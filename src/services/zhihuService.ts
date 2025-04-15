@@ -37,6 +37,7 @@ export interface ZhihuArticle {
   authorAvatar?: string;
   authorBio?: string;
   authorUrl?: string; // 添加作者URL
+  actualUrl?: string; // 添加实际URL字段用于存储回答链接
 }
 
 // Cookie相关信息
@@ -510,6 +511,7 @@ export class ZhihuService {
       let authorBio = "";
       let authorUrl = ""; // 添加作者URL
       let contentHtml = "";
+      let actualUrl = url; // 添加实际URL字段用于存储回答链接
 
       // 1. 获取问题标题
       title = $("h1.QuestionHeader-title").text().trim();
@@ -613,7 +615,8 @@ export class ZhihuService {
               if (answerId && questionId) {
                 const newUrl = `https://www.zhihu.com/question/${questionId}/answer/${answerId}`;
                 console.log(`构建新URL: ${newUrl}，重新获取回答内容`);
-
+                actualUrl = newUrl; // 更新实际URL为带有回答ID的URL
+                
                 // 递归调用自身获取具体回答
                 return this.getArticleContent(newUrl, hideImages);
               } else {
@@ -739,7 +742,8 @@ export class ZhihuService {
         author: author || "未知作者",
         authorAvatar,
         authorBio,
-        authorUrl, // 添加作者URL到返回对象
+        authorUrl,
+        actualUrl, // 添加actualUrl到返回对象
       };
     } catch (error) {
       console.error("获取文章内容失败:", error);

@@ -123,7 +123,7 @@ export class ZhihuTreeDataProvider
 
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error("加载知乎热榜失败:", errorMsg);
-      
+
       // 不总是显示错误消息，因为ZhihuService中已经有提示
       if (!errorMsg.includes("Cookie")) {
         vscode.window.showErrorMessage(`加载知乎热榜失败: ${errorMsg}`);
@@ -146,9 +146,9 @@ export class ZhihuTreeDataProvider
     if (this.isLoading) {
       return [
         new ZhihuStatusTreeItem(
-          "正在加载知乎热榜...", 
+          "正在加载知乎热榜...",
           new vscode.ThemeIcon("loading~spin")
-        )
+        ),
       ];
     }
 
@@ -162,30 +162,30 @@ export class ZhihuTreeDataProvider
     // 如果没有数据也不在加载中，可能是初次加载失败，显示提示
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const cookie = config.get<string>("cookie") || "";
-    
+
     if (!cookie) {
       // 如果没有设置cookie，显示需要设置cookie的提示
       return [
         new ZhihuStatusTreeItem(
-          "需要设置知乎Cookie才能获取热榜", 
+          "需要设置知乎Cookie才能获取热榜",
           new vscode.ThemeIcon("key"),
           {
             command: "zhihu-fisher.setCookie",
             title: "设置知乎Cookie",
           }
-        )
+        ),
       ];
     }
 
     return [
       new ZhihuStatusTreeItem(
-        "获取热榜失败，点击刷新按钮重试", 
+        "获取热榜失败，点击刷新按钮重试",
         new vscode.ThemeIcon("error"),
         {
           command: "zhihu-fisher.refreshHotList",
           title: "刷新知乎热榜",
         }
-      )
+      ),
     ];
   }
 }

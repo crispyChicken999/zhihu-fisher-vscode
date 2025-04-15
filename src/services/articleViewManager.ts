@@ -356,6 +356,9 @@ export class ArticleViewManager {
         </div>
       </div>`;
     }
+    
+    // 使用actualUrl作为来源链接（如果存在），否则使用原始URL
+    const sourceUrl = article.actualUrl || url;
 
     return `
       <!DOCTYPE html>
@@ -389,7 +392,7 @@ export class ArticleViewManager {
           h2 {
             font-size: 1.5em;
             padding-bottom: 0.3em;
-            border-bottom: 1px solid var(--vscode-panel-border);
+            border-bottom: 1px solid var (--vscode-panel-border);
           }
           a {
             color: var(--vscode-textLink-foreground);
@@ -531,7 +534,7 @@ export class ArticleViewManager {
           <h1>${this.escapeHtml(article.title)}</h1>
           <div class="article-meta">
             ${authorHTML}
-            <div>来源: <a href="${url}" target="_blank">知乎</a></div>
+            <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>
           </div>
         </header>
 
@@ -555,7 +558,10 @@ export class ArticleViewManager {
           const vscode = acquireVsCodeApi();
 
           function openInBrowser() {
-            vscode.postMessage({ command: 'openInBrowser' });
+            vscode.postMessage({ 
+              command: 'openInBrowser', 
+              url: ${article.actualUrl ? `"${article.actualUrl}"` : undefined}
+            });
           }
 
           function refreshContent() {
