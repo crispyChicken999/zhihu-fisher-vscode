@@ -13,6 +13,22 @@ export interface ZhihuHotItem {
   imgUrl?: string;
 }
 
+// 知乎问题项目接口
+export interface ZhihuQuestionItem {
+  id: string;
+  title: string;
+  topics?: string[];
+}
+
+// 知乎回答项目接口
+export interface ZhihuAnswerItem {
+  id: string;
+  authorName: string;
+  authorAvatar?: string;
+  upvoteCount?: string;
+  answerUrl: string;
+}
+
 // 知乎文章接口
 export interface ZhihuArticle {
   title: string;
@@ -20,6 +36,7 @@ export interface ZhihuArticle {
   author?: string;
   authorAvatar?: string;
   authorBio?: string;
+  authorUrl?: string; // 添加作者URL
 }
 
 // Cookie相关信息
@@ -491,10 +508,10 @@ export class ZhihuService {
       let author = "";
       let authorAvatar = "";
       let authorBio = "";
+      let authorUrl = ""; // 添加作者URL
       let contentHtml = "";
 
-      // 1. 尝试获取标题
-      // 问题标题
+      // 1. 获取问题标题
       title = $("h1.QuestionHeader-title").text().trim();
       if (!title) {
         // 文章标题
@@ -505,162 +522,179 @@ export class ZhihuService {
         title = $("h1").first().text().trim();
       }
 
-      // 2. 获取作者信息 - 根据提供的DOM结构精确提取
-      // 注意：我们会从AuthorInfo这个父级容器开始查找
+      // 2. 处理问题页面
+      if (url.includes("/question/")) {
+        let questionId = "";
+        let answerId = "";
 
-      // 2.1 从AuthorInfo中精确提取作者名称、头像和简介
-      const authorInfo = $(".AuthorInfo");
-      if (authorInfo.length > 0) {
-        // 提取作者名称 - 从UserLink-link获取
-        author = authorInfo.find(".UserLink-link").text().trim();
-
-        // 提取作者头像 - 从Avatar标签获取src属性
-        authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
-
-        // 提取作者简介 - 从AuthorInfo-badgeText获取
-        authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
-
-        console.log(
-          `从AuthorInfo中提取到作者信息: ${author}, 头像: ${authorAvatar?.substring(
-            0,
-            50
-          )}..., 简介: ${authorBio}`
-        );
-      }
-
-      // 2.2 如果上面的方法没找到完整信息，尝试查找meta标签
-      if (!author || !authorAvatar) {
-        const metaAuthorName = $("meta[itemprop='name']").attr("content");
-        const metaAuthorImage = $("meta[itemprop='image']").attr("content");
-
-        if (metaAuthorName && !author) {
-          author = metaAuthorName;
+        // 2.1 提取问题ID
+        const questionMatch = url.match(/question\/(\d+)/);
+        if (questionMatch && questionMatch[1]) {
+          questionId = questionMatch[1];
+        } else {
+          throw new Error("无法解析问题ID，请联系开发者更新解析方案");
         }
 
-        if (metaAuthorImage && !authorAvatar) {
-          authorAvatar = metaAuthorImage;
-        }
+        // 2.2 检查URL中是否已包含answer ID
+        const answerMatch = url.match(/answer\/(\d+)/);
+        if (answerMatch && answerMatch[1]) {
+          // URL已经包含answer ID，直接获取回答内容
+          answerId = answerMatch[1];
 
-        console.log(
-          `从meta标签提取到作者信息: ${metaAuthorName}, 头像: ${metaAuthorImage?.substring(
-            0,
-            50
-          )}...`
-        );
-      }
+          // 直接查找回答内容
+          const contentItem = $(".ContentItem.AnswerItem");
 
-      // 3. 尝试获取内容
-      // 根据URL类型和页面结构选择不同的内容选择器
+          if (contentItem.length > 0) {
+            // 获取回答内容
+            contentHtml =
+              contentItem.find(".RichContent-inner").html() ||
+              contentItem.find(".RichText.ztext").html() ||
+              "";
 
-      // 问题回答
-      if (url.includes("question")) {
-        // 如果是问题页面
-
-        // 先尝试找最佳回答
-        const contentItem = $(".ContentItem.AnswerItem");
-
-        if (contentItem.length > 0) {
-          // 优先获取第一个回答（推荐回答）
-          contentHtml =
-            $(contentItem[0]).find(".RichContent-inner").html() || "";
-
-          // 如果没有找到内容，尝试其他选择器
-          if (!contentHtml) {
-            contentHtml = $(contentItem[0]).find(".RichText").html() || "";
-          }
-
-          // 如果还没找到作者信息，从当前回答中获取
-          if (!author || !authorAvatar || !authorBio) {
-            const answerAuthorInfo = $(contentItem[0]).find(".AuthorInfo");
-
-            if (!author) {
-              author = answerAuthorInfo.find(".UserLink-link").text().trim();
-            }
-
-            if (!authorAvatar) {
-              authorAvatar = answerAuthorInfo.find(".Avatar").attr("src") || "";
-            }
-
-            if (!authorBio) {
-              authorBio = answerAuthorInfo
+            // 获取作者信息
+            const authorInfo = contentItem.find(".AuthorInfo");
+            if (authorInfo.length > 0) {
+              author =
+                authorInfo.find("meta[itemprop='name']").attr("content") || "";
+              authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
+              authorBio = authorInfo
                 .find(".AuthorInfo-badgeText")
                 .text()
                 .trim();
+
+              // 提取作者URL - 先尝试从meta标签获取
+              const metaUrl = authorInfo.find("meta[itemprop='url']").attr("content");
+              if (metaUrl) {
+                authorUrl = metaUrl;
+                console.log(`从meta标签获取到作者URL: ${authorUrl}`);
+              }
+              console.log(`从回答页面获取到作者信息: ${author}`);
             }
           }
+
+          if (!contentHtml) {
+            throw new Error("无法获取回答内容，请联系开发者更新解析方案");
+          }
         } else {
-          // 备用：直接查找回答内容区域
-          contentHtml = $(".RichContent-inner").first().html() || "";
+          // URL中不包含answer ID，需要从问题页面中提取第一个回答的ID
+          console.log("从问题页面查找第一个回答...");
+
+          // 根据提供的DOM结构查找第一个List-Item
+          const firstListItem = $(".List-item").first();
+
+          if (firstListItem.length > 0) {
+            console.log("找到第一个List-Item元素");
+
+            // 从List-Item中查找answerItem的数据
+            const answerItem = firstListItem.find(".ContentItem.AnswerItem");
+
+            if (answerItem.length > 0) {
+              // 从data-zop属性中提取itemId，这就是回答ID
+              const dataZop = answerItem.attr("data-zop");
+              if (dataZop) {
+                try {
+                  const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
+                  if (zopData.itemId) {
+                    answerId = zopData.itemId;
+                    console.log(`成功提取回答ID: ${answerId}`);
+                  }
+                } catch (e) {
+                  console.error("解析data-zop属性失败", e);
+                }
+              }
+
+              // 备用方法：尝试从name属性获取
+              if (!answerId) {
+                answerId = answerItem.attr("name") || "";
+                console.log(`从name属性获取回答ID: ${answerId}`);
+              }
+
+              // 如果找到了回答ID，构建新的URL并获取内容
+              if (answerId && questionId) {
+                const newUrl = `https://www.zhihu.com/question/${questionId}/answer/${answerId}`;
+                console.log(`构建新URL: ${newUrl}，重新获取回答内容`);
+
+                // 递归调用自身获取具体回答
+                return this.getArticleContent(newUrl, hideImages);
+              } else {
+                throw new Error("无法提取回答ID，请联系开发者更新解析方案");
+              }
+            } else {
+              throw new Error("无法找到回答项目，请联系开发者更新解析方案");
+            }
+          } else {
+            throw new Error("无法找到List-Item元素，请联系开发者更新解析方案");
+          }
         }
       }
-      // 文章
-      else if (url.includes("p/")) {
+      // 3. 处理文章页面
+      else if (url.includes("/p/")) {
         contentHtml =
           $(".Post-RichTextContainer").html() ||
           $(".PostIndex-content").html() ||
           $(".RichText.ztext").html() ||
           "";
+
+        // 获取作者信息
+        const authorInfo = $(".AuthorInfo").first();
+        if (authorInfo.length > 0) {
+          author =
+            authorInfo.find(".meta[itemprop='name']").attr("content") || "";
+          authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
+          authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
+
+          // 提取作者URL
+          const metaUrl = $("meta[itemprop='url']").attr("content");
+          if (metaUrl) {
+            authorUrl = metaUrl;
+          } else {
+            const userLinkHref = authorInfo.find(".UserLink-link").attr("href");
+            if (userLinkHref) {
+              authorUrl = userLinkHref.startsWith("http")
+                ? userLinkHref
+                : `https://www.zhihu.com${userLinkHref}`;
+            }
+          }
+        }
+
+        if (!contentHtml) {
+          throw new Error("无法获取文章内容，请联系开发者更新解析方案");
+        }
       }
-      // 专栏文章
-      else if (url.includes("column") || url.includes("zhuanlan")) {
+      // 4. 处理专栏文章
+      else if (url.includes("/column/") || url.includes("/zhuanlan/")) {
         contentHtml =
           $(".RichText.ztext").html() ||
           $(".Post-RichTextContainer").html() ||
           "";
-      }
 
-      // 兜底方案：如果上述方法都没找到内容，尝试更通用的选择器
-      if (!contentHtml) {
-        contentHtml =
-          $(".RichContent-inner").html() ||
-          $(".RichText.ztext").html() ||
-          $(".ContentItem-content").html() ||
-          "";
-      }
+        // 获取作者信息
+        const authorInfo = $(".AuthorInfo").first();
+        if (authorInfo.length > 0) {
+          author =
+            authorInfo.find(".meta[itemprop='name']").attr("content") || "";
+          authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
+          authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
 
-      // 访问知乎文章有时会被跳转（特别是专栏文章）
-      if (!contentHtml && response.request.res.responseUrl !== url) {
-        console.log(`检测到URL重定向: ${response.request.res.responseUrl}`);
-        // 如果重定向了，尝试解析重定向后的页面
-        const redirectUrl = response.request.res.responseUrl;
-        const redirectResponse = await axios.get(redirectUrl, { headers });
-        const $redirect = cheerio.load(redirectResponse.data);
-
-        // 尝试从重定向页面获取内容
-        contentHtml =
-          $redirect(".RichText.ztext").html() ||
-          $redirect(".RichContent-inner").html() ||
-          $redirect(".Post-RichTextContainer").html() ||
-          "";
-
-        // 更新标题和作者信息（如果重定向页面有）
-        const redirectTitle = $redirect("h1").first().text().trim();
-        if (redirectTitle) {
-          title = redirectTitle;
-        }
-
-        // 尝试从重定向页面获取作者信息
-        if (!author || !authorAvatar || !authorBio) {
-          const redirectAuthorInfo = $redirect(".AuthorInfo");
-
-          if (redirectAuthorInfo.length > 0) {
-            if (!author) {
-              author = redirectAuthorInfo.find(".UserLink-link").text().trim();
-            }
-
-            if (!authorAvatar) {
-              authorAvatar =
-                redirectAuthorInfo.find(".Avatar").attr("src") || "";
-            }
-
-            if (!authorBio) {
-              authorBio = redirectAuthorInfo
-                .find(".AuthorInfo-badgeText")
-                .text()
-                .trim();
+          // 提取作者URL
+          const metaUrl = $("meta[itemprop='url']").attr("content");
+          if (metaUrl) {
+            authorUrl = metaUrl;
+          } else {
+            const userLinkHref = authorInfo.find(".UserLink-link").attr("href");
+            if (userLinkHref) {
+              authorUrl = userLinkHref.startsWith("http")
+                ? userLinkHref
+                : `https://www.zhihu.com${userLinkHref}`;
             }
           }
         }
+
+        if (!contentHtml) {
+          throw new Error("无法获取专栏文章内容，请联系开发者更新解析方案");
+        }
+      } else {
+        throw new Error("不支持的URL类型，请联系开发者更新解析方案");
       }
 
       // 处理内容，如果启用无图片模式，删除所有图片标签
@@ -688,7 +722,7 @@ export class ZhihuService {
       // 如果仍然没有内容，提供友好的错误信息
       if (!contentHtml) {
         console.error("未能解析文章内容，可能需要登录或页面结构已更改");
-        throw new Error("未能解析文章内容，可能需要登录或页面结构已更改");
+        throw new Error("未能解析文章内容，请联系开发者更新解析方案");
       }
 
       // 将HTML转为Markdown
@@ -697,7 +731,7 @@ export class ZhihuService {
       console.log(
         `成功解析文章：${title}，作者：${author || "未知"}，头像: ${
           authorAvatar ? "已获取" : "未获取"
-        }，简介: ${authorBio || "未获取"}`
+        }，简介: ${authorBio || "未获取"}，作者URL: ${authorUrl || "未获取"}`
       );
       return {
         title: title || "未知标题",
@@ -705,12 +739,13 @@ export class ZhihuService {
         author: author || "未知作者",
         authorAvatar,
         authorBio,
+        authorUrl, // 添加作者URL到返回对象
       };
     } catch (error) {
       console.error("获取文章内容失败:", error);
       throw new Error(
         `获取文章内容失败: ${
-          error instanceof Error ? error.message : String(error)
+          error instanceof Error ? error.message : "请联系开发者更新解析方案"
         }`
       );
     }
