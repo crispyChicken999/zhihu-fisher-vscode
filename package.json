@@ -9,15 +9,93 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:zhihuHotList"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "zhihu-fisher.helloWorld",
-        "title": "Hello World"
+        "command": "zhihu-fisher.refreshHotList",
+        "title": "刷新热榜",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.openArticle",
+        "title": "打开文章"
+      },
+      {
+        "command": "zhihu-fisher.setCookie",
+        "title": "设置知乎Cookie",
+        "icon": "$(key)"
+      },
+      {
+        "command": "zhihu-fisher.clearCookie",
+        "title": "清除知乎Cookie",
+        "icon": "$(trash)"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "zhihu-fisher",
+          "title": "知乎摸鱼",
+          "icon": "$(book)"
+        }
+      ]
+    },
+    "views": {
+      "zhihu-fisher": [
+        {
+          "id": "zhihuHotList",
+          "name": "热榜",
+          "icon": "$(flame)",
+          "contextualTitle": "知乎热榜"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "zhihuHotList",
+        "contents": "加载知乎热榜中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[设置Cookie](command:zhihu-fisher.setCookie)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "zhihu-fisher.refreshHotList",
+          "when": "view == zhihuHotList",
+          "group": "navigation"
+        },
+        {
+          "command": "zhihu-fisher.setCookie",
+          "when": "view == zhihuHotList",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "知乎摸鱼",
+      "properties": {
+        "zhihu-fisher.hideImages": {
+          "type": "boolean",
+          "default": false,
+          "description": "无图片模式：启用后加载文章时不显示图片"
+        },
+        "zhihu-fisher.cookie": {
+          "type": "string",
+          "default": "",
+          "description": "知乎Cookie，用于访问需要登录的内容",
+          "scope": "machine"
+        },
+        "zhihu-fisher.cookieExpirationReminder": {
+          "type": "number",
+          "default": 30,
+          "description": "Cookie过期提醒天数（设置cookie后多少天提醒更新）",
+          "scope": "machine"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
@@ -45,5 +123,10 @@
     "typescript": "^5.8.2",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1"
+  },
+  "dependencies": {
+    "axios": "^1.8.4",
+    "cheerio": "^1.0.0",
+    "marked": "^15.0.8"
   }
 }
