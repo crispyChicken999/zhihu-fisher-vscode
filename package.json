@@ -33,6 +33,14 @@
         "command": "zhihu-fisher.clearCookie",
         "title": "清除知乎Cookie",
         "icon": "$(trash)"
+      },
+      {
+        "command": "zhihu-fisher.toggleImageDisplay",
+        "title": "切换图片显示",
+        "icon": {
+          "light": "$(image)",
+          "dark": "$(image)"
+        }
       }
     ],
     "viewsContainers": {
@@ -65,12 +73,17 @@
         {
           "command": "zhihu-fisher.refreshHotList",
           "when": "view == zhihuHotList",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "zhihu-fisher.setCookie",
           "when": "view == zhihuHotList",
-          "group": "navigation"
+          "group": "inline@1"
+        },
+        {
+          "command": "zhihu-fisher.toggleImageDisplay",
+          "when": "view == zhihuHotList",
+          "group": "inline@2"
         }
       ]
     },

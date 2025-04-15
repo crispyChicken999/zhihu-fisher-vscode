@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as cheerio from "cheerio";
 import { ZhihuArticle, ZhihuHotItem, ZhihuService } from "./zhihuService";
 
 // 文章视图状态接口
@@ -82,6 +83,9 @@ export class ArticleViewManager {
             break;
           case "openInBrowser":
             vscode.env.openExternal(vscode.Uri.parse(item.url));
+            break;
+          case "toggleImageDisplay":
+            this.toggleImageDisplay(viewState);
             break;
         }
       });
@@ -258,6 +262,80 @@ export class ArticleViewManager {
 
   // 生成文章HTML
   private getArticleHtml(article: ZhihuArticle, url: string): string {
+    // 获取当前的图片显示设置
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const hideImages = config.get<boolean>("hideImages", false);
+
+    // 如果启用无图模式，处理HTML内容
+    let processedContent = article.content;
+    if (hideImages) {
+      // 使用cheerio解析HTML并删除所有图片标签
+      const $ = cheerio.load(article.content);
+      $('img').each(function() {
+        $(this).remove(); // 完全删除图片标签，不保留占位符
+      });
+      
+      // 同时清理可能导致空白的figure和其他包装元素
+      $('figure').each(function() {
+        if ($(this).children().length === 0) {
+          $(this).remove();
+        }
+      });
+      $('[class*="img-container"], [class*="image-container"]').each(function() {
+        if ($(this).children().length === 0) {
+          $(this).remove();
+        }
+      });
+      
+      processedContent = $.html();
+    } else {
+      // 处理知乎特有的图片属性：data-actualsrc
+      const $ = cheerio.load(article.content);
+      $('img').each(function() {
+        const actualSrc = $(this).attr('data-actualsrc');
+        const originalSrc = $(this).attr('data-original');
+        
+        // 优先使用 data-actualsrc
+        if (actualSrc) {
+          $(this).attr('src', actualSrc);
+          $(this).attr('data-actualsrc-processed', 'true');
+        } 
+        // 其次使用 data-original
+        else if (originalSrc) {
+          $(this).attr('src', originalSrc);
+          $(this).attr('data-original-processed', 'true');
+        }
+        
+        // 添加no-referrer属性以避免跨域问题
+        $(this).attr('referrerpolicy', 'no-referrer');
+      });
+      
+      processedContent = $.html();
+    }
+
+    // 构建作者信息HTML
+    let authorHTML = '';
+    if (article.author) {
+      authorHTML = `<div class="author-info">`;
+      
+      // 如果有作者头像，显示头像
+      if (article.authorAvatar) {
+        authorHTML += `
+          <div class="author-avatar">
+            <img src="${article.authorAvatar}" alt="${this.escapeHtml(article.author)}" referrerpolicy="no-referrer">
+          </div>
+        `;
+      }
+      
+      // 作者名称和简介
+      authorHTML += `
+        <div class="author-details">
+          <div class="author-name">${this.escapeHtml(article.author)}</div>
+          ${article.authorBio ? `<div class="author-bio">${this.escapeHtml(article.authorBio)}</div>` : ''}
+        </div>
+      </div>`;
+    }
+
     return `
       <!DOCTYPE html>
       <html lang="zh-CN">
@@ -370,13 +448,51 @@ export class ArticleViewManager {
           .button:hover {
             background-color: var(--vscode-button-hoverBackground);
           }
-          .article-cover {
-            margin-top: 20px;
-            text-align: center;
+          .image-display-toggle {
+            margin-right: 10px;
           }
           .article-content img.formula {
             display: inline-block;
             vertical-align: middle;
+          }
+          .empty-container {
+            display: none !important;
+          }
+          
+          /* 作者信息样式 */
+          .author-info {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: var(--vscode-editor-inactiveSelectionBackground);
+          }
+          
+          .author-avatar {
+            margin-right: 15px;
+            flex-shrink: 0;
+          }
+          
+          .author-avatar img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+          }
+          
+          .author-details {
+            flex-grow: 1;
+          }
+          
+          .author-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+          }
+          
+          .author-bio {
+            font-size: 0.9em;
+            color: var(--vscode-descriptionForeground);
           }
         </style>
       </head>
@@ -384,22 +500,25 @@ export class ArticleViewManager {
         <header>
           <h1>${this.escapeHtml(article.title)}</h1>
           <div class="article-meta">
-            ${
-              article.author
-                ? `<div>作者: ${this.escapeHtml(article.author)}</div>`
-                : ""
-            }
+            ${authorHTML}
             <div>来源: <a href="${url}" target="_blank">知乎</a></div>
           </div>
         </header>
         
         <div class="article-content">
-          ${article.content}
+          ${processedContent}
         </div>
         
         <div class="toolbar">
-          <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
-          <button class="button" onclick="refreshContent()">刷新内容</button>
+          <div>
+            <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
+            <button class="button" onclick="refreshContent()">刷新内容</button>
+          </div>
+          <div>
+            <button class="button image-display-toggle" onclick="toggleImageDisplay()">
+              ${hideImages ? "显示图片" : "隐藏图片"}
+            </button>
+          </div>
         </div>
         
         <script>
@@ -413,14 +532,74 @@ export class ArticleViewManager {
             vscode.postMessage({ command: 'requestContent' });
           }
           
-          // 调整图片链接，避免跨域问题
+          function toggleImageDisplay() {
+            vscode.postMessage({ command: 'toggleImageDisplay' });
+          }
+          
+          // 处理图片加载错误，完全删除图片占位符
           document.querySelectorAll('img').forEach(img => {
             if (img.src && !img.src.startsWith('data:')) {
               img.onerror = function() {
-                this.style.display = 'none';
+                // 移除整个父元素如果父元素是figure或者特定的图片容器
+                const parent = this.parentNode;
+                if (parent && (parent.tagName.toLowerCase() === 'figure' || 
+                    parent.className.includes('img-container') || 
+                    parent.className.includes('image-container'))) {
+                  parent.remove();
+                } else {
+                  // 否则只移除图片本身
+                  this.remove();
+                }
               };
+              
+              // 检查是否存在data-actualsrc或data-original属性
+              if (!img.getAttribute('data-actualsrc-processed') && !img.getAttribute('data-original-processed')) {
+                // 尝试从data-actualsrc或data-original获取真实图片URL
+                const actualSrc = img.getAttribute('data-actualsrc');
+                const originalSrc = img.getAttribute('data-original');
+                
+                if (actualSrc) {
+                  img.setAttribute('src', actualSrc);
+                } else if (originalSrc) {
+                  img.setAttribute('src', originalSrc);
+                }
+              }
+              
+              // 对于知乎图片，添加source参数和no-referrer策略
+              const src = img.getAttribute('src');
+              if (src && (
+                  src.includes('zhimg.com') || 
+                  src.includes('pic1.zhimg.com') ||
+                  src.includes('pic2.zhimg.com') ||
+                  src.includes('pic3.zhimg.com') ||
+                  src.includes('pic4.zhimg.com') ||
+                  src.includes('picx.zhimg.com')
+                )) {
+                // 修改引用策略
+                img.setAttribute('referrerpolicy', 'no-referrer');
+                
+                // 添加source参数（如果尚未添加）
+                if (!src.includes('source=') && !src.includes('?')) {
+                  img.setAttribute('src', src + '?source=1def8aca');
+                } else if (!src.includes('source=') && src.includes('?')) {
+                  img.setAttribute('src', src + '&source=1def8aca');
+                }
+              }
             }
           });
+          
+          // 查找并清理空白的图片容器
+          function cleanEmptyContainers() {
+            document.querySelectorAll('figure, [class*="img-container"], [class*="image-container"]').forEach(container => {
+              if (container.children.length === 0 || 
+                  (container.children.length === 1 && container.children[0].tagName.toLowerCase() === 'figcaption')) {
+                container.classList.add('empty-container');
+              }
+            });
+          }
+          
+          // 在DOM加载完成后执行清理
+          document.addEventListener('DOMContentLoaded', cleanEmptyContainers);
           
           // 添加锚点滚动
           document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -447,5 +626,22 @@ export class ArticleViewManager {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  // 切换图片显示状态
+  private async toggleImageDisplay(viewState: ArticleViewState): Promise<void> {
+    // 获取当前配置
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const currentValue = config.get<boolean>("hideImages", false);
+    
+    // 切换值
+    await config.update("hideImages", !currentValue, vscode.ConfigurationTarget.Global);
+    
+    // 提示用户
+    const statusText = !currentValue ? '已启用无图模式' : '已启用图片显示模式';
+    vscode.window.showInformationMessage(statusText);
+    
+    // 重新加载文章内容（不触发网络请求，仅重新处理已获取的内容）
+    this.updateWebviewContent(viewState);
   }
 }

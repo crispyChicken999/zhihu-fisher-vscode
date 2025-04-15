@@ -18,6 +18,8 @@ export interface ZhihuArticle {
   title: string;
   content: string;
   author?: string;
+  authorAvatar?: string;
+  authorBio?: string;
 }
 
 // Cookie相关信息
@@ -487,6 +489,8 @@ export class ZhihuService {
 
       let title = "";
       let author = "";
+      let authorAvatar = "";
+      let authorBio = "";
       let contentHtml = "";
 
       // 1. 尝试获取标题
@@ -501,10 +505,48 @@ export class ZhihuService {
         title = $("h1").first().text().trim();
       }
 
-      // 2. 尝试获取作者
-      author = $(".AuthorInfo-name").first().text().trim();
-      if (!author) {
-        author = $(".author-info-head").text().trim();
+      // 2. 获取作者信息 - 根据提供的DOM结构精确提取
+      // 注意：我们会从AuthorInfo这个父级容器开始查找
+
+      // 2.1 从AuthorInfo中精确提取作者名称、头像和简介
+      const authorInfo = $(".AuthorInfo");
+      if (authorInfo.length > 0) {
+        // 提取作者名称 - 从UserLink-link获取
+        author = authorInfo.find(".UserLink-link").text().trim();
+
+        // 提取作者头像 - 从Avatar标签获取src属性
+        authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
+
+        // 提取作者简介 - 从AuthorInfo-badgeText获取
+        authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
+
+        console.log(
+          `从AuthorInfo中提取到作者信息: ${author}, 头像: ${authorAvatar?.substring(
+            0,
+            50
+          )}..., 简介: ${authorBio}`
+        );
+      }
+
+      // 2.2 如果上面的方法没找到完整信息，尝试查找meta标签
+      if (!author || !authorAvatar) {
+        const metaAuthorName = $("meta[itemprop='name']").attr("content");
+        const metaAuthorImage = $("meta[itemprop='image']").attr("content");
+
+        if (metaAuthorName && !author) {
+          author = metaAuthorName;
+        }
+
+        if (metaAuthorImage && !authorAvatar) {
+          authorAvatar = metaAuthorImage;
+        }
+
+        console.log(
+          `从meta标签提取到作者信息: ${metaAuthorName}, 头像: ${metaAuthorImage?.substring(
+            0,
+            50
+          )}...`
+        );
       }
 
       // 3. 尝试获取内容
@@ -527,13 +569,24 @@ export class ZhihuService {
             contentHtml = $(contentItem[0]).find(".RichText").html() || "";
           }
 
-          // 获取这个特定回答的作者信息
-          const answerAuthor = $(contentItem[0])
-            .find(".AuthorInfo-name")
-            .text()
-            .trim();
-          if (answerAuthor) {
-            author = answerAuthor;
+          // 如果还没找到作者信息，从当前回答中获取
+          if (!author || !authorAvatar || !authorBio) {
+            const answerAuthorInfo = $(contentItem[0]).find(".AuthorInfo");
+
+            if (!author) {
+              author = answerAuthorInfo.find(".UserLink-link").text().trim();
+            }
+
+            if (!authorAvatar) {
+              authorAvatar = answerAuthorInfo.find(".Avatar").attr("src") || "";
+            }
+
+            if (!authorBio) {
+              authorBio = answerAuthorInfo
+                .find(".AuthorInfo-badgeText")
+                .text()
+                .trim();
+            }
           }
         } else {
           // 备用：直接查找回答内容区域
@@ -580,18 +633,33 @@ export class ZhihuService {
           $redirect(".Post-RichTextContainer").html() ||
           "";
 
-        // 更新标题和作者（如果重定向页面有）
+        // 更新标题和作者信息（如果重定向页面有）
         const redirectTitle = $redirect("h1").first().text().trim();
         if (redirectTitle) {
           title = redirectTitle;
         }
 
-        const redirectAuthor = $redirect(".AuthorInfo-name")
-          .first()
-          .text()
-          .trim();
-        if (redirectAuthor) {
-          author = redirectAuthor;
+        // 尝试从重定向页面获取作者信息
+        if (!author || !authorAvatar || !authorBio) {
+          const redirectAuthorInfo = $redirect(".AuthorInfo");
+
+          if (redirectAuthorInfo.length > 0) {
+            if (!author) {
+              author = redirectAuthorInfo.find(".UserLink-link").text().trim();
+            }
+
+            if (!authorAvatar) {
+              authorAvatar =
+                redirectAuthorInfo.find(".Avatar").attr("src") || "";
+            }
+
+            if (!authorBio) {
+              authorBio = redirectAuthorInfo
+                .find(".AuthorInfo-badgeText")
+                .text()
+                .trim();
+            }
+          }
         }
       }
 
@@ -599,6 +667,21 @@ export class ZhihuService {
       if (hideImages && contentHtml) {
         const $content = cheerio.load(contentHtml);
         $content("img").remove();
+        contentHtml = $content.html() || "";
+      } else if (contentHtml) {
+        // 如果不是无图片模式，确保使用正确的图片URL
+        const $content = cheerio.load(contentHtml);
+        $content("img").each((_, img) => {
+          const $img = $content(img);
+          // 优先使用data-actualsrc属性，这是知乎图片的真实URL
+          const actualSrc = $img.attr("data-actualsrc");
+          if (actualSrc) {
+            $img.attr("src", actualSrc);
+          } else if ($img.attr("data-original")) {
+            // 备选：某些知乎图片使用data-original存储URL
+            $img.attr("src", $img.attr("data-original"));
+          }
+        });
         contentHtml = $content.html() || "";
       }
 
@@ -611,11 +694,17 @@ export class ZhihuService {
       // 将HTML转为Markdown
       const content = this.htmlToMarkdown(contentHtml);
 
-      console.log(`成功解析文章：${title}，作者：${author || "未知"}`);
+      console.log(
+        `成功解析文章：${title}，作者：${author || "未知"}，头像: ${
+          authorAvatar ? "已获取" : "未获取"
+        }，简介: ${authorBio || "未获取"}`
+      );
       return {
         title: title || "未知标题",
         content,
         author: author || "未知作者",
+        authorAvatar,
+        authorBio,
       };
     } catch (error) {
       console.error("获取文章内容失败:", error);

@@ -49,6 +49,25 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('已清除知乎Cookie');
 	});
 
+	// 注册切换图片显示命令
+	const toggleImageDisplayCommand = vscode.commands.registerCommand('zhihu-fisher.toggleImageDisplay', () => {
+		const config = vscode.workspace.getConfiguration('zhihu-fisher');
+		const currentValue = config.get<boolean>('hideImages', false);
+		
+		// 切换值
+		config.update('hideImages', !currentValue, vscode.ConfigurationTarget.Global).then(() => {
+			// 提示用户
+			const statusText = !currentValue ? '已启用无图模式' : '已启用图片显示模式';
+			vscode.window.showInformationMessage(`${statusText}，重新打开文章可应用设置`);
+			
+			// 更新状态栏图标 (设置为提供视觉反馈)
+			updateImageToggleIcon(!currentValue);
+		});
+	});
+
+	// 在首次激活时设置正确的图标状态
+	updateImageToggleIcon(vscode.workspace.getConfiguration('zhihu-fisher').get<boolean>('hideImages', false));
+
 	// 当配置变更时触发刷新
 	vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('zhihu-fisher')) {
@@ -62,6 +81,14 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(openArticleCommand);
 	context.subscriptions.push(setCookieCommand);
 	context.subscriptions.push(clearCookieCommand);
+	context.subscriptions.push(toggleImageDisplayCommand);
+}
+
+// 更新图片切换图标状态
+function updateImageToggleIcon(hideImages: boolean): void {
+	// 这里可以将图标设置为带有斜线的图片图标，以表示图片已被禁用
+	// 但VSCode API不直接支持动态更改命令图标，所以这里作为未来改进的占位符
+	console.log(`图片显示模式已更新: ${hideImages ? '无图模式' : '显示图片'}`);
 }
 
 // This method is called when your extension is deactivated
