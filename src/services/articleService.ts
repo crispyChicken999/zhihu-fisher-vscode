@@ -225,17 +225,26 @@ export class ArticleService {
         const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
         // 检查是否需要加载更多回答
-        if (cachedData.answers.length < maxCount && cachedData.hasMore) {
+        // 仅当现有回答数量明显不足且缓存中没有可用页面时才异步加载更多
+        if (cachedData.answers.length < maxCount && 
+            cachedData.hasMore && 
+            cachedData.answers.length < (cachedData.totalAnswers || Infinity) * 0.5) { // 仅当缓存的回答数量少于总数的一半时加载
           console.log(
-            `缓存中的回答数量(${cachedData.answers.length})小于请求数量(${maxCount})，尝试加载更多回答`
+            `缓存中的回答数量(${cachedData.answers.length})明显少于请求数量(${maxCount})或总回答数(${cachedData.totalAnswers || "未知"})，尝试加载更多回答`
           );
-          // 异步加载更多回答，但不阻塞当前返回
-          this.loadMoreBatchAnswers(
-            questionId,
-            maxCount - cachedData.answers.length,
-            hideImages,
-            progressCallback
-          ).catch((error) => console.error("自动加载更多回答失败:", error));
+          
+          // 只有当页面已关闭时才初始化新页面，避免重复创建页面
+          if (!cachedData.page) {
+            // 异步加载更多回答，但不阻塞当前返回
+            this.loadMoreBatchAnswers(
+              questionId,
+              maxCount - cachedData.answers.length,
+              hideImages,
+              progressCallback
+            ).catch((error) => console.error("自动加载更多回答失败:", error));
+          } else {
+            console.log("页面仍然活跃，避免重复初始化页面");
+          }
         }
 
         // 如果有回调函数并且有已加载的回答，通知UI第一个回答可以显示
@@ -257,12 +266,11 @@ export class ArticleService {
       const { page, questionTitle, totalAnswers } =
         await this.answerLoader.initQuestionPage(cleanQuestionUrl);
 
-      // 初始化结果对象
+      // 初始化结果对象 - 不再重复获取浏览器实例，使用PuppeteerManager管理的单例
       const result: BatchAnswers = {
         questionTitle: questionTitle,
         answers: [],
         hasMore: false,
-        browser: await PuppeteerManager.getBrowserInstance(),
         page,
         totalAnswers,
       };
@@ -346,8 +354,8 @@ export class ArticleService {
       // 记录原始回答数量
       const originalAnswersCount = cachedData.answers.length;
 
-      // 如果浏览器实例已经关闭，创建新的实例
-      if (!cachedData.browser || !cachedData.page) {
+      // 如果页面已关闭，重新初始化页面
+      if (!cachedData.page) {
         console.log("页面已关闭，创建新页面...");
 
         // 重新初始化页面
@@ -356,7 +364,7 @@ export class ArticleService {
             `https://www.zhihu.com/question/${questionId}`
           );
 
-        // 更新缓存
+        // 更新缓存中的页面引用，但不设置browser引用（使用PuppeteerManager的单例）
         cachedData.page = page;
         if (!cachedData.questionTitle) {
           cachedData.questionTitle = questionTitle;
@@ -399,19 +407,20 @@ export class ArticleService {
   }
 
   /**
-   * 设置当前查看的回答索引，并自动加载下一批次
+   * 设置当前查看的回答索引，并智能地加载下一批次
    * @param questionId 问题ID
    * @param index 当前查看的索引
    * @param hideImages 是否隐藏图片
    * @param progressCallback 进度回调函数
-   * @param options 可选配置参数，包含滚动尝试次数等
+   * @param options 可选配置参数，包含滚动尝试次数和预加载阈值
+   * @returns Promise<boolean> 是否成功加载了新回答
    */
   async setCurrentViewingIndex(
     questionId: string,
     index: number,
     hideImages: boolean = false,
     progressCallback?: ProgressCallback,
-    options?: { scrollAttempts?: number }
+    options?: { scrollAttempts?: number; preloadThreshold?: number }
   ): Promise<boolean> {
     try {
       // 更新当前查看的索引
@@ -419,50 +428,75 @@ export class ArticleService {
 
       // 检查缓存中是否存在该问题的回答
       if (!this.articleCache.hasQuestionCache(questionId)) {
+        console.log(`未找到问题 ${questionId} 的缓存数据`);
         return false;
       }
 
       const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
-      // 如果是最后一项并且还有更多可加载且没有正在加载中的任务
-      if (
-        index === cachedData.answers.length - 1 &&
+      // 预加载阈值，默认为3（当用户浏览到倒数第3个回答时开始预加载）
+      const preloadThreshold = options?.preloadThreshold || 3;
+
+      // 判断是否需要加载更多回答
+      const needsMoreAnswers =
+        // 是否接近末尾（距离末尾小于等于预加载阈值）
+        cachedData.answers.length - index <= preloadThreshold &&
+        // 是否还有更多回答可加载
         cachedData.hasMore &&
+        // 是否没有正在进行的加载任务
         !this.isLoadingMore &&
-        cachedData.answers.length < this.maxAnswersToLoad
-      ) {
-        console.log(`到达当前批次的最后一个回答，自动加载下一批次`);
+        // 是否未达到最大加载数量限制
+        cachedData.answers.length < this.maxAnswersToLoad;
 
-        // 获取滚动尝试次数，默认为1
-        const scrollAttempts = options?.scrollAttempts || 1;
+      // 记录是否成功加载了新回答
+      let newAnswersLoaded = false;
+
+      if (needsMoreAnswers) {
+        console.log(
+          `接近当前批次的末尾（剩余${
+            cachedData.answers.length - index
+          }个回答），开始预加载下一批次`
+        );
+
+        // 获取滚动尝试次数，默认为3
+        const scrollAttempts = options?.scrollAttempts || 3;
         console.log(`将尝试滚动 ${scrollAttempts} 次以加载更多回答`);
-
-        // 如果页面已关闭，需要重新初始化
-        if (!cachedData.page) {
-          console.log("页面已关闭，创建新页面...");
-          // 重新初始化页面
-          const { page } = await this.answerLoader.initQuestionPage(
-            `https://www.zhihu.com/question/${questionId}`
-          );
-          // 更新缓存
-          this.articleCache.updateQuestionCache(questionId, { page });
-          cachedData.page = page;
-        }
 
         // 防止重复加载
         if (this.isLoadingMore) {
           return false;
         }
 
+        // 设置加载状态
         this.isLoadingMore = true;
 
         try {
-          // 根据滚动尝试次数执行多次滚动
+          // 如果页面已关闭，需要重新初始化
+          if (!cachedData.page) {
+            console.log("页面已关闭，创建新页面...");
+            try {
+              // 重新初始化页面
+              const { page } = await this.answerLoader.initQuestionPage(
+                `https://www.zhihu.com/question/${questionId}`
+              );
+              // 更新缓存
+              this.articleCache.updateQuestionCache(questionId, { page });
+              cachedData.page = page;
+            } catch (error) {
+              console.error("重新初始化页面失败:", error);
+              this.isLoadingMore = false;
+              return false;
+            }
+          }
+
+          // 记录原始回答数量
           const originalAnswersCount = cachedData.answers.length;
-          const scrollResult = await this.answerLoader.loadAllAnswers(
+
+          // 执行加载操作
+          const loadResult = await this.answerLoader.loadAllAnswers(
             cachedData.page!,
             questionId,
-            originalAnswersCount + 10, // 增加目标数量
+            originalAnswersCount + 10, // 每次增加10个回答的目标
             hideImages,
             cachedData,
             progressCallback,
@@ -473,21 +507,44 @@ export class ArticleService {
           // 更新缓存
           this.articleCache.updateQuestionCache(questionId, cachedData);
 
+          // 判断是否成功加载了新回答
+          newAnswersLoaded = cachedData.answers.length > originalAnswersCount;
+
+          if (newAnswersLoaded) {
+            console.log(
+              `成功加载了 ${
+                cachedData.answers.length - originalAnswersCount
+              } 个新回答`
+            );
+          } else {
+            console.log("未能加载新回答，可能已达到页面末尾或遇到了反爬机制");
+
+            // 如果我们知道总回答数，并且已加载的回答数小于总回答数，更新hasMore状态
+            if (
+              cachedData.totalAnswers &&
+              cachedData.answers.length < cachedData.totalAnswers
+            ) {
+              cachedData.hasMore = true;
+              this.articleCache.updateQuestionCache(questionId, {
+                hasMore: true,
+              });
+              console.log(
+                `根据总回答数(${cachedData.totalAnswers})，应该还有更多回答可加载`
+              );
+            }
+          }
+        } catch (error) {
+          console.error("加载更多回答时出错:", error);
+        } finally {
           // 重置加载状态
           this.isLoadingMore = false;
-
-          // 判断是否成功加载了新回答
-          const newAnswersLoaded = cachedData.answers.length > originalAnswersCount;
-          return newAnswersLoaded;
-        } catch (error) {
-          this.isLoadingMore = false;
-          console.error("自动加载更多回答失败:", error);
-          return false;
         }
       }
-      return false;
+
+      return newAnswersLoaded;
     } catch (error) {
       console.error("设置当前查看索引失败:", error);
+      this.isLoadingMore = false; // 确保在出错时也重置加载状态
       return false;
     }
   }

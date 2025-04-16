@@ -19,9 +19,8 @@ export class PuppeteerManager {
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
-          `--window-size=1920,1080`,
+          "--window-size=1600,900",
         ],
-        defaultViewport: null, // 设置为null，使用窗口大小作为视口
       });
     }
     return PuppeteerManager.browserInstance;
@@ -108,32 +107,22 @@ export class PuppeteerManager {
    * 模拟人类的滚动行为
    */
   static async simulateHumanScroll(page: puppeteer.Page): Promise<void> {
-    // 先向下滚动到接近底部
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-
-    // 等待一小段随机时间
-    await PuppeteerManager.delay(1000 + Math.random() * 500);
-
-    // 稍微向上滚动一点
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight - 100);
-    });
+    console.log("滚动了吗？");
 
     await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight - 200);
+      window.scrollTo(0, document.body.scrollHeight); // 滚动到顶部
     });
+    await PuppeteerManager.delay(1500 + Math.random() * 500);
 
-    // 再次等待
-    await PuppeteerManager.delay(800 + Math.random() * 400);
+    await page.mouse.wheel({ deltaY: 1000 }); // 快速滚到底部
+    await PuppeteerManager.delay(1500 + Math.random() * 500);
 
-    // 再次向下滚动到底部
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
+    // 2. 上移 200px 制造滚动空间
+    await page.mouse.wheel({ deltaY: -200 });
+    await PuppeteerManager.delay(1500 + Math.random() * 500);
 
-    // 最终等待加载
+    // 3. 再次下滚触发加载
+    await page.mouse.wheel({ deltaY: 500 });
     await PuppeteerManager.delay(1500 + Math.random() * 500);
   }
 

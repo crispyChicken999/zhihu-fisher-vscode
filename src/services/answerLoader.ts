@@ -205,11 +205,10 @@ export class AnswerLoader {
     }
 
     let answersCount = batchAnswers.answers.length;
-    let lastAnswersCount = answersCount;
     // 根据传入的scrollAttempts参数调整尝试次数
     let noNewAnswersCounter = 0;
     // 最大尝试次数
-    const maxAttempts = Math.max(scrollAttempts, 3); // 至少尝试3次
+    const maxAttempts = Math.max(scrollAttempts, 5); // 至少尝试5次
     let loadedNewAnswers = false;
 
     console.log(`将尝试最多 ${maxAttempts} 次滚动以加载更多回答`);
@@ -227,7 +226,41 @@ export class AnswerLoader {
       );
     }
 
+    // 首先给页面充分的初始等待时间，确保之前的内容已完全渲染
+    console.log("等待页面稳定并渲染当前内容...");
+    await PuppeteerManager.delay(2000);
+
     while (answersCount < maxCount && noNewAnswersCounter < maxAttempts) {
+      // 记录滚动前的页面高度
+      const prevHeight = await page.evaluate(() => document.body.scrollHeight);
+      
+      // 使用已有的simulateHumanScroll方法滚动页面
+      console.log("使用模拟人类滚动行为加载更多回答...");
+      await PuppeteerManager.simulateHumanScroll(page);
+      
+      // 等待一段时间让内容加载
+      await PuppeteerManager.delay(2000);
+      
+      // 检查高度是否变化
+      const newHeight = await page.evaluate(() => document.body.scrollHeight);
+      
+      // 如果高度没变化且已经加载了部分回答但与总回答数差距较大，再尝试多滚动几次
+      if (newHeight <= prevHeight && 
+          batchAnswers.totalAnswers &&
+          batchAnswers.answers.length > 0 &&
+          batchAnswers.answers.length < batchAnswers.totalAnswers * 0.5) {
+        console.log("页面高度未变化，检测到已加载部分回答与总数差距较大，尝试多次滚动...");
+        console.log(`成功加载批量回答，共 ${batchAnswers.answers.length} 个回答，总共 ${batchAnswers.totalAnswers} 个回答`);
+        
+        // 多次尝试滚动以触发更多加载
+        for (let i = 0; i < 3; i++) {
+          await PuppeteerManager.simulateHumanScroll(page);
+          await PuppeteerManager.delay(2000);
+        }
+      } else if (newHeight > prevHeight) {
+        console.log(`页面高度变化: ${prevHeight}px -> ${newHeight}px，检测到新内容加载`);
+      }
+
       // 提取当前页面上的所有回答
       const newAnswers = await this.extractAnswersFromPage(
         page,
@@ -284,13 +317,12 @@ export class AnswerLoader {
           );
         }
 
-        lastAnswersCount = batchAnswers.answers.length;
         noNewAnswersCounter = 0;
-        console.log(`已加载 ${batchAnswers.answers.length} 个回答`);
+        console.log(`已加载 ${batchAnswers.answers.length} 个回答，发现 ${uniqueNewAnswers.length} 个新回答`);
       } else {
         noNewAnswersCounter++;
         console.log(
-          `未找到新回答，尝试再次滚动 (${noNewAnswersCounter}/${maxAttempts})`
+          `尝试第 ${noNewAnswersCounter} 次滚动，未发现新回答`
         );
       }
 
@@ -299,53 +331,20 @@ export class AnswerLoader {
         break;
       }
 
-      // 使用模拟人类滚动行为
-      await PuppeteerManager.simulateHumanScroll(page);
-
-      // 添加随机延迟，更好地模拟真人行为（500-1500ms）
-      await PuppeteerManager.delay(500 + Math.random() * 1000);
-
-      // 检查是否还有"加载更多"按钮
-      const hasLoadMoreButton = await page.evaluate(() => {
-        const loadMoreButton = document.querySelector(".QuestionMainAction");
-        if (
-          loadMoreButton &&
-          loadMoreButton.textContent?.includes("更多回答")
-        ) {
-          // 如果找到"更多回答"按钮，点击它
-          (loadMoreButton as HTMLElement).click();
-          return true;
-        }
-        return false;
-      });
-
-      if (hasLoadMoreButton) {
-        // 使用自定义延迟函数等待新内容加载
-        await PuppeteerManager.delay(2000);
-      }
-
       answersCount = batchAnswers.answers.length;
     }
 
-    // 更新是否有更多回答的标志
-    batchAnswers.hasMore = await page.evaluate(() => {
-      return (
-        document.querySelector(".QuestionMainAction") !== null ||
-        document.querySelector(".List-loadMore") !== null
-      );
-    });
-
-    // 如果尝试了多次滚动但仍没有获取到新回答，并且我们知道总回答数大于当前加载的回答数
-    // 那么可能是反爬机制在起作用，我们不应该将hasMore设为false
+    // 更新是否还有更多回答的标志
     if (
-      !loadedNewAnswers &&
       batchAnswers.totalAnswers &&
       batchAnswers.answers.length < batchAnswers.totalAnswers
     ) {
       batchAnswers.hasMore = true;
       console.log(
-        `尽管多次尝试未加载到新回答，但根据总回答数(${batchAnswers.totalAnswers})，应该还有更多回答可加载`
+        `多次滚动尝试后总共加载了 ${batchAnswers.answers.length} 个回答，根据总回答数(${batchAnswers.totalAnswers})，还有更多回答可加载`
       );
+    } else {
+      batchAnswers.hasMore = false;
     }
 
     console.log(
@@ -369,13 +368,24 @@ export class AnswerLoader {
     // 创建新页面
     const page = await PuppeteerManager.createPage(this.cookieManager);
 
-    console.log(`导航到问题页面: ${questionUrl}`);
-    await page.goto(questionUrl, {
-      waitUntil: "networkidle0",
-      timeout: 60000,
-    });
+    // 检查当前页面是否已经加载了目标URL
+    const currentUrl = await page.evaluate(() => window.location.href);
+    // 判断当前页面是不是已经在目标问题页了，如果是就不需要再导航
+    const isAlreadyOnQuestionPage = currentUrl.includes(
+      questionUrl.split("?")[0]
+    );
 
-    console.log("页面加载完成，开始提取问题标题和回答");
+    // 只有当当前页面不是目标问题页时才导航
+    if (!isAlreadyOnQuestionPage) {
+      console.log(`导航到问题页面: ${questionUrl}`);
+      await page.goto(questionUrl, {
+        waitUntil: "networkidle0",
+        timeout: 60000,
+      });
+      console.log("页面加载完成，开始提取问题标题和回答");
+    } else {
+      console.log(`页面已经加载了目标URL: ${questionUrl}，无需再次导航`);
+    }
 
     // 提取问题标题和总回答数
     const { questionTitle, totalAnswers } = await page.evaluate(() => {

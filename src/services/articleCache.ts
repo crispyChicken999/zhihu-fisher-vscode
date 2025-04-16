@@ -6,7 +6,6 @@ export interface BatchAnswers {
   questionTitle: string;
   answers: ZhihuArticle[];
   hasMore: boolean;
-  browser: puppeteer.Browser | null;
   page: puppeteer.Page | null;
   totalAnswers?: number; // 问题的总回答数
 }
