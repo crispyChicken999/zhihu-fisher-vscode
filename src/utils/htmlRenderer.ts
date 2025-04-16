@@ -9,6 +9,8 @@ interface NavState {
   hasPrevious: boolean;
   hasNext: boolean;
   questionId?: string;
+  totalLoaded?: number; // 总加载回答数
+  currentIndex?: number; // 当前回答索引（从1开始）
 }
 
 /**
@@ -267,10 +269,15 @@ export class HtmlRenderer {
             display: flex;
             justify-content: space-between;
             margin: 20px 0;
+            align-items: center;
           }
           .navigation-buttons {
             display: flex;
             gap: 10px;
+          }
+          .nav-info {
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.9em;
           }
 
           /* 作者信息样式 */
@@ -472,6 +479,16 @@ export class HtmlRenderer {
       return ''; // 如果不是问题回答或者没有导航状态，则不显示导航按钮
     }
 
+    // 添加导航状态信息显示
+    let navInfoHtml = '';
+    if (navState.questionId && navState.currentIndex && navState.totalLoaded) {
+      navInfoHtml = `
+        <div class="nav-info">
+          <span>第 ${navState.currentIndex} / ${navState.totalLoaded} 个回答</span>
+        </div>
+      `;
+    }
+
     return `
       <div class="navigation">
         <div class="navigation-buttons">
@@ -482,6 +499,7 @@ export class HtmlRenderer {
             下一个回答
           </button>
         </div>
+        ${navInfoHtml}
       </div>
     `;
   }

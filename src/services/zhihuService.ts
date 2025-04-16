@@ -36,9 +36,45 @@ export class ZhihuService {
     return this.articleService.getArticleContent(url, hideImages);
   }
   
-  // 获取更多回答ID
+  // 获取更多回答ID（已废弃，保留用于兼容性）
   async getMoreAnswersId(questionUrl: string): Promise<string | null> {
     return this.articleService.getMoreAnswersId(questionUrl);
+  }
+
+  /**
+   * 批量获取问题的回答
+   * @param questionUrl 问题URL
+   * @param maxCount 最大获取回答数量，默认为10
+   * @param hideImages 是否隐藏图片
+   */
+  async getBatchAnswers(
+    questionUrl: string, 
+    maxCount: number = 10, 
+    hideImages: boolean = false
+  ) {
+    return this.articleService.getBatchAnswers(questionUrl, maxCount, hideImages);
+  }
+
+  /**
+   * 获取更多批量回答
+   * @param questionId 问题ID
+   * @param maxCount 最大获取回答数量，默认为10
+   * @param hideImages 是否隐藏图片
+   */
+  async loadMoreBatchAnswers(
+    questionId: string,
+    maxCount: number = 10,
+    hideImages: boolean = false
+  ): Promise<ZhihuArticle[]> {
+    return this.articleService.loadMoreBatchAnswers(questionId, maxCount, hideImages);
+  }
+
+  /**
+   * 关闭问题的浏览器实例
+   * @param questionId 问题ID
+   */
+  async closeBrowser(questionId: string): Promise<void> {
+    return this.articleService.closeBrowser(questionId);
   }
 }
 

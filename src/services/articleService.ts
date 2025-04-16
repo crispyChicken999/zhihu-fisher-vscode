@@ -5,8 +5,18 @@ import { ZhihuArticle } from "./types";
 import { CookieManager } from "./cookieManager";
 import * as puppeteer from "puppeteer";
 
+// 定义批量获取的回答内容结构
+interface BatchAnswers {
+  questionTitle: string;
+  answers: ZhihuArticle[];
+  hasMore: boolean;
+  browser: puppeteer.Browser | null;
+  page: puppeteer.Page | null;
+}
+
 export class ArticleService {
   private cookieManager: CookieManager;
+  private batchAnswersCache: Map<string, BatchAnswers> = new Map(); // 用于缓存已加载的回答
 
   constructor(cookieManager: CookieManager) {
     this.cookieManager = cookieManager;
@@ -40,6 +50,31 @@ export class ArticleService {
         headers["Cookie"] = cookie;
       }
 
+      // 如果是问题链接，尝试从缓存中获取批量回答
+      if (url.includes("/question/") && !url.includes("/answer/")) {
+        // 提取问题ID
+        const questionIdMatch = url.match(/question\/(\d+)/);
+        if (questionIdMatch && questionIdMatch[1]) {
+          const questionId = questionIdMatch[1];
+
+          // 检查是否有缓存的回答
+          if (this.batchAnswersCache.has(questionId)) {
+            const cachedData = this.batchAnswersCache.get(questionId);
+            if (cachedData && cachedData.answers.length > 0) {
+              // 返回第一个回答
+              return cachedData.answers[0];
+            }
+          }
+
+          // 如果没有缓存，加载批量回答
+          const batchAnswers = await this.getBatchAnswers(url, 10, hideImages);
+          if (batchAnswers.answers.length > 0) {
+            return batchAnswers.answers[0];
+          }
+        }
+      }
+
+      // 对于特定回答链接或其他类型的内容，使用原有方法获取
       const response = await axios.get(url, {
         headers,
         timeout: 15000,
@@ -325,35 +360,663 @@ export class ArticleService {
   }
 
   /**
-   * 获取问题下的更多回答ID
-   * 从"Card MoreAnswers"区域提取下一个回答ID
+   * 批量获取问题的回答
    * @param questionUrl 问题URL
-   * @returns 下一个回答的ID，如果没有更多回答则返回null
+   * @param maxCount 最大获取回答数量，默认为10
+   * @param hideImages 是否隐藏图片
+   * @returns 包含问题标题和回答列表的对象
    */
-  async getMoreAnswersId(questionUrl: string): Promise<string | null> {
+  async getBatchAnswers(
+    questionUrl: string,
+    maxCount: number = 10,
+    hideImages: boolean = false
+  ): Promise<BatchAnswers> {
     try {
-      console.log(`尝试获取问题${questionUrl}的更多回答`);
+      console.log(`尝试获取问题${questionUrl}的多个回答，最多${maxCount}个`);
 
-      // 从URL中提取问题ID
-      const questionIdMatch = questionUrl.match(/question\/(\d+)/);
-      if (!questionIdMatch || !questionIdMatch[1]) {
-        console.error("无法从URL中提取问题ID");
-        return null;
+      // 检查URL格式是否正确
+      if (!questionUrl.includes("/question/")) {
+        throw new Error("URL必须是知乎问题页面");
       }
 
+      // 提取问题ID
+      const questionIdMatch = questionUrl.match(/question\/(\d+)/);
+      if (!questionIdMatch || !questionIdMatch[1]) {
+        throw new Error("无法从URL中提取问题ID");
+      }
       const questionId = questionIdMatch[1];
-      console.log(`从URL中提取到问题ID: ${questionId}`);
 
-      // 使用Puppeteer模拟浏览器获取更多回答
-      console.log("使用Puppeteer获取更多回答");
-      return await this.getMoreAnswersIdWithPuppeteer(questionUrl);
+      // 检查缓存中是否已存在该问题的回答
+      if (this.batchAnswersCache.has(questionId)) {
+        return this.batchAnswersCache.get(questionId)!;
+      }
+
+      // 直接访问问题页面URL（不带回答ID）
+      const cleanQuestionUrl = `https://www.zhihu.com/question/${questionId}`;
+
+      // 使用Puppeteer获取页面内容
+      let browser: puppeteer.Browser | null = null;
+      let page: puppeteer.Page | null = null;
+
+      console.log("启动Puppeteer浏览器...");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+
+      console.log("打开新页面...");
+      page = await browser.newPage();
+
+      // 设置浏览器视窗大小
+      await page.setViewport({ width: 1920, height: 1080 });
+
+      // 设置User-Agent
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      );
+
+      // 如果有cookie，设置到页面
+      const cookie = this.cookieManager.getCookie();
+      if (cookie) {
+        async function addCookies(
+          cookies_str: string,
+          page: puppeteer.Page,
+          domain: string
+        ) {
+          let cookies = cookies_str.split(";").map((pair) => {
+            let name = pair.trim().slice(0, pair.trim().indexOf("="));
+            let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
+            return { name, value, domain };
+          });
+          await Promise.all(
+            cookies.map((pair) => {
+              return page.setCookie(pair);
+            })
+          );
+        }
+        await addCookies(cookie, page, "www.zhihu.com");
+      }
+
+      // 防反爬虫设置
+      await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, "webdriver", {
+          get: () => undefined,
+        });
+      });
+
+      console.log(`导航到问题页面: ${cleanQuestionUrl}`);
+      await page.goto(cleanQuestionUrl, {
+        waitUntil: "networkidle0",
+        timeout: 60000,
+      });
+
+      console.log("页面加载完成，开始提取问题标题和回答");
+
+      // 提取问题标题
+      const questionTitle = await page.evaluate(() => {
+        const titleElement = document.querySelector("h1.QuestionHeader-title");
+        return titleElement ? titleElement.textContent?.trim() : "未知问题";
+      });
+
+      console.log(`问题标题: ${questionTitle}`);
+
+      // 初始化结果对象
+      const result: BatchAnswers = {
+        questionTitle: questionTitle || "未知问题",
+        answers: [],
+        hasMore: false,
+        browser,
+        page,
+      };
+
+      // 滚动页面加载更多回答，直到达到所需数量或没有更多回答
+      let answersCount = 0;
+      let lastAnswersCount = 0;
+      let noNewAnswersCounter = 0;
+
+      while (answersCount < maxCount && noNewAnswersCounter < 3) {
+        // 提取当前页面上的所有回答
+        const newAnswers = await page.evaluate((hideImgs) => {
+          const answers: any[] = [];
+          const answerElements = document.querySelectorAll(".AnswerItem");
+
+          answerElements.forEach((element) => {
+            try {
+              // 提取回答ID
+              let answerId = "";
+              const dataZop = element.getAttribute("data-zop");
+              if (dataZop) {
+                try {
+                  const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
+                  if (zopData.itemId) {
+                    answerId = zopData.itemId;
+                  }
+                } catch (e) {
+                  console.error("解析data-zop属性失败", e);
+                }
+              }
+
+              if (!answerId) {
+                answerId = element.getAttribute("name") || "";
+              }
+
+              // 提取作者信息
+              const authorInfo = element.querySelector(".AuthorInfo");
+              let author = "未知作者";
+              let authorAvatar = "";
+              let authorBio = "";
+              let authorUrl = "";
+
+              if (authorInfo) {
+                const nameElement = authorInfo.querySelector(
+                  "meta[itemprop='name']"
+                );
+                if (nameElement) {
+                  author = nameElement.getAttribute("content") || "未知作者";
+                }
+
+                const avatarElement = authorInfo.querySelector(".Avatar");
+                if (avatarElement) {
+                  authorAvatar = avatarElement.getAttribute("src") || "";
+                }
+
+                const bioElement = authorInfo.querySelector(
+                  ".AuthorInfo-badgeText"
+                );
+                if (bioElement) {
+                  authorBio = bioElement.textContent?.trim() || "";
+                }
+
+                const urlElement = authorInfo.querySelector(
+                  "meta[itemprop='url']"
+                );
+                if (urlElement) {
+                  authorUrl = urlElement.getAttribute("content") || "";
+                } else {
+                  const linkElement =
+                    authorInfo.querySelector(".UserLink-link");
+                  if (linkElement) {
+                    const href = linkElement.getAttribute("href");
+                    if (href) {
+                      authorUrl = href.startsWith("http")
+                        ? href
+                        : `https://www.zhihu.com${href}`;
+                    }
+                  }
+                }
+              }
+
+              // 提取回答内容
+              let contentElement =
+                element.querySelector(".RichContent-inner") ||
+                element.querySelector(".RichText.ztext");
+              let contentHtml = "";
+
+              if (contentElement) {
+                // 深拷贝节点以避免修改原始DOM
+                const clonedContent = contentElement.cloneNode(true) as Element;
+
+                // 如果需要隐藏图片
+                if (hideImgs) {
+                  const images = clonedContent.querySelectorAll("img");
+                  images.forEach((img) => img.parentNode?.removeChild(img));
+                } else {
+                  // 处理图片链接，确保使用真实URL
+                  const images = clonedContent.querySelectorAll("img");
+                  images.forEach((img) => {
+                    const actualSrc = img.getAttribute("data-actualsrc");
+                    if (actualSrc) {
+                      img.setAttribute("src", actualSrc);
+                    } else {
+                      const originalSrc = img.getAttribute("data-original");
+                      if (originalSrc) {
+                        img.setAttribute("src", originalSrc);
+                      }
+                    }
+                  });
+                }
+
+                contentHtml = clonedContent.innerHTML;
+              }
+
+              if (answerId && contentHtml) {
+                answers.push({
+                  answerId,
+                  author,
+                  authorAvatar,
+                  authorBio,
+                  authorUrl,
+                  contentHtml,
+                });
+              }
+            } catch (e) {
+              console.error("处理回答元素时出错", e);
+            }
+          });
+
+          return answers;
+        }, hideImages);
+
+        // 将新提取的回答转换为ZhihuArticle格式并添加到结果中
+        for (const answer of newAnswers) {
+          // 检查是否已经存在该回答
+          const exists = result.answers.some((a) =>
+            a.actualUrl?.includes(`/answer/${answer.answerId}`)
+          );
+
+          if (!exists && result.answers.length < maxCount) {
+            const content = this.htmlToMarkdown(answer.contentHtml);
+            const actualUrl = `https://www.zhihu.com/question/${questionId}/answer/${answer.answerId}`;
+
+            result.answers.push({
+              title: result.questionTitle,
+              content,
+              author: answer.author,
+              authorAvatar: answer.authorAvatar,
+              authorBio: answer.authorBio,
+              authorUrl: answer.authorUrl,
+              actualUrl,
+            });
+          }
+        }
+
+        // 检查是否有新回答被添加
+        if (result.answers.length > lastAnswersCount) {
+          lastAnswersCount = result.answers.length;
+          noNewAnswersCounter = 0;
+          console.log(`已加载 ${result.answers.length} 个回答`);
+        } else {
+          noNewAnswersCounter++;
+          console.log(`未找到新回答，尝试再次滚动 (${noNewAnswersCounter}/3)`);
+        }
+
+        // 如果已经达到目标数量，跳出循环
+        if (result.answers.length >= maxCount) {
+          break;
+        }
+
+        // 滚动到页面底部以加载更多回答
+        await page.evaluate(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        // 等待内容加载
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // 检查是否还有"加载更多"按钮
+        const hasLoadMoreButton = await page.evaluate(() => {
+          const loadMoreButton = document.querySelector(".QuestionMainAction");
+          if (
+            loadMoreButton &&
+            loadMoreButton.textContent?.includes("更多回答")
+          ) {
+            // 如果找到"更多回答"按钮，点击它
+            (loadMoreButton as HTMLElement).click();
+            return true;
+          }
+          return false;
+        });
+
+        if (hasLoadMoreButton) {
+          // 等待新内容加载
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+
+        answersCount = result.answers.length;
+      }
+
+      // 更新是否有更多回答的标志
+      result.hasMore = await page.evaluate(() => {
+        return (
+          document.querySelector(".QuestionMainAction") !== null ||
+          document.querySelector(".List-loadMore") !== null
+        );
+      });
+
+      console.log(
+        `已成功获取 ${result.answers.length} 个回答，${
+          result.hasMore ? "还有更多回答可加载" : "没有更多回答了"
+        }`
+      );
+
+      // 将结果存入缓存
+      this.batchAnswersCache.set(questionId, result);
+
+      return result;
     } catch (error) {
-      console.error("获取更多回答失败:", error);
+      console.error("批量获取回答失败:", error);
+      // 如果出错，确保关闭浏览器
+      try {
+        // 尝试获取已有缓存
+        const cachedData = this.batchAnswersCache.get(
+          questionUrl.match(/question\/(\d+)/)?.[1] || ""
+        );
+        if (cachedData && cachedData.browser) {
+          await cachedData.browser.close();
+        }
+      } catch (e) {
+        console.error("关闭浏览器失败:", e);
+      }
+
       throw new Error(
-        `获取更多回答失败: ${
+        `批量获取回答失败: ${
           error instanceof Error ? error.message : "未知错误"
         }`
       );
+    }
+  }
+
+  /**
+   * 获取更多批量回答
+   * @param questionId 问题ID
+   * @param maxCount 最大获取回答数量，默认为10
+   * @param hideImages 是否隐藏图片
+   * @returns 新加载的回答列表
+   */
+  async loadMoreBatchAnswers(
+    questionId: string,
+    maxCount: number = 10,
+    hideImages: boolean = false
+  ): Promise<ZhihuArticle[]> {
+    try {
+      // 检查缓存中是否存在该问题的回答
+      if (!this.batchAnswersCache.has(questionId)) {
+        throw new Error("未找到缓存的问题回答");
+      }
+
+      const cachedData = this.batchAnswersCache.get(questionId)!;
+
+      // 如果已经没有更多回答，直接返回空数组
+      if (!cachedData.hasMore) {
+        console.log("没有更多回答可加载");
+        return [];
+      }
+
+      // 如果浏览器实例已经关闭，创建新的实例
+      if (!cachedData.browser || !cachedData.page) {
+        console.log("浏览器实例已关闭，创建新实例...");
+        // 重新获取回答
+        const newBatchAnswers = await this.getBatchAnswers(
+          `https://www.zhihu.com/question/${questionId}`,
+          maxCount,
+          hideImages
+        );
+
+        // 过滤已有回答
+        const existingAnswerIds = new Set(
+          cachedData.answers.map(
+            (a) => a.actualUrl?.match(/answer\/(\d+)/)?.[1]
+          )
+        );
+
+        const newAnswers = newBatchAnswers.answers.filter((answer) => {
+          const answerId = answer.actualUrl?.match(/answer\/(\d+)/)?.[1];
+          return answerId && !existingAnswerIds.has(answerId);
+        });
+
+        // 更新缓存
+        cachedData.answers = [...cachedData.answers, ...newAnswers];
+        cachedData.hasMore = newBatchAnswers.hasMore;
+        cachedData.browser = newBatchAnswers.browser;
+        cachedData.page = newBatchAnswers.page;
+
+        this.batchAnswersCache.set(questionId, cachedData);
+        return newAnswers;
+      }
+
+      // 使用现有浏览器实例继续加载
+      const originalAnswersCount = cachedData.answers.length;
+      let newAnswersCount = 0;
+      let noNewAnswersCounter = 0;
+
+      while (newAnswersCount < maxCount && noNewAnswersCounter < 3) {
+        // 滚动到页面底部以加载更多回答
+        await cachedData.page.evaluate(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        // 等待内容加载
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+
+        // 检查是否还有"加载更多"按钮
+        const hasLoadMoreButton = await cachedData.page.evaluate(() => {
+          const loadMoreButton = document.querySelector(".QuestionMainAction");
+          if (
+            loadMoreButton &&
+            loadMoreButton.textContent?.includes("更多回答")
+          ) {
+            // 如果找到"更多回答"按钮，点击它
+            (loadMoreButton as HTMLElement).click();
+            return true;
+          }
+          return false;
+        });
+
+        if (hasLoadMoreButton) {
+          // 等待新内容加载
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+
+        // 提取新回答
+        const newAnswers = await cachedData.page.evaluate((hideImgs) => {
+          const answers: any[] = [];
+          const answerElements = document.querySelectorAll(".AnswerItem");
+
+          answerElements.forEach((element) => {
+            try {
+              // 提取回答ID
+              let answerId = "";
+              const dataZop = element.getAttribute("data-zop");
+              if (dataZop) {
+                try {
+                  const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
+                  if (zopData.itemId) {
+                    answerId = zopData.itemId;
+                  }
+                } catch (e) {
+                  console.error("解析data-zop属性失败", e);
+                }
+              }
+
+              if (!answerId) {
+                answerId = element.getAttribute("name") || "";
+              }
+
+              // 提取作者信息
+              const authorInfo = element.querySelector(".AuthorInfo");
+              let author = "未知作者";
+              let authorAvatar = "";
+              let authorBio = "";
+              let authorUrl = "";
+
+              if (authorInfo) {
+                const nameElement = authorInfo.querySelector(
+                  "meta[itemprop='name']"
+                );
+                if (nameElement) {
+                  author = nameElement.getAttribute("content") || "未知作者";
+                }
+
+                const avatarElement = authorInfo.querySelector(".Avatar");
+                if (avatarElement) {
+                  authorAvatar = avatarElement.getAttribute("src") || "";
+                }
+
+                const bioElement = authorInfo.querySelector(
+                  ".AuthorInfo-badgeText"
+                );
+                if (bioElement) {
+                  authorBio = bioElement.textContent?.trim() || "";
+                }
+
+                const urlElement = authorInfo.querySelector(
+                  "meta[itemprop='url']"
+                );
+                if (urlElement) {
+                  authorUrl = urlElement.getAttribute("content") || "";
+                } else {
+                  const linkElement =
+                    authorInfo.querySelector(".UserLink-link");
+                  if (linkElement) {
+                    const href = linkElement.getAttribute("href");
+                    if (href) {
+                      authorUrl = href.startsWith("http")
+                        ? href
+                        : `https://www.zhihu.com${href}`;
+                    }
+                  }
+                }
+              }
+
+              // 提取回答内容
+              let contentElement =
+                element.querySelector(".RichContent-inner") ||
+                element.querySelector(".RichText.ztext");
+              let contentHtml = "";
+
+              if (contentElement) {
+                // 深拷贝节点以避免修改原始DOM
+                const clonedContent = contentElement.cloneNode(true) as Element;
+
+                // 如果需要隐藏图片
+                if (hideImgs) {
+                  const images = clonedContent.querySelectorAll("img");
+                  images.forEach((img) => img.parentNode?.removeChild(img));
+                } else {
+                  // 处理图片链接，确保使用真实URL
+                  const images = clonedContent.querySelectorAll("img");
+                  images.forEach((img) => {
+                    const actualSrc = img.getAttribute("data-actualsrc");
+                    if (actualSrc) {
+                      img.setAttribute("src", actualSrc);
+                    } else {
+                      const originalSrc = img.getAttribute("data-original");
+                      if (originalSrc) {
+                        img.setAttribute("src", originalSrc);
+                      }
+                    }
+                  });
+                }
+
+                contentHtml = clonedContent.innerHTML;
+              }
+
+              if (answerId && contentHtml) {
+                answers.push({
+                  answerId,
+                  author,
+                  authorAvatar,
+                  authorBio,
+                  authorUrl,
+                  contentHtml,
+                });
+              }
+            } catch (e) {
+              console.error("处理回答元素时出错", e);
+            }
+          });
+
+          return answers;
+        }, hideImages);
+
+        // 将新提取的回答转换为ZhihuArticle格式
+        const existingAnswerIds = new Set(
+          cachedData.answers.map(
+            (a) => a.actualUrl?.match(/answer\/(\d+)/)?.[1]
+          )
+        );
+
+        const newArticles: ZhihuArticle[] = [];
+
+        for (const answer of newAnswers) {
+          // 检查是否已经存在该回答
+          if (
+            !existingAnswerIds.has(answer.answerId) &&
+            newArticles.length < maxCount
+          ) {
+            const content = this.htmlToMarkdown(answer.contentHtml);
+            const actualUrl = `https://www.zhihu.com/question/${questionId}/answer/${answer.answerId}`;
+
+            const newArticle: ZhihuArticle = {
+              title: cachedData.questionTitle,
+              content,
+              author: answer.author,
+              authorAvatar: answer.authorAvatar,
+              authorBio: answer.authorBio,
+              authorUrl: answer.authorUrl,
+              actualUrl,
+            };
+
+            // 添加到新回答列表和缓存
+            newArticles.push(newArticle);
+            cachedData.answers.push(newArticle);
+            existingAnswerIds.add(answer.answerId);
+          }
+        }
+
+        // 检查是否有新回答被添加
+        if (newArticles.length > newAnswersCount) {
+          newAnswersCount = newArticles.length;
+          noNewAnswersCounter = 0;
+          console.log(`已加载 ${newArticles.length} 个新回答`);
+        } else {
+          noNewAnswersCounter++;
+          console.log(`未找到新回答，尝试再次滚动 (${noNewAnswersCounter}/3)`);
+        }
+
+        // 如果已经达到目标数量，跳出循环
+        if (newArticles.length >= maxCount) {
+          break;
+        }
+      }
+
+      // 更新是否有更多回答的标志
+      cachedData.hasMore = await cachedData.page.evaluate(() => {
+        return (
+          document.querySelector(".QuestionMainAction") !== null ||
+          document.querySelector(".List-loadMore") !== null
+        );
+      });
+
+      console.log(
+        `共获取了 ${
+          cachedData.answers.length - originalAnswersCount
+        } 个新回答，${
+          cachedData.hasMore ? "还有更多回答可加载" : "没有更多回答了"
+        }`
+      );
+
+      // 返回新加载的回答
+      return cachedData.answers.slice(originalAnswersCount);
+    } catch (error) {
+      console.error("加载更多批量回答失败:", error);
+      throw new Error(
+        `加载更多批量回答失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
+      );
+    }
+  }
+
+  /**
+   * 关闭问题的浏览器实例
+   * @param questionId 问题ID
+   */
+  async closeBrowser(questionId: string): Promise<void> {
+    try {
+      const cachedData = this.batchAnswersCache.get(questionId);
+      if (cachedData && cachedData.browser) {
+        console.log(`关闭问题 ${questionId} 的浏览器实例`);
+        await cachedData.browser.close();
+
+        // 更新缓存状态
+        cachedData.browser = null;
+        cachedData.page = null;
+        this.batchAnswersCache.set(questionId, cachedData);
+      }
+    } catch (error) {
+      console.error("关闭浏览器失败:", error);
     }
   }
 
@@ -364,151 +1027,108 @@ export class ArticleService {
   }
 
   /**
-   * 使用Puppeteer获取更多回答ID
-   * @param questionWithAnswerUrl 问题+回答URL
-   * @returns 下一个回答的ID或null
+   * 获取问题下的更多回答ID - 已废弃，保留用于兼容性
+   * @deprecated 请使用getBatchAnswers方法代替
    */
-  private async getMoreAnswersIdWithPuppeteer(
-    questionWithAnswerUrl: string
-  ): Promise<string | null> {
-    // 检查URL格式是否为问题+回答格式（只有在这种URL下才会出现更多回答区域）
-    if (!questionWithAnswerUrl.match(/\/question\/\d+\/answer\/\d+/)) {
-      console.log("URL格式不正确，必须是问题+回答格式才能显示更多回答区域");
-      throw new Error("要获取更多回答，URL必须包含问题ID和回答ID");
-    }
-
-    let browser: puppeteer.Browser | null = null;
-    console.log("启动Puppeteer浏览器...");
-
-    // 以无头模式启动浏览器，添加更多参数避免被检测
-    browser = await puppeteer.launch({
-      headless: true, // 使用无头模式
-      args: ["--no-sandbox"],
-    });
-
-    console.log("打开新页面...");
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
-    );
-
-    // 设置浏览器视窗大小
-    await page.setViewport({ width: 1920, height: 1080 });
-
-    // 如果有cookie，设置到页面
-    const cookie = this.cookieManager.getCookie();
-    if (cookie) {
-      async function addCookies(
-        cookies_str: string,
-        page: puppeteer.Page,
-        domain: string
-      ) {
-        let cookies = cookies_str.split(";").map((pair) => {
-          let name = pair.trim().slice(0, pair.trim().indexOf("="));
-          let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
-          return { name, value, domain };
-        });
-        await Promise.all(
-          cookies.map((pair) => {
-            return page.setCookie(pair);
-          })
-        );
-      }
-      await addCookies(cookie, page, "www.zhihu.com");
-    }
-
-    // 防反爬虫设置 - 避免被检测为自动化脚本
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, 'webdriver', {
-        get: () => undefined
-        })
-    });
+  async getMoreAnswersId(questionUrl: string): Promise<string | null> {
+    console.log(`getMoreAnswersId方法已废弃，请使用getBatchAnswers方法代替`);
 
     try {
-      // 导航到问题页面
-      console.log(`导航到问题页面: ${questionWithAnswerUrl}`);
-      await page.goto(questionWithAnswerUrl, {
-        waitUntil: "networkidle0", // 等待网络请求完成
-        timeout: 0,
-      });
+      // 从URL中提取问题ID
+      const questionIdMatch = questionUrl.match(/question\/(\d+)/);
+      if (!questionIdMatch || !questionIdMatch[1]) {
+        console.error("无法从URL中提取问题ID");
+        return null;
+      }
 
-      console.log("页面完全加载完成");
+      const questionId = questionIdMatch[1];
+      console.log(`从URL中提取到问题ID: ${questionId}`);
 
-      // 等待页面内容加载
-      await page.waitForSelector("body", { timeout: 2000 });
+      // 检查是否已有缓存
+      if (this.batchAnswersCache.has(questionId)) {
+        const cachedData = this.batchAnswersCache.get(questionId)!;
 
-      // 提取更多回答区域中第一个回答的ID
-      const answerId = await page.evaluate(() => {
-        console.log("开始在页面中查找更多回答区域...");
-        const moreAnswersCard = document.querySelector(".MoreAnswers");
-        if (!moreAnswersCard) {
-          console.log("未找到更多回答区域(MoreAnswers)");
+        // 提取当前回答ID
+        const currentAnswerIdMatch = questionUrl.match(/answer\/(\d+)/);
+        if (!currentAnswerIdMatch || !currentAnswerIdMatch[1]) {
           return null;
         }
 
-        // 查找更多回答区域下的第一个回答项
-        const answerItem = moreAnswersCard.querySelector(
-          ".ContentItem.AnswerItem"
+        const currentAnswerId = currentAnswerIdMatch[1];
+        const currentIndex = cachedData.answers.findIndex((a) =>
+          a.actualUrl?.includes(`/answer/${currentAnswerId}`)
         );
-        if (!answerItem) {
-          console.log("更多回答区域中未找到回答项(AnswerItem)");
-          return null;
+
+        // 如果找到当前回答，返回下一个回答的ID
+        if (
+          currentIndex !== -1 &&
+          currentIndex < cachedData.answers.length - 1
+        ) {
+          const nextAnswer = cachedData.answers[currentIndex + 1];
+          const nextAnswerId =
+            nextAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
+          return nextAnswerId || null;
         }
 
-        // 尝试从data-zop属性提取
-        if (answerItem.hasAttribute("data-zop")) {
-          try {
-            const dataZop = answerItem.getAttribute("data-zop");
-            if (dataZop) {
-              const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
-              if (zopData && zopData.itemId) {
-                console.log(`从data-zop找到回答ID: ${zopData.itemId}`);
-                return zopData.itemId;
-              }
-            }
-          } catch (e) {
-            console.error("解析data-zop失败");
+        // 如果当前是最后一个回答，但有更多回答可加载
+        if (
+          currentIndex === cachedData.answers.length - 1 &&
+          cachedData.hasMore
+        ) {
+          // 加载更多回答
+          const newAnswers = await this.loadMoreBatchAnswers(
+            questionId,
+            10,
+            false
+          );
+
+          if (newAnswers.length > 0) {
+            const nextAnswer = newAnswers[0];
+            const nextAnswerId =
+              nextAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
+            return nextAnswerId || null;
           }
         }
-
-        // 从name属性提取
-        if (answerItem.hasAttribute("name")) {
-          const nameId = answerItem.getAttribute("name");
-          console.log(`从name属性找到回答ID: ${nameId}`);
-          return nameId;
-        }
-
-        // 从链接提取
-        const link = answerItem.querySelector('a[href*="/answer/"]');
-        if (link) {
-          const href = link.getAttribute("href");
-          if (href) {
-            const match = href.match(/\/answer\/(\d+)/);
-            if (match && match[1]) {
-              console.log(`从链接找到回答ID: ${match[1]}`);
-              return match[1];
-            }
-          }
-        }
-
-        return null;
-      });
-
-      console.log("关闭浏览器");
-      await browser.close();
-
-      if (answerId) {
-        console.log(`提取到的回答ID: ${answerId}`);
-        return answerId;
       } else {
-        console.log("未能提取到更多回答ID，可能没有更多回答");
-        return null;
+        // 如果没有缓存，使用批量获取方法
+        const batchAnswers = await this.getBatchAnswers(
+          `https://www.zhihu.com/question/${questionId}`,
+          10,
+          false
+        );
+
+        // 提取当前回答ID
+        const currentAnswerIdMatch = questionUrl.match(/answer\/(\d+)/);
+        if (!currentAnswerIdMatch || !currentAnswerIdMatch[1]) {
+          // 如果URL没有回答ID，返回第一个回答的ID
+          if (batchAnswers.answers.length > 0) {
+            const firstAnswer = batchAnswers.answers[0];
+            const firstAnswerId =
+              firstAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
+            return firstAnswerId || null;
+          }
+        } else {
+          const currentAnswerId = currentAnswerIdMatch[1];
+          const currentIndex = batchAnswers.answers.findIndex((a) =>
+            a.actualUrl?.includes(`/answer/${currentAnswerId}`)
+          );
+
+          // 如果找到当前回答，返回下一个回答的ID
+          if (
+            currentIndex !== -1 &&
+            currentIndex < batchAnswers.answers.length - 1
+          ) {
+            const nextAnswer = batchAnswers.answers[currentIndex + 1];
+            const nextAnswerId =
+              nextAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
+            return nextAnswerId || null;
+          }
+        }
       }
+
+      return null;
     } catch (error) {
-      console.error("Puppeteer操作失败:", error);
-      if (browser) {
-        await browser.close();
-      }
+      console.error("获取更多回答失败:", error);
       throw new Error(
         `获取更多回答失败: ${
           error instanceof Error ? error.message : "未知错误"
