@@ -28,6 +28,12 @@ export interface ArticleViewState {
   answersPerBatch?: number;
   // 是否还有更多回答可加载
   hasMoreAnswers?: boolean;
+  // 问题的总回答数
+  totalAnswers?: number;
+  // 当前已加载的回答数
+  loadedAnswersCount?: number;
+  // 记录是否正在后台加载更多回答
+  isLoadingMoreInBackground?: boolean;
 }
 
 /**
@@ -87,6 +93,9 @@ export class ArticleView {
       batchCount: 0, // 初始化批次计数
       answersPerBatch, // 每批加载的回答数量
       hasMoreAnswers: true, // 初始化是否有更多回答标志
+      totalAnswers: 0, // 初始化总回答数
+      loadedAnswersCount: 0, // 初始化已加载回答数
+      isLoadingMoreInBackground: false, // 初始化后台加载状态
     };
 
     // 在WebView中显示正在加载状态
@@ -122,13 +131,15 @@ export class ArticleView {
         // 如果是问题页面，关闭对应的浏览器实例
         if (this.viewState.questionId) {
           try {
-            console.log(`视图关闭，关闭问题 ${this.viewState.questionId} 的浏览器实例`);
+            console.log(
+              `视图关闭，关闭问题 ${this.viewState.questionId} 的浏览器实例`
+            );
             await this.zhihuService.closeBrowser(this.viewState.questionId);
           } catch (error) {
             console.error("关闭浏览器时出错:", error);
           }
         }
-        
+
         // 通知外部调用者面板已关闭
         this.onDidDisposeCallback?.(this.item.id);
       },
@@ -138,10 +149,74 @@ export class ArticleView {
   }
 
   /**
+   * 进度回调函数 - 接收爬取进度并更新UI
+   */
+  private onBatchProgress = (
+    article: ZhihuArticle,
+    loadedCount: number,
+    totalCount: number
+  ) => {
+    // 如果这是第一个回答且当前没有显示回答，立即显示
+    if (loadedCount === 1 && this.viewState.loadedAnswersCount === 0) {
+      console.log("收到第一个回答，立即显示");
+
+      // 更新状态
+      this.viewState.article = article;
+      this.viewState.isLoading = false;
+      this.viewState.loadedAnswersCount = 1;
+      this.viewState.totalAnswers = totalCount;
+
+      // 提取回答ID
+      if (article.actualUrl) {
+        const answerMatch = article.actualUrl.match(/answer\/(\d+)/);
+        if (answerMatch && answerMatch[1]) {
+          this.viewState.answerIds = [answerMatch[1]];
+          this.viewState.currentAnswerIndex = 0;
+          this.viewState.url = article.actualUrl;
+        }
+      }
+
+      // 更新WebView内容
+      this.updateContent();
+
+      // 更新面板标题
+      const shortTitle =
+        article.title.length > 15
+          ? `${article.title.substring(0, 15)}...`
+          : article.title;
+      this.viewState.webviewPanel.title = shortTitle;
+    }
+    // 更新爬取进度
+    else if (loadedCount > this.viewState.loadedAnswersCount!) {
+      console.log(`更新爬取进度: ${loadedCount}/${totalCount}`);
+
+      // 更新状态
+      this.viewState.loadedAnswersCount = loadedCount;
+      this.viewState.totalAnswers = totalCount;
+
+      // 如果有新回答，更新回答ID列表
+      if (
+        this.viewState.batchAnswers &&
+        this.viewState.batchAnswers.length > this.viewState.answerIds.length
+      ) {
+        this.viewState.answerIds = this.viewState.batchAnswers
+          .map((answer) => {
+            const answerIdMatch = answer.actualUrl?.match(/answer\/(\d+)/);
+            return answerIdMatch ? answerIdMatch[1] : "";
+          })
+          .filter((id) => id !== "");
+      }
+
+      // 更新WebView内容，但不更改当前显示的回答
+      this.updateContent();
+    }
+  };
+
+  /**
    * 加载文章内容
    */
   public async loadContent(): Promise<void> {
-    console.log('this.viewState: ', this.viewState);
+    console.log("this.viewState: ", this.viewState);
     try {
       // 已经加载过内容并且正在加载中，避免重复请求
       if (
@@ -174,52 +249,75 @@ export class ArticleView {
 
       try {
         console.log(`开始加载文章内容: ${this.viewState.url}`);
-        
+
         // 判断是否是问题URL且不包含回答ID
-        if (this.viewState.questionId && !this.viewState.url.includes("/answer/")) {
+        if (
+          this.viewState.questionId &&
+          !this.viewState.url.includes("/answer/")
+        ) {
           // 使用批量加载回答的新方法
-          console.log(`使用批量加载回答方法加载问题 ${this.viewState.questionId} 的回答`);
-          
-          const batchResult = await this.zhihuService.getBatchAnswers(
-            this.viewState.url,
-            this.viewState.answersPerBatch,
-            hideImages
+          console.log(
+            `使用批量加载回答方法加载问题 ${this.viewState.questionId} 的回答`
           );
-          
-          // 更新状态
-          this.viewState.batchAnswers = batchResult.answers;
-          this.viewState.hasMoreAnswers = batchResult.hasMore;
-          this.viewState.batchCount = 1;
-          
-          if (batchResult.answers.length > 0) {
-            // 设置第一个回答为当前文章
-            this.viewState.article = batchResult.answers[0];
-            this.viewState.isLoading = false;
-            
-            // 提取并存储所有回答的ID
-            this.viewState.answerIds = batchResult.answers.map(answer => {
-              const answerIdMatch = answer.actualUrl?.match(/answer\/(\d+)/);
-              return answerIdMatch ? answerIdMatch[1] : "";
-            }).filter(id => id !== "");
-            
-            this.viewState.currentAnswerIndex = 0;
-            
-            // 如果有actualUrl，更新当前URL
-            if (this.viewState.article.actualUrl) {
-              this.viewState.url = this.viewState.article.actualUrl;
-            }
-            
-            // 更新面板标题 - 使用截短的标题
-            const shortArticleTitle =
-              batchResult.questionTitle.length > 15
-                ? `${batchResult.questionTitle.substring(0, 15)}...`
-                : batchResult.questionTitle;
-            this.viewState.webviewPanel.title = shortArticleTitle;
-            
-            console.log(`成功加载批量回答，共 ${batchResult.answers.length} 个回答`);
-          } else {
-            throw new Error("未获取到任何回答");
-          }
+
+          // 设置isLoading标志，但不需要等待所有回答加载完成
+          this.viewState.isLoadingMoreInBackground = true;
+
+          // 使用回调函数进行实时更新
+          this.zhihuService
+            .getBatchAnswers(
+              this.viewState.url,
+              this.viewState.answersPerBatch,
+              hideImages,
+              this.onBatchProgress
+            )
+            .then((batchResult) => {
+              // 更新状态
+              this.viewState.batchAnswers = batchResult.answers;
+              this.viewState.hasMoreAnswers = batchResult.hasMore;
+              this.viewState.batchCount = 1;
+              this.viewState.totalAnswers =
+                batchResult.totalAnswers || batchResult.answers.length;
+              this.viewState.loadedAnswersCount = batchResult.answers.length;
+              this.viewState.isLoadingMoreInBackground = false;
+
+              // 提取并存储所有回答的ID（如果尚未存储）
+              if (
+                this.viewState.answerIds.length < batchResult.answers.length
+              ) {
+                this.viewState.answerIds = batchResult.answers
+                  .map((answer) => {
+                    const answerIdMatch =
+                      answer.actualUrl?.match(/answer\/(\d+)/);
+                    return answerIdMatch ? answerIdMatch[1] : "";
+                  })
+                  .filter((id) => id !== "");
+
+                // 确保当前索引有效
+                if (
+                  this.viewState.currentAnswerIndex < 0 &&
+                  this.viewState.answerIds.length > 0
+                ) {
+                  this.viewState.currentAnswerIndex = 0;
+                }
+              }
+
+              // 更新内容（如果尚未更新）
+              this.updateContent();
+
+              console.log(
+                `成功加载批量回答，共 ${
+                  batchResult.answers.length
+                } 个回答，总共 ${batchResult.totalAnswers || "未知"} 个回答`
+              );
+            })
+            .catch((error) => {
+              console.error("批量加载回答失败:", error);
+              this.viewState.isLoadingMoreInBackground = false;
+              // 错误处理在外部catch块中
+            });
+
+          // 不等待上面的操作完成，直接返回，回调函数会更新UI
         } else {
           // 使用原有方法获取单个回答
           const article = await this.zhihuService.getArticleContent(
@@ -256,14 +354,17 @@ export class ArticleView {
               }
             }
           }
-        }
 
-        // 更新内容
-        this.updateContent();
-        console.log(`成功加载并显示文章内容: ${this.viewState.article.title}`);
+          // 加载完成后更新内容
+          this.updateContent();
+          console.log(
+            `成功加载并显示文章内容: ${this.viewState.article.title}`
+          );
+        }
       } catch (error) {
         console.error("加载文章内容失败:", error);
         this.viewState.isLoading = false;
+        this.viewState.isLoadingMoreInBackground = false;
 
         // 显示错误信息
         this.viewState.article = {
@@ -279,6 +380,7 @@ export class ArticleView {
       }
     } catch (error) {
       this.viewState.isLoading = false;
+      this.viewState.isLoadingMoreInBackground = false;
       console.error("处理文章加载失败:", error);
       vscode.window.showErrorMessage(
         `加载文章内容时出错: ${
@@ -304,12 +406,16 @@ export class ArticleView {
     const navState = {
       hasPrevious: this.viewState.currentAnswerIndex > 0,
       hasNext:
-        this.viewState.answerIds.length > 0 &&
-        this.viewState.currentAnswerIndex < this.viewState.answerIds.length - 1 || 
-        (this.viewState.hasMoreAnswers === true),
+        (this.viewState.answerIds.length > 0 &&
+          this.viewState.currentAnswerIndex <
+            this.viewState.answerIds.length - 1) ||
+        this.viewState.hasMoreAnswers === true,
       questionId: this.viewState.questionId,
-      totalLoaded: this.viewState.answerIds.length, // 总加载回答数
+      totalLoaded:
+        this.viewState.loadedAnswersCount || this.viewState.answerIds.length, // 已加载回答数
       currentIndex: this.viewState.currentAnswerIndex + 1, // 当前索引（用户友好，从1开始）
+      totalAnswers: this.viewState.totalAnswers || 0, // 问题总回答数
+      isLoadingMore: this.viewState.isLoadingMoreInBackground, // 是否正在加载更多
     };
 
     this.viewState.webviewPanel.webview.html = HtmlRenderer.getArticleHtml(
@@ -331,7 +437,7 @@ export class ArticleView {
 
       // 检查是否有下一个回答
       const nextIndex = this.viewState.currentAnswerIndex + 1;
-      
+
       // 如果下一个索引超过了当前批次的最后一个回答
       if (nextIndex >= this.viewState.answerIds.length) {
         // 需要从问题页面获取更多回答
@@ -342,18 +448,19 @@ export class ArticleView {
         }
       } else {
         // 已有缓存的下一个回答，直接从batchAnswers中获取
-        if (this.viewState.batchAnswers && 
-            nextIndex < this.viewState.batchAnswers.length) {
-          
+        if (
+          this.viewState.batchAnswers &&
+          nextIndex < this.viewState.batchAnswers.length
+        ) {
           // 从批量回答中获取
           this.viewState.article = this.viewState.batchAnswers[nextIndex];
           this.viewState.currentAnswerIndex = nextIndex;
-          
+
           // 更新URL
           if (this.viewState.article.actualUrl) {
             this.viewState.url = this.viewState.article.actualUrl;
           }
-          
+
           this.updateContent();
         } else {
           // 使用传统方式加载
@@ -387,18 +494,18 @@ export class ArticleView {
       }
 
       const prevIndex = this.viewState.currentAnswerIndex - 1;
-      
+
       // 如果有批量回答缓存
       if (this.viewState.batchAnswers && prevIndex >= 0) {
         // 从批量回答中获取
         this.viewState.article = this.viewState.batchAnswers[prevIndex];
         this.viewState.currentAnswerIndex = prevIndex;
-        
+
         // 更新URL
         if (this.viewState.article.actualUrl) {
           this.viewState.url = this.viewState.article.actualUrl;
         }
-        
+
         this.updateContent();
       } else {
         // 使用传统方式加载
@@ -430,7 +537,7 @@ export class ArticleView {
       this.viewState.isLoading = true;
       this.viewState.article = {
         ...this.viewState.article,
-        content: "正在加载更多回答..."
+        content: "正在加载更多回答...",
       };
       this.updateContent();
 
@@ -439,49 +546,56 @@ export class ArticleView {
       const hideImages = config.get<boolean>("hideImages", false);
 
       console.log(`加载问题 ${this.viewState.questionId} 的更多回答`);
-      
+
       // 加载更多回答
       const newAnswers = await this.zhihuService.loadMoreBatchAnswers(
         this.viewState.questionId,
         this.viewState.answersPerBatch,
         hideImages
       );
-      
+
       this.viewState.isLoading = false;
-      
+
       if (newAnswers && newAnswers.length > 0) {
         console.log(`成功加载 ${newAnswers.length} 个新回答`);
-        
+
         // 更新批次计数
         this.viewState.batchCount = (this.viewState.batchCount || 0) + 1;
-        
+
         // 添加新的回答ID
-        const newIds = newAnswers.map(answer => {
-          const answerIdMatch = answer.actualUrl?.match(/answer\/(\d+)/);
-          return answerIdMatch ? answerIdMatch[1] : "";
-        }).filter(id => id !== "");
-        
+        const newIds = newAnswers
+          .map((answer) => {
+            const answerIdMatch = answer.actualUrl?.match(/answer\/(\d+)/);
+            return answerIdMatch ? answerIdMatch[1] : "";
+          })
+          .filter((id) => id !== "");
+
         this.viewState.answerIds = [...this.viewState.answerIds, ...newIds];
-        
+
+        // 更新已加载回答数
+        this.viewState.loadedAnswersCount =
+          (this.viewState.loadedAnswersCount || 0) + newAnswers.length;
+
         // 将新回答添加到批量回答数组
         if (this.viewState.batchAnswers) {
-          this.viewState.batchAnswers = [...this.viewState.batchAnswers, ...newAnswers];
+          this.viewState.batchAnswers = [
+            ...this.viewState.batchAnswers,
+            ...newAnswers,
+          ];
         } else {
           this.viewState.batchAnswers = newAnswers;
         }
-        
+
         // 更新当前回答为新批次的第一个回答
         this.viewState.article = newAnswers[0];
-        this.viewState.currentAnswerIndex = this.viewState.answerIds.length - newIds.length;
-        
+        this.viewState.currentAnswerIndex =
+          this.viewState.answerIds.length - newIds.length;
+
         // 更新URL
         if (this.viewState.article.actualUrl) {
           this.viewState.url = this.viewState.article.actualUrl;
         }
-        
-        // 检查是否还有更多回答
-        // 这个状态在loadMoreBatchAnswers调用中已经更新了，不需要额外更新
-        
+
         // 更新内容
         this.updateContent();
       } else {

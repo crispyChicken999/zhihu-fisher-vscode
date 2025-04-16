@@ -3,6 +3,11 @@ import { HotListService } from './hotListService';
 import { ArticleService } from './articleService';
 import { ZhihuHotItem, ZhihuArticle } from './types';
 
+// 定义进度回调函数类型
+interface ProgressCallback {
+  (article: ZhihuArticle, count: number, total: number): void;
+}
+
 /**
  * 知乎服务主类 - 整合各子服务
  */
@@ -46,13 +51,15 @@ export class ZhihuService {
    * @param questionUrl 问题URL
    * @param maxCount 最大获取回答数量，默认为10
    * @param hideImages 是否隐藏图片
+   * @param progressCallback 进度回调函数，用于实时更新UI
    */
   async getBatchAnswers(
     questionUrl: string, 
     maxCount: number = 10, 
-    hideImages: boolean = false
+    hideImages: boolean = false,
+    progressCallback?: ProgressCallback
   ) {
-    return this.articleService.getBatchAnswers(questionUrl, maxCount, hideImages);
+    return this.articleService.getBatchAnswers(questionUrl, maxCount, hideImages, progressCallback);
   }
 
   /**

@@ -9,8 +9,10 @@ interface NavState {
   hasPrevious: boolean;
   hasNext: boolean;
   questionId?: string;
-  totalLoaded?: number; // 总加载回答数
+  totalLoaded?: number; // 已加载回答数
   currentIndex?: number; // 当前回答索引（从1开始）
+  totalAnswers?: number; // 问题总回答数
+  isLoadingMore?: boolean; // 是否正在后台加载更多回答
 }
 
 /**
@@ -125,11 +127,14 @@ export class HtmlRenderer {
     navState?: NavState
   ): string {
     // 处理文章内容中的图片
-    let processedContent = this.processArticleContent(article.content, hideImages);
+    let processedContent = this.processArticleContent(
+      article.content,
+      hideImages
+    );
 
     // 构建作者信息HTML
     let authorHTML = this.buildAuthorHtml(article);
-    
+
     // 构建导航按钮
     let navigationHTML = this.buildNavigationHtml(navState);
 
@@ -475,16 +480,40 @@ export class HtmlRenderer {
    * @returns 导航按钮的HTML字符串
    */
   private static buildNavigationHtml(navState?: NavState): string {
-    if (!navState || (!navState.hasPrevious && !navState.hasNext && !navState.questionId)) {
-      return ''; // 如果不是问题回答或者没有导航状态，则不显示导航按钮
+    if (
+      !navState ||
+      (!navState.hasPrevious && !navState.hasNext && !navState.questionId)
+    ) {
+      return ""; // 如果不是问题回答或者没有导航状态，则不显示导航按钮
     }
 
     // 添加导航状态信息显示
-    let navInfoHtml = '';
-    if (navState.questionId && navState.currentIndex && navState.totalLoaded) {
+    let navInfoHtml = "";
+    if (navState.questionId) {
+      // 显示当前回答索引、已加载回答数和总回答数，分别显示
+      let currentIndexText = `当前第 ${navState.currentIndex || 1} 个回答`;
+      let loadedText = `已加载 ${navState.totalLoaded || 1} 个回答`;
+      let totalText =
+        navState.totalAnswers && navState.totalAnswers > 0
+          ? `共 ${navState.totalAnswers} 个回答`
+          : "";
+
+      // 如果正在加载更多，添加指示器
+      let loadingText = navState.isLoadingMore
+        ? '<span class="loading-indicator">(正在加载更多...)</span>'
+        : "";
+
       navInfoHtml = `
         <div class="nav-info">
-          <span>第 ${navState.currentIndex} / ${navState.totalLoaded} 个回答</span>
+          <span>${currentIndexText}</span>
+          <span class="separator">|</span>
+          <span>${loadedText}</span>
+          ${
+            totalText
+              ? `<span class="separator">|</span><span>${totalText}</span>`
+              : ""
+          }
+          ${loadingText}
         </div>
       `;
     }
@@ -492,10 +521,16 @@ export class HtmlRenderer {
     return `
       <div class="navigation">
         <div class="navigation-buttons">
-          <button class="button" onclick="loadPreviousAnswer()" ${!navState.hasPrevious ? 'disabled' : ''}>
+          ${
+            !navState.hasPrevious
+              ? ""
+              : `<button class="button" onclick="loadPreviousAnswer()">
             上一个回答
-          </button>
-          <button class="button" onclick="loadNextAnswer()" ${!navState.hasNext && !navState.questionId ? 'disabled' : ''}>
+          </button>`
+          }
+          <button class="button" onclick="loadNextAnswer()" ${
+            !navState.hasNext && !navState.questionId ? "disabled" : ""
+          }>
             下一个回答
           </button>
         </div>
@@ -510,7 +545,10 @@ export class HtmlRenderer {
    * @param hideImages 是否隐藏图片
    * @returns 处理后的文章内容
    */
-  private static processArticleContent(content: string, hideImages: boolean): string {
+  private static processArticleContent(
+    content: string,
+    hideImages: boolean
+  ): string {
     // 如果启用无图模式，处理HTML内容
     if (hideImages) {
       // 使用cheerio解析HTML并删除所有图片标签

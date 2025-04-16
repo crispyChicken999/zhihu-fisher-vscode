@@ -12,14 +12,33 @@ interface BatchAnswers {
   hasMore: boolean;
   browser: puppeteer.Browser | null;
   page: puppeteer.Page | null;
+  totalAnswers?: number; // 问题的总回答数
+}
+
+// 定义回调函数类型，用于实时更新爬取状态
+interface ProgressCallback {
+  (article: ZhihuArticle, count: number, total: number): void;
 }
 
 export class ArticleService {
   private cookieManager: CookieManager;
   private batchAnswersCache: Map<string, BatchAnswers> = new Map(); // 用于缓存已加载的回答
+  private static browserInstance: puppeteer.Browser | null = null; // 浏览器单例
 
   constructor(cookieManager: CookieManager) {
     this.cookieManager = cookieManager;
+  }
+
+  // 获取或创建浏览器实例
+  private async getBrowserInstance(): Promise<puppeteer.Browser> {
+    if (!ArticleService.browserInstance) {
+      console.log("创建新的浏览器实例...");
+      ArticleService.browserInstance = await puppeteer.launch({
+        headless: false, // 设置为false以便调试
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
+    return ArticleService.browserInstance;
   }
 
   // 获取文章内容
@@ -360,16 +379,59 @@ export class ArticleService {
   }
 
   /**
+   * 创建延时Promise
+   * @param ms 延时毫秒数
+   * @returns Promise对象
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * 模拟人类的滚动行为
+   * @param page Puppeteer页面对象
+   */
+  private async simulateHumanScroll(page: puppeteer.Page): Promise<void> {
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+
+    // 先向下滚动到接近底部
+    await page.evaluate((height) => {
+      window.scrollBy(0, document.body.scrollHeight - height * 1.5);
+    }, viewportHeight);
+
+    // 等待一小段随机时间
+    await this.delay(1000 + Math.random() * 500);
+
+    // 稍微向上滚动一点
+    await page.evaluate((height) => {
+      window.scrollBy(0, -height * (0.1 + Math.random() * 0.3));
+    }, viewportHeight);
+
+    // 再次等待
+    await this.delay(800 + Math.random() * 400);
+
+    // 再次向下滚动到底部
+    await page.evaluate(() => {
+      window.scrollBy(0, document.body.scrollHeight);
+    });
+
+    // 最终等待加载
+    await this.delay(1500 + Math.random() * 500);
+  }
+
+  /**
    * 批量获取问题的回答
    * @param questionUrl 问题URL
    * @param maxCount 最大获取回答数量，默认为10
    * @param hideImages 是否隐藏图片
+   * @param progressCallback 进度回调函数，用于实时更新UI
    * @returns 包含问题标题和回答列表的对象
    */
   async getBatchAnswers(
     questionUrl: string,
     maxCount: number = 10,
-    hideImages: boolean = false
+    hideImages: boolean = false,
+    progressCallback?: ProgressCallback
   ): Promise<BatchAnswers> {
     try {
       console.log(`尝试获取问题${questionUrl}的多个回答，最多${maxCount}个`);
@@ -388,7 +450,18 @@ export class ArticleService {
 
       // 检查缓存中是否已存在该问题的回答
       if (this.batchAnswersCache.has(questionId)) {
-        return this.batchAnswersCache.get(questionId)!;
+        const cachedData = this.batchAnswersCache.get(questionId)!;
+
+        // 如果有回调函数并且有已加载的回答，通知UI第一个回答可以显示
+        if (progressCallback && cachedData.answers.length > 0) {
+          progressCallback(
+            cachedData.answers[0],
+            1,
+            cachedData.totalAnswers || cachedData.answers.length
+          );
+        }
+
+        return cachedData;
       }
 
       // 直接访问问题页面URL（不带回答ID）
@@ -398,11 +471,8 @@ export class ArticleService {
       let browser: puppeteer.Browser | null = null;
       let page: puppeteer.Page | null = null;
 
-      console.log("启动Puppeteer浏览器...");
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
+      console.log("获取浏览器实例...");
+      browser = await this.getBrowserInstance();
 
       console.log("打开新页面...");
       page = await browser.newPage();
@@ -452,13 +522,41 @@ export class ArticleService {
 
       console.log("页面加载完成，开始提取问题标题和回答");
 
-      // 提取问题标题
-      const questionTitle = await page.evaluate(() => {
+      // 提取问题标题和总回答数
+      const { questionTitle, totalAnswers } = await page.evaluate(() => {
         const titleElement = document.querySelector("h1.QuestionHeader-title");
-        return titleElement ? titleElement.textContent?.trim() : "未知问题";
+
+        // 获取总回答数
+        let total = 0;
+        const listHeaderText = document.querySelector(".List-headerText span");
+        if (listHeaderText) {
+          const match = listHeaderText.textContent?.match(/(\d+)/);
+          if (match && match[1]) {
+            total = parseInt(match[1], 10);
+          }
+        }
+
+        return {
+          questionTitle: titleElement
+            ? titleElement.textContent?.trim()
+            : "未知问题",
+          totalAnswers: total,
+        };
       });
 
-      console.log(`问题标题: ${questionTitle}`);
+      console.log(`问题标题: ${questionTitle}, 总回答数: ${totalAnswers}`);
+
+      // 首先尝试点击"收起全部回答"按钮
+      await page.evaluate(() => {
+        const collapseButton = document.querySelector("#collapsed-button");
+        if (collapseButton) {
+          (collapseButton as HTMLElement).click();
+          console.log("已点击收起回答按钮");
+        }
+      });
+
+      // 使用自定义延迟函数等待UI更新
+      await this.delay(1000);
 
       // 初始化结果对象
       const result: BatchAnswers = {
@@ -467,12 +565,16 @@ export class ArticleService {
         hasMore: false,
         browser,
         page,
+        totalAnswers: totalAnswers || undefined,
       };
 
       // 滚动页面加载更多回答，直到达到所需数量或没有更多回答
       let answersCount = 0;
       let lastAnswersCount = 0;
       let noNewAnswersCounter = 0;
+
+      // 是否发送了第一个回答
+      let firstAnswerSent = false;
 
       while (answersCount < maxCount && noNewAnswersCounter < 3) {
         // 提取当前页面上的所有回答
@@ -608,7 +710,7 @@ export class ArticleService {
             const content = this.htmlToMarkdown(answer.contentHtml);
             const actualUrl = `https://www.zhihu.com/question/${questionId}/answer/${answer.answerId}`;
 
-            result.answers.push({
+            const newArticle: ZhihuArticle = {
               title: result.questionTitle,
               content,
               author: answer.author,
@@ -616,12 +718,33 @@ export class ArticleService {
               authorBio: answer.authorBio,
               authorUrl: answer.authorUrl,
               actualUrl,
-            });
+            };
+
+            result.answers.push(newArticle);
+
+            // 如果这是第一个回答且有回调函数，立即通知UI可以显示第一个回答
+            if (
+              !firstAnswerSent &&
+              progressCallback &&
+              result.answers.length === 1
+            ) {
+              progressCallback(newArticle, 1, totalAnswers || maxCount);
+              firstAnswerSent = true;
+            }
           }
         }
 
         // 检查是否有新回答被添加
         if (result.answers.length > lastAnswersCount) {
+          // 如果有回调函数，通知UI更新当前爬取进度
+          if (progressCallback) {
+            progressCallback(
+              result.answers[0], // 始终传递第一个回答（因为可能已经显示了）
+              result.answers.length,
+              totalAnswers || maxCount
+            );
+          }
+
           lastAnswersCount = result.answers.length;
           noNewAnswersCounter = 0;
           console.log(`已加载 ${result.answers.length} 个回答`);
@@ -635,13 +758,8 @@ export class ArticleService {
           break;
         }
 
-        // 滚动到页面底部以加载更多回答
-        await page.evaluate(() => {
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-
-        // 等待内容加载
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // 使用模拟人类滚动行为代替简单的滚动
+        await this.simulateHumanScroll(page);
 
         // 检查是否还有"加载更多"按钮
         const hasLoadMoreButton = await page.evaluate(() => {
@@ -658,8 +776,8 @@ export class ArticleService {
         });
 
         if (hasLoadMoreButton) {
-          // 等待新内容加载
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          // 使用自定义延迟函数等待新内容加载
+          await this.delay(2000);
         }
 
         answersCount = result.answers.length;
@@ -685,17 +803,18 @@ export class ArticleService {
       return result;
     } catch (error) {
       console.error("批量获取回答失败:", error);
-      // 如果出错，确保关闭浏览器
+      // 如果出错，不要关闭浏览器，只关闭当前页面
       try {
         // 尝试获取已有缓存
         const cachedData = this.batchAnswersCache.get(
           questionUrl.match(/question\/(\d+)/)?.[1] || ""
         );
-        if (cachedData && cachedData.browser) {
-          await cachedData.browser.close();
+        if (cachedData && cachedData.page) {
+          await cachedData.page.close();
+          cachedData.page = null;
         }
       } catch (e) {
-        console.error("关闭浏览器失败:", e);
+        console.error("关闭页面失败:", e);
       }
 
       throw new Error(
@@ -734,34 +853,43 @@ export class ArticleService {
 
       // 如果浏览器实例已经关闭，创建新的实例
       if (!cachedData.browser || !cachedData.page) {
-        console.log("浏览器实例已关闭，创建新实例...");
-        // 重新获取回答
-        const newBatchAnswers = await this.getBatchAnswers(
-          `https://www.zhihu.com/question/${questionId}`,
-          maxCount,
-          hideImages
+        console.log("页面已关闭，创建新页面...");
+
+        // 获取浏览器实例
+        cachedData.browser = await this.getBrowserInstance();
+
+        // 创建新页面
+        cachedData.page = await cachedData.browser.newPage();
+
+        // 重新设置页面并导航到问题
+        await cachedData.page.setViewport({ width: 1920, height: 1080 });
+        await cachedData.page.setUserAgent(
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
         );
 
-        // 过滤已有回答
-        const existingAnswerIds = new Set(
-          cachedData.answers.map(
-            (a) => a.actualUrl?.match(/answer\/(\d+)/)?.[1]
-          )
-        );
+        // 设置cookie
+        const cookie = this.cookieManager.getCookie();
+        if (cookie) {
+          const cookies = cookie.split(";").map((pair) => {
+            let name = pair.trim().slice(0, pair.trim().indexOf("="));
+            let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
+            return { name, value, domain: "www.zhihu.com" };
+          });
+          await Promise.all(cookies.map((c) => cachedData.page!.setCookie(c)));
+        }
 
-        const newAnswers = newBatchAnswers.answers.filter((answer) => {
-          const answerId = answer.actualUrl?.match(/answer\/(\d+)/)?.[1];
-          return answerId && !existingAnswerIds.has(answerId);
+        // 防反爬虫设置
+        await cachedData.page.evaluateOnNewDocument(() => {
+          Object.defineProperty(navigator, "webdriver", {
+            get: () => undefined,
+          });
         });
 
-        // 更新缓存
-        cachedData.answers = [...cachedData.answers, ...newAnswers];
-        cachedData.hasMore = newBatchAnswers.hasMore;
-        cachedData.browser = newBatchAnswers.browser;
-        cachedData.page = newBatchAnswers.page;
-
-        this.batchAnswersCache.set(questionId, cachedData);
-        return newAnswers;
+        // 导航到问题页面
+        await cachedData.page.goto(
+          `https://www.zhihu.com/question/${questionId}`,
+          { waitUntil: "networkidle0", timeout: 60000 }
+        );
       }
 
       // 使用现有浏览器实例继续加载
@@ -770,14 +898,8 @@ export class ArticleService {
       let noNewAnswersCounter = 0;
 
       while (newAnswersCount < maxCount && noNewAnswersCounter < 3) {
-        // 滚动到页面底部以加载更多回答
-        await cachedData.page.evaluate(() => {
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-
-        // 等待内容加载
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
+        // 使用模拟人类滚动行为
+        await this.simulateHumanScroll(cachedData.page);
 
         // 检查是否还有"加载更多"按钮
         const hasLoadMoreButton = await cachedData.page.evaluate(() => {
@@ -795,7 +917,7 @@ export class ArticleService {
 
         if (hasLoadMoreButton) {
           // 等待新内容加载
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          await this.delay(2000);
         }
 
         // 提取新回答
@@ -1000,23 +1122,37 @@ export class ArticleService {
   }
 
   /**
-   * 关闭问题的浏览器实例
+   * 关闭问题的浏览器页面
    * @param questionId 问题ID
    */
   async closeBrowser(questionId: string): Promise<void> {
     try {
       const cachedData = this.batchAnswersCache.get(questionId);
-      if (cachedData && cachedData.browser) {
-        console.log(`关闭问题 ${questionId} 的浏览器实例`);
-        await cachedData.browser.close();
+      if (cachedData && cachedData.page) {
+        console.log(`关闭问题 ${questionId} 的页面`);
+        await cachedData.page.close();
 
         // 更新缓存状态
-        cachedData.browser = null;
         cachedData.page = null;
         this.batchAnswersCache.set(questionId, cachedData);
       }
     } catch (error) {
-      console.error("关闭浏览器失败:", error);
+      console.error("关闭页面失败:", error);
+    }
+  }
+
+  /**
+   * 完全关闭浏览器实例（应用退出时调用）
+   */
+  static async closeBrowserInstance(): Promise<void> {
+    if (ArticleService.browserInstance) {
+      try {
+        await ArticleService.browserInstance.close();
+        ArticleService.browserInstance = null;
+        console.log("已关闭浏览器实例");
+      } catch (error) {
+        console.error("关闭浏览器实例失败:", error);
+      }
     }
   }
 
