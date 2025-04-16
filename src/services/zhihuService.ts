@@ -35,6 +35,11 @@ export class ZhihuService {
   async getArticleContent(url: string, hideImages: boolean): Promise<ZhihuArticle> {
     return this.articleService.getArticleContent(url, hideImages);
   }
+  
+  // 获取更多回答ID
+  async getMoreAnswersId(questionUrl: string): Promise<string | null> {
+    return this.articleService.getMoreAnswersId(questionUrl);
+  }
 }
 
 // 导出所有类型定义

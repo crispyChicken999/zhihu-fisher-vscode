@@ -125,21 +125,22 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.99.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.99.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
-    "eslint": "^9.23.0",
-    "esbuild": "^0.25.1",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.8.2",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.25.1",
+    "eslint": "^9.23.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.8.2"
   },
   "dependencies": {
     "axios": "^1.8.4",
     "cheerio": "^1.0.0",
-    "marked": "^15.0.8"
+    "marked": "^15.0.8",
+    "puppeteer": "^24.6.1"
   }
 }

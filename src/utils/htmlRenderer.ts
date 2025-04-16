@@ -3,6 +3,15 @@ import * as cheerio from "cheerio";
 import { ZhihuArticle } from "../services/zhihuService";
 
 /**
+ * 导航状态接口
+ */
+interface NavState {
+  hasPrevious: boolean;
+  hasNext: boolean;
+  questionId?: string;
+}
+
+/**
  * HTML渲染工具类，用于生成各种视图的HTML内容
  */
 export class HtmlRenderer {
@@ -104,12 +113,14 @@ export class HtmlRenderer {
    * @param article 文章内容对象
    * @param url 文章URL
    * @param hideImages 是否隐藏图片
+   * @param navState 导航状态（添加上一个/下一个回答导航功能）
    * @returns 文章内容的HTML字符串
    */
   public static getArticleHtml(
     article: ZhihuArticle,
     url: string,
-    hideImages: boolean
+    hideImages: boolean,
+    navState?: NavState
   ): string {
     // 处理文章内容中的图片
     let processedContent = this.processArticleContent(article.content, hideImages);
@@ -117,6 +128,9 @@ export class HtmlRenderer {
     // 构建作者信息HTML
     let authorHTML = this.buildAuthorHtml(article);
     
+    // 构建导航按钮
+    let navigationHTML = this.buildNavigationHtml(navState);
+
     // 使用actualUrl作为来源链接（如果存在），否则使用原始URL
     const sourceUrl = article.actualUrl || url;
 
@@ -228,9 +242,14 @@ export class HtmlRenderer {
             padding: 8px 16px;
             border-radius: 2px;
             cursor: pointer;
+            margin-right: 8px;
           }
           .button:hover {
             background-color: var(--vscode-button-hoverBackground);
+          }
+          .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
           }
           .image-display-toggle {
             margin-right: 10px;
@@ -241,6 +260,17 @@ export class HtmlRenderer {
           }
           .empty-container {
             display: none !important;
+          }
+          
+          /* 导航按钮样式 */
+          .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+          }
+          .navigation-buttons {
+            display: flex;
+            gap: 10px;
           }
 
           /* 作者信息样式 */
@@ -297,10 +327,14 @@ export class HtmlRenderer {
             <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>
           </div>
         </header>
+        
+        ${navigationHTML}
 
         <div class="article-content">
           ${processedContent}
         </div>
+        
+        ${navigationHTML}
 
         <div class="toolbar">
           <div>
@@ -334,6 +368,16 @@ export class HtmlRenderer {
 
           function openAuthorPage(url) {
             vscode.postMessage({ command: 'openInBrowser', url: url });
+          }
+
+          // 上一个回答按钮点击事件
+          function loadPreviousAnswer() {
+            vscode.postMessage({ command: 'loadPreviousAnswer' });
+          }
+
+          // 下一个回答按钮点击事件
+          function loadNextAnswer() {
+            vscode.postMessage({ command: 'loadNextAnswer' });
           }
 
           // 处理图片加载错误，完全删除图片占位符
@@ -415,6 +459,30 @@ export class HtmlRenderer {
         </script>
       </body>
       </html>
+    `;
+  }
+
+  /**
+   * 构建导航按钮HTML
+   * @param navState 导航状态
+   * @returns 导航按钮的HTML字符串
+   */
+  private static buildNavigationHtml(navState?: NavState): string {
+    if (!navState || (!navState.hasPrevious && !navState.hasNext && !navState.questionId)) {
+      return ''; // 如果不是问题回答或者没有导航状态，则不显示导航按钮
+    }
+
+    return `
+      <div class="navigation">
+        <div class="navigation-buttons">
+          <button class="button" onclick="loadPreviousAnswer()" ${!navState.hasPrevious ? 'disabled' : ''}>
+            上一个回答
+          </button>
+          <button class="button" onclick="loadNextAnswer()" ${!navState.hasNext && !navState.questionId ? 'disabled' : ''}>
+            下一个回答
+          </button>
+        </div>
+      </div>
     `;
   }
 

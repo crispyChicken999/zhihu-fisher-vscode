@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { marked } from "marked";
 import { ZhihuArticle } from "./types";
 import { CookieManager } from "./cookieManager";
+import * as puppeteer from "puppeteer";
 
 export class ArticleService {
   private cookieManager: CookieManager;
@@ -56,11 +57,15 @@ export class ArticleService {
       if (loginElements > 0 || captchaElements > 0) {
         // 如果需要登录而用户没有设置cookie
         if (!cookie) {
-          this.cookieManager.promptForNewCookie("需要知乎Cookie才能查看文章内容");
+          this.cookieManager.promptForNewCookie(
+            "需要知乎Cookie才能查看文章内容"
+          );
           throw new Error("需要设置知乎Cookie才能查看文章内容");
         } else {
           // 如果已有cookie但仍被拦截
-          this.cookieManager.promptForNewCookie("您的知乎Cookie可能已过期，请更新");
+          this.cookieManager.promptForNewCookie(
+            "您的知乎Cookie可能已过期，请更新"
+          );
           throw new Error("知乎Cookie已失效，请更新");
         }
       }
@@ -127,7 +132,9 @@ export class ArticleService {
                 .trim();
 
               // 提取作者URL - 先尝试从meta标签获取
-              const metaUrl = authorInfo.find("meta[itemprop='url']").attr("content");
+              const metaUrl = authorInfo
+                .find("meta[itemprop='url']")
+                .attr("content");
               if (metaUrl) {
                 authorUrl = metaUrl;
                 console.log(`从meta标签获取到作者URL: ${authorUrl}`);
@@ -178,7 +185,7 @@ export class ArticleService {
                 const newUrl = `https://www.zhihu.com/question/${questionId}/answer/${answerId}`;
                 console.log(`构建新URL: ${newUrl}，重新获取回答内容`);
                 actualUrl = newUrl; // 更新实际URL为带有回答ID的URL
-                
+
                 // 递归调用自身获取具体回答
                 return this.getArticleContent(newUrl, hideImages);
               } else {
@@ -317,9 +324,196 @@ export class ArticleService {
     }
   }
 
+  /**
+   * 获取问题下的更多回答ID
+   * 从"Card MoreAnswers"区域提取下一个回答ID
+   * @param questionUrl 问题URL
+   * @returns 下一个回答的ID，如果没有更多回答则返回null
+   */
+  async getMoreAnswersId(questionUrl: string): Promise<string | null> {
+    try {
+      console.log(`尝试获取问题${questionUrl}的更多回答`);
+
+      // 从URL中提取问题ID
+      const questionIdMatch = questionUrl.match(/question\/(\d+)/);
+      if (!questionIdMatch || !questionIdMatch[1]) {
+        console.error("无法从URL中提取问题ID");
+        return null;
+      }
+
+      const questionId = questionIdMatch[1];
+      console.log(`从URL中提取到问题ID: ${questionId}`);
+
+      // 使用Puppeteer模拟浏览器获取更多回答
+      console.log("使用Puppeteer获取更多回答");
+      return await this.getMoreAnswersIdWithPuppeteer(questionUrl);
+    } catch (error) {
+      console.error("获取更多回答失败:", error);
+      throw new Error(
+        `获取更多回答失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
+      );
+    }
+  }
+
   // 将HTML转为Markdown
   private htmlToMarkdown(html: string): string {
     // 使用marked库将HTML转为Markdown
     return marked.parse(html) as string;
+  }
+
+  /**
+   * 使用Puppeteer获取更多回答ID
+   * @param questionWithAnswerUrl 问题+回答URL
+   * @returns 下一个回答的ID或null
+   */
+  private async getMoreAnswersIdWithPuppeteer(
+    questionWithAnswerUrl: string
+  ): Promise<string | null> {
+    // 检查URL格式是否为问题+回答格式（只有在这种URL下才会出现更多回答区域）
+    if (!questionWithAnswerUrl.match(/\/question\/\d+\/answer\/\d+/)) {
+      console.log("URL格式不正确，必须是问题+回答格式才能显示更多回答区域");
+      throw new Error("要获取更多回答，URL必须包含问题ID和回答ID");
+    }
+
+    let browser: puppeteer.Browser | null = null;
+    console.log("启动Puppeteer浏览器...");
+
+    // 以无头模式启动浏览器，添加更多参数避免被检测
+    browser = await puppeteer.launch({
+      headless: true, // 使用无头模式
+      args: ["--no-sandbox"],
+    });
+
+    console.log("打开新页面...");
+    const page = await browser.newPage();
+    await page.setUserAgent(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+    );
+
+    // 设置浏览器视窗大小
+    await page.setViewport({ width: 1920, height: 1080 });
+
+    // 如果有cookie，设置到页面
+    const cookie = this.cookieManager.getCookie();
+    if (cookie) {
+      async function addCookies(
+        cookies_str: string,
+        page: puppeteer.Page,
+        domain: string
+      ) {
+        let cookies = cookies_str.split(";").map((pair) => {
+          let name = pair.trim().slice(0, pair.trim().indexOf("="));
+          let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
+          return { name, value, domain };
+        });
+        await Promise.all(
+          cookies.map((pair) => {
+            return page.setCookie(pair);
+          })
+        );
+      }
+      await addCookies(cookie, page, "www.zhihu.com");
+    }
+
+    // 防反爬虫设置 - 避免被检测为自动化脚本
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', {
+        get: () => undefined
+        })
+    });
+
+    try {
+      // 导航到问题页面
+      console.log(`导航到问题页面: ${questionWithAnswerUrl}`);
+      await page.goto(questionWithAnswerUrl, {
+        waitUntil: "networkidle0", // 等待网络请求完成
+        timeout: 0,
+      });
+
+      console.log("页面完全加载完成");
+
+      // 等待页面内容加载
+      await page.waitForSelector("body", { timeout: 2000 });
+
+      // 提取更多回答区域中第一个回答的ID
+      const answerId = await page.evaluate(() => {
+        console.log("开始在页面中查找更多回答区域...");
+        const moreAnswersCard = document.querySelector(".MoreAnswers");
+        if (!moreAnswersCard) {
+          console.log("未找到更多回答区域(MoreAnswers)");
+          return null;
+        }
+
+        // 查找更多回答区域下的第一个回答项
+        const answerItem = moreAnswersCard.querySelector(
+          ".ContentItem.AnswerItem"
+        );
+        if (!answerItem) {
+          console.log("更多回答区域中未找到回答项(AnswerItem)");
+          return null;
+        }
+
+        // 尝试从data-zop属性提取
+        if (answerItem.hasAttribute("data-zop")) {
+          try {
+            const dataZop = answerItem.getAttribute("data-zop");
+            if (dataZop) {
+              const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
+              if (zopData && zopData.itemId) {
+                console.log(`从data-zop找到回答ID: ${zopData.itemId}`);
+                return zopData.itemId;
+              }
+            }
+          } catch (e) {
+            console.error("解析data-zop失败");
+          }
+        }
+
+        // 从name属性提取
+        if (answerItem.hasAttribute("name")) {
+          const nameId = answerItem.getAttribute("name");
+          console.log(`从name属性找到回答ID: ${nameId}`);
+          return nameId;
+        }
+
+        // 从链接提取
+        const link = answerItem.querySelector('a[href*="/answer/"]');
+        if (link) {
+          const href = link.getAttribute("href");
+          if (href) {
+            const match = href.match(/\/answer\/(\d+)/);
+            if (match && match[1]) {
+              console.log(`从链接找到回答ID: ${match[1]}`);
+              return match[1];
+            }
+          }
+        }
+
+        return null;
+      });
+
+      console.log("关闭浏览器");
+      await browser.close();
+
+      if (answerId) {
+        console.log(`提取到的回答ID: ${answerId}`);
+        return answerId;
+      } else {
+        console.log("未能提取到更多回答ID，可能没有更多回答");
+        return null;
+      }
+    } catch (error) {
+      console.error("Puppeteer操作失败:", error);
+      if (browser) {
+        await browser.close();
+      }
+      throw new Error(
+        `获取更多回答失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
+      );
+    }
   }
 }
