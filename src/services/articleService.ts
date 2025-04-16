@@ -226,25 +226,28 @@ export class ArticleService {
 
         // 检查是否需要加载更多回答
         // 仅当现有回答数量明显不足且缓存中没有可用页面时才异步加载更多
-        if (cachedData.answers.length < maxCount && 
-            cachedData.hasMore && 
-            cachedData.answers.length < (cachedData.totalAnswers || Infinity) * 0.5) { // 仅当缓存的回答数量少于总数的一半时加载
+        if (
+          cachedData.answers.length < maxCount &&
+          cachedData.hasMore &&
+          cachedData.answers.length <
+            (cachedData.totalAnswers || Infinity) * 0.5
+        ) {
+          // 仅当缓存的回答数量少于总数的一半时加载
           console.log(
-            `缓存中的回答数量(${cachedData.answers.length})明显少于请求数量(${maxCount})或总回答数(${cachedData.totalAnswers || "未知"})，尝试加载更多回答`
+            `缓存中的回答数量(${
+              cachedData.answers.length
+            })明显少于请求数量(${maxCount})或总回答数(${
+              cachedData.totalAnswers || "未知"
+            })，尝试加载更多回答`
           );
-          
-          // 只有当页面已关闭时才初始化新页面，避免重复创建页面
-          if (!cachedData.page) {
-            // 异步加载更多回答，但不阻塞当前返回
-            this.loadMoreBatchAnswers(
-              questionId,
-              maxCount - cachedData.answers.length,
-              hideImages,
-              progressCallback
-            ).catch((error) => console.error("自动加载更多回答失败:", error));
-          } else {
-            console.log("页面仍然活跃，避免重复初始化页面");
-          }
+
+          // 异步加载更多回答，但不阻塞当前返回
+          this.loadMoreBatchAnswers(
+            questionId,
+            maxCount - cachedData.answers.length,
+            hideImages,
+            progressCallback
+          ).catch((error) => console.error("自动加载更多回答失败:", error));
         }
 
         // 如果有回调函数并且有已加载的回答，通知UI第一个回答可以显示
@@ -262,16 +265,59 @@ export class ArticleService {
       // 直接访问问题页面URL（不带回答ID）
       const cleanQuestionUrl = `https://www.zhihu.com/question/${questionId}`;
 
-      // 初始化问题页面
-      const { page, questionTitle, totalAnswers } =
-        await this.answerLoader.initQuestionPage(cleanQuestionUrl);
+      // 使用获取共享页面的方法
+      const page = await PuppeteerManager.createPage(this.cookieManager);
 
-      // 初始化结果对象 - 不再重复获取浏览器实例，使用PuppeteerManager管理的单例
+      // 导航到问题页
+      console.log(`导航到问题页面: ${cleanQuestionUrl}`);
+      await page.goto(cleanQuestionUrl, {
+        waitUntil: "networkidle0",
+        timeout: 60000,
+      });
+      console.log("页面加载完成，开始提取问题标题和回答");
+
+      // 提取问题标题和总回答数
+      const { questionTitle, totalAnswers } = await page.evaluate(() => {
+        const titleElement = document.querySelector("h1.QuestionHeader-title");
+
+        // 获取总回答数
+        let total = 0;
+        const listHeaderText = document.querySelector(".List-headerText span");
+        if (listHeaderText) {
+          const match = listHeaderText.textContent?.match(/(\d+)/);
+          if (match && match[1]) {
+            total = parseInt(match[1], 10);
+          }
+        }
+
+        return {
+          questionTitle: titleElement
+            ? (titleElement.textContent?.trim() as string)
+            : "未知问题",
+          totalAnswers: total,
+        };
+      });
+
+      console.log(`问题标题: ${questionTitle}, 总回答数: ${totalAnswers}`);
+
+      // 尝试点击"收起全部回答"按钮
+      await page.evaluate(() => {
+        const collapseButton = document.querySelector("#collapsed-button");
+        if (collapseButton) {
+          (collapseButton as HTMLElement).click();
+          console.log("已点击收起回答按钮");
+        }
+      });
+
+      // 等待一段时间让页面稳定
+      await PuppeteerManager.delay(1000);
+
+      // 初始化结果对象
       const result: BatchAnswers = {
         questionTitle: questionTitle,
         answers: [],
         hasMore: false,
-        page,
+        page, // 保存页面实例引用
         totalAnswers,
       };
 
@@ -354,31 +400,29 @@ export class ArticleService {
       // 记录原始回答数量
       const originalAnswersCount = cachedData.answers.length;
 
-      // 如果页面已关闭，重新初始化页面
-      if (!cachedData.page) {
+      // 检查页面状态并确保页面可用
+      let page = cachedData.page;
+      if (!page) {
         console.log("页面已关闭，创建新页面...");
 
-        // 重新初始化页面
-        const { page, questionTitle } =
-          await this.answerLoader.initQuestionPage(
-            `https://www.zhihu.com/question/${questionId}`
-          );
-
-        // 更新缓存中的页面引用，但不设置browser引用（使用PuppeteerManager的单例）
-        cachedData.page = page;
-        if (!cachedData.questionTitle) {
-          cachedData.questionTitle = questionTitle;
-        }
-
-        this.articleCache.updateQuestionCache(questionId, {
-          page,
-          questionTitle: cachedData.questionTitle || questionTitle,
+        // 创建新页面并导航
+        page = await PuppeteerManager.createPage(this.cookieManager);
+        await page.goto(`https://www.zhihu.com/question/${questionId}`, {
+          waitUntil: "networkidle0",
+          timeout: 60000,
         });
+
+        // 更新缓存
+        cachedData.page = page;
+        this.articleCache.updateQuestionCache(questionId, { page });
+
+        // 等待页面稳定
+        await PuppeteerManager.delay(1000);
       }
 
       // 加载更多回答，传入isLoadingMore=true参数以通知UI进入加载状态
       await this.answerLoader.loadAllAnswers(
-        cachedData.page!,
+        page,
         questionId,
         originalAnswersCount + maxCount, // 增加目标数量
         hideImages,
@@ -471,22 +515,24 @@ export class ArticleService {
         this.isLoadingMore = true;
 
         try {
-          // 如果页面已关闭，需要重新初始化
-          if (!cachedData.page) {
+          // 检查页面状态并确保页面可用
+          let page = cachedData.page;
+          if (!page) {
             console.log("页面已关闭，创建新页面...");
-            try {
-              // 重新初始化页面
-              const { page } = await this.answerLoader.initQuestionPage(
-                `https://www.zhihu.com/question/${questionId}`
-              );
-              // 更新缓存
-              this.articleCache.updateQuestionCache(questionId, { page });
-              cachedData.page = page;
-            } catch (error) {
-              console.error("重新初始化页面失败:", error);
-              this.isLoadingMore = false;
-              return false;
-            }
+
+            // 创建新页面并导航
+            page = await PuppeteerManager.createPage(this.cookieManager);
+            await page.goto(`https://www.zhihu.com/question/${questionId}`, {
+              waitUntil: "networkidle0",
+              timeout: 60000,
+            });
+
+            // 更新缓存
+            cachedData.page = page;
+            this.articleCache.updateQuestionCache(questionId, { page });
+
+            // 等待页面稳定
+            await PuppeteerManager.delay(1000);
           }
 
           // 记录原始回答数量
@@ -494,7 +540,7 @@ export class ArticleService {
 
           // 执行加载操作
           const loadResult = await this.answerLoader.loadAllAnswers(
-            cachedData.page!,
+            page,
             questionId,
             originalAnswersCount + 10, // 每次增加10个回答的目标
             hideImages,
