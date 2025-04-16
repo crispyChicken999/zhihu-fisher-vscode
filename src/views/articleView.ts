@@ -216,7 +216,6 @@ export class ArticleView {
    * 加载文章内容
    */
   public async loadContent(): Promise<void> {
-    console.log("this.viewState: ", this.viewState);
     try {
       // 已经加载过内容并且正在加载中，避免重复请求
       if (

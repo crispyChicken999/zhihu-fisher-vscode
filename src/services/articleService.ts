@@ -1,44 +1,21 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { marked } from "marked";
 import { ZhihuArticle } from "./types";
 import { CookieManager } from "./cookieManager";
-import * as puppeteer from "puppeteer";
-
-// 定义批量获取的回答内容结构
-interface BatchAnswers {
-  questionTitle: string;
-  answers: ZhihuArticle[];
-  hasMore: boolean;
-  browser: puppeteer.Browser | null;
-  page: puppeteer.Page | null;
-  totalAnswers?: number; // 问题的总回答数
-}
-
-// 定义回调函数类型，用于实时更新爬取状态
-interface ProgressCallback {
-  (article: ZhihuArticle, count: number, total: number): void;
-}
+import { PuppeteerManager } from "./puppeteerManager";
+import { ContentParser } from "./contentParser";
+import { ArticleCache, BatchAnswers } from "./articleCache";
+import { AnswerLoader, ProgressCallback } from "./answerLoader";
 
 export class ArticleService {
   private cookieManager: CookieManager;
-  private batchAnswersCache: Map<string, BatchAnswers> = new Map(); // 用于缓存已加载的回答
-  private static browserInstance: puppeteer.Browser | null = null; // 浏览器单例
+  private articleCache: ArticleCache;
+  private answerLoader: AnswerLoader;
 
   constructor(cookieManager: CookieManager) {
     this.cookieManager = cookieManager;
-  }
-
-  // 获取或创建浏览器实例
-  private async getBrowserInstance(): Promise<puppeteer.Browser> {
-    if (!ArticleService.browserInstance) {
-      console.log("创建新的浏览器实例...");
-      ArticleService.browserInstance = await puppeteer.launch({
-        headless: false, // 设置为false以便调试
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
-    }
-    return ArticleService.browserInstance;
+    this.articleCache = new ArticleCache();
+    this.answerLoader = new AnswerLoader(cookieManager);
   }
 
   // 获取文章内容
@@ -77,8 +54,8 @@ export class ArticleService {
           const questionId = questionIdMatch[1];
 
           // 检查是否有缓存的回答
-          if (this.batchAnswersCache.has(questionId)) {
-            const cachedData = this.batchAnswersCache.get(questionId);
+          if (this.articleCache.hasQuestionCache(questionId)) {
+            const cachedData = this.articleCache.getQuestionCache(questionId);
             if (cachedData && cachedData.answers.length > 0) {
               // 返回第一个回答
               return cachedData.answers[0];
@@ -126,84 +103,15 @@ export class ArticleService {
 
       console.log("成功获取HTML，开始解析文章内容");
 
-      let title = "";
-      let author = "";
-      let authorAvatar = "";
-      let authorBio = "";
-      let authorUrl = ""; // 添加作者URL
-      let contentHtml = "";
+      // 解析文章信息
+      const articleInfo = ContentParser.parseArticleInfo($, url);
+      let { title, author, authorAvatar, authorBio, authorUrl, contentHtml } = articleInfo;
       let actualUrl = url; // 添加实际URL字段用于存储回答链接
 
-      // 1. 获取问题标题
-      title = $("h1.QuestionHeader-title").text().trim();
-      if (!title) {
-        // 文章标题
-        title = $("h1.Post-Title").text().trim();
-      }
-      if (!title) {
-        // 更通用的标题选择器
-        title = $("h1").first().text().trim();
-      }
-
-      // 2. 处理问题页面
-      if (url.includes("/question/")) {
-        let questionId = "";
-        let answerId = "";
-
-        // 2.1 提取问题ID
-        const questionMatch = url.match(/question\/(\d+)/);
-        if (questionMatch && questionMatch[1]) {
-          questionId = questionMatch[1];
-        } else {
-          throw new Error("无法解析问题ID，请联系开发者更新解析方案");
-        }
-
-        // 2.2 检查URL中是否已包含answer ID
-        const answerMatch = url.match(/answer\/(\d+)/);
-        if (answerMatch && answerMatch[1]) {
-          // URL已经包含answer ID，直接获取回答内容
-          answerId = answerMatch[1];
-
-          // 直接查找回答内容
-          const contentItem = $(".ContentItem.AnswerItem");
-
-          if (contentItem.length > 0) {
-            // 获取回答内容
-            contentHtml =
-              contentItem.find(".RichContent-inner").html() ||
-              contentItem.find(".RichText.ztext").html() ||
-              "";
-
-            // 获取作者信息
-            const authorInfo = contentItem.find(".AuthorInfo");
-            if (authorInfo.length > 0) {
-              author =
-                authorInfo.find("meta[itemprop='name']").attr("content") || "";
-              authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
-              authorBio = authorInfo
-                .find(".AuthorInfo-badgeText")
-                .text()
-                .trim();
-
-              // 提取作者URL - 先尝试从meta标签获取
-              const metaUrl = authorInfo
-                .find("meta[itemprop='url']")
-                .attr("content");
-              if (metaUrl) {
-                authorUrl = metaUrl;
-                console.log(`从meta标签获取到作者URL: ${authorUrl}`);
-              }
-              console.log(`从回答页面获取到作者信息: ${author}`);
-            }
-          }
-
-          if (!contentHtml) {
-            throw new Error("无法获取回答内容，请联系开发者更新解析方案");
-          }
-        } else {
-          // URL中不包含answer ID，需要从问题页面中提取第一个回答的ID
-          console.log("从问题页面查找第一个回答...");
-
+      // 处理特殊情况：URL中不包含answer ID，需要从问题页面中提取第一个回答
+      if (url.includes("/question/") && !url.includes("/answer/")) {
+        const questionId = url.match(/question\/(\d+)/)?.[1];
+        if (questionId) {
           // 根据提供的DOM结构查找第一个List-Item
           const firstListItem = $(".List-item").first();
 
@@ -214,14 +122,15 @@ export class ArticleService {
             const answerItem = firstListItem.find(".ContentItem.AnswerItem");
 
             if (answerItem.length > 0) {
-              // 从data-zop属性中提取itemId，这就是回答ID
+              let answerId = "";
+              
+              // 从data-zop属性中提取itemId
               const dataZop = answerItem.attr("data-zop");
               if (dataZop) {
                 try {
                   const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
                   if (zopData.itemId) {
                     answerId = zopData.itemId;
-                    console.log(`成功提取回答ID: ${answerId}`);
                   }
                 } catch (e) {
                   console.error("解析data-zop属性失败", e);
@@ -231,7 +140,6 @@ export class ArticleService {
               // 备用方法：尝试从name属性获取
               if (!answerId) {
                 answerId = answerItem.attr("name") || "";
-                console.log(`从name属性获取回答ID: ${answerId}`);
               }
 
               // 如果找到了回答ID，构建新的URL并获取内容
@@ -242,108 +150,14 @@ export class ArticleService {
 
                 // 递归调用自身获取具体回答
                 return this.getArticleContent(newUrl, hideImages);
-              } else {
-                throw new Error("无法提取回答ID，请联系开发者更新解析方案");
               }
-            } else {
-              throw new Error("无法找到回答项目，请联系开发者更新解析方案");
-            }
-          } else {
-            throw new Error("无法找到List-Item元素，请联系开发者更新解析方案");
-          }
-        }
-      }
-      // 3. 处理文章页面
-      else if (url.includes("/p/")) {
-        contentHtml =
-          $(".Post-RichTextContainer").html() ||
-          $(".PostIndex-content").html() ||
-          $(".RichText.ztext").html() ||
-          "";
-
-        // 获取作者信息
-        const authorInfo = $(".AuthorInfo").first();
-        if (authorInfo.length > 0) {
-          author =
-            authorInfo.find(".meta[itemprop='name']").attr("content") || "";
-          authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
-          authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
-
-          // 提取作者URL
-          const metaUrl = $("meta[itemprop='url']").attr("content");
-          if (metaUrl) {
-            authorUrl = metaUrl;
-          } else {
-            const userLinkHref = authorInfo.find(".UserLink-link").attr("href");
-            if (userLinkHref) {
-              authorUrl = userLinkHref.startsWith("http")
-                ? userLinkHref
-                : `https://www.zhihu.com${userLinkHref}`;
             }
           }
         }
-
-        if (!contentHtml) {
-          throw new Error("无法获取文章内容，请联系开发者更新解析方案");
-        }
-      }
-      // 4. 处理专栏文章
-      else if (url.includes("/column/") || url.includes("/zhuanlan/")) {
-        contentHtml =
-          $(".RichText.ztext").html() ||
-          $(".Post-RichTextContainer").html() ||
-          "";
-
-        // 获取作者信息
-        const authorInfo = $(".AuthorInfo").first();
-        if (authorInfo.length > 0) {
-          author =
-            authorInfo.find(".meta[itemprop='name']").attr("content") || "";
-          authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
-          authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
-
-          // 提取作者URL
-          const metaUrl = $("meta[itemprop='url']").attr("content");
-          if (metaUrl) {
-            authorUrl = metaUrl;
-          } else {
-            const userLinkHref = authorInfo.find(".UserLink-link").attr("href");
-            if (userLinkHref) {
-              authorUrl = userLinkHref.startsWith("http")
-                ? userLinkHref
-                : `https://www.zhihu.com${userLinkHref}`;
-            }
-          }
-        }
-
-        if (!contentHtml) {
-          throw new Error("无法获取专栏文章内容，请联系开发者更新解析方案");
-        }
-      } else {
-        throw new Error("不支持的URL类型，请联系开发者更新解析方案");
       }
 
-      // 处理内容，如果启用无图片模式，删除所有图片标签
-      if (hideImages && contentHtml) {
-        const $content = cheerio.load(contentHtml);
-        $content("img").remove();
-        contentHtml = $content.html() || "";
-      } else if (contentHtml) {
-        // 如果不是无图片模式，确保使用正确的图片URL
-        const $content = cheerio.load(contentHtml);
-        $content("img").each((_, img) => {
-          const $img = $content(img);
-          // 优先使用data-actualsrc属性，这是知乎图片的真实URL
-          const actualSrc = $img.attr("data-actualsrc");
-          if (actualSrc) {
-            $img.attr("src", actualSrc);
-          } else if ($img.attr("data-original")) {
-            // 备选：某些知乎图片使用data-original存储URL
-            $img.attr("src", $img.attr("data-original"));
-          }
-        });
-        contentHtml = $content.html() || "";
-      }
+      // 处理内容中的图片
+      contentHtml = ContentParser.processHtmlContent(contentHtml, hideImages);
 
       // 如果仍然没有内容，提供友好的错误信息
       if (!contentHtml) {
@@ -352,13 +166,14 @@ export class ArticleService {
       }
 
       // 将HTML转为Markdown
-      const content = this.htmlToMarkdown(contentHtml);
+      const content = ContentParser.htmlToMarkdown(contentHtml);
 
       console.log(
         `成功解析文章：${title}，作者：${author || "未知"}，头像: ${
           authorAvatar ? "已获取" : "未获取"
         }，简介: ${authorBio || "未获取"}，作者URL: ${authorUrl || "未获取"}`
       );
+      
       return {
         title: title || "未知标题",
         content,
@@ -376,47 +191,6 @@ export class ArticleService {
         }`
       );
     }
-  }
-
-  /**
-   * 创建延时Promise
-   * @param ms 延时毫秒数
-   * @returns Promise对象
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  /**
-   * 模拟人类的滚动行为
-   * @param page Puppeteer页面对象
-   */
-  private async simulateHumanScroll(page: puppeteer.Page): Promise<void> {
-    const viewportHeight = await page.evaluate(() => window.innerHeight);
-
-    // 先向下滚动到接近底部
-    await page.evaluate((height) => {
-      window.scrollBy(0, document.body.scrollHeight - height * 1.5);
-    }, viewportHeight);
-
-    // 等待一小段随机时间
-    await this.delay(1000 + Math.random() * 500);
-
-    // 稍微向上滚动一点
-    await page.evaluate((height) => {
-      window.scrollBy(0, -height * (0.1 + Math.random() * 0.3));
-    }, viewportHeight);
-
-    // 再次等待
-    await this.delay(800 + Math.random() * 400);
-
-    // 再次向下滚动到底部
-    await page.evaluate(() => {
-      window.scrollBy(0, document.body.scrollHeight);
-    });
-
-    // 最终等待加载
-    await this.delay(1500 + Math.random() * 500);
   }
 
   /**
@@ -449,8 +223,8 @@ export class ArticleService {
       const questionId = questionIdMatch[1];
 
       // 检查缓存中是否已存在该问题的回答
-      if (this.batchAnswersCache.has(questionId)) {
-        const cachedData = this.batchAnswersCache.get(questionId)!;
+      if (this.articleCache.hasQuestionCache(questionId)) {
+        const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
         // 如果有回调函数并且有已加载的回答，通知UI第一个回答可以显示
         if (progressCallback && cachedData.answers.length > 0) {
@@ -467,338 +241,31 @@ export class ArticleService {
       // 直接访问问题页面URL（不带回答ID）
       const cleanQuestionUrl = `https://www.zhihu.com/question/${questionId}`;
 
-      // 使用Puppeteer获取页面内容
-      let browser: puppeteer.Browser | null = null;
-      let page: puppeteer.Page | null = null;
-
-      console.log("获取浏览器实例...");
-      browser = await this.getBrowserInstance();
-
-      console.log("打开新页面...");
-      page = await browser.newPage();
-
-      // 设置浏览器视窗大小
-      await page.setViewport({ width: 1920, height: 1080 });
-
-      // 设置User-Agent
-      await page.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
-      );
-
-      // 如果有cookie，设置到页面
-      const cookie = this.cookieManager.getCookie();
-      if (cookie) {
-        async function addCookies(
-          cookies_str: string,
-          page: puppeteer.Page,
-          domain: string
-        ) {
-          let cookies = cookies_str.split(";").map((pair) => {
-            let name = pair.trim().slice(0, pair.trim().indexOf("="));
-            let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
-            return { name, value, domain };
-          });
-          await Promise.all(
-            cookies.map((pair) => {
-              return page.setCookie(pair);
-            })
-          );
-        }
-        await addCookies(cookie, page, "www.zhihu.com");
-      }
-
-      // 防反爬虫设置
-      await page.evaluateOnNewDocument(() => {
-        Object.defineProperty(navigator, "webdriver", {
-          get: () => undefined,
-        });
-      });
-
-      console.log(`导航到问题页面: ${cleanQuestionUrl}`);
-      await page.goto(cleanQuestionUrl, {
-        waitUntil: "networkidle0",
-        timeout: 60000,
-      });
-
-      console.log("页面加载完成，开始提取问题标题和回答");
-
-      // 提取问题标题和总回答数
-      const { questionTitle, totalAnswers } = await page.evaluate(() => {
-        const titleElement = document.querySelector("h1.QuestionHeader-title");
-
-        // 获取总回答数
-        let total = 0;
-        const listHeaderText = document.querySelector(".List-headerText span");
-        if (listHeaderText) {
-          const match = listHeaderText.textContent?.match(/(\d+)/);
-          if (match && match[1]) {
-            total = parseInt(match[1], 10);
-          }
-        }
-
-        return {
-          questionTitle: titleElement
-            ? titleElement.textContent?.trim()
-            : "未知问题",
-          totalAnswers: total,
-        };
-      });
-
-      console.log(`问题标题: ${questionTitle}, 总回答数: ${totalAnswers}`);
-
-      // 首先尝试点击"收起全部回答"按钮
-      await page.evaluate(() => {
-        const collapseButton = document.querySelector("#collapsed-button");
-        if (collapseButton) {
-          (collapseButton as HTMLElement).click();
-          console.log("已点击收起回答按钮");
-        }
-      });
-
-      // 使用自定义延迟函数等待UI更新
-      await this.delay(1000);
+      // 初始化问题页面
+      const { page, questionTitle, totalAnswers } = await this.answerLoader.initQuestionPage(cleanQuestionUrl);
 
       // 初始化结果对象
       const result: BatchAnswers = {
-        questionTitle: questionTitle || "未知问题",
+        questionTitle: questionTitle,
         answers: [],
         hasMore: false,
-        browser,
+        browser: await PuppeteerManager.getBrowserInstance(),
         page,
-        totalAnswers: totalAnswers || undefined,
+        totalAnswers,
       };
 
-      // 滚动页面加载更多回答，直到达到所需数量或没有更多回答
-      let answersCount = 0;
-      let lastAnswersCount = 0;
-      let noNewAnswersCounter = 0;
-
-      // 是否发送了第一个回答
-      let firstAnswerSent = false;
-
-      while (answersCount < maxCount && noNewAnswersCounter < 3) {
-        // 提取当前页面上的所有回答
-        const newAnswers = await page.evaluate((hideImgs) => {
-          const answers: any[] = [];
-          const answerElements = document.querySelectorAll(".AnswerItem");
-
-          answerElements.forEach((element) => {
-            try {
-              // 提取回答ID
-              let answerId = "";
-              const dataZop = element.getAttribute("data-zop");
-              if (dataZop) {
-                try {
-                  const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
-                  if (zopData.itemId) {
-                    answerId = zopData.itemId;
-                  }
-                } catch (e) {
-                  console.error("解析data-zop属性失败", e);
-                }
-              }
-
-              if (!answerId) {
-                answerId = element.getAttribute("name") || "";
-              }
-
-              // 提取作者信息
-              const authorInfo = element.querySelector(".AuthorInfo");
-              let author = "未知作者";
-              let authorAvatar = "";
-              let authorBio = "";
-              let authorUrl = "";
-
-              if (authorInfo) {
-                const nameElement = authorInfo.querySelector(
-                  "meta[itemprop='name']"
-                );
-                if (nameElement) {
-                  author = nameElement.getAttribute("content") || "未知作者";
-                }
-
-                const avatarElement = authorInfo.querySelector(".Avatar");
-                if (avatarElement) {
-                  authorAvatar = avatarElement.getAttribute("src") || "";
-                }
-
-                const bioElement = authorInfo.querySelector(
-                  ".AuthorInfo-badgeText"
-                );
-                if (bioElement) {
-                  authorBio = bioElement.textContent?.trim() || "";
-                }
-
-                const urlElement = authorInfo.querySelector(
-                  "meta[itemprop='url']"
-                );
-                if (urlElement) {
-                  authorUrl = urlElement.getAttribute("content") || "";
-                } else {
-                  const linkElement =
-                    authorInfo.querySelector(".UserLink-link");
-                  if (linkElement) {
-                    const href = linkElement.getAttribute("href");
-                    if (href) {
-                      authorUrl = href.startsWith("http")
-                        ? href
-                        : `https://www.zhihu.com${href}`;
-                    }
-                  }
-                }
-              }
-
-              // 提取回答内容
-              let contentElement =
-                element.querySelector(".RichContent-inner") ||
-                element.querySelector(".RichText.ztext");
-              let contentHtml = "";
-
-              if (contentElement) {
-                // 深拷贝节点以避免修改原始DOM
-                const clonedContent = contentElement.cloneNode(true) as Element;
-
-                // 如果需要隐藏图片
-                if (hideImgs) {
-                  const images = clonedContent.querySelectorAll("img");
-                  images.forEach((img) => img.parentNode?.removeChild(img));
-                } else {
-                  // 处理图片链接，确保使用真实URL
-                  const images = clonedContent.querySelectorAll("img");
-                  images.forEach((img) => {
-                    const actualSrc = img.getAttribute("data-actualsrc");
-                    if (actualSrc) {
-                      img.setAttribute("src", actualSrc);
-                    } else {
-                      const originalSrc = img.getAttribute("data-original");
-                      if (originalSrc) {
-                        img.setAttribute("src", originalSrc);
-                      }
-                    }
-                  });
-                }
-
-                contentHtml = clonedContent.innerHTML;
-              }
-
-              if (answerId && contentHtml) {
-                answers.push({
-                  answerId,
-                  author,
-                  authorAvatar,
-                  authorBio,
-                  authorUrl,
-                  contentHtml,
-                });
-              }
-            } catch (e) {
-              console.error("处理回答元素时出错", e);
-            }
-          });
-
-          return answers;
-        }, hideImages);
-
-        // 将新提取的回答转换为ZhihuArticle格式并添加到结果中
-        for (const answer of newAnswers) {
-          // 检查是否已经存在该回答
-          const exists = result.answers.some((a) =>
-            a.actualUrl?.includes(`/answer/${answer.answerId}`)
-          );
-
-          if (!exists && result.answers.length < maxCount) {
-            const content = this.htmlToMarkdown(answer.contentHtml);
-            const actualUrl = `https://www.zhihu.com/question/${questionId}/answer/${answer.answerId}`;
-
-            const newArticle: ZhihuArticle = {
-              title: result.questionTitle,
-              content,
-              author: answer.author,
-              authorAvatar: answer.authorAvatar,
-              authorBio: answer.authorBio,
-              authorUrl: answer.authorUrl,
-              actualUrl,
-            };
-
-            result.answers.push(newArticle);
-
-            // 如果这是第一个回答且有回调函数，立即通知UI可以显示第一个回答
-            if (
-              !firstAnswerSent &&
-              progressCallback &&
-              result.answers.length === 1
-            ) {
-              progressCallback(newArticle, 1, totalAnswers || maxCount);
-              firstAnswerSent = true;
-            }
-          }
-        }
-
-        // 检查是否有新回答被添加
-        if (result.answers.length > lastAnswersCount) {
-          // 如果有回调函数，通知UI更新当前爬取进度
-          if (progressCallback) {
-            progressCallback(
-              result.answers[0], // 始终传递第一个回答（因为可能已经显示了）
-              result.answers.length,
-              totalAnswers || maxCount
-            );
-          }
-
-          lastAnswersCount = result.answers.length;
-          noNewAnswersCounter = 0;
-          console.log(`已加载 ${result.answers.length} 个回答`);
-        } else {
-          noNewAnswersCounter++;
-          console.log(`未找到新回答，尝试再次滚动 (${noNewAnswersCounter}/3)`);
-        }
-
-        // 如果已经达到目标数量，跳出循环
-        if (result.answers.length >= maxCount) {
-          break;
-        }
-
-        // 使用模拟人类滚动行为代替简单的滚动
-        await this.simulateHumanScroll(page);
-
-        // 检查是否还有"加载更多"按钮
-        const hasLoadMoreButton = await page.evaluate(() => {
-          const loadMoreButton = document.querySelector(".QuestionMainAction");
-          if (
-            loadMoreButton &&
-            loadMoreButton.textContent?.includes("更多回答")
-          ) {
-            // 如果找到"更多回答"按钮，点击它
-            (loadMoreButton as HTMLElement).click();
-            return true;
-          }
-          return false;
-        });
-
-        if (hasLoadMoreButton) {
-          // 使用自定义延迟函数等待新内容加载
-          await this.delay(2000);
-        }
-
-        answersCount = result.answers.length;
-      }
-
-      // 更新是否有更多回答的标志
-      result.hasMore = await page.evaluate(() => {
-        return (
-          document.querySelector(".QuestionMainAction") !== null ||
-          document.querySelector(".List-loadMore") !== null
-        );
-      });
-
-      console.log(
-        `已成功获取 ${result.answers.length} 个回答，${
-          result.hasMore ? "还有更多回答可加载" : "没有更多回答了"
-        }`
+      // 加载回答
+      await this.answerLoader.loadAllAnswers(
+        page,
+        questionId,
+        maxCount,
+        hideImages,
+        result,
+        progressCallback
       );
 
       // 将结果存入缓存
-      this.batchAnswersCache.set(questionId, result);
+      this.articleCache.setQuestionCache(questionId, result);
 
       return result;
     } catch (error) {
@@ -806,7 +273,7 @@ export class ArticleService {
       // 如果出错，不要关闭浏览器，只关闭当前页面
       try {
         // 尝试获取已有缓存
-        const cachedData = this.batchAnswersCache.get(
+        const cachedData = this.articleCache.getQuestionCache(
           questionUrl.match(/question\/(\d+)/)?.[1] || ""
         );
         if (cachedData && cachedData.page) {
@@ -839,11 +306,11 @@ export class ArticleService {
   ): Promise<ZhihuArticle[]> {
     try {
       // 检查缓存中是否存在该问题的回答
-      if (!this.batchAnswersCache.has(questionId)) {
+      if (!this.articleCache.hasQuestionCache(questionId)) {
         throw new Error("未找到缓存的问题回答");
       }
 
-      const cachedData = this.batchAnswersCache.get(questionId)!;
+      const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
       // 如果已经没有更多回答，直接返回空数组
       if (!cachedData.hasMore) {
@@ -851,263 +318,41 @@ export class ArticleService {
         return [];
       }
 
+      // 记录原始回答数量
+      const originalAnswersCount = cachedData.answers.length;
+
       // 如果浏览器实例已经关闭，创建新的实例
       if (!cachedData.browser || !cachedData.page) {
         console.log("页面已关闭，创建新页面...");
-
-        // 获取浏览器实例
-        cachedData.browser = await this.getBrowserInstance();
-
-        // 创建新页面
-        cachedData.page = await cachedData.browser.newPage();
-
-        // 重新设置页面并导航到问题
-        await cachedData.page.setViewport({ width: 1920, height: 1080 });
-        await cachedData.page.setUserAgent(
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+        
+        // 重新初始化页面
+        const { page, questionTitle } = await this.answerLoader.initQuestionPage(
+          `https://www.zhihu.com/question/${questionId}`
         );
-
-        // 设置cookie
-        const cookie = this.cookieManager.getCookie();
-        if (cookie) {
-          const cookies = cookie.split(";").map((pair) => {
-            let name = pair.trim().slice(0, pair.trim().indexOf("="));
-            let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
-            return { name, value, domain: "www.zhihu.com" };
-          });
-          await Promise.all(cookies.map((c) => cachedData.page!.setCookie(c)));
+        
+        // 更新缓存
+        cachedData.page = page;
+        if (!cachedData.questionTitle) {
+          cachedData.questionTitle = questionTitle;
         }
-
-        // 防反爬虫设置
-        await cachedData.page.evaluateOnNewDocument(() => {
-          Object.defineProperty(navigator, "webdriver", {
-            get: () => undefined,
-          });
+        
+        this.articleCache.updateQuestionCache(questionId, {
+          page,
+          questionTitle: cachedData.questionTitle || questionTitle,
         });
-
-        // 导航到问题页面
-        await cachedData.page.goto(
-          `https://www.zhihu.com/question/${questionId}`,
-          { waitUntil: "networkidle0", timeout: 60000 }
-        );
       }
 
-      // 使用现有浏览器实例继续加载
-      const originalAnswersCount = cachedData.answers.length;
-      let newAnswersCount = 0;
-      let noNewAnswersCounter = 0;
-
-      while (newAnswersCount < maxCount && noNewAnswersCounter < 3) {
-        // 使用模拟人类滚动行为
-        await this.simulateHumanScroll(cachedData.page);
-
-        // 检查是否还有"加载更多"按钮
-        const hasLoadMoreButton = await cachedData.page.evaluate(() => {
-          const loadMoreButton = document.querySelector(".QuestionMainAction");
-          if (
-            loadMoreButton &&
-            loadMoreButton.textContent?.includes("更多回答")
-          ) {
-            // 如果找到"更多回答"按钮，点击它
-            (loadMoreButton as HTMLElement).click();
-            return true;
-          }
-          return false;
-        });
-
-        if (hasLoadMoreButton) {
-          // 等待新内容加载
-          await this.delay(2000);
-        }
-
-        // 提取新回答
-        const newAnswers = await cachedData.page.evaluate((hideImgs) => {
-          const answers: any[] = [];
-          const answerElements = document.querySelectorAll(".AnswerItem");
-
-          answerElements.forEach((element) => {
-            try {
-              // 提取回答ID
-              let answerId = "";
-              const dataZop = element.getAttribute("data-zop");
-              if (dataZop) {
-                try {
-                  const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
-                  if (zopData.itemId) {
-                    answerId = zopData.itemId;
-                  }
-                } catch (e) {
-                  console.error("解析data-zop属性失败", e);
-                }
-              }
-
-              if (!answerId) {
-                answerId = element.getAttribute("name") || "";
-              }
-
-              // 提取作者信息
-              const authorInfo = element.querySelector(".AuthorInfo");
-              let author = "未知作者";
-              let authorAvatar = "";
-              let authorBio = "";
-              let authorUrl = "";
-
-              if (authorInfo) {
-                const nameElement = authorInfo.querySelector(
-                  "meta[itemprop='name']"
-                );
-                if (nameElement) {
-                  author = nameElement.getAttribute("content") || "未知作者";
-                }
-
-                const avatarElement = authorInfo.querySelector(".Avatar");
-                if (avatarElement) {
-                  authorAvatar = avatarElement.getAttribute("src") || "";
-                }
-
-                const bioElement = authorInfo.querySelector(
-                  ".AuthorInfo-badgeText"
-                );
-                if (bioElement) {
-                  authorBio = bioElement.textContent?.trim() || "";
-                }
-
-                const urlElement = authorInfo.querySelector(
-                  "meta[itemprop='url']"
-                );
-                if (urlElement) {
-                  authorUrl = urlElement.getAttribute("content") || "";
-                } else {
-                  const linkElement =
-                    authorInfo.querySelector(".UserLink-link");
-                  if (linkElement) {
-                    const href = linkElement.getAttribute("href");
-                    if (href) {
-                      authorUrl = href.startsWith("http")
-                        ? href
-                        : `https://www.zhihu.com${href}`;
-                    }
-                  }
-                }
-              }
-
-              // 提取回答内容
-              let contentElement =
-                element.querySelector(".RichContent-inner") ||
-                element.querySelector(".RichText.ztext");
-              let contentHtml = "";
-
-              if (contentElement) {
-                // 深拷贝节点以避免修改原始DOM
-                const clonedContent = contentElement.cloneNode(true) as Element;
-
-                // 如果需要隐藏图片
-                if (hideImgs) {
-                  const images = clonedContent.querySelectorAll("img");
-                  images.forEach((img) => img.parentNode?.removeChild(img));
-                } else {
-                  // 处理图片链接，确保使用真实URL
-                  const images = clonedContent.querySelectorAll("img");
-                  images.forEach((img) => {
-                    const actualSrc = img.getAttribute("data-actualsrc");
-                    if (actualSrc) {
-                      img.setAttribute("src", actualSrc);
-                    } else {
-                      const originalSrc = img.getAttribute("data-original");
-                      if (originalSrc) {
-                        img.setAttribute("src", originalSrc);
-                      }
-                    }
-                  });
-                }
-
-                contentHtml = clonedContent.innerHTML;
-              }
-
-              if (answerId && contentHtml) {
-                answers.push({
-                  answerId,
-                  author,
-                  authorAvatar,
-                  authorBio,
-                  authorUrl,
-                  contentHtml,
-                });
-              }
-            } catch (e) {
-              console.error("处理回答元素时出错", e);
-            }
-          });
-
-          return answers;
-        }, hideImages);
-
-        // 将新提取的回答转换为ZhihuArticle格式
-        const existingAnswerIds = new Set(
-          cachedData.answers.map(
-            (a) => a.actualUrl?.match(/answer\/(\d+)/)?.[1]
-          )
-        );
-
-        const newArticles: ZhihuArticle[] = [];
-
-        for (const answer of newAnswers) {
-          // 检查是否已经存在该回答
-          if (
-            !existingAnswerIds.has(answer.answerId) &&
-            newArticles.length < maxCount
-          ) {
-            const content = this.htmlToMarkdown(answer.contentHtml);
-            const actualUrl = `https://www.zhihu.com/question/${questionId}/answer/${answer.answerId}`;
-
-            const newArticle: ZhihuArticle = {
-              title: cachedData.questionTitle,
-              content,
-              author: answer.author,
-              authorAvatar: answer.authorAvatar,
-              authorBio: answer.authorBio,
-              authorUrl: answer.authorUrl,
-              actualUrl,
-            };
-
-            // 添加到新回答列表和缓存
-            newArticles.push(newArticle);
-            cachedData.answers.push(newArticle);
-            existingAnswerIds.add(answer.answerId);
-          }
-        }
-
-        // 检查是否有新回答被添加
-        if (newArticles.length > newAnswersCount) {
-          newAnswersCount = newArticles.length;
-          noNewAnswersCounter = 0;
-          console.log(`已加载 ${newArticles.length} 个新回答`);
-        } else {
-          noNewAnswersCounter++;
-          console.log(`未找到新回答，尝试再次滚动 (${noNewAnswersCounter}/3)`);
-        }
-
-        // 如果已经达到目标数量，跳出循环
-        if (newArticles.length >= maxCount) {
-          break;
-        }
-      }
-
-      // 更新是否有更多回答的标志
-      cachedData.hasMore = await cachedData.page.evaluate(() => {
-        return (
-          document.querySelector(".QuestionMainAction") !== null ||
-          document.querySelector(".List-loadMore") !== null
-        );
-      });
-
-      console.log(
-        `共获取了 ${
-          cachedData.answers.length - originalAnswersCount
-        } 个新回答，${
-          cachedData.hasMore ? "还有更多回答可加载" : "没有更多回答了"
-        }`
+      // 加载更多回答
+      await this.answerLoader.loadAllAnswers(
+        cachedData.page!,
+        questionId,
+        maxCount + originalAnswersCount,  // 增加目标数量
+        hideImages,
+        cachedData
       );
+      
+      // 更新缓存
+      this.articleCache.updateQuestionCache(questionId, cachedData);
 
       // 返回新加载的回答
       return cachedData.answers.slice(originalAnswersCount);
@@ -1127,14 +372,13 @@ export class ArticleService {
    */
   async closeBrowser(questionId: string): Promise<void> {
     try {
-      const cachedData = this.batchAnswersCache.get(questionId);
+      const cachedData = this.articleCache.getQuestionCache(questionId);
       if (cachedData && cachedData.page) {
         console.log(`关闭问题 ${questionId} 的页面`);
         await cachedData.page.close();
 
         // 更新缓存状态
-        cachedData.page = null;
-        this.batchAnswersCache.set(questionId, cachedData);
+        this.articleCache.updateQuestionCache(questionId, { page: null });
       }
     } catch (error) {
       console.error("关闭页面失败:", error);
@@ -1145,21 +389,7 @@ export class ArticleService {
    * 完全关闭浏览器实例（应用退出时调用）
    */
   static async closeBrowserInstance(): Promise<void> {
-    if (ArticleService.browserInstance) {
-      try {
-        await ArticleService.browserInstance.close();
-        ArticleService.browserInstance = null;
-        console.log("已关闭浏览器实例");
-      } catch (error) {
-        console.error("关闭浏览器实例失败:", error);
-      }
-    }
-  }
-
-  // 将HTML转为Markdown
-  private htmlToMarkdown(html: string): string {
-    // 使用marked库将HTML转为Markdown
-    return marked.parse(html) as string;
+    await PuppeteerManager.closeBrowserInstance();
   }
 
   /**
@@ -1181,8 +411,8 @@ export class ArticleService {
       console.log(`从URL中提取到问题ID: ${questionId}`);
 
       // 检查是否已有缓存
-      if (this.batchAnswersCache.has(questionId)) {
-        const cachedData = this.batchAnswersCache.get(questionId)!;
+      if (this.articleCache.hasQuestionCache(questionId)) {
+        const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
         // 提取当前回答ID
         const currentAnswerIdMatch = questionUrl.match(/answer\/(\d+)/);

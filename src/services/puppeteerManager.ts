@@ -1,0 +1,126 @@
+import * as puppeteer from "puppeteer";
+import { CookieManager } from "./cookieManager";
+
+/**
+ * 负责管理Puppeteer浏览器实例和页面操作
+ */
+export class PuppeteerManager {
+  private static browserInstance: puppeteer.Browser | null = null;
+
+  /**
+   * 获取或创建浏览器实例（单例模式）
+   */
+  static async getBrowserInstance(): Promise<puppeteer.Browser> {
+    if (!PuppeteerManager.browserInstance) {
+      console.log("创建新的浏览器实例...");
+      PuppeteerManager.browserInstance = await puppeteer.launch({
+        headless: false, // 设置为false以便调试
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
+    return PuppeteerManager.browserInstance;
+  }
+
+  /**
+   * 创建并设置新的页面
+   */
+  static async createPage(cookieManager: CookieManager): Promise<puppeteer.Page> {
+    const browser = await PuppeteerManager.getBrowserInstance();
+    
+    console.log("打开新页面...");
+    const page = await browser.newPage();
+
+    // 设置浏览器视窗大小
+    await page.setViewport({ width: 1920, height: 1080 });
+
+    // 设置User-Agent
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+    );
+
+    // 如果有cookie，设置到页面
+    const cookie = cookieManager.getCookie();
+    if (cookie) {
+      await PuppeteerManager.addCookiesToPage(cookie, page);
+    }
+
+    // 防反爬虫设置
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, "webdriver", {
+        get: () => undefined,
+      });
+    });
+
+    return page;
+  }
+
+  /**
+   * 添加Cookies到页面
+   */
+  static async addCookiesToPage(cookiesStr: string, page: puppeteer.Page, domain: string = "www.zhihu.com"): Promise<void> {
+    const cookies = cookiesStr.split(";").map((pair) => {
+      let name = pair.trim().slice(0, pair.trim().indexOf("="));
+      let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
+      return { name, value, domain };
+    });
+    
+    await Promise.all(
+      cookies.map((pair) => {
+        return page.setCookie(pair);
+      })
+    );
+  }
+
+  /**
+   * 创建延时Promise
+   */
+  static delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * 模拟人类的滚动行为
+   */
+  static async simulateHumanScroll(page: puppeteer.Page): Promise<void> {
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+
+    // 先向下滚动到接近底部
+    await page.evaluate((height) => {
+      window.scrollBy(0, document.body.scrollHeight - height * 1.5);
+    }, viewportHeight);
+
+    // 等待一小段随机时间
+    await PuppeteerManager.delay(1000 + Math.random() * 500);
+
+    // 稍微向上滚动一点
+    await page.evaluate((height) => {
+      window.scrollBy(0, -height * (0.1 + Math.random() * 0.3));
+    }, viewportHeight);
+
+    // 再次等待
+    await PuppeteerManager.delay(800 + Math.random() * 400);
+
+    // 再次向下滚动到底部
+    await page.evaluate(() => {
+      window.scrollBy(0, document.body.scrollHeight);
+    });
+
+    // 最终等待加载
+    await PuppeteerManager.delay(1500 + Math.random() * 500);
+  }
+
+  /**
+   * 完全关闭浏览器实例
+   */
+  static async closeBrowserInstance(): Promise<void> {
+    if (PuppeteerManager.browserInstance) {
+      try {
+        await PuppeteerManager.browserInstance.close();
+        PuppeteerManager.browserInstance = null;
+        console.log("已关闭浏览器实例");
+      } catch (error) {
+        console.error("关闭浏览器实例失败:", error);
+      }
+    }
+  }
+}
