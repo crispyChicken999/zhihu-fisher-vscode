@@ -7,7 +7,12 @@ import { CookieManager } from "./cookieManager";
 
 // 定义回调函数类型，用于实时更新爬取状态
 export interface ProgressCallback {
-  (article: ZhihuArticle, count: number, total: number, isLoading?: boolean): void;
+  (
+    article: ZhihuArticle,
+    count: number,
+    total: number,
+    isLoading?: boolean
+  ): void;
 }
 
 /**
@@ -15,11 +20,11 @@ export interface ProgressCallback {
  */
 export class AnswerLoader {
   private cookieManager: CookieManager;
-  
+
   constructor(cookieManager: CookieManager) {
     this.cookieManager = cookieManager;
   }
-  
+
   /**
    * 从问题页面提取回答
    * @param page Puppeteer页面对象
@@ -62,11 +67,13 @@ export class AnswerLoader {
             name: "未知作者",
             avatar: "",
             bio: "",
-            url: ""
+            url: "",
           };
 
           if (authorInfo) {
-            const nameElement = authorInfo.querySelector("meta[itemprop='name']");
+            const nameElement = authorInfo.querySelector(
+              "meta[itemprop='name']"
+            );
             if (nameElement) {
               author.name = nameElement.getAttribute("content") || "未知作者";
             }
@@ -76,7 +83,9 @@ export class AnswerLoader {
               author.avatar = avatarElement.getAttribute("src") || "";
             }
 
-            const bioElement = authorInfo.querySelector(".AuthorInfo-badgeText");
+            const bioElement = authorInfo.querySelector(
+              ".AuthorInfo-badgeText"
+            );
             if (bioElement) {
               author.bio = bioElement.textContent?.trim() || "";
             }
@@ -149,7 +158,9 @@ export class AnswerLoader {
     const result: ZhihuArticle[] = [];
     const questionTitle = await page.evaluate(() => {
       const titleElement = document.querySelector("h1.QuestionHeader-title");
-      return titleElement ? titleElement.textContent?.trim() as string : "未知问题";
+      return titleElement
+        ? (titleElement.textContent?.trim() as string)
+        : "未知问题";
     });
 
     for (const answer of newAnswers) {
@@ -194,14 +205,14 @@ export class AnswerLoader {
     let answersCount = batchAnswers.answers.length;
     let lastAnswersCount = answersCount;
     let noNewAnswersCounter = 0;
-    
+
     // 是否发送了第一个回答
     let firstAnswerSent = batchAnswers.answers.length > 0 && !isLoadingMore;
-    
+
     // 如果是加载更多操作，先通知UI进入加载状态
     if (isLoadingMore && progressCallback) {
       progressCallback(
-        batchAnswers.answers[batchAnswers.answers.length - 1], 
+        batchAnswers.answers[batchAnswers.answers.length - 1],
         batchAnswers.answers.length,
         batchAnswers.totalAnswers || maxCount,
         true // 标记为加载中
@@ -210,30 +221,45 @@ export class AnswerLoader {
 
     while (answersCount < maxCount && noNewAnswersCounter < 3) {
       // 提取当前页面上的所有回答
-      const newAnswers = await this.extractAnswersFromPage(page, questionId, hideImages);
-      
-      // 将新提取的回答添加到结果中
-      const existingUrls = new Set(batchAnswers.answers.map(a => a.actualUrl));
-      const uniqueNewAnswers = newAnswers.filter(
-        answer => !existingUrls.has(answer.actualUrl) && 
-                  batchAnswers.answers.length < maxCount
+      const newAnswers = await this.extractAnswersFromPage(
+        page,
+        questionId,
+        hideImages
       );
-      
+
+      // 将新提取的回答添加到结果中
+      const existingUrls = new Set(
+        batchAnswers.answers.map((a) => a.actualUrl)
+      );
+      const uniqueNewAnswers = newAnswers.filter(
+        (answer) =>
+          !existingUrls.has(answer.actualUrl) &&
+          batchAnswers.answers.length < maxCount
+      );
+
       if (uniqueNewAnswers.length > 0) {
         // 添加新回答
         batchAnswers.answers.push(...uniqueNewAnswers);
-        
+
         // 如果这是第一个回答且有回调函数，立即通知UI可以显示第一个回答
-        if (!firstAnswerSent && progressCallback && batchAnswers.answers.length > 0) {
+        if (
+          !firstAnswerSent &&
+          progressCallback &&
+          batchAnswers.answers.length > 0
+        ) {
           progressCallback(
-            batchAnswers.answers[0], 
-            1, 
+            batchAnswers.answers[0],
+            1,
             batchAnswers.totalAnswers || maxCount
           );
           firstAnswerSent = true;
         }
         // 如果是加载更多且这是新批次的第一个回答，通知UI新回答已加载
-        else if (isLoadingMore && progressCallback && uniqueNewAnswers.length > 0) {
+        else if (
+          isLoadingMore &&
+          progressCallback &&
+          uniqueNewAnswers.length > 0
+        ) {
           progressCallback(
             uniqueNewAnswers[0],
             batchAnswers.answers.length,
@@ -268,7 +294,10 @@ export class AnswerLoader {
       // 检查是否还有"加载更多"按钮
       const hasLoadMoreButton = await page.evaluate(() => {
         const loadMoreButton = document.querySelector(".QuestionMainAction");
-        if (loadMoreButton && loadMoreButton.textContent?.includes("更多回答")) {
+        if (
+          loadMoreButton &&
+          loadMoreButton.textContent?.includes("更多回答")
+        ) {
           // 如果找到"更多回答"按钮，点击它
           (loadMoreButton as HTMLElement).click();
           return true;
@@ -298,7 +327,7 @@ export class AnswerLoader {
       }`
     );
   }
-  
+
   /**
    * 初始化问题页面
    * @param questionUrl 问题URL
@@ -310,7 +339,7 @@ export class AnswerLoader {
   }> {
     // 创建新页面
     const page = await PuppeteerManager.createPage(this.cookieManager);
-    
+
     console.log(`导航到问题页面: ${questionUrl}`);
     await page.goto(questionUrl, {
       waitUntil: "networkidle0",
@@ -335,7 +364,7 @@ export class AnswerLoader {
 
       return {
         questionTitle: titleElement
-          ? titleElement.textContent?.trim() as string
+          ? (titleElement.textContent?.trim() as string)
           : "未知问题",
         totalAnswers: total,
       };
@@ -351,10 +380,10 @@ export class AnswerLoader {
         console.log("已点击收起回答按钮");
       }
     });
-    
+
     // 等待一段时间让页面稳定
     await PuppeteerManager.delay(1000);
-    
+
     return { page, questionTitle, totalAnswers };
   }
 }

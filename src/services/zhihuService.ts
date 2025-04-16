@@ -1,11 +1,16 @@
-import { CookieManager } from './cookieManager';
-import { HotListService } from './hotListService';
-import { ArticleService } from './articleService';
-import { ZhihuHotItem, ZhihuArticle } from './types';
+import { CookieManager } from "./cookieManager";
+import { HotListService } from "./hotListService";
+import { ArticleService } from "./articleService";
+import { ZhihuHotItem, ZhihuArticle } from "./types";
 
 // 定义进度回调函数类型
 interface ProgressCallback {
-  (article: ZhihuArticle, count: number, total: number, isLoading?: boolean): void;
+  (
+    article: ZhihuArticle,
+    count: number,
+    total: number,
+    isLoading?: boolean
+  ): void;
 }
 
 /**
@@ -37,10 +42,13 @@ export class ZhihuService {
   }
 
   // 获取文章内容
-  async getArticleContent(url: string, hideImages: boolean): Promise<ZhihuArticle> {
+  async getArticleContent(
+    url: string,
+    hideImages: boolean
+  ): Promise<ZhihuArticle> {
     return this.articleService.getArticleContent(url, hideImages);
   }
-  
+
   // 获取更多回答ID（已废弃，保留用于兼容性）
   async getMoreAnswersId(questionUrl: string): Promise<string | null> {
     return this.articleService.getMoreAnswersId(questionUrl);
@@ -54,12 +62,17 @@ export class ZhihuService {
    * @param progressCallback 进度回调函数，用于实时更新UI
    */
   async getBatchAnswers(
-    questionUrl: string, 
-    maxCount: number = 10, 
+    questionUrl: string,
+    maxCount: number = 10,
     hideImages: boolean = false,
     progressCallback?: ProgressCallback
   ) {
-    return this.articleService.getBatchAnswers(questionUrl, maxCount, hideImages, progressCallback);
+    return this.articleService.getBatchAnswers(
+      questionUrl,
+      maxCount,
+      hideImages,
+      progressCallback
+    );
   }
 
   /**
@@ -75,7 +88,12 @@ export class ZhihuService {
     hideImages: boolean = false,
     progressCallback?: ProgressCallback
   ): Promise<ZhihuArticle[]> {
-    return this.articleService.loadMoreBatchAnswers(questionId, maxCount, hideImages, progressCallback);
+    return this.articleService.loadMoreBatchAnswers(
+      questionId,
+      maxCount,
+      hideImages,
+      progressCallback
+    );
   }
 
   /**
@@ -91,7 +109,12 @@ export class ZhihuService {
     hideImages: boolean = false,
     progressCallback?: ProgressCallback
   ): Promise<void> {
-    return this.articleService.setCurrentViewingIndex(questionId, index, hideImages, progressCallback);
+    return this.articleService.setCurrentViewingIndex(
+      questionId,
+      index,
+      hideImages,
+      progressCallback
+    );
   }
 
   /**
@@ -104,4 +127,4 @@ export class ZhihuService {
 }
 
 // 导出所有类型定义
-export * from './types';
+export * from "./types";

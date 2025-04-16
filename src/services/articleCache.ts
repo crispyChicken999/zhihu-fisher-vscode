@@ -47,7 +47,10 @@ export class ArticleCache {
    * @param questionId 问题ID
    * @param updates 要更新的属性
    */
-  updateQuestionCache(questionId: string, updates: Partial<BatchAnswers>): void {
+  updateQuestionCache(
+    questionId: string,
+    updates: Partial<BatchAnswers>
+  ): void {
     if (this.batchAnswersCache.has(questionId)) {
       const existingData = this.batchAnswersCache.get(questionId)!;
       this.batchAnswersCache.set(questionId, { ...existingData, ...updates });
@@ -62,16 +65,16 @@ export class ArticleCache {
   addAnswersToCache(questionId: string, answers: ZhihuArticle[]): void {
     if (this.batchAnswersCache.has(questionId)) {
       const existingData = this.batchAnswersCache.get(questionId)!;
-      
+
       // 过滤掉已经存在的回答
       const existingAnswerUrls = new Set(
-        existingData.answers.map(a => a.actualUrl)
+        existingData.answers.map((a) => a.actualUrl)
       );
-      
+
       const newAnswers = answers.filter(
-        answer => !existingAnswerUrls.has(answer.actualUrl)
+        (answer) => !existingAnswerUrls.has(answer.actualUrl)
       );
-      
+
       // 合并新回答
       existingData.answers = [...existingData.answers, ...newAnswers];
       this.batchAnswersCache.set(questionId, existingData);

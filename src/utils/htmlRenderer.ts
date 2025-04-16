@@ -637,9 +637,7 @@ export class HtmlRenderer {
         ${authorNameHTML}
         ${
           author.bio
-            ? `<div class="author-bio">${this.escapeHtml(
-                author.bio
-              )}</div>`
+            ? `<div class="author-bio">${this.escapeHtml(author.bio)}</div>`
             : ""
         }
       </div>

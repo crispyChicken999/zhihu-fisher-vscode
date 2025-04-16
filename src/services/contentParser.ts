@@ -25,7 +25,7 @@ export class ContentParser {
     }
 
     const $ = cheerio.load(contentHtml);
-    
+
     if (hideImages) {
       // 如果启用无图片模式，删除所有图片标签
       $("img").remove();
@@ -43,21 +43,24 @@ export class ContentParser {
         }
       });
     }
-    
+
     return $.html();
   }
-  
+
   /**
    * 解析问题页面，提取标题和回答数等信息
    * @param html 页面HTML
    * @returns 解析结果
    */
-  static parseQuestionPage(html: string): { title: string, totalAnswers: number } {
+  static parseQuestionPage(html: string): {
+    title: string;
+    totalAnswers: number;
+  } {
     const $ = cheerio.load(html);
-    
+
     // 获取问题标题
     const title = $("h1.QuestionHeader-title").text().trim() || "未知问题";
-    
+
     // 获取总回答数
     let totalAnswers = 0;
     const listHeaderText = $(".List-headerText span").text();
@@ -67,17 +70,20 @@ export class ContentParser {
         totalAnswers = parseInt(match[1], 10);
       }
     }
-    
+
     return { title, totalAnswers };
   }
-  
+
   /**
    * 解析文章基本信息
    * @param $ cheerio实例
    * @param url 原始URL
    * @returns 解析结果
    */
-  static parseArticleInfo($: cheerio.CheerioAPI, url: string): {
+  static parseArticleInfo(
+    $: cheerio.CheerioAPI,
+    url: string
+  ): {
     title: string;
     contentHtml: string;
     author: ZhihuAuthor;
@@ -88,9 +94,9 @@ export class ContentParser {
       name: "未知作者",
       avatar: "",
       bio: "",
-      url: ""
+      url: "",
     };
-    
+
     // 1. 获取问题标题
     title = $("h1.QuestionHeader-title").text().trim();
     if (!title) {
@@ -101,27 +107,31 @@ export class ContentParser {
       // 更通用的标题选择器
       title = $("h1").first().text().trim();
     }
-    
+
     // 2. 处理问题页面
     if (url.includes("/question/")) {
       const contentItem = $(".ContentItem.AnswerItem");
-      
+
       if (contentItem.length > 0) {
         // 获取回答内容
-        contentHtml = 
+        contentHtml =
           contentItem.find(".RichContent-inner").html() ||
           contentItem.find(".RichText.ztext").html() ||
           "";
-        
+
         // 获取作者信息
         const authorInfo = contentItem.find(".AuthorInfo");
         if (authorInfo.length > 0) {
-          author.name = authorInfo.find("meta[itemprop='name']").attr("content") || "未知作者";
+          author.name =
+            authorInfo.find("meta[itemprop='name']").attr("content") ||
+            "未知作者";
           author.avatar = authorInfo.find(".Avatar").attr("src") || "";
           author.bio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
-          
+
           // 提取作者URL - 先尝试从meta标签获取
-          const metaUrl = authorInfo.find("meta[itemprop='url']").attr("content");
+          const metaUrl = authorInfo
+            .find("meta[itemprop='url']")
+            .attr("content");
           if (metaUrl) {
             author.url = metaUrl;
           } else {
@@ -142,14 +152,16 @@ export class ContentParser {
         $(".PostIndex-content").html() ||
         $(".RichText.ztext").html() ||
         "";
-      
+
       // 获取作者信息
       const authorInfo = $(".AuthorInfo").first();
       if (authorInfo.length > 0) {
-        author.name = authorInfo.find(".meta[itemprop='name']").attr("content") || "未知作者";
+        author.name =
+          authorInfo.find(".meta[itemprop='name']").attr("content") ||
+          "未知作者";
         author.avatar = authorInfo.find(".Avatar").attr("src") || "";
         author.bio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
-        
+
         // 提取作者URL
         const metaUrl = $("meta[itemprop='url']").attr("content");
         if (metaUrl) {
@@ -170,14 +182,16 @@ export class ContentParser {
         $(".RichText.ztext").html() ||
         $(".Post-RichTextContainer").html() ||
         "";
-      
+
       // 获取作者信息
       const authorInfo = $(".AuthorInfo").first();
       if (authorInfo.length > 0) {
-        author.name = authorInfo.find(".meta[itemprop='name']").attr("content") || "未知作者";
+        author.name =
+          authorInfo.find(".meta[itemprop='name']").attr("content") ||
+          "未知作者";
         author.avatar = authorInfo.find(".Avatar").attr("src") || "";
         author.bio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
-        
+
         // 提取作者URL
         const metaUrl = $("meta[itemprop='url']").attr("content");
         if (metaUrl) {
@@ -192,7 +206,7 @@ export class ContentParser {
         }
       }
     }
-    
+
     return { title, author, contentHtml };
   }
 }

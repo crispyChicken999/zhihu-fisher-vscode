@@ -457,15 +457,19 @@ export class ArticleView {
     // 3. 还有更多回答可加载
     // 4. 当前没有任何加载进行中
     // 5. 已加载的回答数小于问题的总回答数
-    const isNearEnd = this.viewState.currentAnswerIndex >= this.viewState.answerIds.length - 2;
+    const isNearEnd =
+      this.viewState.currentAnswerIndex >= this.viewState.answerIds.length - 2;
     const canLoadMore = this.viewState.hasMoreAnswers === true;
-    const notLoading = !this.viewState.isLoadingMoreInBackground && !this.viewState.isLoading;
-    const hasMoreToLoad = !this.viewState.totalAnswers || 
-                          (this.viewState.loadedAnswersCount || 0) < (this.viewState.totalAnswers || 0);
-    
+    const notLoading =
+      !this.viewState.isLoadingMoreInBackground && !this.viewState.isLoading;
+    const hasMoreToLoad =
+      !this.viewState.totalAnswers ||
+      (this.viewState.loadedAnswersCount || 0) <
+        (this.viewState.totalAnswers || 0);
+
     if (isNearEnd && canLoadMore && notLoading && hasMoreToLoad) {
       console.log("检测到用户接近当前批次末尾，预加载下一批次回答");
-      
+
       try {
         // 获取配置中的无图片模式设置
         const config = vscode.workspace.getConfiguration("zhihu-fisher");
