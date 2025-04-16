@@ -154,8 +154,21 @@ export class ArticleView {
   private onBatchProgress = (
     article: ZhihuArticle,
     loadedCount: number,
-    totalCount: number
+    totalCount: number,
+    isLoading: boolean = false
   ) => {
+    // 如果是加载中状态，显示加载UI
+    if (isLoading) {
+      console.log("批量加载中，显示加载状态...");
+      this.viewState.isLoading = true;
+      this.viewState.article = {
+        ...this.viewState.article,
+        content: "正在加载下一批回答...",
+      };
+      this.updateContent();
+      return;
+    }
+
     // 如果这是第一个回答且当前没有显示回答，立即显示
     if (loadedCount === 1 && this.viewState.loadedAnswersCount === 0) {
       console.log("收到第一个回答，立即显示");
@@ -191,8 +204,10 @@ export class ArticleView {
       console.log(`更新爬取进度: ${loadedCount}/${totalCount}`);
 
       // 更新状态
+      this.viewState.isLoading = false;
       this.viewState.loadedAnswersCount = loadedCount;
       this.viewState.totalAnswers = totalCount;
+      this.viewState.isLoadingMoreInBackground = false;
 
       // 如果有新回答，更新回答ID列表
       if (
@@ -423,6 +438,52 @@ export class ArticleView {
       hideImages,
       navState
     );
+
+    // 检查是否需要自动加载下一批次回答
+    this.checkAutoLoadNextBatch();
+  }
+
+  /**
+   * 检查是否需要自动加载下一批次回答
+   */
+  private async checkAutoLoadNextBatch(): Promise<void> {
+    if (!this.viewState.questionId) {
+      return;
+    }
+
+    // 只有在以下条件都满足时才自动加载下一批次
+    // 1. 有问题ID
+    // 2. 当前查看的是批次中的倒数第二个或最后一个回答
+    // 3. 还有更多回答可加载
+    // 4. 当前没有任何加载进行中
+    // 5. 已加载的回答数小于问题的总回答数
+    const isNearEnd = this.viewState.currentAnswerIndex >= this.viewState.answerIds.length - 2;
+    const canLoadMore = this.viewState.hasMoreAnswers === true;
+    const notLoading = !this.viewState.isLoadingMoreInBackground && !this.viewState.isLoading;
+    const hasMoreToLoad = !this.viewState.totalAnswers || 
+                          (this.viewState.loadedAnswersCount || 0) < (this.viewState.totalAnswers || 0);
+    
+    if (isNearEnd && canLoadMore && notLoading && hasMoreToLoad) {
+      console.log("检测到用户接近当前批次末尾，预加载下一批次回答");
+      
+      try {
+        // 获取配置中的无图片模式设置
+        const config = vscode.workspace.getConfiguration("zhihu-fisher");
+        const hideImages = config.get<boolean>("hideImages", false);
+
+        // 通知服务更新当前查看的索引，触发自动加载
+        if (this.viewState.questionId) {
+          await this.zhihuService.setCurrentViewingIndex(
+            this.viewState.questionId,
+            this.viewState.currentAnswerIndex,
+            hideImages,
+            this.onBatchProgress
+          );
+        }
+      } catch (error) {
+        console.error("自动加载下一批次回答失败:", error);
+      }
+    }
   }
 
   /**
@@ -534,6 +595,7 @@ export class ArticleView {
     try {
       // 显示加载状态
       this.viewState.isLoading = true;
+      this.viewState.isLoadingMoreInBackground = true;
       this.viewState.article = {
         ...this.viewState.article,
         content: "正在加载更多回答...",
@@ -550,10 +612,12 @@ export class ArticleView {
       const newAnswers = await this.zhihuService.loadMoreBatchAnswers(
         this.viewState.questionId,
         this.viewState.answersPerBatch,
-        hideImages
+        hideImages,
+        this.onBatchProgress
       );
 
       this.viewState.isLoading = false;
+      this.viewState.isLoadingMoreInBackground = false;
 
       if (newAnswers && newAnswers.length > 0) {
         console.log(`成功加载 ${newAnswers.length} 个新回答`);
@@ -605,6 +669,7 @@ export class ArticleView {
       }
     } catch (error) {
       this.viewState.isLoading = false;
+      this.viewState.isLoadingMoreInBackground = false;
       console.error("获取更多回答失败:", error);
       vscode.window.showErrorMessage(
         `获取更多回答失败: ${
@@ -613,14 +678,6 @@ export class ArticleView {
       );
       this.updateContent();
     }
-  }
-
-  /**
-   * 获取更多回答 - 已废弃，保留用于兼容性
-   * @deprecated 请使用loadMoreBatchAnswers方法代替
-   */
-  private async fetchMoreAnswers(): Promise<void> {
-    await this.loadMoreBatchAnswers();
   }
 
   /**

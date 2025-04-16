@@ -5,7 +5,7 @@ import { ZhihuHotItem, ZhihuArticle } from './types';
 
 // 定义进度回调函数类型
 interface ProgressCallback {
-  (article: ZhihuArticle, count: number, total: number): void;
+  (article: ZhihuArticle, count: number, total: number, isLoading?: boolean): void;
 }
 
 /**
@@ -67,13 +67,31 @@ export class ZhihuService {
    * @param questionId 问题ID
    * @param maxCount 最大获取回答数量，默认为10
    * @param hideImages 是否隐藏图片
+   * @param progressCallback 进度回调函数，用于实时更新UI
    */
   async loadMoreBatchAnswers(
     questionId: string,
     maxCount: number = 10,
-    hideImages: boolean = false
+    hideImages: boolean = false,
+    progressCallback?: ProgressCallback
   ): Promise<ZhihuArticle[]> {
-    return this.articleService.loadMoreBatchAnswers(questionId, maxCount, hideImages);
+    return this.articleService.loadMoreBatchAnswers(questionId, maxCount, hideImages, progressCallback);
+  }
+
+  /**
+   * 设置当前查看的回答索引，并自动加载下一批次
+   * @param questionId 问题ID
+   * @param index 当前查看的索引
+   * @param hideImages 是否隐藏图片
+   * @param progressCallback 进度回调函数，用于实时更新UI
+   */
+  async setCurrentViewingIndex(
+    questionId: string,
+    index: number,
+    hideImages: boolean = false,
+    progressCallback?: ProgressCallback
+  ): Promise<void> {
+    return this.articleService.setCurrentViewingIndex(questionId, index, hideImages, progressCallback);
   }
 
   /**

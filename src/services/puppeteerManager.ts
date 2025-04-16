@@ -6,6 +6,7 @@ import { CookieManager } from "./cookieManager";
  */
 export class PuppeteerManager {
   private static browserInstance: puppeteer.Browser | null = null;
+  private static currentPage: puppeteer.Page | null = null;
 
   /**
    * 获取或创建浏览器实例（单例模式）
@@ -15,20 +16,44 @@ export class PuppeteerManager {
       console.log("创建新的浏览器实例...");
       PuppeteerManager.browserInstance = await puppeteer.launch({
         headless: false, // 设置为false以便调试
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          `--window-size=1920,1080`,
+        ],
+        defaultViewport: {
+          width: 1920,
+          height: 1080,
+        },
       });
     }
     return PuppeteerManager.browserInstance;
   }
 
   /**
-   * 创建并设置新的页面
+   * 创建并设置新的页面，如果已存在页面则重用
    */
-  static async createPage(cookieManager: CookieManager): Promise<puppeteer.Page> {
+  static async createPage(
+    cookieManager: CookieManager
+  ): Promise<puppeteer.Page> {
     const browser = await PuppeteerManager.getBrowserInstance();
-    
+
+    // 如果已有页面且没有关闭，则重用
+    if (PuppeteerManager.currentPage) {
+      try {
+        // 检查页面是否仍然可用
+        await PuppeteerManager.currentPage.evaluate(() => true);
+        console.log("重用现有页面...");
+        return PuppeteerManager.currentPage;
+      } catch (e) {
+        console.log("现有页面已关闭，创建新页面...");
+        PuppeteerManager.currentPage = null;
+      }
+    }
+
     console.log("打开新页面...");
     const page = await browser.newPage();
+    PuppeteerManager.currentPage = page;
 
     // 设置浏览器视窗大小
     await page.setViewport({ width: 1920, height: 1080 });
@@ -57,13 +82,17 @@ export class PuppeteerManager {
   /**
    * 添加Cookies到页面
    */
-  static async addCookiesToPage(cookiesStr: string, page: puppeteer.Page, domain: string = "www.zhihu.com"): Promise<void> {
+  static async addCookiesToPage(
+    cookiesStr: string,
+    page: puppeteer.Page,
+    domain: string = "www.zhihu.com"
+  ): Promise<void> {
     const cookies = cookiesStr.split(";").map((pair) => {
       let name = pair.trim().slice(0, pair.trim().indexOf("="));
       let value = pair.trim().slice(pair.trim().indexOf("=") + 1);
       return { name, value, domain };
     });
-    
+
     await Promise.all(
       cookies.map((pair) => {
         return page.setCookie(pair);
@@ -115,6 +144,7 @@ export class PuppeteerManager {
   static async closeBrowserInstance(): Promise<void> {
     if (PuppeteerManager.browserInstance) {
       try {
+        PuppeteerManager.currentPage = null;
         await PuppeteerManager.browserInstance.close();
         PuppeteerManager.browserInstance = null;
         console.log("已关闭浏览器实例");

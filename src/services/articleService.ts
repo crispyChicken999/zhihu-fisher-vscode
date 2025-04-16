@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { ZhihuArticle } from "./types";
+import { ZhihuArticle, ZhihuAuthor } from "./types";
 import { CookieManager } from "./cookieManager";
 import { PuppeteerManager } from "./puppeteerManager";
 import { ContentParser } from "./contentParser";
@@ -11,6 +11,12 @@ export class ArticleService {
   private cookieManager: CookieManager;
   private articleCache: ArticleCache;
   private answerLoader: AnswerLoader;
+  // 记录是否正在加载更多回答
+  private isLoadingMore: boolean = false;
+  // 记录当前正在查看的回答索引
+  private currentViewingIndex: number = 0;
+  // 记录总共需要加载的回答数量
+  private maxAnswersToLoad: number = Infinity;
 
   constructor(cookieManager: CookieManager) {
     this.cookieManager = cookieManager;
@@ -46,7 +52,7 @@ export class ArticleService {
         headers["Cookie"] = cookie;
       }
 
-      // 如果是问题链接，尝试从缓存中获取批量回答
+      // 如果是问题链接，直接使用批量获取回答的方法
       if (url.includes("/question/") && !url.includes("/answer/")) {
         // 提取问题ID
         const questionIdMatch = url.match(/question\/(\d+)/);
@@ -67,6 +73,46 @@ export class ArticleService {
           if (batchAnswers.answers.length > 0) {
             return batchAnswers.answers[0];
           }
+        }
+      }
+
+      // 如果是特定回答链接，检查是否在缓存中
+      if (url.includes("/question/") && url.includes("/answer/")) {
+        const questionIdMatch = url.match(/question\/(\d+)/);
+        const answerIdMatch = url.match(/answer\/(\d+)/);
+
+        if (
+          questionIdMatch &&
+          questionIdMatch[1] &&
+          answerIdMatch &&
+          answerIdMatch[1]
+        ) {
+          const questionId = questionIdMatch[1];
+          const answerId = answerIdMatch[1];
+
+          // 检查是否有缓存的回答
+          if (this.articleCache.hasQuestionCache(questionId)) {
+            const cachedData = this.articleCache.getQuestionCache(questionId);
+            if (cachedData) {
+              // 查找匹配的回答
+              const cachedAnswer = cachedData.answers.find(
+                (a) =>
+                  a.actualUrl && a.actualUrl.includes(`/answer/${answerId}`)
+              );
+
+              if (cachedAnswer) {
+                // 更新当前查看的索引
+                this.currentViewingIndex = cachedData.answers.findIndex(
+                  (a) =>
+                    a.actualUrl && a.actualUrl.includes(`/answer/${answerId}`)
+                );
+                return cachedAnswer;
+              }
+            }
+          }
+
+          // 如果没有在缓存中找到，则从问题页获取批量回答
+          url = `https://www.zhihu.com/question/${questionId}`; // 简化为只访问问题页
         }
       }
 
@@ -105,56 +151,8 @@ export class ArticleService {
 
       // 解析文章信息
       const articleInfo = ContentParser.parseArticleInfo($, url);
-      let { title, author, authorAvatar, authorBio, authorUrl, contentHtml } = articleInfo;
+      let { title, author, contentHtml } = articleInfo;
       let actualUrl = url; // 添加实际URL字段用于存储回答链接
-
-      // 处理特殊情况：URL中不包含answer ID，需要从问题页面中提取第一个回答
-      if (url.includes("/question/") && !url.includes("/answer/")) {
-        const questionId = url.match(/question\/(\d+)/)?.[1];
-        if (questionId) {
-          // 根据提供的DOM结构查找第一个List-Item
-          const firstListItem = $(".List-item").first();
-
-          if (firstListItem.length > 0) {
-            console.log("找到第一个List-Item元素");
-
-            // 从List-Item中查找answerItem的数据
-            const answerItem = firstListItem.find(".ContentItem.AnswerItem");
-
-            if (answerItem.length > 0) {
-              let answerId = "";
-              
-              // 从data-zop属性中提取itemId
-              const dataZop = answerItem.attr("data-zop");
-              if (dataZop) {
-                try {
-                  const zopData = JSON.parse(dataZop.replace(/&quot;/g, '"'));
-                  if (zopData.itemId) {
-                    answerId = zopData.itemId;
-                  }
-                } catch (e) {
-                  console.error("解析data-zop属性失败", e);
-                }
-              }
-
-              // 备用方法：尝试从name属性获取
-              if (!answerId) {
-                answerId = answerItem.attr("name") || "";
-              }
-
-              // 如果找到了回答ID，构建新的URL并获取内容
-              if (answerId && questionId) {
-                const newUrl = `https://www.zhihu.com/question/${questionId}/answer/${answerId}`;
-                console.log(`构建新URL: ${newUrl}，重新获取回答内容`);
-                actualUrl = newUrl; // 更新实际URL为带有回答ID的URL
-
-                // 递归调用自身获取具体回答
-                return this.getArticleContent(newUrl, hideImages);
-              }
-            }
-          }
-        }
-      }
 
       // 处理内容中的图片
       contentHtml = ContentParser.processHtmlContent(contentHtml, hideImages);
@@ -169,18 +167,15 @@ export class ArticleService {
       const content = ContentParser.htmlToMarkdown(contentHtml);
 
       console.log(
-        `成功解析文章：${title}，作者：${author || "未知"}，头像: ${
-          authorAvatar ? "已获取" : "未获取"
-        }，简介: ${authorBio || "未获取"}，作者URL: ${authorUrl || "未获取"}`
+        `成功解析文章：${title}，作者：${author.name}，头像: ${
+          author.avatar ? "已获取" : "未获取"
+        }，简介: ${author.bio || "未获取"}，作者URL: ${author.url || "未获取"}`
       );
-      
+
       return {
         title: title || "未知标题",
         content,
-        author: author || "未知作者",
-        authorAvatar,
-        authorBio,
-        authorUrl,
+        author,
         actualUrl, // 添加actualUrl到返回对象
       };
     } catch (error) {
@@ -209,6 +204,9 @@ export class ArticleService {
   ): Promise<BatchAnswers> {
     try {
       console.log(`尝试获取问题${questionUrl}的多个回答，最多${maxCount}个`);
+      // 重置当前查看的索引
+      this.currentViewingIndex = 0;
+      this.maxAnswersToLoad = maxCount;
 
       // 检查URL格式是否正确
       if (!questionUrl.includes("/question/")) {
@@ -226,6 +224,20 @@ export class ArticleService {
       if (this.articleCache.hasQuestionCache(questionId)) {
         const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
+        // 检查是否需要加载更多回答
+        if (cachedData.answers.length < maxCount && cachedData.hasMore) {
+          console.log(
+            `缓存中的回答数量(${cachedData.answers.length})小于请求数量(${maxCount})，尝试加载更多回答`
+          );
+          // 异步加载更多回答，但不阻塞当前返回
+          this.loadMoreBatchAnswers(
+            questionId,
+            maxCount - cachedData.answers.length,
+            hideImages,
+            progressCallback
+          ).catch((error) => console.error("自动加载更多回答失败:", error));
+        }
+
         // 如果有回调函数并且有已加载的回答，通知UI第一个回答可以显示
         if (progressCallback && cachedData.answers.length > 0) {
           progressCallback(
@@ -242,7 +254,8 @@ export class ArticleService {
       const cleanQuestionUrl = `https://www.zhihu.com/question/${questionId}`;
 
       // 初始化问题页面
-      const { page, questionTitle, totalAnswers } = await this.answerLoader.initQuestionPage(cleanQuestionUrl);
+      const { page, questionTitle, totalAnswers } =
+        await this.answerLoader.initQuestionPage(cleanQuestionUrl);
 
       // 初始化结果对象
       const result: BatchAnswers = {
@@ -297,16 +310,27 @@ export class ArticleService {
    * @param questionId 问题ID
    * @param maxCount 最大获取回答数量，默认为10
    * @param hideImages 是否隐藏图片
+   * @param progressCallback 进度回调函数，用于实时更新UI
    * @returns 新加载的回答列表
    */
   async loadMoreBatchAnswers(
     questionId: string,
     maxCount: number = 10,
-    hideImages: boolean = false
+    hideImages: boolean = false,
+    progressCallback?: ProgressCallback
   ): Promise<ZhihuArticle[]> {
     try {
+      // 如果已经在加载中，直接返回
+      if (this.isLoadingMore) {
+        console.log("已有加载任务正在进行中，请稍后再试");
+        return [];
+      }
+
+      this.isLoadingMore = true;
+
       // 检查缓存中是否存在该问题的回答
       if (!this.articleCache.hasQuestionCache(questionId)) {
+        this.isLoadingMore = false;
         throw new Error("未找到缓存的问题回答");
       }
 
@@ -315,6 +339,7 @@ export class ArticleService {
       // 如果已经没有更多回答，直接返回空数组
       if (!cachedData.hasMore) {
         console.log("没有更多回答可加载");
+        this.isLoadingMore = false;
         return [];
       }
 
@@ -324,45 +349,98 @@ export class ArticleService {
       // 如果浏览器实例已经关闭，创建新的实例
       if (!cachedData.browser || !cachedData.page) {
         console.log("页面已关闭，创建新页面...");
-        
+
         // 重新初始化页面
-        const { page, questionTitle } = await this.answerLoader.initQuestionPage(
-          `https://www.zhihu.com/question/${questionId}`
-        );
-        
+        const { page, questionTitle } =
+          await this.answerLoader.initQuestionPage(
+            `https://www.zhihu.com/question/${questionId}`
+          );
+
         // 更新缓存
         cachedData.page = page;
         if (!cachedData.questionTitle) {
           cachedData.questionTitle = questionTitle;
         }
-        
+
         this.articleCache.updateQuestionCache(questionId, {
           page,
           questionTitle: cachedData.questionTitle || questionTitle,
         });
       }
 
-      // 加载更多回答
+      // 加载更多回答，传入isLoadingMore=true参数以通知UI进入加载状态
       await this.answerLoader.loadAllAnswers(
         cachedData.page!,
         questionId,
-        maxCount + originalAnswersCount,  // 增加目标数量
+        originalAnswersCount + maxCount, // 增加目标数量
         hideImages,
-        cachedData
+        cachedData,
+        progressCallback,
+        true // 标记这是加载更多操作
       );
-      
+
       // 更新缓存
       this.articleCache.updateQuestionCache(questionId, cachedData);
+
+      // 重置加载状态
+      this.isLoadingMore = false;
 
       // 返回新加载的回答
       return cachedData.answers.slice(originalAnswersCount);
     } catch (error) {
+      this.isLoadingMore = false;
       console.error("加载更多批量回答失败:", error);
       throw new Error(
         `加载更多批量回答失败: ${
           error instanceof Error ? error.message : "未知错误"
         }`
       );
+    }
+  }
+
+  /**
+   * 设置当前查看的回答索引，并自动加载下一批次
+   * @param questionId 问题ID
+   * @param index 当前查看的索引
+   * @param hideImages 是否隐藏图片
+   * @param progressCallback 进度回调函数
+   */
+  async setCurrentViewingIndex(
+    questionId: string,
+    index: number,
+    hideImages: boolean = false,
+    progressCallback?: ProgressCallback
+  ): Promise<void> {
+    try {
+      // 更新当前查看的索引
+      this.currentViewingIndex = index;
+
+      // 检查缓存中是否存在该问题的回答
+      if (!this.articleCache.hasQuestionCache(questionId)) {
+        return;
+      }
+
+      const cachedData = this.articleCache.getQuestionCache(questionId)!;
+
+      // 如果是最后一项并且还有更多可加载且没有正在加载中的任务
+      if (
+        index === cachedData.answers.length - 1 &&
+        cachedData.hasMore &&
+        !this.isLoadingMore &&
+        cachedData.answers.length < this.maxAnswersToLoad
+      ) {
+        console.log(`到达当前批次的最后一个回答，自动加载下一批次`);
+
+        // 异步加载更多回答
+        this.loadMoreBatchAnswers(
+          questionId,
+          10,
+          hideImages,
+          progressCallback
+        ).catch((error) => console.error("自动加载更多回答失败:", error));
+      }
+    } catch (error) {
+      console.error("设置当前查看索引失败:", error);
     }
   }
 
@@ -397,109 +475,9 @@ export class ArticleService {
    * @deprecated 请使用getBatchAnswers方法代替
    */
   async getMoreAnswersId(questionUrl: string): Promise<string | null> {
-    console.log(`getMoreAnswersId方法已废弃，请使用getBatchAnswers方法代替`);
-
-    try {
-      // 从URL中提取问题ID
-      const questionIdMatch = questionUrl.match(/question\/(\d+)/);
-      if (!questionIdMatch || !questionIdMatch[1]) {
-        console.error("无法从URL中提取问题ID");
-        return null;
-      }
-
-      const questionId = questionIdMatch[1];
-      console.log(`从URL中提取到问题ID: ${questionId}`);
-
-      // 检查是否已有缓存
-      if (this.articleCache.hasQuestionCache(questionId)) {
-        const cachedData = this.articleCache.getQuestionCache(questionId)!;
-
-        // 提取当前回答ID
-        const currentAnswerIdMatch = questionUrl.match(/answer\/(\d+)/);
-        if (!currentAnswerIdMatch || !currentAnswerIdMatch[1]) {
-          return null;
-        }
-
-        const currentAnswerId = currentAnswerIdMatch[1];
-        const currentIndex = cachedData.answers.findIndex((a) =>
-          a.actualUrl?.includes(`/answer/${currentAnswerId}`)
-        );
-
-        // 如果找到当前回答，返回下一个回答的ID
-        if (
-          currentIndex !== -1 &&
-          currentIndex < cachedData.answers.length - 1
-        ) {
-          const nextAnswer = cachedData.answers[currentIndex + 1];
-          const nextAnswerId =
-            nextAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
-          return nextAnswerId || null;
-        }
-
-        // 如果当前是最后一个回答，但有更多回答可加载
-        if (
-          currentIndex === cachedData.answers.length - 1 &&
-          cachedData.hasMore
-        ) {
-          // 加载更多回答
-          const newAnswers = await this.loadMoreBatchAnswers(
-            questionId,
-            10,
-            false
-          );
-
-          if (newAnswers.length > 0) {
-            const nextAnswer = newAnswers[0];
-            const nextAnswerId =
-              nextAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
-            return nextAnswerId || null;
-          }
-        }
-      } else {
-        // 如果没有缓存，使用批量获取方法
-        const batchAnswers = await this.getBatchAnswers(
-          `https://www.zhihu.com/question/${questionId}`,
-          10,
-          false
-        );
-
-        // 提取当前回答ID
-        const currentAnswerIdMatch = questionUrl.match(/answer\/(\d+)/);
-        if (!currentAnswerIdMatch || !currentAnswerIdMatch[1]) {
-          // 如果URL没有回答ID，返回第一个回答的ID
-          if (batchAnswers.answers.length > 0) {
-            const firstAnswer = batchAnswers.answers[0];
-            const firstAnswerId =
-              firstAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
-            return firstAnswerId || null;
-          }
-        } else {
-          const currentAnswerId = currentAnswerIdMatch[1];
-          const currentIndex = batchAnswers.answers.findIndex((a) =>
-            a.actualUrl?.includes(`/answer/${currentAnswerId}`)
-          );
-
-          // 如果找到当前回答，返回下一个回答的ID
-          if (
-            currentIndex !== -1 &&
-            currentIndex < batchAnswers.answers.length - 1
-          ) {
-            const nextAnswer = batchAnswers.answers[currentIndex + 1];
-            const nextAnswerId =
-              nextAnswer.actualUrl?.match(/answer\/(\d+)/)?.[1];
-            return nextAnswerId || null;
-          }
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error("获取更多回答失败:", error);
-      throw new Error(
-        `获取更多回答失败: ${
-          error instanceof Error ? error.message : "未知错误"
-        }`
-      );
-    }
+    console.log(
+      `getMoreAnswersId方法已废弃，请使用getBatchAnswers和setCurrentViewingIndex方法代替`
+    );
+    return null;
   }
 }

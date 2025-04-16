@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
-import { ZhihuArticle } from "../services/zhihuService";
+import { ZhihuArticle, ZhihuAuthor } from "../services/types";
 
 /**
  * 导航状态接口
@@ -608,14 +608,15 @@ export class HtmlRenderer {
       return "";
     }
 
+    const author = article.author;
     let authorHTML = `<div class="author-info">`;
 
     // 如果有作者头像，显示头像
-    if (article.authorAvatar) {
+    if (author.avatar) {
       authorHTML += `
         <div class="author-avatar">
-          <img src="${article.authorAvatar}" alt="${this.escapeHtml(
-        article.author
+          <img src="${author.avatar}" alt="${this.escapeHtml(
+        author.name
       )}" referrerpolicy="no-referrer">
         </div>
       `;
@@ -623,21 +624,21 @@ export class HtmlRenderer {
 
     // 作者名称和简介
     // 如果有作者URL，将作者名字设为可点击链接
-    const authorNameHTML = article.authorUrl
+    const authorNameHTML = author.url
       ? `<div class="author-name"><a href="${
-          article.authorUrl
+          author.url
         }" onclick="openAuthorPage('${
-          article.authorUrl
-        }')" class="author-link">${this.escapeHtml(article.author)}</a></div>`
-      : `<div class="author-name">${this.escapeHtml(article.author)}</div>`;
+          author.url
+        }')" class="author-link">${this.escapeHtml(author.name)}</a></div>`
+      : `<div class="author-name">${this.escapeHtml(author.name)}</div>`;
 
     authorHTML += `
       <div class="author-details">
         ${authorNameHTML}
         ${
-          article.authorBio
+          author.bio
             ? `<div class="author-bio">${this.escapeHtml(
-                article.authorBio
+                author.bio
               )}</div>`
             : ""
         }

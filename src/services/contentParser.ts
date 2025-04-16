@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { marked } from "marked";
-import { ZhihuArticle } from "./types";
+import { ZhihuArticle, ZhihuAuthor } from "./types";
 
 /**
  * 负责解析HTML内容和格式转换
@@ -79,18 +79,17 @@ export class ContentParser {
    */
   static parseArticleInfo($: cheerio.CheerioAPI, url: string): {
     title: string;
-    author: string;
-    authorAvatar: string;
-    authorBio: string;
-    authorUrl: string;
     contentHtml: string;
+    author: ZhihuAuthor;
   } {
     let title = "";
-    let author = "";
-    let authorAvatar = "";
-    let authorBio = "";
-    let authorUrl = "";
     let contentHtml = "";
+    let author: ZhihuAuthor = {
+      name: "未知作者",
+      avatar: "",
+      bio: "",
+      url: ""
+    };
     
     // 1. 获取问题标题
     title = $("h1.QuestionHeader-title").text().trim();
@@ -117,14 +116,21 @@ export class ContentParser {
         // 获取作者信息
         const authorInfo = contentItem.find(".AuthorInfo");
         if (authorInfo.length > 0) {
-          author = authorInfo.find("meta[itemprop='name']").attr("content") || "";
-          authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
-          authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
+          author.name = authorInfo.find("meta[itemprop='name']").attr("content") || "未知作者";
+          author.avatar = authorInfo.find(".Avatar").attr("src") || "";
+          author.bio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
           
           // 提取作者URL - 先尝试从meta标签获取
           const metaUrl = authorInfo.find("meta[itemprop='url']").attr("content");
           if (metaUrl) {
-            authorUrl = metaUrl;
+            author.url = metaUrl;
+          } else {
+            const userLinkHref = authorInfo.find(".UserLink-link").attr("href");
+            if (userLinkHref) {
+              author.url = userLinkHref.startsWith("http")
+                ? userLinkHref
+                : `https://www.zhihu.com${userLinkHref}`;
+            }
           }
         }
       }
@@ -140,18 +146,18 @@ export class ContentParser {
       // 获取作者信息
       const authorInfo = $(".AuthorInfo").first();
       if (authorInfo.length > 0) {
-        author = authorInfo.find(".meta[itemprop='name']").attr("content") || "";
-        authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
-        authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
+        author.name = authorInfo.find(".meta[itemprop='name']").attr("content") || "未知作者";
+        author.avatar = authorInfo.find(".Avatar").attr("src") || "";
+        author.bio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
         
         // 提取作者URL
         const metaUrl = $("meta[itemprop='url']").attr("content");
         if (metaUrl) {
-          authorUrl = metaUrl;
+          author.url = metaUrl;
         } else {
           const userLinkHref = authorInfo.find(".UserLink-link").attr("href");
           if (userLinkHref) {
-            authorUrl = userLinkHref.startsWith("http")
+            author.url = userLinkHref.startsWith("http")
               ? userLinkHref
               : `https://www.zhihu.com${userLinkHref}`;
           }
@@ -168,18 +174,18 @@ export class ContentParser {
       // 获取作者信息
       const authorInfo = $(".AuthorInfo").first();
       if (authorInfo.length > 0) {
-        author = authorInfo.find(".meta[itemprop='name']").attr("content") || "";
-        authorAvatar = authorInfo.find(".Avatar").attr("src") || "";
-        authorBio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
+        author.name = authorInfo.find(".meta[itemprop='name']").attr("content") || "未知作者";
+        author.avatar = authorInfo.find(".Avatar").attr("src") || "";
+        author.bio = authorInfo.find(".AuthorInfo-badgeText").text().trim();
         
         // 提取作者URL
         const metaUrl = $("meta[itemprop='url']").attr("content");
         if (metaUrl) {
-          authorUrl = metaUrl;
+          author.url = metaUrl;
         } else {
           const userLinkHref = authorInfo.find(".UserLink-link").attr("href");
           if (userLinkHref) {
-            authorUrl = userLinkHref.startsWith("http")
+            author.url = userLinkHref.startsWith("http")
               ? userLinkHref
               : `https://www.zhihu.com${userLinkHref}`;
           }
@@ -187,6 +193,6 @@ export class ContentParser {
       }
     }
     
-    return { title, author, authorAvatar, authorBio, authorUrl, contentHtml };
+    return { title, author, contentHtml };
   }
 }

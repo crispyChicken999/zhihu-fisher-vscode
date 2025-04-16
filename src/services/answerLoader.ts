@@ -1,5 +1,5 @@
 import * as puppeteer from "puppeteer";
-import { ZhihuArticle } from "./types";
+import { ZhihuArticle, ZhihuAuthor } from "./types";
 import { PuppeteerManager } from "./puppeteerManager";
 import { ContentParser } from "./contentParser";
 import { BatchAnswers } from "./articleCache";
@@ -7,7 +7,7 @@ import { CookieManager } from "./cookieManager";
 
 // 定义回调函数类型，用于实时更新爬取状态
 export interface ProgressCallback {
-  (article: ZhihuArticle, count: number, total: number): void;
+  (article: ZhihuArticle, count: number, total: number, isLoading?: boolean): void;
 }
 
 /**
@@ -58,36 +58,38 @@ export class AnswerLoader {
 
           // 提取作者信息
           const authorInfo = element.querySelector(".AuthorInfo");
-          let author = "未知作者";
-          let authorAvatar = "";
-          let authorBio = "";
-          let authorUrl = "";
+          let author = {
+            name: "未知作者",
+            avatar: "",
+            bio: "",
+            url: ""
+          };
 
           if (authorInfo) {
             const nameElement = authorInfo.querySelector("meta[itemprop='name']");
             if (nameElement) {
-              author = nameElement.getAttribute("content") || "未知作者";
+              author.name = nameElement.getAttribute("content") || "未知作者";
             }
 
             const avatarElement = authorInfo.querySelector(".Avatar");
             if (avatarElement) {
-              authorAvatar = avatarElement.getAttribute("src") || "";
+              author.avatar = avatarElement.getAttribute("src") || "";
             }
 
             const bioElement = authorInfo.querySelector(".AuthorInfo-badgeText");
             if (bioElement) {
-              authorBio = bioElement.textContent?.trim() || "";
+              author.bio = bioElement.textContent?.trim() || "";
             }
 
             const urlElement = authorInfo.querySelector("meta[itemprop='url']");
             if (urlElement) {
-              authorUrl = urlElement.getAttribute("content") || "";
+              author.url = urlElement.getAttribute("content") || "";
             } else {
               const linkElement = authorInfo.querySelector(".UserLink-link");
               if (linkElement) {
                 const href = linkElement.getAttribute("href");
                 if (href) {
-                  authorUrl = href.startsWith("http")
+                  author.url = href.startsWith("http")
                     ? href
                     : `https://www.zhihu.com${href}`;
                 }
@@ -132,9 +134,6 @@ export class AnswerLoader {
             answers.push({
               answerId,
               author,
-              authorAvatar,
-              authorBio,
-              authorUrl,
               contentHtml,
             });
           }
@@ -161,9 +160,6 @@ export class AnswerLoader {
         title: questionTitle,
         content,
         author: answer.author,
-        authorAvatar: answer.authorAvatar,
-        authorBio: answer.authorBio,
-        authorUrl: answer.authorUrl,
         actualUrl,
       });
     }
@@ -174,10 +170,12 @@ export class AnswerLoader {
   /**
    * 从问题页面加载所有回答
    * @param page Puppeteer页面对象
+   * @param questionId 问题ID
    * @param maxCount 最大获取回答数量
    * @param hideImages 是否隐藏图片
    * @param batchAnswers 现有的回答批次数据
    * @param progressCallback 进度回调函数
+   * @param isLoadingMore 是否是加载更多操作
    */
   async loadAllAnswers(
     page: puppeteer.Page,
@@ -185,7 +183,8 @@ export class AnswerLoader {
     maxCount: number,
     hideImages: boolean,
     batchAnswers: BatchAnswers,
-    progressCallback?: ProgressCallback
+    progressCallback?: ProgressCallback,
+    isLoadingMore: boolean = false
   ): Promise<void> {
     // 检查是否已经达到目标数量
     if (batchAnswers.answers.length >= maxCount) {
@@ -197,7 +196,17 @@ export class AnswerLoader {
     let noNewAnswersCounter = 0;
     
     // 是否发送了第一个回答
-    let firstAnswerSent = batchAnswers.answers.length > 0;
+    let firstAnswerSent = batchAnswers.answers.length > 0 && !isLoadingMore;
+    
+    // 如果是加载更多操作，先通知UI进入加载状态
+    if (isLoadingMore && progressCallback) {
+      progressCallback(
+        batchAnswers.answers[batchAnswers.answers.length - 1], 
+        batchAnswers.answers.length,
+        batchAnswers.totalAnswers || maxCount,
+        true // 标记为加载中
+      );
+    }
 
     while (answersCount < maxCount && noNewAnswersCounter < 3) {
       // 提取当前页面上的所有回答
@@ -223,9 +232,16 @@ export class AnswerLoader {
           );
           firstAnswerSent = true;
         }
-        
+        // 如果是加载更多且这是新批次的第一个回答，通知UI新回答已加载
+        else if (isLoadingMore && progressCallback && uniqueNewAnswers.length > 0) {
+          progressCallback(
+            uniqueNewAnswers[0],
+            batchAnswers.answers.length,
+            batchAnswers.totalAnswers || maxCount
+          );
+        }
         // 如果有回调函数，通知UI更新当前爬取进度
-        if (progressCallback) {
+        else if (progressCallback) {
           progressCallback(
             batchAnswers.answers[0], // 始终传递第一个回答（因为可能已经显示了）
             batchAnswers.answers.length,
