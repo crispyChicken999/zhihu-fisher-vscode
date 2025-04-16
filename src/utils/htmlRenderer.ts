@@ -510,7 +510,7 @@ export class HtmlRenderer {
           <span>${loadedText}</span>
           ${
             totalText
-              ? `<span class="separator">|</span><span>${totalText}</span>`
+              ? `<span class="separator">| </span><span>${totalText}</span>`
               : ""
           }
           ${loadingText}

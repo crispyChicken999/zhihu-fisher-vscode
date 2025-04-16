@@ -187,6 +187,7 @@ export class AnswerLoader {
    * @param batchAnswers 现有的回答批次数据
    * @param progressCallback 进度回调函数
    * @param isLoadingMore 是否是加载更多操作
+   * @param scrollAttempts 滚动尝试次数，默认为3
    */
   async loadAllAnswers(
     page: puppeteer.Page,
@@ -195,16 +196,23 @@ export class AnswerLoader {
     hideImages: boolean,
     batchAnswers: BatchAnswers,
     progressCallback?: ProgressCallback,
-    isLoadingMore: boolean = false
-  ): Promise<void> {
+    isLoadingMore: boolean = false,
+    scrollAttempts: number = 3
+  ): Promise<boolean> {
     // 检查是否已经达到目标数量
     if (batchAnswers.answers.length >= maxCount) {
-      return;
+      return false;
     }
 
     let answersCount = batchAnswers.answers.length;
     let lastAnswersCount = answersCount;
+    // 根据传入的scrollAttempts参数调整尝试次数
     let noNewAnswersCounter = 0;
+    // 最大尝试次数
+    const maxAttempts = Math.max(scrollAttempts, 3); // 至少尝试3次
+    let loadedNewAnswers = false;
+
+    console.log(`将尝试最多 ${maxAttempts} 次滚动以加载更多回答`);
 
     // 是否发送了第一个回答
     let firstAnswerSent = batchAnswers.answers.length > 0 && !isLoadingMore;
@@ -219,7 +227,7 @@ export class AnswerLoader {
       );
     }
 
-    while (answersCount < maxCount && noNewAnswersCounter < 3) {
+    while (answersCount < maxCount && noNewAnswersCounter < maxAttempts) {
       // 提取当前页面上的所有回答
       const newAnswers = await this.extractAnswersFromPage(
         page,
@@ -240,6 +248,7 @@ export class AnswerLoader {
       if (uniqueNewAnswers.length > 0) {
         // 添加新回答
         batchAnswers.answers.push(...uniqueNewAnswers);
+        loadedNewAnswers = true;
 
         // 如果这是第一个回答且有回调函数，立即通知UI可以显示第一个回答
         if (
@@ -280,7 +289,9 @@ export class AnswerLoader {
         console.log(`已加载 ${batchAnswers.answers.length} 个回答`);
       } else {
         noNewAnswersCounter++;
-        console.log(`未找到新回答，尝试再次滚动 (${noNewAnswersCounter}/3)`);
+        console.log(
+          `未找到新回答，尝试再次滚动 (${noNewAnswersCounter}/${maxAttempts})`
+        );
       }
 
       // 如果已经达到目标数量，跳出循环
@@ -290,6 +301,9 @@ export class AnswerLoader {
 
       // 使用模拟人类滚动行为
       await PuppeteerManager.simulateHumanScroll(page);
+
+      // 添加随机延迟，更好地模拟真人行为（500-1500ms）
+      await PuppeteerManager.delay(500 + Math.random() * 1000);
 
       // 检查是否还有"加载更多"按钮
       const hasLoadMoreButton = await page.evaluate(() => {
@@ -321,11 +335,26 @@ export class AnswerLoader {
       );
     });
 
+    // 如果尝试了多次滚动但仍没有获取到新回答，并且我们知道总回答数大于当前加载的回答数
+    // 那么可能是反爬机制在起作用，我们不应该将hasMore设为false
+    if (
+      !loadedNewAnswers &&
+      batchAnswers.totalAnswers &&
+      batchAnswers.answers.length < batchAnswers.totalAnswers
+    ) {
+      batchAnswers.hasMore = true;
+      console.log(
+        `尽管多次尝试未加载到新回答，但根据总回答数(${batchAnswers.totalAnswers})，应该还有更多回答可加载`
+      );
+    }
+
     console.log(
       `已成功获取 ${batchAnswers.answers.length} 个回答，${
         batchAnswers.hasMore ? "还有更多回答可加载" : "没有更多回答了"
       }`
     );
+
+    return loadedNewAnswers;
   }
 
   /**

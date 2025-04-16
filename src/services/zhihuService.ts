@@ -102,18 +102,21 @@ export class ZhihuService {
    * @param index 当前查看的索引
    * @param hideImages 是否隐藏图片
    * @param progressCallback 进度回调函数，用于实时更新UI
+   * @param options 可选配置参数，包含滚动尝试次数等
    */
   async setCurrentViewingIndex(
     questionId: string,
     index: number,
     hideImages: boolean = false,
-    progressCallback?: ProgressCallback
-  ): Promise<void> {
+    progressCallback?: ProgressCallback,
+    options?: { scrollAttempts?: number }
+  ): Promise<boolean> {
     return this.articleService.setCurrentViewingIndex(
       questionId,
       index,
       hideImages,
-      progressCallback
+      progressCallback,
+      options
     );
   }
 

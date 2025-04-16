@@ -203,7 +203,7 @@ export class ArticleService {
     progressCallback?: ProgressCallback
   ): Promise<BatchAnswers> {
     try {
-      console.log(`尝试获取问题${questionUrl}的多个回答，最多${maxCount}个`);
+      console.log(`尝试获取问题 ${questionUrl} 的多个回答，最多${maxCount}个`);
       // 重置当前查看的索引
       this.currentViewingIndex = 0;
       this.maxAnswersToLoad = maxCount;
@@ -404,20 +404,22 @@ export class ArticleService {
    * @param index 当前查看的索引
    * @param hideImages 是否隐藏图片
    * @param progressCallback 进度回调函数
+   * @param options 可选配置参数，包含滚动尝试次数等
    */
   async setCurrentViewingIndex(
     questionId: string,
     index: number,
     hideImages: boolean = false,
-    progressCallback?: ProgressCallback
-  ): Promise<void> {
+    progressCallback?: ProgressCallback,
+    options?: { scrollAttempts?: number }
+  ): Promise<boolean> {
     try {
       // 更新当前查看的索引
       this.currentViewingIndex = index;
 
       // 检查缓存中是否存在该问题的回答
       if (!this.articleCache.hasQuestionCache(questionId)) {
-        return;
+        return false;
       }
 
       const cachedData = this.articleCache.getQuestionCache(questionId)!;
@@ -431,16 +433,62 @@ export class ArticleService {
       ) {
         console.log(`到达当前批次的最后一个回答，自动加载下一批次`);
 
-        // 异步加载更多回答
-        this.loadMoreBatchAnswers(
-          questionId,
-          10,
-          hideImages,
-          progressCallback
-        ).catch((error) => console.error("自动加载更多回答失败:", error));
+        // 获取滚动尝试次数，默认为1
+        const scrollAttempts = options?.scrollAttempts || 1;
+        console.log(`将尝试滚动 ${scrollAttempts} 次以加载更多回答`);
+
+        // 如果页面已关闭，需要重新初始化
+        if (!cachedData.page) {
+          console.log("页面已关闭，创建新页面...");
+          // 重新初始化页面
+          const { page } = await this.answerLoader.initQuestionPage(
+            `https://www.zhihu.com/question/${questionId}`
+          );
+          // 更新缓存
+          this.articleCache.updateQuestionCache(questionId, { page });
+          cachedData.page = page;
+        }
+
+        // 防止重复加载
+        if (this.isLoadingMore) {
+          return false;
+        }
+
+        this.isLoadingMore = true;
+
+        try {
+          // 根据滚动尝试次数执行多次滚动
+          const originalAnswersCount = cachedData.answers.length;
+          const scrollResult = await this.answerLoader.loadAllAnswers(
+            cachedData.page!,
+            questionId,
+            originalAnswersCount + 10, // 增加目标数量
+            hideImages,
+            cachedData,
+            progressCallback,
+            true, // 标记这是加载更多操作
+            scrollAttempts // 传入滚动尝试次数
+          );
+
+          // 更新缓存
+          this.articleCache.updateQuestionCache(questionId, cachedData);
+
+          // 重置加载状态
+          this.isLoadingMore = false;
+
+          // 判断是否成功加载了新回答
+          const newAnswersLoaded = cachedData.answers.length > originalAnswersCount;
+          return newAnswersLoaded;
+        } catch (error) {
+          this.isLoadingMore = false;
+          console.error("自动加载更多回答失败:", error);
+          return false;
+        }
       }
+      return false;
     } catch (error) {
       console.error("设置当前查看索引失败:", error);
+      return false;
     }
   }
 

@@ -21,10 +21,7 @@ export class PuppeteerManager {
           "--disable-setuid-sandbox",
           `--window-size=1920,1080`,
         ],
-        defaultViewport: {
-          width: 1920,
-          height: 1080,
-        },
+        defaultViewport: null, // 设置为null，使用窗口大小作为视口
       });
     }
     return PuppeteerManager.browserInstance;
@@ -56,7 +53,7 @@ export class PuppeteerManager {
     PuppeteerManager.currentPage = page;
 
     // 设置浏览器视窗大小
-    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setViewport({ width: 800, height: 600 });
 
     // 设置User-Agent
     await page.setUserAgent(
@@ -111,27 +108,29 @@ export class PuppeteerManager {
    * 模拟人类的滚动行为
    */
   static async simulateHumanScroll(page: puppeteer.Page): Promise<void> {
-    const viewportHeight = await page.evaluate(() => window.innerHeight);
-
     // 先向下滚动到接近底部
-    await page.evaluate((height) => {
-      window.scrollBy(0, document.body.scrollHeight - height * 1.5);
-    }, viewportHeight);
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
 
     // 等待一小段随机时间
     await PuppeteerManager.delay(1000 + Math.random() * 500);
 
     // 稍微向上滚动一点
-    await page.evaluate((height) => {
-      window.scrollBy(0, -height * (0.1 + Math.random() * 0.3));
-    }, viewportHeight);
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight - 100);
+    });
+
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight - 200);
+    });
 
     // 再次等待
     await PuppeteerManager.delay(800 + Math.random() * 400);
 
     // 再次向下滚动到底部
     await page.evaluate(() => {
-      window.scrollBy(0, document.body.scrollHeight);
+      window.scrollTo(0, document.body.scrollHeight);
     });
 
     // 最终等待加载

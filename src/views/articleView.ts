@@ -476,13 +476,60 @@ export class ArticleView {
         const hideImages = config.get<boolean>("hideImages", false);
 
         // 通知服务更新当前查看的索引，触发自动加载
+        // 增加多次滚动逻辑以绕过知乎反爬机制
         if (this.viewState.questionId) {
-          await this.zhihuService.setCurrentViewingIndex(
+          console.log("执行多次滚动以模拟真实用户行为，绕过反爬机制");
+
+          // 首次尝试加载
+          let result = await this.zhihuService.setCurrentViewingIndex(
             this.viewState.questionId,
             this.viewState.currentAnswerIndex,
             hideImages,
-            this.onBatchProgress
+            this.onBatchProgress,
+            { scrollAttempts: 1 }
           );
+
+          // 如果没有获取到新回答，并且我们认为应该还有更多回答（基于总回答数）
+          // 则多次尝试滚动加载
+          if (
+            !result &&
+            this.viewState.totalAnswers &&
+            this.viewState.loadedAnswersCount! < this.viewState.totalAnswers
+          ) {
+            console.log("首次滚动未获取到更多回答，尝试多次滚动以绕过反爬机制");
+
+            // 尝试更多次滚动（3-5次是个合理的次数）
+            for (let attempt = 2; attempt <= 5; attempt++) {
+              console.log(`尝试第 ${attempt} 次滚动加载...`);
+
+              // 添加随机延迟以模拟真实用户行为（500-1500ms）
+              await new Promise((resolve) =>
+                setTimeout(resolve, 500 + Math.random() * 1000)
+              );
+
+              result = await this.zhihuService.setCurrentViewingIndex(
+                this.viewState.questionId,
+                this.viewState.currentAnswerIndex,
+                hideImages,
+                this.onBatchProgress,
+                { scrollAttempts: attempt }
+              );
+
+              // 如果成功获取到更多回答，退出循环
+              if (result) {
+                console.log(`在第 ${attempt} 次滚动尝试后成功加载更多回答`);
+                break;
+              }
+            }
+
+            // 如果多次尝试后仍未加载到回答，可能确实没有更多回答了
+            if (!result) {
+              console.log(
+                "多次滚动尝试后仍未获取到更多回答，可能确实已到达末尾"
+              );
+              this.viewState.hasMoreAnswers = false;
+            }
+          }
         }
       } catch (error) {
         console.error("自动加载下一批次回答失败:", error);
