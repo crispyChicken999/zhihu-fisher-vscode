@@ -548,6 +548,9 @@ export class ArticleView {
                 } else {
                   this.viewState.batchAnswers = newAnswers;
                 }
+
+                // 立即更新UI，刷新导航栏状态和加载数量显示
+                this.updateContent();
               } else {
                 console.log("预加载时没有找到更多回答");
                 this.viewState.hasMoreAnswers = false;

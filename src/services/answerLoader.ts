@@ -210,11 +210,10 @@ export class AnswerLoader {
     // 最大尝试次数
     const maxAttempts = Math.max(scrollAttempts, 5); // 至少尝试5次
     let loadedNewAnswers = false;
+    // 是否已经发送了第一个回答通知
+    let firstAnswerSent = batchAnswers.answers.length > 0 && !isLoadingMore;
 
     console.log(`将尝试最多 ${maxAttempts} 次滚动以加载更多回答`);
-
-    // 是否发送了第一个回答
-    let firstAnswerSent = batchAnswers.answers.length > 0 && !isLoadingMore;
 
     // 如果是加载更多操作，先通知UI进入加载状态
     if (isLoadingMore && progressCallback) {
@@ -229,6 +228,35 @@ export class AnswerLoader {
     // 首先给页面充分的初始等待时间，确保之前的内容已完全渲染
     console.log("等待页面稳定并渲染当前内容...");
     await PuppeteerManager.delay(2000);
+    
+    // 尝试立即提取第一批回答，如果当前页面已有回答则直接显示
+    if (!firstAnswerSent) {
+      const initialAnswers = await this.extractAnswersFromPage(
+        page,
+        questionId,
+        hideImages
+      );
+      
+      if (initialAnswers.length > 0) {
+        // 将首批回答添加到结果中
+        batchAnswers.answers.push(...initialAnswers);
+        loadedNewAnswers = true;
+        
+        // 立即通知UI显示第一个回答
+        if (progressCallback) {
+          console.log("已找到第一个回答，立即通知UI显示");
+          progressCallback(
+            initialAnswers[0],
+            1,
+            batchAnswers.totalAnswers || maxCount
+          );
+          firstAnswerSent = true;
+        }
+        
+        // 如果只获取到一个回答，继续后续流程加载更多回答
+        console.log(`已加载页面上的 ${initialAnswers.length} 个回答，继续加载更多...`);
+      }
+    }
 
     while (answersCount < maxCount && noNewAnswersCounter < maxAttempts) {
       // 记录滚动前的页面高度
@@ -284,31 +312,32 @@ export class AnswerLoader {
         loadedNewAnswers = true;
 
         // 如果这是第一个回答且有回调函数，立即通知UI可以显示第一个回答
-        if (
-          !firstAnswerSent &&
-          progressCallback &&
-          batchAnswers.answers.length > 0
-        ) {
+        if (!firstAnswerSent && progressCallback && batchAnswers.answers.length > 0) {
           progressCallback(
             batchAnswers.answers[0],
             1,
             batchAnswers.totalAnswers || maxCount
           );
           firstAnswerSent = true;
+        } 
+        // 如果有第二个回答，及时通知UI启用"下一条回答"按钮
+        else if (firstAnswerSent && progressCallback && batchAnswers.answers.length >= 2) {
+          console.log("已加载至少两个回答，通知UI更新导航状态");
+          progressCallback(
+            batchAnswers.answers[0], // 仍然使用第一个回答，不改变当前显示内容
+            batchAnswers.answers.length,
+            batchAnswers.totalAnswers || maxCount
+          );
         }
-        // 如果是加载更多且这是新批次的第一个回答，通知UI新回答已加载
-        else if (
-          isLoadingMore &&
-          progressCallback &&
-          uniqueNewAnswers.length > 0
-        ) {
+        // 如果是加载更多操作，通知UI新回答已加载
+        else if (isLoadingMore && progressCallback && uniqueNewAnswers.length > 0) {
           progressCallback(
             uniqueNewAnswers[0],
             batchAnswers.answers.length,
             batchAnswers.totalAnswers || maxCount
           );
         }
-        // 如果有回调函数，通知UI更新当前爬取进度
+        // 其他情况，如有回调函数，通知UI更新当前爬取进度
         else if (progressCallback) {
           progressCallback(
             batchAnswers.answers[0], // 始终传递第一个回答（因为可能已经显示了）
@@ -321,14 +350,18 @@ export class AnswerLoader {
         console.log(`已加载 ${batchAnswers.answers.length} 个回答，发现 ${uniqueNewAnswers.length} 个新回答`);
       } else {
         noNewAnswersCounter++;
-        console.log(
-          `尝试第 ${noNewAnswersCounter} 次滚动，未发现新回答`
-        );
+        console.log(`尝试第 ${noNewAnswersCounter} 次滚动，未发现新回答`);
       }
 
       // 如果已经达到目标数量，跳出循环
       if (batchAnswers.answers.length >= maxCount) {
         break;
+      }
+
+      // 如果已经至少有两个回答，且已经通知了UI，可以考虑减少剩余尝试次数，加快返回
+      if (firstAnswerSent && batchAnswers.answers.length >= 2 && noNewAnswersCounter >= 2) {
+        console.log("已有足够的回答可供浏览，减少剩余尝试次数");
+        noNewAnswersCounter++;
       }
 
       answersCount = batchAnswers.answers.length;

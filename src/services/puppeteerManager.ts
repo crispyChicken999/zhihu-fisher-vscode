@@ -107,8 +107,6 @@ export class PuppeteerManager {
    * 模拟人类的滚动行为
    */
   static async simulateHumanScroll(page: puppeteer.Page): Promise<void> {
-    console.log("滚动了吗？");
-
     await page.evaluate(() => {
       window.scrollTo(0, document.body.scrollHeight); // 滚动到顶部
     });
