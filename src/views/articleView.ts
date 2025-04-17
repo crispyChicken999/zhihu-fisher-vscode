@@ -551,6 +551,11 @@ export class ArticleView {
 
                 // 立即更新UI，刷新导航栏状态和加载数量显示
                 this.updateContent();
+
+                // vscode 提示用户
+                vscode.window.showInformationMessage(
+                  `自动加载了 ${newAnswers.length} 个新回答`
+                );
               } else {
                 console.log("预加载时没有找到更多回答");
                 this.viewState.hasMoreAnswers = false;
@@ -560,12 +565,12 @@ export class ArticleView {
               this.viewState.isLoadingMoreInBackground = false;
             })
             .catch((error) => {
-              console.error("预加载下一批次回答失败:", error);
+              console.warn("预加载下一批次回答失败:", error);
               this.viewState.isLoadingMoreInBackground = false;
             });
         }
       } catch (error) {
-        console.error("自动加载下一批次回答失败:", error);
+        console.warn("自动加载下一批次回答失败:", error);
         this.viewState.isLoadingMoreInBackground = false;
       }
     }

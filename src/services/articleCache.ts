@@ -6,7 +6,7 @@ export interface BatchAnswers {
   questionTitle: string;
   answers: ZhihuArticle[];
   hasMore: boolean;
-  page: puppeteer.Page | null;
+  page: puppeteer.Page | null; // 每个问题对应一个独立的页面实例
   totalAnswers?: number; // 问题的总回答数
 }
 
@@ -81,10 +81,45 @@ export class ArticleCache {
   }
 
   /**
+   * 关闭问题对应的页面
+   * @param questionId 问题ID
+   */
+  async closePageForQuestion(questionId: string): Promise<void> {
+    if (this.batchAnswersCache.has(questionId)) {
+      const existingData = this.batchAnswersCache.get(questionId)!;
+      if (existingData.page) {
+        try {
+          await existingData.page.close();
+          existingData.page = null;
+          this.batchAnswersCache.set(questionId, existingData);
+          console.log(`已关闭问题 ${questionId} 的页面`);
+        } catch (error) {
+          console.error(`关闭问题 ${questionId} 的页面失败:`, error);
+        }
+      }
+    }
+  }
+
+  /**
+   * 关闭所有问题的页面
+   */
+  async closeAllPages(): Promise<void> {
+    const closePromises: Promise<void>[] = [];
+    for (const questionId of this.batchAnswersCache.keys()) {
+      closePromises.push(this.closePageForQuestion(questionId));
+    }
+    await Promise.all(closePromises);
+    console.log('已关闭所有问题的页面');
+  }
+
+  /**
    * 清除问题的缓存
    * @param questionId 问题ID
    */
-  clearQuestionCache(questionId: string): void {
+  async clearQuestionCache(questionId: string): Promise<void> {
+    // 首先关闭页面
+    await this.closePageForQuestion(questionId);
+    // 然后移除缓存
     this.batchAnswersCache.delete(questionId);
   }
 

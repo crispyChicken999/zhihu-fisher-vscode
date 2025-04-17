@@ -6,7 +6,7 @@ import { CookieManager } from "./cookieManager";
  */
 export class PuppeteerManager {
   private static browserInstance: puppeteer.Browser | null = null;
-  private static currentPage: puppeteer.Page | null = null;
+  // 移除单一currentPage属性，改为支持多页面管理
 
   /**
    * 获取或创建浏览器实例（单例模式）
@@ -27,29 +27,15 @@ export class PuppeteerManager {
   }
 
   /**
-   * 创建并设置新的页面，如果已存在页面则重用
+   * 创建新的页面
    */
   static async createPage(
     cookieManager: CookieManager
   ): Promise<puppeteer.Page> {
     const browser = await PuppeteerManager.getBrowserInstance();
 
-    // 如果已有页面且没有关闭，则重用
-    if (PuppeteerManager.currentPage) {
-      try {
-        // 检查页面是否仍然可用
-        await PuppeteerManager.currentPage.evaluate(() => true);
-        console.log("重用现有页面...");
-        return PuppeteerManager.currentPage;
-      } catch (e) {
-        console.log("现有页面已关闭，创建新页面...");
-        PuppeteerManager.currentPage = null;
-      }
-    }
-
     console.log("打开新页面...");
     const page = await browser.newPage();
-    PuppeteerManager.currentPage = page;
 
     // 设置浏览器视窗大小
     await page.setViewport({ width: 800, height: 600 });
@@ -130,7 +116,6 @@ export class PuppeteerManager {
   static async closeBrowserInstance(): Promise<void> {
     if (PuppeteerManager.browserInstance) {
       try {
-        PuppeteerManager.currentPage = null;
         await PuppeteerManager.browserInstance.close();
         PuppeteerManager.browserInstance = null;
         console.log("已关闭浏览器实例");

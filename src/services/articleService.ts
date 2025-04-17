@@ -224,6 +224,23 @@ export class ArticleService {
       if (this.articleCache.hasQuestionCache(questionId)) {
         const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
+        // 如果页面已关闭但缓存存在，重新为该问题创建页面
+        if (!cachedData.page) {
+          console.log(`为已缓存的问题 ${questionId} 创建新页面...`);
+          const page = await PuppeteerManager.createPage(this.cookieManager);
+          await page.goto(`https://www.zhihu.com/question/${questionId}`, {
+            waitUntil: "networkidle0",
+            timeout: 60000,
+          });
+
+          // 更新缓存中的页面引用
+          cachedData.page = page;
+          this.articleCache.updateQuestionCache(questionId, { page });
+          
+          // 等待页面稳定
+          await PuppeteerManager.delay(1000);
+        }
+
         // 检查是否需要加载更多回答
         // 仅当现有回答数量明显不足且缓存中没有可用页面时才异步加载更多
         if (
@@ -265,7 +282,8 @@ export class ArticleService {
       // 直接访问问题页面URL（不带回答ID）
       const cleanQuestionUrl = `https://www.zhihu.com/question/${questionId}`;
 
-      // 使用获取共享页面的方法
+      // 为该问题创建专用的页面
+      console.log(`为问题 ${questionId} 创建新的标签页`);
       const page = await PuppeteerManager.createPage(this.cookieManager);
 
       // 导航到问题页
@@ -433,7 +451,7 @@ export class ArticleService {
       return cachedData.answers.slice(originalAnswersCount);
     } catch (error) {
       this.isLoadingMore = false;
-      console.error("加载更多批量回答失败:", error);
+      console.warn("加载更多批量回答失败:", error);
       throw new Error(
         `加载更多批量回答失败: ${
           error instanceof Error ? error.message : "未知错误"
