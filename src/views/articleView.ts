@@ -5,7 +5,7 @@ import {
   ZhihuService,
 } from "../services/zhihuService";
 import { HtmlRenderer } from "../utils/htmlRenderer";
-
+import { PuppeteerManager } from "../services/puppeteerManager";
 /**
  * 文章视图状态接口
  */
@@ -680,5 +680,25 @@ export class ArticleView {
    */
   public setOnDidDisposeCallback(callback: (id: string) => void): void {
     this.onDidDisposeCallback = callback;
+  }
+
+  /**
+   * 激活对应问题的浏览器标签页
+   * @param questionId 问题ID
+   */
+  public async activateBrowserTab(questionId?: string): Promise<void> {
+    // 如果未提供问题ID，则使用当前视图的问题ID
+    const qid = questionId || this.viewState.questionId;
+    if (!qid) {
+      return;
+    }
+
+    try {
+      console.log(`找到问题 ${qid} 的浏览器页面，正在激活到前台...`);
+      let page = await PuppeteerManager.getPageInstance(qid);
+      await page?.bringToFront();
+    } catch (error) {
+      console.error(`激活问题 ${qid} 的浏览器标签页失败:`, error);
+    }
   }
 }

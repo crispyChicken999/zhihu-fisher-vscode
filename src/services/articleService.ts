@@ -204,6 +204,7 @@ export class ArticleService {
         if (!cachedData.page) {
           console.log(`为已缓存的问题 ${questionId} 创建新页面...`);
           const page = await PuppeteerManager.createPage(this.cookieManager);
+          PuppeteerManager.setPageInstance(questionId, page);
           await page.goto(`https://www.zhihu.com/question/${questionId}`, {
             waitUntil: "networkidle0",
             timeout: 60000,
@@ -216,7 +217,6 @@ export class ArticleService {
           // 等待页面稳定
           await PuppeteerManager.delay(1000);
         }
-
 
         // 如果有回调函数并且有已加载的回答，通知UI第一个回答可以显示
         if (progressCallback && cachedData.answers.length > 0) {
@@ -236,6 +236,7 @@ export class ArticleService {
       // 为该问题创建专用的页面
       console.log(`为问题 ${questionId} 创建新的标签页`);
       const page = await PuppeteerManager.createPage(this.cookieManager);
+      PuppeteerManager.setPageInstance(questionId, page);
 
       // 导航到问题页
       console.log(`导航到问题页面: ${cleanQuestionUrl}`);
@@ -371,6 +372,8 @@ export class ArticleService {
 
         // 创建新页面并导航
         page = await PuppeteerManager.createPage(this.cookieManager);
+        PuppeteerManager.setPageInstance(questionId, page);
+
         await page.goto(`https://www.zhihu.com/question/${questionId}`, {
           waitUntil: "networkidle0",
           timeout: 60000,
@@ -486,6 +489,8 @@ export class ArticleService {
 
             // 创建新页面并导航
             page = await PuppeteerManager.createPage(this.cookieManager);
+            PuppeteerManager.setPageInstance(questionId, page);
+
             await page.goto(`https://www.zhihu.com/question/${questionId}`, {
               waitUntil: "networkidle0",
               timeout: 60000,

@@ -6,6 +6,7 @@ import { CookieManager } from "./cookieManager";
  */
 export class PuppeteerManager {
   private static browserInstance: puppeteer.Browser | null = null;
+  private static pagesInstance: Map<string, puppeteer.Page> = new Map(); // 使用Map来存储多个页面实例
   // 移除单一currentPage属性，改为支持多页面管理
 
   /**
@@ -24,6 +25,28 @@ export class PuppeteerManager {
       });
     }
     return PuppeteerManager.browserInstance;
+  }
+
+  /**
+   * 获取指定问题的页面实例
+   * @param questionId 问题ID
+   */
+  static async getPageInstance(
+    questionId: string
+  ): Promise<puppeteer.Page | null> {
+    return PuppeteerManager.pagesInstance.get(questionId) || null;
+  }
+
+  /**
+   * 设置指定问题的页面实例
+   * @param questionId 问题ID
+   * @param page 页面实例
+   */
+  static async setPageInstance(
+    questionId: string,
+    page: puppeteer.Page
+  ): Promise<void> {
+    PuppeteerManager.pagesInstance.set(questionId, page);
   }
 
   /**
