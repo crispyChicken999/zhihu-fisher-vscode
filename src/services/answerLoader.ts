@@ -411,15 +411,6 @@ export class AnswerLoader {
 
     console.log(`问题标题: ${questionTitle}, 总回答数: ${totalAnswers}`);
 
-    // 尝试点击"收起全部回答"按钮
-    await page.evaluate(() => {
-      const collapseButton = document.querySelector("#collapsed-button");
-      if (collapseButton) {
-        (collapseButton as HTMLElement).click();
-        console.log("已点击收起回答按钮");
-      }
-    });
-
     // 等待一段时间让页面稳定
     await PuppeteerManager.delay(1000);
 
