@@ -148,7 +148,7 @@ export class ArticleView {
     );
   }
 
-/**
+  /**
    * 进度回调函数 - 接收爬取进度并更新UI
    */
   private onBatchProgress = (
@@ -168,9 +168,13 @@ export class ArticleView {
       this.updateContent();
       return;
     }
-    
+
     // 如果正在后台预加载，只更新导航栏状态，不修改文章内容
-    if (isLoading && this.viewState.isLoadingMoreInBackground && !this.viewState.isLoading) {
+    if (
+      isLoading &&
+      this.viewState.isLoadingMoreInBackground &&
+      !this.viewState.isLoading
+    ) {
       console.log("正在后台预加载下一批次回答...");
       // 只更新UI中的加载状态指示器，不改变当前显示的文章内容
       this.updateContent();
@@ -502,52 +506,60 @@ export class ArticleView {
         // 如果有问题ID，执行加载操作
         if (this.viewState.questionId) {
           // 调用 loadMoreBatchAnswers 方法来加载更多回答
-          this.zhihuService.loadMoreBatchAnswers(
-            this.viewState.questionId,
-            this.viewState.answersPerBatch,
-            hideImages,
-            this.onBatchProgress
-          ).then(newAnswers => {
-            if (newAnswers && newAnswers.length > 0) {
-              console.log(`自动加载了 ${newAnswers.length} 个新回答`);
-              
-              // 更新批次计数
-              this.viewState.batchCount = (this.viewState.batchCount || 0) + 1;
+          this.zhihuService
+            .loadMoreBatchAnswers(
+              this.viewState.questionId,
+              this.viewState.answersPerBatch,
+              hideImages,
+              this.onBatchProgress
+            )
+            .then((newAnswers) => {
+              if (newAnswers && newAnswers.length > 0) {
+                console.log(`自动加载了 ${newAnswers.length} 个新回答`);
 
-              // 添加新的回答ID
-              const newIds = newAnswers
-                .map((answer) => {
-                  const answerIdMatch = answer.actualUrl?.match(/answer\/(\d+)/);
-                  return answerIdMatch ? answerIdMatch[1] : "";
-                })
-                .filter((id) => id !== "");
+                // 更新批次计数
+                this.viewState.batchCount =
+                  (this.viewState.batchCount || 0) + 1;
 
-              this.viewState.answerIds = [...this.viewState.answerIds, ...newIds];
+                // 添加新的回答ID
+                const newIds = newAnswers
+                  .map((answer) => {
+                    const answerIdMatch =
+                      answer.actualUrl?.match(/answer\/(\d+)/);
+                    return answerIdMatch ? answerIdMatch[1] : "";
+                  })
+                  .filter((id) => id !== "");
 
-              // 更新已加载回答数
-              this.viewState.loadedAnswersCount =
-                (this.viewState.loadedAnswersCount || 0) + newAnswers.length;
-
-              // 将新回答添加到批量回答数组
-              if (this.viewState.batchAnswers) {
-                this.viewState.batchAnswers = [
-                  ...this.viewState.batchAnswers,
-                  ...newAnswers,
+                this.viewState.answerIds = [
+                  ...this.viewState.answerIds,
+                  ...newIds,
                 ];
+
+                // 更新已加载回答数
+                this.viewState.loadedAnswersCount =
+                  (this.viewState.loadedAnswersCount || 0) + newAnswers.length;
+
+                // 将新回答添加到批量回答数组
+                if (this.viewState.batchAnswers) {
+                  this.viewState.batchAnswers = [
+                    ...this.viewState.batchAnswers,
+                    ...newAnswers,
+                  ];
+                } else {
+                  this.viewState.batchAnswers = newAnswers;
+                }
               } else {
-                this.viewState.batchAnswers = newAnswers;
+                console.log("预加载时没有找到更多回答");
+                this.viewState.hasMoreAnswers = false;
               }
-            } else {
-              console.log("预加载时没有找到更多回答");
-              this.viewState.hasMoreAnswers = false;
-            }
-            
-            // 重置加载状态
-            this.viewState.isLoadingMoreInBackground = false;
-          }).catch(error => {
-            console.error("预加载下一批次回答失败:", error);
-            this.viewState.isLoadingMoreInBackground = false;
-          });
+
+              // 重置加载状态
+              this.viewState.isLoadingMoreInBackground = false;
+            })
+            .catch((error) => {
+              console.error("预加载下一批次回答失败:", error);
+              this.viewState.isLoadingMoreInBackground = false;
+            });
         }
       } catch (error) {
         console.error("自动加载下一批次回答失败:", error);
@@ -737,14 +749,18 @@ export class ArticleView {
       } else {
         console.log("没有更多回答可加载");
         this.viewState.hasMoreAnswers = false;
-        
+
         // 如果没有新回答，恢复显示之前的内容
-        if (this.viewState.batchAnswers && this.viewState.batchAnswers.length > 0 && 
-            this.viewState.currentAnswerIndex >= 0 && 
-            this.viewState.currentAnswerIndex < this.viewState.batchAnswers.length) {
-          this.viewState.article = this.viewState.batchAnswers[this.viewState.currentAnswerIndex];
+        if (
+          this.viewState.batchAnswers &&
+          this.viewState.batchAnswers.length > 0 &&
+          this.viewState.currentAnswerIndex >= 0 &&
+          this.viewState.currentAnswerIndex < this.viewState.batchAnswers.length
+        ) {
+          this.viewState.article =
+            this.viewState.batchAnswers[this.viewState.currentAnswerIndex];
         }
-        
+
         vscode.window.showInformationMessage("没有更多回答了");
         this.updateContent();
       }
@@ -752,14 +768,18 @@ export class ArticleView {
       this.viewState.isLoading = false;
       this.viewState.isLoadingMoreInBackground = false;
       console.error("获取更多回答失败:", error);
-      
+
       // 恢复显示之前的内容，而不是保持显示"正在加载"状态
-      if (this.viewState.batchAnswers && this.viewState.batchAnswers.length > 0 && 
-          this.viewState.currentAnswerIndex >= 0 && 
-          this.viewState.currentAnswerIndex < this.viewState.batchAnswers.length) {
-        this.viewState.article = this.viewState.batchAnswers[this.viewState.currentAnswerIndex];
+      if (
+        this.viewState.batchAnswers &&
+        this.viewState.batchAnswers.length > 0 &&
+        this.viewState.currentAnswerIndex >= 0 &&
+        this.viewState.currentAnswerIndex < this.viewState.batchAnswers.length
+      ) {
+        this.viewState.article =
+          this.viewState.batchAnswers[this.viewState.currentAnswerIndex];
       }
-      
+
       vscode.window.showErrorMessage(
         `获取更多回答失败: ${
           error instanceof Error ? error.message : String(error)

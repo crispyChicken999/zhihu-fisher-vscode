@@ -122,7 +122,7 @@ export class PuppeteerManager {
     await PuppeteerManager.delay(1500 + Math.random() * 500);
 
     // 3. 再次下滚触发加载
-    await page.mouse.wheel({ deltaY: 500 });
+    await page.mouse.wheel({ deltaY: 1000 });
     await PuppeteerManager.delay(1500 + Math.random() * 500);
   }
 
