@@ -333,7 +333,7 @@ export class HtmlRenderer {
       </head>
       <body>
         <header>
-          <h1>${this.escapeHtml(article.title)}</h1>
+          <h3>${this.escapeHtml(article.title)}</h3>
           <div class="article-meta">
             ${authorHTML}
             <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>

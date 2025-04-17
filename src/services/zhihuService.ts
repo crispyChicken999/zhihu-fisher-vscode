@@ -49,11 +49,6 @@ export class ZhihuService {
     return this.articleService.getArticleContent(url, hideImages);
   }
 
-  // 获取更多回答ID（已废弃，保留用于兼容性）
-  async getMoreAnswersId(questionUrl: string): Promise<string | null> {
-    return this.articleService.getMoreAnswersId(questionUrl);
-  }
-
   /**
    * 批量获取问题的回答
    * @param questionUrl 问题URL
@@ -67,6 +62,9 @@ export class ZhihuService {
     hideImages: boolean = false,
     progressCallback?: ProgressCallback
   ) {
+    console.log(
+      `[ZhihuService] 调用 getBatchAnswers: ${questionUrl}, maxCount=${maxCount}`
+    );
     return this.articleService.getBatchAnswers(
       questionUrl,
       maxCount,
@@ -124,8 +122,8 @@ export class ZhihuService {
    * 关闭问题的浏览器实例
    * @param questionId 问题ID
    */
-  async closeBrowser(questionId: string): Promise<void> {
-    return this.articleService.closeBrowser(questionId);
+  async closeBrowserPage(questionId: string): Promise<void> {
+    return this.articleService.closeBrowserPage(questionId);
   }
 }
 

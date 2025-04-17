@@ -40,18 +40,14 @@ export class ArticleViewManager {
 
       // 创建新的文章视图
       const articleView = new ArticleView(item, this.zhihuService);
-      
+
       // 设置视图关闭回调
       articleView.setOnDidDisposeCallback((id) => {
         this.activeViews.delete(id);
       });
-      
+
       // 添加到活动视图管理
       this.activeViews.set(item.id, articleView);
-      
-      // 加载内容
-      await articleView.loadContent();
-
     } catch (error) {
       vscode.window.showErrorMessage(`无法打开文章: ${error}`);
     }

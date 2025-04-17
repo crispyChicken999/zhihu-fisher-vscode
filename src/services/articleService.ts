@@ -52,30 +52,6 @@ export class ArticleService {
         headers["Cookie"] = cookie;
       }
 
-      // 如果是问题链接，直接使用批量获取回答的方法
-      if (url.includes("/question/") && !url.includes("/answer/")) {
-        // 提取问题ID
-        const questionIdMatch = url.match(/question\/(\d+)/);
-        if (questionIdMatch && questionIdMatch[1]) {
-          const questionId = questionIdMatch[1];
-
-          // 检查是否有缓存的回答
-          if (this.articleCache.hasQuestionCache(questionId)) {
-            const cachedData = this.articleCache.getQuestionCache(questionId);
-            if (cachedData && cachedData.answers.length > 0) {
-              // 返回第一个回答
-              return cachedData.answers[0];
-            }
-          }
-
-          // 如果没有缓存，加载批量回答
-          const batchAnswers = await this.getBatchAnswers(url, 10, hideImages);
-          if (batchAnswers.answers.length > 0) {
-            return batchAnswers.answers[0];
-          }
-        }
-      }
-
       // 如果是特定回答链接，检查是否在缓存中
       if (url.includes("/question/") && url.includes("/answer/")) {
         const questionIdMatch = url.match(/question\/(\d+)/);
@@ -236,36 +212,11 @@ export class ArticleService {
           // 更新缓存中的页面引用
           cachedData.page = page;
           this.articleCache.updateQuestionCache(questionId, { page });
-          
+
           // 等待页面稳定
           await PuppeteerManager.delay(1000);
         }
 
-        // 检查是否需要加载更多回答
-        // 仅当现有回答数量明显不足且缓存中没有可用页面时才异步加载更多
-        if (
-          cachedData.answers.length < maxCount &&
-          cachedData.hasMore &&
-          cachedData.answers.length <
-            (cachedData.totalAnswers || Infinity) * 0.5
-        ) {
-          // 仅当缓存的回答数量少于总数的一半时加载
-          console.log(
-            `缓存中的回答数量(${
-              cachedData.answers.length
-            })明显少于请求数量(${maxCount})或总回答数(${
-              cachedData.totalAnswers || "未知"
-            })，尝试加载更多回答`
-          );
-
-          // 异步加载更多回答，但不阻塞当前返回
-          this.loadMoreBatchAnswers(
-            questionId,
-            maxCount - cachedData.answers.length,
-            hideImages,
-            progressCallback
-          ).catch((error) => console.error("自动加载更多回答失败:", error));
-        }
 
         // 如果有回调函数并且有已加载的回答，通知UI第一个回答可以显示
         if (progressCallback && cachedData.answers.length > 0) {
@@ -395,20 +346,23 @@ export class ArticleService {
       // 检查缓存中是否存在该问题的回答
       if (!this.articleCache.hasQuestionCache(questionId)) {
         this.isLoadingMore = false;
-        throw new Error("未找到缓存的问题回答");
+        console.log(
+          `未找到问题 ${questionId} 的缓存数据，认为是新问题，开始加载...`
+        );
+        return [];
       }
 
       const cachedData = this.articleCache.getQuestionCache(questionId)!;
 
       // 如果已经没有更多回答，直接返回空数组
-      if (!cachedData.hasMore) {
+      if (cachedData && !cachedData.hasMore) {
         console.log("没有更多回答可加载");
         this.isLoadingMore = false;
         return [];
       }
 
       // 记录原始回答数量
-      const originalAnswersCount = cachedData.answers.length;
+      const originalAnswersCount = cachedData?.answers.length || 0;
 
       // 检查页面状态并确保页面可用
       let page = cachedData.page;
@@ -609,7 +563,7 @@ export class ArticleService {
    * 关闭问题的浏览器页面
    * @param questionId 问题ID
    */
-  async closeBrowser(questionId: string): Promise<void> {
+  async closeBrowserPage(questionId: string): Promise<void> {
     try {
       const cachedData = this.articleCache.getQuestionCache(questionId);
       if (cachedData && cachedData.page) {
@@ -629,16 +583,5 @@ export class ArticleService {
    */
   static async closeBrowserInstance(): Promise<void> {
     await PuppeteerManager.closeBrowserInstance();
-  }
-
-  /**
-   * 获取问题下的更多回答ID - 已废弃，保留用于兼容性
-   * @deprecated 请使用getBatchAnswers方法代替
-   */
-  async getMoreAnswersId(questionUrl: string): Promise<string | null> {
-    console.log(
-      `getMoreAnswersId方法已废弃，请使用getBatchAnswers和setCurrentViewingIndex方法代替`
-    );
-    return null;
   }
 }

@@ -132,9 +132,9 @@ export class ArticleView {
         if (this.viewState.questionId) {
           try {
             console.log(
-              `视图关闭，关闭问题 ${this.viewState.questionId} 的浏览器实例`
+              `视图关闭，关闭问题 ${this.viewState.questionId} 的浏览器标签页`
             );
-            await this.zhihuService.closeBrowser(this.viewState.questionId);
+            await this.zhihuService.closeBrowserPage(this.viewState.questionId);
           } catch (error) {
             console.error("关闭浏览器时出错:", error);
           }
@@ -158,7 +158,6 @@ export class ArticleView {
     isLoading: boolean = false
   ) => {
     // 如果是加载中状态，但只有在使用loadMoreBatchAnswers方法时才显示加载UI
-    // 预加载（通过checkAutoLoadNextBatch触发）不应该把内容替换为加载信息
     if (isLoading && this.viewState.isLoading) {
       console.log("批量加载中，显示加载状态...");
       this.viewState.article = {
@@ -355,50 +354,6 @@ export class ArticleView {
               this.viewState.isLoadingMoreInBackground = false;
               // 错误处理在外部catch块中
             });
-
-          // 不等待上面的操作完成，直接返回，回调函数会更新UI
-        } else {
-          // 使用原有方法获取单个回答
-          const article = await this.zhihuService.getArticleContent(
-            this.viewState.url,
-            hideImages
-          );
-
-          // 更新状态
-          this.viewState.article = article;
-          this.viewState.isLoading = false;
-
-          // 更新面板标题 - 使用截短的标题
-          const shortArticleTitle =
-            article.title.length > 15
-              ? `${article.title.substring(0, 15)}...`
-              : article.title;
-          this.viewState.webviewPanel.title = shortArticleTitle;
-
-          // 如果是问题页面，从返回的实际URL中提取回答ID并添加到数组
-          if (this.viewState.questionId && article.actualUrl) {
-            const answerMatch = article.actualUrl.match(/answer\/(\d+)/);
-            if (answerMatch && answerMatch[1]) {
-              const answerId = answerMatch[1];
-
-              // 如果是新的回答ID，更新回答ID数组和当前索引
-              if (!this.viewState.answerIds.includes(answerId)) {
-                this.viewState.answerIds.push(answerId);
-                this.viewState.currentAnswerIndex =
-                  this.viewState.answerIds.length - 1;
-              } else {
-                // 如果已有此回答ID，更新当前索引
-                this.viewState.currentAnswerIndex =
-                  this.viewState.answerIds.indexOf(answerId);
-              }
-            }
-          }
-
-          // 加载完成后更新内容
-          this.updateContent();
-          console.log(
-            `成功加载并显示文章内容: ${this.viewState.article.title}`
-          );
         }
       } catch (error) {
         console.error("加载文章内容失败:", error);
@@ -470,18 +425,19 @@ export class ArticleView {
 
   /**
    * 检查是否需要自动加载下一批次回答
+   *
+   * 只有在以下条件都满足时才自动加载下一批次
+   * 1. 有问题ID
+   * 2. 当前查看的是批次中的倒数第二个或最后一个回答
+   * 3. 还有更多回答可加载
+   * 4. 当前没有任何加载进行中
+   * 5. 已加载的回答数小于问题的总回答数
    */
   private async checkAutoLoadNextBatch(): Promise<void> {
     if (!this.viewState.questionId) {
       return;
     }
 
-    // 只有在以下条件都满足时才自动加载下一批次
-    // 1. 有问题ID
-    // 2. 当前查看的是批次中的倒数第二个或最后一个回答
-    // 3. 还有更多回答可加载
-    // 4. 当前没有任何加载进行中
-    // 5. 已加载的回答数小于问题的总回答数
     const isNearEnd =
       this.viewState.currentAnswerIndex >= this.viewState.answerIds.length - 2;
     const canLoadMore = this.viewState.hasMoreAnswers === true;
@@ -596,23 +552,6 @@ export class ArticleView {
           vscode.window.showInformationMessage("正在加载更多回答，请稍候...");
           return;
         }
-
-        // 需要从问题页面获取更多回答
-        if (this.viewState.hasMoreAnswers) {
-          await this.loadMoreBatchAnswers();
-        } else {
-          // 检查已加载的回答是否已经达到总回答数
-          if (
-            this.viewState.totalAnswers &&
-            this.viewState.loadedAnswersCount &&
-            this.viewState.loadedAnswersCount < this.viewState.totalAnswers
-          ) {
-            // 还有回答可加载，尝试加载更多
-            await this.loadMoreBatchAnswers();
-          } else {
-            vscode.window.showInformationMessage("已经是最后一个回答了");
-          }
-        }
       } else {
         // 已有缓存的下一个回答，直接从batchAnswers中获取
         if (
@@ -629,12 +568,6 @@ export class ArticleView {
           }
 
           this.updateContent();
-        } else {
-          // 使用传统方式加载
-          const nextAnswerId = this.viewState.answerIds[nextIndex];
-          this.viewState.url = `https://www.zhihu.com/question/${this.viewState.questionId}/answer/${nextAnswerId}`;
-          this.viewState.currentAnswerIndex = nextIndex;
-          await this.loadContent();
         }
       }
     } catch (error) {
@@ -674,12 +607,6 @@ export class ArticleView {
         }
 
         this.updateContent();
-      } else {
-        // 使用传统方式加载
-        const prevAnswerId = this.viewState.answerIds[prevIndex];
-        this.viewState.url = `https://www.zhihu.com/question/${this.viewState.questionId}/answer/${prevAnswerId}`;
-        this.viewState.currentAnswerIndex = prevIndex;
-        await this.loadContent();
       }
     } catch (error) {
       console.error("加载上一个回答失败:", error);
