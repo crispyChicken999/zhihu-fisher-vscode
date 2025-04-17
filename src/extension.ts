@@ -95,7 +95,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration("zhihu-fisher")) {
+    // 只在非hideImages的配置变更时才刷新热榜
+    if (
+      e.affectsConfiguration("zhihu-fisher") &&
+      !e.affectsConfiguration("zhihu-fisher.hideImages")
+    ) {
       zhihuTreeDataProvider.refresh();
     }
   });
