@@ -582,11 +582,28 @@ export class ArticleView {
 
       // 如果下一个索引超过了当前批次的最后一个回答
       if (nextIndex >= this.viewState.answerIds.length) {
+        // 检查是否正在预加载更多回答
+        if (this.viewState.isLoadingMoreInBackground) {
+          // 如果正在预加载，显示"正在加载中"的提示，而不是"没有更多回答了"
+          vscode.window.showInformationMessage("正在加载更多回答，请稍候...");
+          return;
+        }
+
         // 需要从问题页面获取更多回答
         if (this.viewState.hasMoreAnswers) {
           await this.loadMoreBatchAnswers();
         } else {
-          vscode.window.showInformationMessage("已经是最后一个回答了");
+          // 检查已加载的回答是否已经达到总回答数
+          if (
+            this.viewState.totalAnswers &&
+            this.viewState.loadedAnswersCount &&
+            this.viewState.loadedAnswersCount < this.viewState.totalAnswers
+          ) {
+            // 还有回答可加载，尝试加载更多
+            await this.loadMoreBatchAnswers();
+          } else {
+            vscode.window.showInformationMessage("已经是最后一个回答了");
+          }
         }
       } else {
         // 已有缓存的下一个回答，直接从batchAnswers中获取
