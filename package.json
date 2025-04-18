@@ -7,6 +7,10 @@
   "engines": {
     "vscode": "^1.99.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/CrispyChicken999/zhihu-fisher"
+  },
   "icon": "./icon.png",
   "publisher": "CrispyChicken",
   "categories": [
