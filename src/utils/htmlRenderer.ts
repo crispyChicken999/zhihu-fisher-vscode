@@ -62,6 +62,7 @@ export class HtmlRenderer {
             height: 80vh;
           }
           .loading-spinner {
+            flex: 0 0 auto;
             width: 50px;
             height: 50px;
             border: 5px solid rgba(0, 0, 0, 0.1);
@@ -94,9 +95,13 @@ export class HtmlRenderer {
         <div class="loading-container">
           <div class="loading-spinner"></div>
           <h2>正在加载文章内容...</h2>
-          <h3 style="text-align:center;max-width:500px;">${this.escapeHtml(title)}</h3>
+          <h3 style="text-align:center;max-width:500px;">${this.escapeHtml(
+            title
+          )}</h3>
           <div style="border: 1px solid var(--vscode-panel-border); width: 100%; margin: 10px;"></div>
-          <p style="text-align:center;max-width:500px;">${this.escapeHtml(excerpt)}</p>
+          <p style="text-align:center;max-width:500px;">${this.escapeHtml(
+            excerpt
+          )}</p>
           <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
         </div>
         <script>
@@ -340,7 +345,7 @@ export class HtmlRenderer {
       <body>
         <header>
           <h3>${this.escapeHtml(article.title)}</h3>
-          <div class="article-meta${hideImages? " hide-avatar": ''}">
+          <div class="article-meta${hideImages ? " hide-avatar" : ""}">
             ${authorHTML}
             <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>
           </div>

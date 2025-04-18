@@ -1,8 +1,8 @@
 {
   "name": "zhihu-fisher",
-  "displayName": "zhihu-fisher",
-  "description": "知乎摸鱼神器-使用MarkDown来刷知乎热榜，提供无图片模式",
-  "version": "0.0.1",
+  "displayName": "Zhihu Fisher",
+  "description": "VSCode摸鱼神器 使用MarkDown来刷知乎热榜和推荐 提供无图片模式",
+  "version": "1.0.0-beta.1",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.99.0"
