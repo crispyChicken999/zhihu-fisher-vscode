@@ -16,7 +16,7 @@ export class PuppeteerManager {
     if (!PuppeteerManager.browserInstance) {
       console.log("创建新的浏览器实例...");
       PuppeteerManager.browserInstance = await puppeteer.launch({
-        headless: false, // 设置为false以便调试
+        headless: true,
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",

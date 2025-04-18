@@ -169,6 +169,7 @@ export class AnswerLoader {
 
       result.push({
         title: questionTitle,
+        excerpt: '',
         content,
         author: answer.author,
         actualUrl,

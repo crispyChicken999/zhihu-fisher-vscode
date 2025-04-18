@@ -150,6 +150,7 @@ export class ArticleService {
 
       return {
         title: title || "未知标题",
+        excerpt: "无摘要",
         content,
         author,
         actualUrl, // 添加actualUrl到返回对象
@@ -255,7 +256,7 @@ export class ArticleService {
         let total = 0;
         const listHeaderText = document.querySelector(".List-headerText span");
         if (listHeaderText) {
-          const match = listHeaderText.textContent?.match(/(\d+)/);
+          const match = listHeaderText.textContent?.replace(',','').match(/(\d+)/);
           if (match && match[1]) {
             total = parseInt(match[1], 10);
           }

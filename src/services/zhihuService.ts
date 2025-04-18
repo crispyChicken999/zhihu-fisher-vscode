@@ -1,5 +1,6 @@
 import { CookieManager } from "./cookieManager";
 import { HotListService } from "./hotListService";
+import { RecommendService } from "./recommendService";
 import { ArticleService } from "./articleService";
 import { ZhihuHotItem, ZhihuArticle } from "./types";
 
@@ -7,8 +8,8 @@ import { ZhihuHotItem, ZhihuArticle } from "./types";
 interface ProgressCallback {
   (
     article: ZhihuArticle,
-    count: number,
-    total: number,
+    loadedCount: number,
+    totalCount: number,
     isLoading?: boolean
   ): void;
 }
@@ -19,11 +20,13 @@ interface ProgressCallback {
 export class ZhihuService {
   private cookieManager: CookieManager;
   private hotListService: HotListService;
+  private recommendService: RecommendService;
   private articleService: ArticleService;
 
   constructor() {
     this.cookieManager = new CookieManager();
     this.hotListService = new HotListService(this.cookieManager);
+    this.recommendService = new RecommendService(this.cookieManager);
     this.articleService = new ArticleService(this.cookieManager);
   }
 
@@ -39,6 +42,11 @@ export class ZhihuService {
   // 获取热榜
   async getHotList(): Promise<ZhihuHotItem[]> {
     return this.hotListService.getHotList();
+  }
+
+  // 获取推荐列表
+  async getRecommendList(): Promise<ZhihuHotItem[]> {
+    return this.recommendService.getRecommendList();
   }
 
   // 获取文章内容

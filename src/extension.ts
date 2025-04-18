@@ -2,8 +2,11 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { ZhihuTreeDataProvider } from "./services/zhihuTreeDataProvider";
+import { ZhihuRecommendDataProvider } from "./services/zhihuRecommendDataProvider";
 import { ArticleViewManager } from "./services/articleViewManager";
 import { ZhihuHotItem, ZhihuService } from "./services/zhihuService";
+import { RecommendService } from "./services/recommendService";
+import { HotListService } from "./services/hotListService";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -17,13 +20,23 @@ export function activate(context: vscode.ExtensionContext) {
   // 创建知乎热榜视图提供者
   const zhihuTreeDataProvider = new ZhihuTreeDataProvider(zhihuService);
   // 注册知乎热榜视图
-  const treeView = vscode.window.createTreeView("zhihuHotList", {
+  const hotListView = vscode.window.createTreeView("zhihuHotList", {
     treeDataProvider: zhihuTreeDataProvider,
     showCollapseAll: false,
   });
 
+  // 创建知乎推荐视图提供者
+  const zhihuRecommendDataProvider = new ZhihuRecommendDataProvider(
+    zhihuService
+  );
+  // 注册知乎推荐视图
+  const recommendListView = vscode.window.createTreeView("zhihuRecommendList", {
+    treeDataProvider: zhihuRecommendDataProvider,
+    showCollapseAll: false,
+  });
+
   // 注册刷新热榜命令
-  const refreshCommand = vscode.commands.registerCommand(
+  const refreshHotListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshHotList",
     () => {
       zhihuTreeDataProvider.refresh();
@@ -31,10 +44,35 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // 注册刷新推荐命令
+  const refreshRecommendListCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.refreshRecommendList",
+    () => {
+      zhihuRecommendDataProvider.refresh();
+      vscode.window.showInformationMessage("正在刷新知乎推荐...");
+    }
+  );
+
   // 注册打开文章命令
   const openArticleCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openArticle",
     (item: ZhihuHotItem) => {
+      // 检查热榜列表是否正在加载中
+      if (HotListService.isLoadingHotList()) {
+        vscode.window.showInformationMessage(
+          "热榜列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查推荐列表是否正在加载中
+      if (RecommendService.isLoadingRecommendList()) {
+        vscode.window.showInformationMessage(
+          "推荐列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
       const articleViewManager = ArticleViewManager.getInstance();
       articleViewManager.openArticle(item);
     }
@@ -46,8 +84,9 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       const success = await zhihuService.setCookie();
       if (success) {
-        // 设置Cookie成功后刷新热榜
+        // 设置Cookie成功后刷新热榜和推荐
         zhihuTreeDataProvider.refresh();
+        zhihuRecommendDataProvider.refresh();
       }
     }
   );
@@ -95,18 +134,21 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
-    // 只在非hideImages的配置变更时才刷新热榜
+    // 只在非hideImages的配置变更时才刷新热榜和推荐
     if (
       e.affectsConfiguration("zhihu-fisher") &&
       !e.affectsConfiguration("zhihu-fisher.hideImages")
     ) {
       zhihuTreeDataProvider.refresh();
+      zhihuRecommendDataProvider.refresh();
     }
   });
 
   // 将所有可处置对象添加到扩展上下文的订阅中
-  context.subscriptions.push(treeView);
-  context.subscriptions.push(refreshCommand);
+  context.subscriptions.push(hotListView);
+  context.subscriptions.push(recommendListView);
+  context.subscriptions.push(refreshHotListCommand);
+  context.subscriptions.push(refreshRecommendListCommand);
   context.subscriptions.push(openArticleCommand);
   context.subscriptions.push(setCookieCommand);
   context.subscriptions.push(clearCookieCommand);

@@ -38,7 +38,7 @@ export class HtmlRenderer {
    * @param title 文章标题
    * @returns 加载中的HTML字符串
    */
-  public static getLoadingHtml(title: string): string {
+  public static getLoadingHtml(title: string, excerpt: string): string {
     return `
       <!DOCTYPE html>
       <html lang="zh-CN">
@@ -94,7 +94,9 @@ export class HtmlRenderer {
         <div class="loading-container">
           <div class="loading-spinner"></div>
           <h2>正在加载文章内容...</h2>
-          <p>${this.escapeHtml(title)}</p>
+          <h3 style="text-align:center;max-width:500px;">${this.escapeHtml(title)}</h3>
+          <div style="border: 1px solid var(--vscode-panel-border); width: 100%; margin: 10px;"></div>
+          <p style="text-align:center;max-width:500px;">${this.escapeHtml(excerpt)}</p>
           <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
         </div>
         <script>
@@ -232,6 +234,10 @@ export class HtmlRenderer {
             margin-bottom: 20px;
             font-size: 0.9em;
           }
+          .article-meta.hide-avatar .author-avatar{
+            display: none;
+          }
+
           .article-content {
             margin-top: 20px;
           }
@@ -246,7 +252,7 @@ export class HtmlRenderer {
             background-color: var(--vscode-button-background);
             color: var(--vscode-button-foreground);
             border: none;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 2px;
             cursor: pointer;
             margin-right: 8px;
@@ -268,7 +274,6 @@ export class HtmlRenderer {
           .empty-container {
             display: none !important;
           }
-          
           /* 导航按钮样式 */
           .navigation {
             display: flex;
@@ -293,6 +298,7 @@ export class HtmlRenderer {
             padding: 10px;
             border-radius: 4px;
             background-color: var(--vscode-editor-inactiveSelectionBackground);
+            box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
           }
 
           .author-avatar {
@@ -301,8 +307,8 @@ export class HtmlRenderer {
           }
 
           .author-avatar img {
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             object-fit: cover;
           }
@@ -334,24 +340,25 @@ export class HtmlRenderer {
       <body>
         <header>
           <h3>${this.escapeHtml(article.title)}</h3>
-          <div class="article-meta">
+          <div class="article-meta${hideImages? " hide-avatar": ''}">
             ${authorHTML}
             <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>
           </div>
         </header>
-        
+
         ${navigationHTML}
 
         <div class="article-content">
           ${processedContent}
         </div>
-        
+
         ${navigationHTML}
 
         <div class="toolbar">
           <div>
             <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
-            <button class="button" onclick="refreshContent()">刷新内容</button>
+            <button class="button" onclick="backTop()">回到顶部</button>
+            <button class="button" onclick="refreshContent()" style="display:none;">刷新内容</button>
           </div>
           <div>
             <button class="button image-display-toggle" onclick="toggleImageDisplay()">
@@ -363,9 +370,13 @@ export class HtmlRenderer {
         <script>
           const vscode = acquireVsCodeApi();
 
+          function backTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+
           function openInBrowser() {
-            vscode.postMessage({ 
-              command: 'openInBrowser', 
+            vscode.postMessage({
+              command: 'openInBrowser',
               url: ${article.actualUrl ? `"${article.actualUrl}"` : undefined}
             });
           }
@@ -375,7 +386,22 @@ export class HtmlRenderer {
           }
 
           function toggleImageDisplay() {
+            // 向扩展发送消息
             vscode.postMessage({ command: 'toggleImageDisplay' });
+
+            // 在前端立即切换图片显示状态
+            const allImages = document.querySelectorAll('.article-content img');
+            const isHidden = allImages.length > 0 && window.getComputedStyle(allImages[0]).display === 'none';
+
+            allImages.forEach(img => {
+              img.style.display = isHidden ? 'inline' : 'none';
+            });
+
+            // 更新按钮文本
+            const toggleButton = document.querySelector('.image-display-toggle');
+            if (toggleButton) {
+              toggleButton.textContent = isHidden ? '隐藏图片' : '显示图片';
+            }
           }
 
           function openAuthorPage(url) {

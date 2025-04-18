@@ -37,6 +37,7 @@ export interface ZhihuAuthor {
 // 知乎文章接口
 export interface ZhihuArticle {
   title: string;
+  excerpt: string;
   content: string;
   author?: ZhihuAuthor; // 使用作者对象替代单独的字段
   actualUrl?: string; // 实际URL字段用于存储回答链接

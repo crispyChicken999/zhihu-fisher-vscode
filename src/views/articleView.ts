@@ -83,7 +83,11 @@ export class ArticleView {
     // 初始化文章状态
     this.viewState = {
       webviewPanel: panel,
-      article: { title: item.title, content: "正在加载内容..." },
+      article: {
+        title: item.title,
+        excerpt: item.excerpt || '',
+        content: "正在加载内容...",
+      },
       url: item.url,
       isLoading: true,
       answerIds: [], // 初始化回答ID数组
@@ -99,7 +103,7 @@ export class ArticleView {
     };
 
     // 在WebView中显示正在加载状态
-    panel.webview.html = HtmlRenderer.getLoadingHtml(item.title);
+    panel.webview.html = HtmlRenderer.getLoadingHtml(item.title, item.excerpt || '');
 
     // 设置消息处理
     this.setupMessageHandling();
@@ -363,6 +367,7 @@ export class ArticleView {
         // 显示错误信息
         this.viewState.article = {
           title: this.item.title,
+          excerpt: this.item.excerpt || '',
           content: `加载文章内容失败: ${
             error instanceof Error ? error.message : String(error)
           }\n\n可能需要更新Cookie或者稍后再试。`,
@@ -632,10 +637,6 @@ export class ArticleView {
       !currentValue,
       vscode.ConfigurationTarget.Global
     );
-
-    // 提示用户
-    const statusText = !currentValue ? "已启用无图模式" : "已启用图片显示模式";
-    vscode.window.showInformationMessage(statusText);
 
     // 重新加载文章内容（不触发网络请求，仅重新处理已获取的内容）
     this.updateContent();

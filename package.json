@@ -6,6 +6,7 @@
   "engines": {
     "vscode": "^1.99.0"
   },
+  "publisher": "CrispyChicken",
   "categories": [
     "Other"
   ],
@@ -16,6 +17,11 @@
       {
         "command": "zhihu-fisher.refreshHotList",
         "title": "刷新热榜",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.refreshRecommendList",
+        "title": "刷新推荐",
         "icon": "$(refresh)"
       },
       {
@@ -34,7 +40,7 @@
       },
       {
         "command": "zhihu-fisher.toggleImageDisplay",
-        "title": "切换图片显示",
+        "title": "显示/隐藏图片",
         "icon": {
           "light": "$(image)",
           "dark": "$(image)"
@@ -53,6 +59,12 @@
     "views": {
       "zhihu-fisher": [
         {
+          "id": "zhihuRecommendList",
+          "name": "推荐",
+          "icon": "$(star)",
+          "contextualTitle": "知乎推荐"
+        },
+        {
           "id": "zhihuHotList",
           "name": "热榜",
           "icon": "$(flame)",
@@ -64,6 +76,10 @@
       {
         "view": "zhihuHotList",
         "contents": "加载知乎热榜中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[设置Cookie](command:zhihu-fisher.setCookie)"
+      },
+      {
+        "view": "zhihuRecommendList",
+        "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshRecommendList)\n[设置Cookie](command:zhihu-fisher.setCookie)"
       }
     ],
     "menus": {
@@ -74,14 +90,18 @@
           "group": "navigation@1"
         },
         {
-          "command": "zhihu-fisher.setCookie",
-          "when": "view == zhihuHotList",
-          "group": "inline@1"
+          "command": "zhihu-fisher.refreshRecommendList",
+          "when": "view == zhihuRecommendList",
+          "group": "navigation@1"
         },
         {
-          "command": "zhihu-fisher.toggleImageDisplay",
-          "when": "view == zhihuHotList",
-          "group": "inline@2"
+          "command": "zhihu-fisher.setCookie"
+        },
+        {
+          "command": "zhihu-fisher.clearCookie"
+        },
+        {
+          "command": "zhihu-fisher.toggleImageDisplay"
         }
       ]
     },

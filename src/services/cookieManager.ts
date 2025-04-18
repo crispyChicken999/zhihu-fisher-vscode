@@ -100,6 +100,9 @@ export class CookieManager {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     config.update("cookie", "", vscode.ConfigurationTarget.Global);
     vscode.window.showInformationMessage("知乎Cookie已清除");
+    // 重新拿一下热榜和推荐
+    vscode.commands.executeCommand("zhihu-fisher.refreshHotList");
+    vscode.commands.executeCommand("zhihu-fisher.refreshRecommendList");
   }
 
   // 获取当前 cookie

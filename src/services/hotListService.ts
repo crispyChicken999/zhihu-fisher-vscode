@@ -5,15 +5,28 @@ import { CookieManager } from "./cookieManager";
 
 export class HotListService {
   private cookieManager: CookieManager;
+  // 静态变量标记是否正在加载热榜
+  private static isLoading: boolean = false;
 
   constructor(cookieManager: CookieManager) {
     this.cookieManager = cookieManager;
+  }
+
+  /**
+   * 检查是否正在加载热榜
+   * @returns 是否正在加载
+   */
+  static isLoadingHotList(): boolean {
+    return HotListService.isLoading;
   }
 
   // 获取知乎热榜
   async getHotList(): Promise<ZhihuHotItem[]> {
     try {
       console.log("开始获取知乎热榜...");
+      
+      // 设置加载状态
+      HotListService.isLoading = true;
 
       // 构建请求头
       const headers: Record<string, string> = {
@@ -43,9 +56,10 @@ export class HotListService {
         headers["Cookie"] = cookie;
         console.log("使用已保存的Cookie进行请求");
       } else {
-        console.log("未设置Cookie，使用匿名模式访问");
-        // 使用基本的匿名cookie
-        headers["Cookie"] = "_xsrf=anonymous; d_c0=anonymous; _zap=anonymous";
+        this.cookieManager.promptForNewCookie(
+          "需要知乎Cookie才能获取热榜，请设置"
+        );
+        throw new Error("需要设置知乎Cookie才能访问");
       }
 
       const response = await axios.get("https://www.zhihu.com/hot", {
@@ -55,8 +69,6 @@ export class HotListService {
       });
 
       console.log("成功获取知乎热榜HTML，开始解析...");
-      console.log("HTTP状态码:", response.status);
-      console.log("响应头:", JSON.stringify(response.headers));
 
       const $ = cheerio.load(response.data);
 
@@ -76,12 +88,16 @@ export class HotListService {
         if (cookie) {
           // 如果已经有cookie但仍然被拦截，可能是cookie过期
           console.log("Cookie可能已失效，需要更新");
-          this.cookieManager.promptForNewCookie("您的知乎Cookie可能已过期，请更新");
+          this.cookieManager.promptForNewCookie(
+            "您的知乎Cookie可能已过期，请更新"
+          );
           throw new Error("知乎Cookie已失效，请更新");
         } else {
           // 如果没有cookie且被拦截
           console.log("需要设置Cookie才能访问");
-          this.cookieManager.promptForNewCookie("需要知乎Cookie才能获取热榜，请设置");
+          this.cookieManager.promptForNewCookie(
+            "需要知乎Cookie才能获取热榜，请设置"
+          );
           throw new Error("需要设置知乎Cookie才能访问");
         }
       }
@@ -282,9 +298,13 @@ export class HotListService {
 
         // 如果没有cookie或cookie无效，提示需要更新cookie
         if (!cookie) {
-          this.cookieManager.promptForNewCookie("需要知乎Cookie才能获取热榜，请设置");
+          this.cookieManager.promptForNewCookie(
+            "需要知乎Cookie才能获取热榜，请设置"
+          );
         } else {
-          this.cookieManager.promptForNewCookie("无法解析知乎热榜，您的Cookie可能已失效");
+          this.cookieManager.promptForNewCookie(
+            "无法解析知乎热榜，您的Cookie可能已失效"
+          );
         }
 
         throw new Error("未能识别知乎热榜结构，可能需要设置或更新Cookie");
@@ -299,6 +319,9 @@ export class HotListService {
           error instanceof Error ? error.message : String(error)
         }`
       );
+    } finally {
+      // 重置加载状态
+      HotListService.isLoading = false;
     }
   }
 }
