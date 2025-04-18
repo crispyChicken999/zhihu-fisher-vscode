@@ -2,7 +2,7 @@
   "name": "zhihu-fisher",
   "displayName": "Zhihu Fisher",
   "description": "VSCode摸鱼神器 使用MarkDown来刷知乎热榜和推荐 提供无图片模式（beta）",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.99.0"
