@@ -1,7 +1,7 @@
 # 知乎摸鱼 🐟 (Zhihu Fisher) 📚
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io-badge/version-1.0.0-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。
 
@@ -44,4 +44,5 @@
 ## 💖 欢迎赞赏 💖
 
 您的支持是我更新的最大动力！感谢~
-![image](./code.jpg)
+
+<img src="https://raw.githubusercontent.com/crispyChicken999/crispyChicken999.github.io/main/code.jpg" style="width:200px;height:200px;" alt="赞赏码">
