@@ -3,9 +3,11 @@
   "displayName": "zhihu-fisher",
   "description": "知乎摸鱼神器-使用MarkDown来刷知乎热榜，提供无图片模式",
   "version": "0.0.1",
+  "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.99.0"
   },
+  "icon": "./icon.png",
   "publisher": "CrispyChicken",
   "categories": [
     "Other"
