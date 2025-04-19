@@ -7,66 +7,7 @@ import * as Puppeteer from "puppeteer";
 import { marked } from "marked";
 
 export class WebviewManager {
-  private webview = null as unknown as WebViewItem;
-  private disposables: vscode.Disposable[] = []; // 添加一个数组来存储所有的订阅
-
   constructor() {}
-
-  // public watchVscodeWindowEvents() {
-  //   // 添加活动编辑器变化事件监听
-  //   const disposable = vscode.window.onDidChangeActiveTextEditor(
-  //     this.onDidChangeActiveTextEditor,
-  //     this
-  //   );
-  //   this.disposables.push(disposable);
-
-  //   // 添加活动窗口变化事件监听
-  //   const windowDisposable = vscode.window.onDidChangeWindowState(
-  //     this.onDidChangeWindowState,
-  //     this
-  //   );
-  //   this.disposables.push(windowDisposable);
-  // }
-
-  // 处理窗口状态变化事件
-  // private async onDidChangeWindowState(e: vscode.WindowState): Promise<void> {
-  //   if (e.focused) {
-  //     await this.activateWebviewBrowserTab();
-  //   }
-  // }
-
-  // 处理活动编辑器变化事件
-  // private async onDidChangeActiveTextEditor(
-  //   editor?: vscode.TextEditor
-  // ): Promise<void> {
-  //   await this.activateWebviewBrowserTab();
-  // }
-
-  // 提取出激活浏览器标签页的逻辑为单独的方法
-  // private async activateWebviewBrowserTab(): Promise<void> {
-  //   // 当活动编辑器变化时，我们需要检查当前的活动面板是否是我们的WebView面板
-  //   let activeWebview: WebViewItem = null as unknown as WebViewItem;
-  //   Store.webviewMap.forEach((view) => {
-  //     if (view.webviewPanel.visible) {
-  //       activeWebview = view;
-  //     }
-  //   });
-
-  //   if (!activeWebview) {
-  //     console.log("没有活动的WebView面板，无法激活浏览器标签页。");
-  //     return;
-  //   }
-
-  //   const activePage = PuppeteerManager.getPageInstance(
-  //     activeWebview.id
-  //   ) as unknown as Puppeteer.Page;
-  //   console.log(`找到问题 ${activeWebview.id} 的浏览器页面，正在激活到前台...`);
-  //   try {
-  //     await activePage?.bringToFront();
-  //   } catch (error) {
-  //     console.error(`激活问题 ${activeWebview.id} 的浏览器标签页失败:`, error);
-  //   }
-  // }
 
   /** 在vscode编辑器中打开页面（新建一个窗口） */
   async openWebview(item: LinkItem): Promise<void> {
@@ -101,7 +42,7 @@ export class WebviewManager {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const limitPerBatch = config.get<number>("answersPerBatch", 10);
 
-    this.webview = {
+    const webviewItem: WebViewItem = {
       id: item.id,
       url: item.url,
       webviewPanel: panel,
@@ -126,60 +67,68 @@ export class WebviewManager {
     };
 
     // 将WebView项存储到Store中
-    Store.webviewMap.set(item.id, this.webview);
+    Store.webviewMap.set(item.id, webviewItem);
 
     // 在WebView中显示正在加载状态
     panel.webview.html = HtmlRenderer.getLoadingHtml(item.title, item.excerpt);
 
     // 设置消息处理
-    this.setupMessageHandling();
+    this.setupMessageHandling(item.id);
 
     // 设置面板关闭处理
-    this.setupPanelCloseHandler();
+    this.setupPanelCloseHandler(item.id);
   }
 
   /** 更新内容显示 */
-  private updateWebview(): void {
+  private updateWebview(webviewId: string): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
     // 更新WebView内容
-    this.webview.webviewPanel.webview.html = HtmlRenderer.getArticleHtml(
-      this.webview.id
-    );
+    webviewItem.webviewPanel.webview.html = HtmlRenderer.getArticleHtml(webviewId);
   }
 
   /** 从URL中爬取数据 */
-  private async crawlingURLData(): Promise<void> {
+  private async crawlingURLData(webviewId: string): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
     try {
       // 已经加载过内容并且正在加载中，避免重复请求
-      if (this.webview.isLoading) {
+      if (webviewItem.isLoading) {
         return;
       }
 
-      this.webview.isLoading = true;
+      webviewItem.isLoading = true;
 
       // 显示状态栏加载提示
       const statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         100
       );
-      const shortTitle = this.getShortTitle(this.webview.article.title);
+      const shortTitle = this.getShortTitle(webviewItem.article.title);
       statusBarItem.text = `$(sync~spin) 加载文章: ${shortTitle}`;
       statusBarItem.show();
 
       // 关键步骤！
       // 这里使用 Puppeteer来获取文章内容
       const page = await PuppeteerManager.createPage();
-      PuppeteerManager.setPageInstance(this.webview.id, page); // 设置页面实例
+      PuppeteerManager.setPageInstance(webviewId, page); // 设置页面实例
 
       // 前往页面
-      await page.goto(this.webview.url, {
+      await page.goto(webviewItem.url, {
         waitUntil: "networkidle0",
         timeout: 30000, // 30秒超时
       });
 
       // 到这一步，页面加载完成，开始处理内容
       console.log("页面加载完成，开始读取页面...");
-      this.webview.isLoading = false;
-      this.webview.webviewPanel.title = shortTitle; // 更新面板标题
+      webviewItem.isLoading = false;
+      webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
 
       // 全部回答的总数量
       const totalAnswerCount = await page.evaluate(() => {
@@ -190,31 +139,39 @@ export class WebviewManager {
         const count = answerElements?.textContent?.replace(/[^\d]/g, "");
         return parseInt(count || "0", 10);
       });
-      this.webview.article.totalAnswerCount = totalAnswerCount;
+      webviewItem.article.totalAnswerCount = totalAnswerCount;
       console.log(`总回答数量: ${totalAnswerCount}`);
 
       // 初始化批次加载参数
-      this.webview.batchConfig.beforeLoadCount =
-        this.webview.batchConfig.afterLoadCount =
-          this.webview.article.answerList.length;
-      await this.parseAllAnswers(page); // 解析页面中的全部回答
+      webviewItem.batchConfig.beforeLoadCount =
+        webviewItem.batchConfig.afterLoadCount =
+          webviewItem.article.answerList.length;
+      await this.parseAllAnswers(webviewId, page); // 解析页面中的全部回答
 
-      await this.loadMoreAnswers(page); // 加载更多回答
+      await this.loadMoreAnswers(webviewId, page); // 加载更多回答
     } catch (error) {
-      this.webview.isLoading = false;
+      const webviewItem = Store.webviewMap.get(webviewId);
+      if (webviewItem) {
+        webviewItem.isLoading = false;
+      }
       console.error("加载内容时出错:", error);
       throw new Error("加载内容时出错:" + error);
     }
   }
 
   /** 加载上一个回答 */
-  public async loadPreviousAnswer(): Promise<void> {
+  public async loadPreviousAnswer(webviewId: string): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
     try {
-      if (this.webview.article.currentAnswerIndex > 0) {
-        this.webview.article.currentAnswerIndex -= 1;
+      if (webviewItem.article.currentAnswerIndex > 0) {
+        webviewItem.article.currentAnswerIndex -= 1;
 
         // 更新webview内容
-        this.updateWebview();
+        this.updateWebview(webviewId);
       } else {
         console.log("没有更多的回答可以加载了！");
       }
@@ -225,35 +182,40 @@ export class WebviewManager {
   }
 
   /** 加载下一个回答 */
-  public async loadNextAnswer(): Promise<void> {
+  public async loadNextAnswer(webviewId: string): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
     try {
       if (
-        this.webview.article.currentAnswerIndex <
-        this.webview.article.answerList.length - 1
+        webviewItem.article.currentAnswerIndex <
+        webviewItem.article.answerList.length - 1
       ) {
-        this.webview.article.currentAnswerIndex += 1;
+        webviewItem.article.currentAnswerIndex += 1;
         // 更新WebView内容
-        this.updateWebview();
+        this.updateWebview(webviewId);
 
         // 这里的逻辑是：如果当前回答索引大于等于当前批次已加载回答数量-5，则加载更多回答
         if (
-          this.webview.article.currentAnswerIndex >=
-          this.webview.article.loadedAnswerCount - 5
+          webviewItem.article.currentAnswerIndex >=
+          webviewItem.article.loadedAnswerCount - 5
         ) {
-          if (this.webview.batchConfig.isLoadingBatch) {
+          if (webviewItem.batchConfig.isLoadingBatch) {
             console.log("批次正在加载中，跳过...");
             return;
           }
 
-          const page = PuppeteerManager.getPageInstance(this.webview.id);
+          const page = PuppeteerManager.getPageInstance(webviewId);
 
           // 初始化批次加载参数
-          this.webview.batchConfig.beforeLoadCount =
-            this.webview.batchConfig.afterLoadCount =
-              this.webview.article.answerList.length;
-          this.webview.batchConfig.isLoadingBatch = true; // 设置为正在加载批次
-          this.updateWebview(); // 更新WebView内容
-          await this.loadMoreAnswers(page);
+          webviewItem.batchConfig.beforeLoadCount =
+            webviewItem.batchConfig.afterLoadCount =
+              webviewItem.article.answerList.length;
+          webviewItem.batchConfig.isLoadingBatch = true; // 设置为正在加载批次
+          this.updateWebview(webviewId); // 更新WebView内容
+          await this.loadMoreAnswers(webviewId, page);
         }
       } else {
         console.log("没有更多的回答可以加载了！");
@@ -265,15 +227,20 @@ export class WebviewManager {
   }
 
   /** 从页面中解析全部的回答 */
-  private async parseAllAnswers(page: Puppeteer.Page): Promise<void> {
-    if (this.webview.article.isLoading) {
+  private async parseAllAnswers(webviewId: string, page: Puppeteer.Page): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    if (webviewItem.article.isLoading) {
       console.log("正在解析回答中，请稍候...");
       return;
     }
 
     try {
-      this.webview.article.isLoading = true;
-      this.updateWebview(); // 更新WebView内容
+      webviewItem.article.isLoading = true;
+      this.updateWebview(webviewId); // 更新WebView内容
 
       console.log("开始解析回答列表...");
 
@@ -400,19 +367,19 @@ export class WebviewManager {
         item.content = marked.parse(item.content) as string;
       });
 
-      this.webview.article.answerList = [...answerList];
-      this.webview.article.isLoading = false;
+      webviewItem.article.answerList = [...answerList];
+      webviewItem.article.isLoading = false;
 
       // 更新批次加载数量参数，便于中断循环
-      this.webview.batchConfig.afterLoadCount = answerList.length || 0;
+      webviewItem.batchConfig.afterLoadCount = answerList.length || 0;
 
-      this.webview.article.loadedAnswerCount =
-        this.webview.article.answerList.length;
-      this.webview.article.loadComplete =
-        this.webview.article.answerList.length >=
-        this.webview.article.totalAnswerCount;
+      webviewItem.article.loadedAnswerCount =
+        webviewItem.article.answerList.length;
+      webviewItem.article.loadComplete =
+        webviewItem.article.answerList.length >=
+        webviewItem.article.totalAnswerCount;
 
-      this.updateWebview(); // 更新WebView内容
+      this.updateWebview(webviewId); // 更新WebView内容
     } catch (error) {
       console.error("解析内容时出错:", error);
       throw new Error("解析内容时出错:" + error);
@@ -420,17 +387,18 @@ export class WebviewManager {
   }
 
   /** 获取足够数量的回答，看看够不够不够则模拟滚动到页面底部加载更多 */
-  private async loadMoreAnswers(page: Puppeteer.Page): Promise<void> {
-    if (this.webview.article.loadComplete) {
+  private async loadMoreAnswers(webviewId: string, page: Puppeteer.Page): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem || webviewItem.article.loadComplete) {
       console.log("全部回答已加载完成，停止加载更多。");
       return;
     }
 
     console.log(
       `当前批次已加载：${
-        this.webview.batchConfig.afterLoadCount -
-        this.webview.batchConfig.beforeLoadCount
-      }，批次数量限制为：${this.webview.batchConfig.limitPerBatch}`
+        webviewItem.batchConfig.afterLoadCount -
+        webviewItem.batchConfig.beforeLoadCount
+      }，批次数量限制为：${webviewItem.batchConfig.limitPerBatch}`
     );
 
     // 模拟滚动到底部加载更多回答
@@ -438,11 +406,16 @@ export class WebviewManager {
     await PuppeteerManager.delay(1000);
 
     // 重新解析回答列表
-    await this.parseAllAnswers(page);
+    await this.parseAllAnswers(webviewId, page);
 
-    const beforeLoadCount = this.webview.batchConfig.beforeLoadCount; // 加载前的回答数量
-    const afterLoadCount = this.webview.batchConfig.afterLoadCount; // 加载后的回答数量
-    const limitPerBatch = this.webview.batchConfig.limitPerBatch; // 每批加载的回答数量
+    const webviewItemUpdated = Store.webviewMap.get(webviewId); // 重新获取，因为可能已经被更新
+    if (!webviewItemUpdated) {
+      return;
+    }
+
+    const beforeLoadCount = webviewItemUpdated.batchConfig.beforeLoadCount; // 加载前的回答数量
+    const afterLoadCount = webviewItemUpdated.batchConfig.afterLoadCount; // 加载后的回答数量
+    const limitPerBatch = webviewItemUpdated.batchConfig.limitPerBatch; // 每批加载的回答数量
 
     // 如果加载的回答数量超过了配置的每批数量，则停止加载更多
     if (afterLoadCount - beforeLoadCount >= limitPerBatch) {
@@ -450,15 +423,15 @@ export class WebviewManager {
         `加载了 ${
           afterLoadCount - beforeLoadCount
         } 新个回答，达到每批 ${limitPerBatch} 个回答的限制， 总共已加载${
-          this.webview.article.loadedAnswerCount
+          webviewItemUpdated.article.loadedAnswerCount
         }，停止加载更多`
       );
-      this.webview.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
-      this.updateWebview(); // 更新WebView内容
+      webviewItemUpdated.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
+      this.updateWebview(webviewId); // 更新WebView内容
       return;
     }
 
-    await this.loadMoreAnswers(page); // 递归调用加载更多回答
+    await this.loadMoreAnswers(webviewId, page); // 递归调用加载更多回答
   }
 
   /** 获取短标题，避免文章标题过长，截取前15个字符 */
@@ -467,7 +440,7 @@ export class WebviewManager {
   }
 
   /** 切换图片显示 */
-  private async toggleImageDisplay(): Promise<void> {
+  private async toggleImageDisplay(webviewId: string): Promise<void> {
     // 获取当前配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const currentValue = config.get<boolean>("hideImages", false);
@@ -480,59 +453,73 @@ export class WebviewManager {
     );
 
     // 重新加载文章内容（不触发网络请求，仅重新处理已获取的内容）
-    this.updateWebview();
+    this.updateWebview(webviewId);
   }
 
   /** 设置WebView消息处理 */
-  private setupMessageHandling(): void {
+  private setupMessageHandling(webviewId: string): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
     // 处理WebView消息
-    this.webview.webviewPanel.webview.onDidReceiveMessage(async (message) => {
+    webviewItem.webviewPanel.webview.onDidReceiveMessage(async (message) => {
       // console.log(
       //   `接收到WebView Command: ${JSON.stringify(message)}，即将开始处理...`
       // );
       switch (message.command) {
         case "requestContent":
-          await this.crawlingURLData();
+          await this.crawlingURLData(webviewId);
           break;
         case "openInBrowser":
+          const webviewItemForBrowser = Store.webviewMap.get(webviewId);
+          if (!webviewItemForBrowser) {
+            return;
+          }
           // 如果提供了特定的URL（如作者页面），则打开该URL，否则打开文章URL
           if (message.url) {
             vscode.env.openExternal(vscode.Uri.parse(message.url));
           } else {
-            vscode.env.openExternal(vscode.Uri.parse(this.webview.url));
+            vscode.env.openExternal(vscode.Uri.parse(webviewItemForBrowser.url));
           }
           break;
         case "toggleImageDisplay":
-          await this.toggleImageDisplay();
+          await this.toggleImageDisplay(webviewId);
           break;
 
         case "loadPreviousAnswer":
-          await this.loadPreviousAnswer();
+          await this.loadPreviousAnswer(webviewId);
           break;
         case "loadNextAnswer":
-          await this.loadNextAnswer();
+          await this.loadNextAnswer(webviewId);
           break;
       }
     });
   }
 
   /** 设置面板关闭处理 */
-  private setupPanelCloseHandler(): void {
-    this.webview.webviewPanel.onDidDispose(
+  private setupPanelCloseHandler(webviewId: string): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    webviewItem.webviewPanel.onDidDispose(
       async () => {
         // 如果是问题页面，关闭对应的浏览器实例
-        if (this.webview.id) {
+        if (webviewId) {
           try {
-            console.log(`视图关闭，关闭问题 ${this.webview.id} 的浏览器标签页`);
-            await PuppeteerManager.closePage(this.webview.id);
-            Store.webviewMap.delete(this.webview.id); // 删除对应的WebView项
+            console.log(`视图关闭，关闭问题 ${webviewId} 的浏览器标签页`);
+            await PuppeteerManager.closePage(webviewId);
+            Store.webviewMap.delete(webviewId); // 删除对应的WebView项
           } catch (error) {
             console.error("关闭浏览器时出错:", error);
           }
         }
 
         // 通知外部调用者面板已关闭
-        this.onDidDisposeCallback?.(this.webview.id);
+        this.onDidDisposeCallback?.(webviewId);
       },
       null,
       []
