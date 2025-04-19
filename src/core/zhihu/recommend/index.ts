@@ -5,17 +5,11 @@ import { PuppeteerManager } from "../puppeteer";
 
 export class RecommendListManager {
   private cookieManager = Store.Zhihu.cookieManager;
-  // 存储已使用的ID，避免重复
-  private usedIds: Set<string> = new Set();
-
   constructor() {}
 
   // 获取知乎首页推荐
   async getRecommendList() {
     console.log("开始获取知乎首页推荐...");
-
-    // 每次获取推荐前清空ID缓存
-    this.usedIds.clear();
 
     Store.Zhihu.recommend.isLoading = true; // 设置加载状态
 
@@ -87,13 +81,9 @@ export class RecommendListManager {
       await this.scrollToLoadMore(page);
 
       const recommendList = await this.parseRecommendList(page);
-
-      // 确保ID唯一
-      const processedList = this.ensureUniqueIds(recommendList);
-
-      console.log(`成功解析出${processedList.length}个推荐项目`);
+      console.log(`成功解析出${recommendList.length}个推荐项目`);
       console.log("推荐列表解析完成，更新Store...");
-      Store.Zhihu.recommend.list = processedList; // 更新推荐列表
+      Store.Zhihu.recommend.list = recommendList; // 更新推荐列表
     } catch (error) {
       console.error("获取推荐列表失败:", error);
       // 处理错误
@@ -135,47 +125,26 @@ export class RecommendListManager {
             ? (urlElement as HTMLMetaElement).content
             : "未知链接";
 
-          // 提取URL中的ID部分，格式化为临时ID
-          let baseId = "";
-          if (url.includes("/question/")) {
-            const match = url.match(/question\/(\d+)/);
-            baseId = match ? match[1] : "";
-          } else if (url.includes("/answer/")) {
-            const match = url.match(/answer\/(\d+)/);
-            baseId = match ? match[1] : "";
-          } else if (url.includes("/p/")) {
-            const match = url.match(/p\/([a-zA-Z0-9]+)/);
-            baseId = match ? match[1] : "";
-          }
-
-          // 生成带时间戳和索引的ID，增加唯一性
-          const timestamp = new Date().getTime();
-          const id = baseId
-            ? `recommend-${baseId}-${timestamp}-${index}`
-            : `recommend-${timestamp}-${index}`;
+          const id =
+            `recommend-${url.split("/").pop() as string}` ||
+            `recommend-${index}`; // 获取问题的ID
 
           const excerptElement = item.querySelector(".RichContent .RichText");
           const excerpt = excerptElement
             ? ((excerptElement as HTMLMetaElement).textContent as string)
             : "未知摘要";
 
-          // 获取图片URL
-          const imgElement = item.querySelector("img[src]");
-          const imgUrl = imgElement?.getAttribute("src") || "";
-
-          // 获取热度值
-          const hotValueElement = item.querySelector(
-            ".ContentItem-actions .Button--plain"
-          );
-          const hotValue = hotValueElement?.textContent?.trim() || "";
+          // 原因是首页推荐，展示的是回答，那么热门的话题可能会出现多次，导致提取重复
+          if (items.some((item) => item.id === id)) {
+            console.log(`推荐项 #${index + 1} 已存在，跳过...`);
+            return;
+          }
 
           items.push({
             id,
             url,
             title,
             excerpt,
-            hotValue,
-            imgUrl,
           });
           console.log(`成功解析推荐项 #${index + 1}: ${title}`);
         });
@@ -185,34 +154,6 @@ export class RecommendListManager {
     });
 
     return recommendList;
-  }
-
-  // 确保推荐项的ID唯一
-  private ensureUniqueIds(items: LinkItem[]): LinkItem[] {
-    const uniqueItems: LinkItem[] = [];
-
-    for (const item of items) {
-      // 如果ID已存在，为其生成新ID
-      if (this.usedIds.has(item.id)) {
-        const timestamp = Date.now();
-        const randomSuffix = Math.floor(Math.random() * 10000);
-        const newId = `recommend-${timestamp}-${randomSuffix}`;
-        console.log(`检测到重复ID: ${item.id}，重新分配为: ${newId}`);
-
-        // 创建新对象而不是修改原对象
-        uniqueItems.push({
-          ...item,
-          id: newId,
-        });
-        this.usedIds.add(newId);
-      } else {
-        // ID尚未使用，记录并添加到结果
-        this.usedIds.add(item.id);
-        uniqueItems.push(item);
-      }
-    }
-
-    return uniqueItems;
   }
 
   // 滚动页面加载更多内容

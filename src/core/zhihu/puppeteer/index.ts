@@ -126,6 +126,20 @@ export class PuppeteerManager {
   }
 
   /**
+   * 将页面带到前台(激活页面)
+   * @param key 页面唯一标识符
+   */
+  static async bringPageToFront(key: string): Promise<void> {
+    const page = Store.pagesInstance.get(key);
+    if (page) {
+      console.log(`激活页面: ${key}`);
+      await page.bringToFront();
+    } else {
+      console.log(`页面不存在，无法激活: ${key}`);
+    }
+  }
+
+  /**
    * 关闭页面
    * @param key 页面唯一标识符
    */

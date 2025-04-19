@@ -77,6 +77,9 @@ export class WebviewManager {
 
     // 设置面板关闭处理
     this.setupPanelCloseHandler(item.id);
+    
+    // 设置视图状态变化处理（监听标签页切换）
+    this.setupViewStateChangeHandler(item.id);
   }
 
   /** 更新内容显示 */
@@ -524,6 +527,24 @@ export class WebviewManager {
       null,
       []
     );
+  }
+
+  /** 设置视图状态变化处理 */
+  private setupViewStateChangeHandler(webviewId: string): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    webviewItem.webviewPanel.onDidChangeViewState(async (event) => {
+      if (event.webviewPanel.active) {
+        console.log(`WebView ${webviewId} 被激活`);
+        // 当VS Code标签页被激活时，同时激活对应的Puppeteer浏览器页面
+        await PuppeteerManager.bringPageToFront(webviewId);
+      } else {
+        console.log(`WebView ${webviewId} 失去焦点`);
+      }
+    });
   }
 
   /** 回调函数，用于通知视图管理器面板已关闭 */
