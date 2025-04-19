@@ -7,7 +7,40 @@ import * as Puppeteer from "puppeteer";
 import { marked } from "marked";
 
 export class WebviewManager {
-  webview = null as unknown as WebViewItem;
+  private webview = null as unknown as WebViewItem;
+
+  constructor() {
+    vscode.window.onDidChangeActiveTextEditor(
+      this.onDidChangeActiveTextEditor,
+      this
+    );
+  }
+
+  // 处理活动编辑器变化事件
+  private async onDidChangeActiveTextEditor() {
+    // 当活动编辑器变化时，我们需要检查当前的活动面板是否是我们的WebView面板
+    let activeWebview: WebViewItem = null as unknown as WebViewItem;
+    Store.webviewMap.forEach((view) => {
+      if (view.webviewPanel.visible) {
+        activeWebview = view;
+      }
+    });
+
+    if (!activeWebview) {
+      console.log("没有活动的WebView面板，无法激活浏览器标签页。");
+      return;
+    }
+
+    const activePage = PuppeteerManager.getPageInstance(
+      activeWebview.id
+    ) as unknown as Puppeteer.Page;
+    console.log(`找到问题 ${activeWebview.id} 的浏览器页面，正在激活到前台...`);
+    try {
+      await activePage?.bringToFront();
+    } catch (error) {
+      console.error(`激活问题 ${activeWebview.id} 的浏览器标签页失败:`, error);
+    }
+  }
 
   /** 在vscode编辑器中打开页面（新建一个窗口） */
   async openWebview(item: LinkItem): Promise<void> {
