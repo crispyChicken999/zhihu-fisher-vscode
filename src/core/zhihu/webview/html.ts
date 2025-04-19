@@ -1,19 +1,7 @@
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
-// import { ZhihuArticle, ZhihuAuthor } from "../../types";
-
-/**
- * 导航状态接口
- */
-interface NavState {
-  hasPrevious: boolean;
-  hasNext: boolean;
-  questionId?: string;
-  totalLoaded?: number; // 已加载回答数
-  currentIndex?: number; // 当前回答索引（从1开始）
-  totalAnswers?: number; // 问题总回答数
-  isLoadingMore?: boolean; // 是否正在后台加载更多回答
-}
+import { Store } from "../../stores";
+import { AnswerAuthor, ArticleInfo, WebViewItem } from "../../types";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -127,26 +115,30 @@ export class HtmlRenderer {
    * @param navState 导航状态（添加上一个/下一个回答导航功能）
    * @returns 文章内容的HTML字符串
    */
-  public static getArticleHtml(
-    article: ZhihuArticle,
-    url: string,
-    hideImages: boolean,
-    navState?: NavState
-  ): string {
+  public static getArticleHtml(webviewId: string): string {
+    // 获取文章对象
+    const webview = Store.webviewMap.get(webviewId) as WebViewItem;
+    const article = webview.article;
+    const config = vscode.workspace.getConfiguration("zhihu-helper");
+    const hideImages = config.get("hideImages") as boolean;
+
+    // 当前的回答
+    const currentAnswer = article.answerList[article.currentAnswerIndex];
+
     // 处理文章内容中的图片
     let processedContent = this.processArticleContent(
-      article.content,
+      currentAnswer.content,
       hideImages
     );
 
     // 构建作者信息HTML
-    let authorHTML = this.buildAuthorHtml(article);
+    let authorHTML = this.buildAuthorHtml(currentAnswer.author);
 
     // 构建导航按钮
-    let navigationHTML = this.buildNavigationHtml(navState);
+    let navigationHTML = this.buildNavigationHtml(article);
 
-    // 使用actualUrl作为来源链接（如果存在），否则使用原始URL
-    const sourceUrl = article.actualUrl || url;
+    // 回答的来源URL
+    const sourceUrl = currentAnswer.url;
 
     return `
       <!DOCTYPE html>
@@ -382,7 +374,7 @@ export class HtmlRenderer {
           function openInBrowser() {
             vscode.postMessage({
               command: 'openInBrowser',
-              url: ${article.actualUrl ? `"${article.actualUrl}"` : undefined}
+              url: ${sourceUrl || undefined}
             });
           }
 
@@ -510,31 +502,24 @@ export class HtmlRenderer {
    * @param navState 导航状态
    * @returns 导航按钮的HTML字符串
    */
-  private static buildNavigationHtml(navState?: NavState): string {
-    if (
-      !navState ||
-      (!navState.hasPrevious && !navState.hasNext && !navState.questionId)
-    ) {
-      return ""; // 如果不是问题回答或者没有导航状态，则不显示导航按钮
-    }
-
+  private static buildNavigationHtml(article: ArticleInfo): string {
     // 添加导航状态信息显示
     let navInfoHtml = "";
-    if (navState.questionId) {
-      // 显示当前回答索引、已加载回答数和总回答数，分别显示
-      let currentIndexText = `当前第 ${navState.currentIndex || 1} 个回答`;
-      let loadedText = `已加载 ${navState.totalLoaded || 1} 个回答`;
-      let totalText =
-        navState.totalAnswers && navState.totalAnswers > 0
-          ? `共 ${navState.totalAnswers} 个回答`
-          : "";
 
-      // 如果正在加载更多，添加指示器
-      let loadingText = navState.isLoadingMore
-        ? '<span class="loading-indicator">(正在加载更多...)</span>'
+    // 显示当前回答索引、已加载回答数和总回答数，分别显示
+    let currentIndexText = `当前第 ${article.currentAnswerIndex + 1} 个回答`;
+    let loadedText = `已加载 ${article.loadedAnswerCount || 1} 个回答`;
+    let totalText =
+      article.totalAnswerCount && article.totalAnswerCount > 0
+        ? `共 ${article.totalAnswerCount} 个回答`
         : "";
 
-      navInfoHtml = `
+    // 如果正在加载更多，添加指示器
+    let loadingText = article.isLoading
+      ? '<span class="loading-indicator">(正在加载更多...)</span>'
+      : "";
+
+    navInfoHtml = `
         <div class="nav-info">
           <span>${currentIndexText}</span>
           <span class="separator">|</span>
@@ -547,20 +532,19 @@ export class HtmlRenderer {
           ${loadingText}
         </div>
       `;
-    }
 
     return `
       <div class="navigation">
         <div class="navigation-buttons">
-          ${
-            !navState.hasPrevious
-              ? ""
-              : `<button class="button" onclick="loadPreviousAnswer()">
+          <button class="button" onclick="loadPreviousAnswer()"
+          ${article.currentAnswerIndex === 0 ? "disabled" : ""}
+          >
             上一个回答
-          </button>`
-          }
+          </button>
           <button class="button" onclick="loadNextAnswer()" ${
-            !navState.hasNext && !navState.questionId ? "disabled" : ""
+            article.currentAnswerIndex + 1 === article.loadedAnswerCount
+              ? "disabled"
+              : ""
           }>
             下一个回答
           </button>
@@ -587,20 +571,6 @@ export class HtmlRenderer {
       $("img").each(function () {
         $(this).remove(); // 完全删除图片标签，不保留占位符
       });
-
-      // 同时清理可能导致空白的figure和其他包装元素
-      $("figure").each(function () {
-        if ($(this).children().length === 0) {
-          $(this).remove();
-        }
-      });
-      $('[class*="img-container"], [class*="image-container"]').each(
-        function () {
-          if ($(this).children().length === 0) {
-            $(this).remove();
-          }
-        }
-      );
 
       return $.html();
     } else {
@@ -631,44 +601,46 @@ export class HtmlRenderer {
 
   /**
    * 构建作者信息的HTML
-   * @param article 文章对象
+   * @param author 作者信息
    * @returns 作者信息的HTML
    */
-  private static buildAuthorHtml(article: ZhihuArticle): string {
-    if (!article.author) {
+  private static buildAuthorHtml(author: AnswerAuthor): string {
+    if (!author.name) {
       return "";
     }
 
-    const author = article.author;
+    const authorName = author.name;
+    const authorAvatar = author.avatar || ""; // 使用默认头像URL
+    const authorBio = author.signature || ""; // 使用默认签名
+    const authorFollowersCount = author.followersCount || 0; // 使用默认粉丝数
+    const authorUrl = author.url || ""; // 使用默认作者主页URL
     let authorHTML = `<div class="author-info">`;
 
     // 如果有作者头像，显示头像
     if (author.avatar) {
       authorHTML += `
         <div class="author-avatar">
-          <img src="${author.avatar}" alt="${this.escapeHtml(
-        author.name
-      )}" referrerpolicy="no-referrer">
+          <img src="${authorAvatar}" alt="${this.escapeHtml(
+        authorName
+      )}" referrerpolicy="no-referrer" />
         </div>
       `;
     }
 
     // 作者名称和简介
     // 如果有作者URL，将作者名字设为可点击链接
-    const authorNameHTML = author.url
-      ? `<div class="author-name"><a href="${
-          author.url
-        }" onclick="openAuthorPage('${
-          author.url
-        }')" class="author-link">${this.escapeHtml(author.name)}</a></div>`
-      : `<div class="author-name">${this.escapeHtml(author.name)}</div>`;
+    const authorTitleHtml = authorUrl
+      ? `<div class="author-name"><a href="${authorUrl}" onclick="openAuthorPage('${authorUrl}')" class="author-link">${this.escapeHtml(
+          authorName
+        )}</a></div>`
+      : `<div class="author-name">${this.escapeHtml(authorName)}</div>`;
 
     authorHTML += `
       <div class="author-details">
-        ${authorNameHTML}
+        ${authorTitleHtml}
         ${
-          author.bio
-            ? `<div class="author-bio">${this.escapeHtml(author.bio)}</div>`
+          authorBio
+            ? `<div class="author-bio">${this.escapeHtml(authorBio)}</div>`
             : ""
         }
       </div>

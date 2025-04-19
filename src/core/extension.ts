@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { Store } from "./stores";
 import { LinkItem } from "./types";
@@ -7,10 +5,7 @@ import { ZhihuService } from "./zhihu/index";
 import { sidebarHotListDataProvider } from "./zhihu/sidebar/hot";
 import { sidebarRecommendListDataProvider } from "./zhihu/sidebar/recommend";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // 使用控制台输出诊断信息和错误信息
   console.log("🐟知乎摸鱼🐟 已激活！");
 
   // 创建知乎服务实例
@@ -142,8 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(toggleImageDisplayCommand);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {
-  console.log('扩展 "zhihu-fisher" 已停用！');
+  console.log("🐟知乎摸鱼🐟 已停用！");
   // 清理资源或执行其他必要的操作
 }

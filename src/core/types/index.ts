@@ -114,6 +114,8 @@ export interface AnswerItem {
   commentCount: number;
   /** 回答的发布时间 */
   publishTime: string;
+  /** 回答的更新时间 */
+  updateTime: string;
   /** 回答的内容 */
   content: string;
 }
@@ -130,6 +132,8 @@ export interface AnswerAuthor {
   signature: string;
   /** 作者的头像 */
   avatar: string;
+  /** 作者的粉丝数 */
+  followersCount: number;
 }
 
 /** Cookie对象信息 */
