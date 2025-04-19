@@ -8,26 +8,26 @@ import { WebviewManager } from "./zhihu/webview";
 
 
 export const Store: ContentStore = {
-  webviewMap: new Map<string, WebViewItem>(),
-  webviewManager: new WebviewManager(),
+  webviewMap: null as any,
+  webviewManager: null as any,
   browserInstance: null,
-  pagesInstance: new Map<string, Puppeteer.Page>(),
+  pagesInstance: null as any,
   Zhihu: {
     hot: {
       list: [],
       isLoading: false,
     },
-    hotListManager: new HotListManager(),
+    hotListManager: null as any,
     recommend: {
       list: [],
       isLoading: false,
     },
-    recommendListManager: new RecommendListManager(),
+    recommendListManager: null as any,
     cookieInfo: {
       cookie: "",
       lastUpdated: null,
     },
-    cookieManager: new CookieManager(),
-    puppeteerManager: new PuppeteerManager(),
+    cookieManager: null as any,
+    puppeteerManager: null as any,
   },
 };

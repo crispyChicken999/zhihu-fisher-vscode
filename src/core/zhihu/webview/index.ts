@@ -9,7 +9,9 @@ import { marked } from "marked";
 export class WebviewManager {
   private webview = null as unknown as WebViewItem;
 
-  constructor() {
+  constructor() {}
+
+  public watchVscodeWindowEvents() {
     vscode.window.onDidChangeActiveTextEditor(
       this.onDidChangeActiveTextEditor,
       this
@@ -71,6 +73,10 @@ export class WebviewManager {
       }
     );
 
+    // 获取配置中的每批回答数量
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const limitPerBatch = config.get<number>("answersPerBatch", 10);
+
     this.webview = {
       id: item.id,
       url: item.url,
@@ -85,7 +91,13 @@ export class WebviewManager {
         loadComplete: false,
         isLoading: false,
       },
-      isLoading: true,
+      batchConfig: {
+        beforeLoadCount: 0,
+        afterLoadCount: 0,
+        limitPerBatch,
+        isLoadingBatch: false,
+      },
+      isLoading: false,
       isLoaded: false,
     };
 
@@ -141,11 +153,28 @@ export class WebviewManager {
       });
 
       // 到这一步，页面加载完成，开始处理内容
-      console.log("页面加载完成，等待内容稳定...");
+      console.log("页面加载完成，开始读取页面...");
       this.webview.isLoading = false;
       this.webview.webviewPanel.title = shortTitle; // 更新面板标题
 
+      // 全部回答的总数量
+      const totalAnswerCount = await page.evaluate(() => {
+        const answerElements = document.querySelector(
+          ".List-header .List-headerText span"
+        );
+        // 2,437 个回答， 需要去掉逗号、空格和汉字
+        const count = answerElements?.textContent?.replace(/[^\d]/g, "");
+        return parseInt(count || "0", 10);
+      });
+      this.webview.article.totalAnswerCount = totalAnswerCount;
+      console.log(`总回答数量: ${totalAnswerCount}`);
+
+      // 初始化批次加载参数
+      this.webview.batchConfig.beforeLoadCount =
+        this.webview.batchConfig.afterLoadCount =
+          this.webview.article.answerList.length;
       await this.parseAllAnswers(page); // 解析页面中的全部回答
+
       await this.loadMoreAnswers(page); // 加载更多回答
     } catch (error) {
       this.webview.isLoading = false;
@@ -159,6 +188,8 @@ export class WebviewManager {
     try {
       if (this.webview.article.currentAnswerIndex > 0) {
         this.webview.article.currentAnswerIndex -= 1;
+
+        // 更新webview内容
         this.updateWebview();
       } else {
         console.log("没有更多的回答可以加载了！");
@@ -177,18 +208,36 @@ export class WebviewManager {
         this.webview.article.answerList.length - 1
       ) {
         this.webview.article.currentAnswerIndex += 1;
+        // 更新WebView内容
+        this.updateWebview();
 
-        // 这里的逻辑是：如果当前回答索引大于等于已加载回答数量的一半，那么就加载更多回答
+        // 这里的逻辑是：如果当前回答索引大于等于当前批次已加载回答数量的一半，那么就加载更多回答，并且未在加载新批次
         if (
-          this.webview.article.currentAnswerIndex >=
-          this.webview.article.loadedAnswerCount / 2
+          this.webview.article.currentAnswerIndex %
+            this.webview.batchConfig.limitPerBatch >=
+          (this.webview.batchConfig.afterLoadCount -
+            this.webview.batchConfig.beforeLoadCount) /
+            2
         ) {
-          const page = PuppeteerManager.getPageInstance(
-            this.webview.id
-          ) as unknown as Puppeteer.Page;
+          if (this.webview.batchConfig.isLoadingBatch) {
+            console.log("正在加载中，请稍候...");
+            return;
+          }
+
+          const page = PuppeteerManager.getPageInstance(this.webview.id);
+
+          // 模拟滚动一下，加载更多回答，避免点太快没反应过来导致加载失败
+          // await PuppeteerManager.simulateHumanScroll(page);
+          // await PuppeteerManager.delay(1000); // 等待1秒钟，给页面加载时间
+
+          // 初始化批次加载参数
+          this.webview.batchConfig.beforeLoadCount =
+            this.webview.batchConfig.afterLoadCount =
+              this.webview.article.answerList.length;
+          this.webview.batchConfig.isLoadingBatch = true; // 设置为正在加载批次
+          this.updateWebview(); // 更新WebView内容
           await this.loadMoreAnswers(page);
         }
-        this.updateWebview();
       } else {
         console.log("没有更多的回答可以加载了！");
       }
@@ -200,20 +249,17 @@ export class WebviewManager {
 
   /** 从页面中解析全部的回答 */
   private async parseAllAnswers(page: Puppeteer.Page): Promise<void> {
-    // 拿全部回答的总数量
-    const totalAnswerCount = await page.evaluate(() => {
-      const answerElements = document.querySelector(
-        ".List-header .List-headerText span"
-      );
-      // 2,437 个回答， 需要去掉逗号、空格和汉字
-      const count = answerElements?.textContent?.replace(/[^\d]/g, "");
-      return parseInt(count || "0", 10);
-    });
-    this.webview.article.totalAnswerCount = totalAnswerCount;
-    console.log(`总回答数量: ${totalAnswerCount}`);
+    if (this.webview.article.isLoading) {
+      console.log("正在加载中，请稍候...");
+      return;
+    }
 
     try {
       this.webview.article.isLoading = true;
+      this.updateWebview(); // 更新WebView内容
+
+      console.log("开始解析回答列表...");
+
       // 解析回答列表 @todo 可能有问题，因为获取完了以后就删除了元素，导致了scrollHeight发生了变化，那么滚动加载更多可能无法生效
       const answerList = await page.evaluate(() => {
         // 处理页面内容，获取回答列表
@@ -224,11 +270,17 @@ export class WebviewManager {
 
         answerElements.forEach((element, index) => {
           try {
+            // 获取回答元素 <div class="ContentItem AnswerItem">...</div>
+            const answerElement = element.querySelector(
+              ".ContentItem.AnswerItem"
+            );
+
+            // 获取问题ID
+            const questionId = location.href.split("/").pop() as string;
+
             // 获取回答ID
             const answerId =
-              element
-                .querySelector(".ContentItem.AnswerItem")
-                ?.getAttribute("name") || `answer-${index}`;
+              answerElement?.getAttribute("name") || `answer-${index}`;
             const authorElement = element.querySelector(
               ".ContentItem-meta .AuthorInfo"
             );
@@ -288,11 +340,10 @@ export class WebviewManager {
 
             // 获取内容的HTML字符串
             const contentHtml = contentElement?.innerHTML || "";
-            // htmlToMarkdown 将 html 字符串转换为 markdown
-            const content = marked.parse(contentHtml) as string;
+
             list.push({
               id: answerId,
-              url: `https://www.zhihu.com/question/${this.webview.id}/answer/${answerId}`,
+              url: `https://www.zhihu.com/question/${questionId}/answer/${answerId}`,
               author: {
                 id: authorId || "",
                 name: authorName || "",
@@ -313,11 +364,11 @@ export class WebviewManager {
                     timeZone: "Asia/Shanghai",
                   })
                 : "",
-              content: content,
+              content: contentHtml,
             });
 
             // 把这个元素从页面中删除，避免获后续获取回答元素时重复
-            element.remove();
+            // element.remove();
           } catch (error) {
             console.error("解析回答时出错:", error);
             throw new Error("解析回答时出错:" + error);
@@ -327,15 +378,22 @@ export class WebviewManager {
         return list;
       });
 
-      this.webview.article.answerList = [
-        ...this.webview.article.answerList,
-        ...answerList,
-      ];
+      answerList.forEach((item) => {
+        // 解析markdown格式的内容，因为evaluate时在浏览器环境中，并不存在我们import的这个库，所以需要出来再parse
+        item.content = marked.parse(item.content) as string;
+      });
+
+      this.webview.article.answerList = [...answerList];
       this.webview.article.isLoading = false;
 
-      this.webview.article.loadedAnswerCount = answerList.length;
+      // 更新批次加载数量参数，便于中断循环
+      this.webview.batchConfig.afterLoadCount = answerList.length || 0;
+
+      this.webview.article.loadedAnswerCount =
+        this.webview.article.answerList.length;
       this.webview.article.loadComplete =
-        this.webview.article.answerList.length >= totalAnswerCount;
+        this.webview.article.answerList.length >=
+        this.webview.article.totalAnswerCount;
 
       this.updateWebview(); // 更新WebView内容
     } catch (error) {
@@ -346,38 +404,44 @@ export class WebviewManager {
 
   /** 获取足够数量的回答，看看够不够不够则模拟滚动到页面底部加载更多 */
   private async loadMoreAnswers(page: Puppeteer.Page): Promise<void> {
-    // 获取配置中的每批回答数量
-    const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    const answersPerBatch = config.get<number>("answersPerBatch", 10);
-
-    const totalAnswerCount = this.webview.article.totalAnswerCount;
-    // 看看已加载的回答的数量是否达到批次
-    const loadedAnswerCount = this.webview.article.loadedAnswerCount;
-    const loadComplete = this.webview.article.loadComplete;
-
-    /**
-     * @todo 这个时breaker条件，没达到的话就要一直往下滚动
-     * 也许是返回一个promise 然后await一下，传入page
-     */
-    if (loadedAnswerCount >= answersPerBatch) {
-      // 如果已加载的回答数量大于等于每批回答数量，停止加载更多
-      console.log(
-        `已加载 ${loadedAnswerCount} 个回答，达到每批 ${answersPerBatch} 个回答的限制，停止加载更多`
-      );
-
-      // 重新解析回答列表
-      await this.parseAllAnswers(page);
+    if (this.webview.article.loadComplete) {
+      console.log("全部回答已加载完成，停止加载更多。");
       return;
-    } else {
-      // 如果已加载的回答数量小于每批回答数量，继续加载更多回答
-      console.log(`已加载 ${loadedAnswerCount} 个回答，继续加载更多回答...`);
-
-      // 模拟滚动到底部加载更多回答
-      await PuppeteerManager.simulateHumanScroll(page);
-      await PuppeteerManager.delay(1000);
-
-      await this.loadMoreAnswers(page); // 递归调用加载更多回答
     }
+
+    console.log(
+      `当前批次已加载：${
+        this.webview.batchConfig.afterLoadCount -
+        this.webview.batchConfig.beforeLoadCount
+      }，批次数量限制为：${this.webview.batchConfig.limitPerBatch}`
+    );
+
+    // 模拟滚动到底部加载更多回答
+    await PuppeteerManager.simulateHumanScroll(page);
+    await PuppeteerManager.delay(1000);
+
+    // 重新解析回答列表
+    await this.parseAllAnswers(page);
+
+    const beforeLoadCount = this.webview.batchConfig.beforeLoadCount; // 加载前的回答数量
+    const afterLoadCount = this.webview.batchConfig.afterLoadCount; // 加载后的回答数量
+    const limitPerBatch = this.webview.batchConfig.limitPerBatch; // 每批加载的回答数量
+
+    // 如果加载的回答数量超过了配置的每批数量，则停止加载更多
+    if (afterLoadCount - beforeLoadCount >= limitPerBatch) {
+      console.log(
+        `加载了 ${
+          afterLoadCount - beforeLoadCount
+        } 新个回答，达到每批 ${limitPerBatch} 个回答的限制， 总共已加载${
+          this.webview.article.loadedAnswerCount
+        }，停止加载更多`
+      );
+      this.webview.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
+      this.updateWebview(); // 更新WebView内容
+      return;
+    }
+
+    await this.loadMoreAnswers(page); // 递归调用加载更多回答
   }
 
   /** 获取短标题，避免文章标题过长，截取前15个字符 */
@@ -406,6 +470,9 @@ export class WebviewManager {
   private setupMessageHandling(): void {
     // 处理WebView消息
     this.webview.webviewPanel.webview.onDidReceiveMessage(async (message) => {
+      // console.log(
+      //   `接收到WebView Command: ${JSON.stringify(message)}，即将开始处理...`
+      // );
       switch (message.command) {
         case "requestContent":
           await this.crawlingURLData();

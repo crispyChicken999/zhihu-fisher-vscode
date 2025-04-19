@@ -9,11 +9,11 @@ export class PuppeteerManager {
     if (!Store.browserInstance) {
       console.log("创建新的浏览器实例...");
       Store.browserInstance = await Puppeteer.launch({
-        headless: true,
+        headless: false,
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
-          "--window-size=1600,900",
+          "--window-size=1000,700",
         ],
       });
     }
@@ -24,8 +24,8 @@ export class PuppeteerManager {
    * 获取的页面实例
    * @param key 页面唯一标识符
    */
-  static async getPageInstance(key: string): Promise<Puppeteer.Page | null> {
-    return Store.pagesInstance.get(key) || null;
+  static getPageInstance(key: string): Puppeteer.Page {
+    return Store.pagesInstance.get(key) as Puppeteer.Page;
   }
 
   /**
@@ -111,18 +111,18 @@ export class PuppeteerManager {
     await page.evaluate(() => {
       window.scrollTo(0, document.body.scrollHeight); // 滚动到底部
     });
-    await PuppeteerManager.delay(1500 + Math.random() * 500);
+    await PuppeteerManager.delay(1000 + Math.random() * 500);
 
     await page.mouse.wheel({ deltaY: 1000 }); // 快速滚到底部
-    await PuppeteerManager.delay(1500 + Math.random() * 500);
+    await PuppeteerManager.delay(1000 + Math.random() * 500);
 
     // 2. 上移 200px 制造滚动空间
     await page.mouse.wheel({ deltaY: -200 });
-    await PuppeteerManager.delay(1500 + Math.random() * 500);
+    await PuppeteerManager.delay(1000 + Math.random() * 500);
 
     // 3. 再次下滚触发加载
     await page.mouse.wheel({ deltaY: 1000 });
-    await PuppeteerManager.delay(1500 + Math.random() * 500);
+    await PuppeteerManager.delay(1000 + Math.random() * 500);
   }
 
   /**

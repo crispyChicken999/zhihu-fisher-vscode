@@ -1,29 +1,37 @@
+// The module 'vscode' contains the VS Code extensibility API
+// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { Store } from "./stores";
-import { LinkItem } from "./types";
-import { ZhihuService } from "./zhihu/index";
-import { sidebarHotListDataProvider } from "./zhihu/sidebar/hot";
-import { sidebarRecommendListDataProvider } from "./zhihu/sidebar/recommend";
+import { ZhihuTreeDataProvider } from "./services/zhihuTreeDataProvider";
+import { ZhihuRecommendDataProvider } from "./services/zhihuRecommendDataProvider";
+import { ArticleViewManager } from "./services/articleViewManager";
+import { ZhihuHotItem, ZhihuService } from "./services/zhihuService";
+import { RecommendService } from "./services/recommendService";
+import { HotListService } from "./services/hotListService";
 
+// This method is called when your extension is activated
+// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  console.log("🐟知乎摸鱼🐟 已激活！");
+  // 使用控制台输出诊断信息和错误信息
+  console.log('恭喜，你的扩展 "zhihu-fisher" 已激活！');
 
   // 创建知乎服务实例
   const zhihuService = new ZhihuService();
 
   // 创建知乎热榜视图提供者
-  const sidebarHotList = new sidebarHotListDataProvider();
+  const zhihuTreeDataProvider = new ZhihuTreeDataProvider(zhihuService);
   // 注册知乎热榜视图
   const hotListView = vscode.window.createTreeView("zhihuHotList", {
-    treeDataProvider: sidebarHotList,
+    treeDataProvider: zhihuTreeDataProvider,
     showCollapseAll: false,
   });
 
   // 创建知乎推荐视图提供者
-  const sidebarRecommendList = new sidebarRecommendListDataProvider();
+  const zhihuRecommendDataProvider = new ZhihuRecommendDataProvider(
+    zhihuService
+  );
   // 注册知乎推荐视图
   const recommendListView = vscode.window.createTreeView("zhihuRecommendList", {
-    treeDataProvider: sidebarRecommendList,
+    treeDataProvider: zhihuRecommendDataProvider,
     showCollapseAll: false,
   });
 
@@ -31,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
   const refreshHotListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshHotList",
     () => {
-      sidebarHotList.refresh();
+      zhihuTreeDataProvider.refresh();
       vscode.window.showInformationMessage("正在刷新知乎热榜...");
     }
   );
@@ -40,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
   const refreshRecommendListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshRecommendList",
     () => {
-      sidebarRecommendList.refresh();
+      zhihuRecommendDataProvider.refresh();
       vscode.window.showInformationMessage("正在刷新知乎推荐...");
     }
   );
@@ -48,9 +56,9 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册打开文章命令
   const openArticleCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openArticle",
-    (item: LinkItem) => {
+    (item: ZhihuHotItem) => {
       // 检查热榜列表是否正在加载中
-      if (Store.Zhihu.hot.isLoading) {
+      if (HotListService.isLoadingHotList()) {
         vscode.window.showInformationMessage(
           "热榜列表正在加载中，请稍候再试..."
         );
@@ -58,15 +66,15 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       // 检查推荐列表是否正在加载中
-      if (Store.Zhihu.recommend.isLoading) {
+      if (RecommendService.isLoadingRecommendList()) {
         vscode.window.showInformationMessage(
           "推荐列表正在加载中，请稍候再试..."
         );
         return;
       }
 
-      const webviewManager = Store.webviewManager;
-      webviewManager.openWebview(item);
+      const articleViewManager = ArticleViewManager.getInstance();
+      articleViewManager.openArticle(item);
     }
   );
 
@@ -77,8 +85,8 @@ export function activate(context: vscode.ExtensionContext) {
       const success = await zhihuService.setCookie();
       if (success) {
         // 设置Cookie成功后刷新热榜和推荐
-        sidebarHotList.refresh();
-        sidebarRecommendList.refresh();
+        zhihuTreeDataProvider.refresh();
+        zhihuRecommendDataProvider.refresh();
       }
     }
   );
@@ -110,8 +118,18 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.window.showInformationMessage(
             `${statusText}，重新打开文章可应用设置`
           );
+
+          // 更新状态栏图标 (设置为提供视觉反馈)
+          updateImageToggleIcon(!currentValue);
         });
     }
+  );
+
+  // 在首次激活时设置正确的图标状态
+  updateImageToggleIcon(
+    vscode.workspace
+      .getConfiguration("zhihu-fisher")
+      .get<boolean>("hideImages", false)
   );
 
   // 当配置变更时触发刷新
@@ -121,8 +139,8 @@ export function activate(context: vscode.ExtensionContext) {
       e.affectsConfiguration("zhihu-fisher") &&
       !e.affectsConfiguration("zhihu-fisher.hideImages")
     ) {
-      sidebarHotList.refresh();
-      sidebarRecommendList.refresh();
+      zhihuTreeDataProvider.refresh();
+      zhihuRecommendDataProvider.refresh();
     }
   });
 
@@ -137,7 +155,12 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(toggleImageDisplayCommand);
 }
 
-export function deactivate() {
-  console.log("🐟知乎摸鱼🐟 已停用！");
-  // 清理资源或执行其他必要的操作
+// 更新图片切换图标状态
+function updateImageToggleIcon(hideImages: boolean): void {
+  // 这里可以将图标设置为带有斜线的图片图标，以表示图片已被禁用
+  // 但VSCode API不直接支持动态更改命令图标，所以这里作为未来改进的占位符
+  console.log(`图片显示模式已更新: ${hideImages ? "无图模式" : "显示图片"}`);
 }
+
+// This method is called when your extension is deactivated
+export function deactivate() {}

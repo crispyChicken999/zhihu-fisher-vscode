@@ -78,6 +78,17 @@ export interface WebViewItem {
   isLoading: boolean;
   /** 是否已加载 */
   isLoaded: boolean;
+  /** BatchConfig 批次加载的参数，方便终止递归 */
+  batchConfig: {
+    /** 加载前的回答数量 */
+    beforeLoadCount: number;
+    /** 加载后的回答数量 */
+    afterLoadCount: number;
+    /** 每一批次加载的数量限制 */
+    limitPerBatch: number;
+    /** 正在加载批次，避免重复加载 */
+    isLoadingBatch: boolean;
+  };
 }
 
 /** 文章数据结构 */

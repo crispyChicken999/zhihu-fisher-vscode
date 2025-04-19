@@ -30,12 +30,12 @@ export class RecommendListManager {
       timeout: 30000, // 30秒超时
     });
 
-    PuppeteerManager.setPageInstance("home", page); // 设置页面实例
+    PuppeteerManager.setPageInstance("recommend", page); // 设置页面实例
 
     try {
-      console.log("页面加载完成，等待内容稳定...");
+      console.log("页面加载完成，开始读取页面...");
       await PuppeteerManager.simulateHumanScroll(page);
-      await PuppeteerManager.delay(1000);
+      await PuppeteerManager.delay(500);
 
       // 检查是否有登录墙或验证码
       const hasLoginWall = await page.evaluate(() => {
@@ -81,8 +81,9 @@ export class RecommendListManager {
       await this.scrollToLoadMore(page);
 
       const recommendList = await this.parseRecommendList(page);
-
       console.log(`成功解析出${recommendList.length}个推荐项目`);
+      console.log("推荐列表解析完成，更新Store...");
+      Store.Zhihu.recommend.list = recommendList; // 更新推荐列表
     } catch (error) {
       console.error("获取推荐列表失败:", error);
       // 处理错误
@@ -112,11 +113,7 @@ export class RecommendListManager {
         console.log(`找到${feedItems.length}个Feed项`);
 
         feedItems.forEach((item, index) => {
-          const infoElement = item.querySelector(".ContentItem.AnswerItem");
-          // data-za-extra-module
-          const info = infoElement?.getAttribute("data-za-extra-module");
-          const infoJson = JSON.parse(info || "{}");
-          const id = infoJson.parent_token || `未知ID-${index}`; // 获取ID
+          const id = location.href.split('/').pop() as string; // 获取问题的ID
 
           // title <meta itemprop="name" content="长辈的什么行为让你感到窒息？">
           const titleElement = item.querySelector('meta[itemprop="name"]');
@@ -164,7 +161,7 @@ export class RecommendListManager {
         window.scrollTo(0, document.body.scrollHeight);
       });
 
-      await PuppeteerManager.delay(1000); // 等待加载
+      await PuppeteerManager.delay(500); // 等待加载
 
       const newScrollHeight = await page.evaluate(() => {
         return document.body.scrollHeight;

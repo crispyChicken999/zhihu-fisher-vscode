@@ -119,380 +119,330 @@ export class HtmlRenderer {
     // 获取文章对象
     const webview = Store.webviewMap.get(webviewId) as WebViewItem;
     const article = webview.article;
-    const config = vscode.workspace.getConfiguration("zhihu-helper");
-    const hideImages = config.get("hideImages") as boolean;
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const hideImages = config.get<boolean>("hideImages", false);
 
     // 当前的回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];
 
     // 处理文章内容中的图片
     let processedContent = this.processArticleContent(
-      currentAnswer.content,
+      currentAnswer?.content,
       hideImages
     );
 
     // 构建作者信息HTML
-    let authorHTML = this.buildAuthorHtml(currentAnswer.author);
+    let authorHTML = this.buildAuthorHtml(currentAnswer?.author);
 
     // 构建导航按钮
-    let navigationHTML = this.buildNavigationHtml(article);
+    let navigationHTML = this.buildNavigationHtml(webview, article);
 
     // 回答的来源URL
-    const sourceUrl = currentAnswer.url;
+    const sourceUrl = currentAnswer?.url || webview.url || "";
 
     return `
       <!DOCTYPE html>
       <html lang="zh-CN">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${this.escapeHtml(article.title)}</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
-            padding: 0 20px;
-            margin: 0 auto;
-            max-width: 800px;
-            line-height: 1.6;
-            color: var(--vscode-foreground);
-            background-color: var(--vscode-editor-background);
-          }
-          h1, h2, h3, h4, h5, h6 {
-            color: var(--vscode-editor-foreground);
-            margin-top: 24px;
-            margin-bottom: 16px;
-            font-weight: 600;
-            line-height: 1.25;
-          }
-          h1 {
-            font-size: 2em;
-            padding-bottom: 0.3em;
-            border-bottom: 1px solid var(--vscode-panel-border);
-          }
-          h2 {
-            font-size: 1.5em;
-            padding-bottom: 0.3em;
-            border-bottom: 1px solid var (--vscode-panel-border);
-          }
-          a {
-            color: var(--vscode-textLink-foreground);
-            text-decoration: none;
-          }
-          a:hover {
-            text-decoration: underline;
-          }
-          code {
-            font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
-            background-color: var(--vscode-textCodeBlock-background);
-            padding: 2px 4px;
-            border-radius: 3px;
-          }
-          pre {
-            background-color: var(--vscode-textCodeBlock-background);
-            padding: 16px;
-            border-radius: 3px;
-            overflow: auto;
-          }
-          img {
-            max-width: 100%;
-            height: auto;
-          }
-          blockquote {
-            padding: 0 1em;
-            color: var(--vscode-foreground);
-            border-left: 0.25em solid var(--vscode-panel-border);
-            margin: 0 0 16px 0;
-          }
-          hr {
-            height: 0.25em;
-            padding: 0;
-            margin: 24px 0;
-            background-color: var(--vscode-panel-border);
-            border: 0;
-          }
-          table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 16px;
-          }
-          table th, table td {
-            padding: 6px 13px;
-            border: 1px solid var(--vscode-panel-border);
-          }
-          table tr {
-            background-color: var(--vscode-editor-background);
-            border-top: 1px solid var(--vscode-panel-border);
-          }
-          table tr:nth-child(2n) {
-            background-color: var(--vscode-textCodeBlock-background);
-          }
-          .article-meta {
-            color: var(--vscode-descriptionForeground);
-            margin-bottom: 20px;
-            font-size: 0.9em;
-          }
-          .article-meta.hide-avatar .author-avatar{
-            display: none;
-          }
-
-          .article-content {
-            margin-top: 20px;
-          }
-          .toolbar {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-            padding: 10px 0;
-            border-top: 1px solid var(--vscode-panel-border);
-          }
-          .button {
-            background-color: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
-            border: none;
-            padding: 6px 12px;
-            border-radius: 2px;
-            cursor: pointer;
-            margin-right: 8px;
-          }
-          .button:hover {
-            background-color: var(--vscode-button-hoverBackground);
-          }
-          .button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-          .image-display-toggle {
-            margin-right: 10px;
-          }
-          .article-content img.formula {
-            display: inline-block;
-            vertical-align: middle;
-          }
-          .empty-container {
-            display: none !important;
-          }
-          /* 导航按钮样式 */
-          .navigation {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-            align-items: center;
-          }
-          .navigation-buttons {
-            display: flex;
-            gap: 10px;
-          }
-          .nav-info {
-            color: var(--vscode-descriptionForeground);
-            font-size: 0.9em;
-          }
-
-          /* 作者信息样式 */
-          .author-info {
-            display: flex;
-            align-items: center;
-            margin: 15px 0;
-            padding: 10px;
-            border-radius: 4px;
-            background-color: var(--vscode-editor-inactiveSelectionBackground);
-            box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
-          }
-
-          .author-avatar {
-            margin-right: 15px;
-            flex-shrink: 0;
-          }
-
-          .author-avatar img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-          }
-
-          .author-details {
-            flex-grow: 1;
-          }
-
-          .author-name {
-            font-weight: 600;
-            margin-bottom: 4px;
-          }
-
-          .author-bio {
-            font-size: 0.9em;
-            color: var(--vscode-descriptionForeground);
-          }
-
-          .author-link {
-            cursor: pointer;
-            color: var(--vscode-textLink-foreground);
-          }
-
-          .author-link:hover {
-            text-decoration: underline;
-          }
-        </style>
-      </head>
-      <body>
-        <header>
-          <h3>${this.escapeHtml(article.title)}</h3>
-          <div class="article-meta${hideImages ? " hide-avatar" : ""}">
-            ${authorHTML}
-            <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>
-          </div>
-        </header>
-
-        ${navigationHTML}
-
-        <div class="article-content">
-          ${processedContent}
-        </div>
-
-        ${navigationHTML}
-
-        <div class="toolbar">
-          <div>
-            <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
-            <button class="button" onclick="backTop()">回到顶部</button>
-            <button class="button" onclick="refreshContent()" style="display:none;">刷新内容</button>
-          </div>
-          <div>
-            <button class="button image-display-toggle" onclick="toggleImageDisplay()">
-              ${hideImages ? "显示图片" : "隐藏图片"}
-            </button>
-          </div>
-        </div>
-
-        <script>
-          const vscode = acquireVsCodeApi();
-
-          function backTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-
-          function openInBrowser() {
-            vscode.postMessage({
-              command: 'openInBrowser',
-              url: ${sourceUrl || undefined}
-            });
-          }
-
-          function refreshContent() {
-            vscode.postMessage({ command: 'requestContent' });
-          }
-
-          function toggleImageDisplay() {
-            // 向扩展发送消息
-            vscode.postMessage({ command: 'toggleImageDisplay' });
-
-            // 在前端立即切换图片显示状态
-            const allImages = document.querySelectorAll('.article-content img');
-            const isHidden = allImages.length > 0 && window.getComputedStyle(allImages[0]).display === 'none';
-
-            allImages.forEach(img => {
-              img.style.display = isHidden ? 'inline' : 'none';
-            });
-
-            // 更新按钮文本
-            const toggleButton = document.querySelector('.image-display-toggle');
-            if (toggleButton) {
-              toggleButton.textContent = isHidden ? '隐藏图片' : '显示图片';
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${this.escapeHtml(article.title)}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI",
+                system-ui, "Ubuntu", "Droid Sans", sans-serif;
+              padding: 0 20px;
+              margin: 0 auto;
+              max-width: 800px;
+              line-height: 1.6;
+              color: var(--vscode-foreground);
+              background-color: var(--vscode-editor-background);
             }
-          }
-
-          function openAuthorPage(url) {
-            vscode.postMessage({ command: 'openInBrowser', url: url });
-          }
-
-          // 上一个回答按钮点击事件
-          function loadPreviousAnswer() {
-            vscode.postMessage({ command: 'loadPreviousAnswer' });
-          }
-
-          // 下一个回答按钮点击事件
-          function loadNextAnswer() {
-            vscode.postMessage({ command: 'loadNextAnswer' });
-          }
-
-          // 处理图片加载错误，完全删除图片占位符
-          document.querySelectorAll('img').forEach(img => {
-            if (img.src && !img.src.startsWith('data:')) {
-              img.onerror = function() {
-                // 移除整个父元素如果父元素是figure或者特定的图片容器
-                const parent = this.parentNode;
-                if (parent && (parent.tagName.toLowerCase() === 'figure' ||
-                    parent.className.includes('img-container') ||
-                    parent.className.includes('image-container'))) {
-                  parent.remove();
-                } else {
-                  // 否则只移除图片本身
-                  this.remove();
-                }
-              };
-
-              // 检查是否存在data-actualsrc或data-original属性
-              if (!img.getAttribute('data-actualsrc-processed') && !img.getAttribute('data-original-processed')) {
-                // 尝试从data-actualsrc或data-original获取真实图片URL
-                const actualSrc = img.getAttribute('data-actualsrc');
-                const originalSrc = img.getAttribute('data-original');
-
-                if (actualSrc) {
-                  img.setAttribute('src', actualSrc);
-                } else if (originalSrc) {
-                  img.setAttribute('src', originalSrc);
-                }
-              }
-
-              // 对于知乎图片，添加source参数和no-referrer策略
-              const src = img.getAttribute('src');
-              if (src && (
-                  src.includes('zhimg.com') ||
-                  src.includes('pic1.zhimg.com') ||
-                  src.includes('pic2.zhimg.com') ||
-                  src.includes('pic3.zhimg.com') ||
-                  src.includes('pic4.zhimg.com') ||
-                  src.includes('picx.zhimg.com')
-                )) {
-                // 修改引用策略
-                img.setAttribute('referrerpolicy', 'no-referrer');
-
-                // 添加source参数（如果尚未添加）
-                if (!src.includes('source=') && !src.includes('?')) {
-                  img.setAttribute('src', src + '?source=1def8aca');
-                } else if (!src.includes('source=') && src.includes('?')) {
-                  img.setAttribute('src', src + '&source=1def8aca');
-                }
-              }
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+              color: var(--vscode-editor-foreground);
+              margin-top: 24px;
+              margin-bottom: 16px;
+              font-weight: 600;
+              line-height: 1.25;
             }
-          });
+            h1 {
+              font-size: 2em;
+              padding-bottom: 0.3em;
+              border-bottom: 1px solid var(--vscode-panel-border);
+            }
+            h2 {
+              font-size: 1.5em;
+              padding-bottom: 0.3em;
+              border-bottom: 1px solid var (--vscode-panel-border);
+            }
+            a {
+              color: var(--vscode-textLink-foreground);
+              text-decoration: none;
+            }
+            a:hover {
+              text-decoration: underline;
+            }
+            code {
+              font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+              background-color: var(--vscode-textCodeBlock-background);
+              padding: 2px 4px;
+              border-radius: 3px;
+            }
+            pre {
+              background-color: var(--vscode-textCodeBlock-background);
+              padding: 16px;
+              border-radius: 3px;
+              overflow: auto;
+            }
+            img {
+              max-width: 100%;
+              height: auto;
+            }
+            blockquote {
+              padding: 0 1em;
+              color: var(--vscode-foreground);
+              border-left: 0.25em solid var(--vscode-panel-border);
+              margin: 0 0 16px 0;
+            }
+            hr {
+              height: 0.25em;
+              padding: 0;
+              margin: 24px 0;
+              background-color: var(--vscode-panel-border);
+              border: 0;
+            }
+            table {
+              border-collapse: collapse;
+              width: 100%;
+              margin-bottom: 16px;
+            }
+            table th,
+            table td {
+              padding: 6px 13px;
+              border: 1px solid var(--vscode-panel-border);
+            }
+            table tr {
+              background-color: var(--vscode-editor-background);
+              border-top: 1px solid var(--vscode-panel-border);
+            }
+            table tr:nth-child(2n) {
+              background-color: var(--vscode-textCodeBlock-background);
+            }
+            .article-meta {
+              color: var(--vscode-descriptionForeground);
+              margin-bottom: 20px;
+              font-size: 0.9em;
+            }
+            .article-meta.hide-avatar .author-avatar {
+              display: none;
+            }
 
-          // 查找并清理空白的图片容器
-          function cleanEmptyContainers() {
-            document.querySelectorAll('figure, [class*="img-container"], [class*="image-container"]').forEach(container => {
-              if (container.children.length === 0 ||
-                  (container.children.length === 1 && container.children[0].tagName.toLowerCase() === 'figcaption')) {
-                container.classList.add('empty-container');
-              }
-            });
-          }
+            .article-content {
+              margin-top: 20px;
+            }
+            .toolbar {
+              display: flex;
+              justify-content: space-between;
+              margin: 20px 0;
+              padding: 10px 0;
+              border-top: 1px solid var(--vscode-panel-border);
+            }
+            .button {
+              background-color: var(--vscode-button-background);
+              color: var(--vscode-button-foreground);
+              border: none;
+              padding: 6px 12px;
+              border-radius: 2px;
+              cursor: pointer;
+              margin-right: 8px;
+            }
+            .button:hover {
+              background-color: var(--vscode-button-hoverBackground);
+            }
+            .button:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
+            .image-display-toggle {
+              margin-right: 10px;
+            }
+            .article-content img.formula {
+              display: inline-block;
+              vertical-align: middle;
+              text-align: center;
+            }
+            .article-content.hide-image img {
+              display: none;
+            }
+            .empty-container {
+              display: none !important;
+            }
+            /* 导航按钮样式 */
+            .navigation {
+              display: flex;
+              justify-content: space-between;
+              margin: 20px 0;
+              align-items: center;
+            }
+            .navigation-buttons {
+              display: flex;
+              gap: 10px;
+            }
+            .nav-info {
+              color: var(--vscode-descriptionForeground);
+              font-size: 0.9em;
+            }
 
-          // 在DOM加载完成后执行清理
-          document.addEventListener('DOMContentLoaded', cleanEmptyContainers);
+            /* 作者信息样式 */
+            .author-info {
+              display: flex;
+              align-items: center;
+              margin: 15px 0;
+              padding: 10px;
+              border-radius: 4px;
+              background-color: var(--vscode-editor-inactiveSelectionBackground);
+              box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px,
+                rgba(0, 0, 0, 0.3) 0px 7px 13px -3px,
+                rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+            }
 
-          // 添加锚点滚动
-          document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-              e.preventDefault();
-              const targetId = this.getAttribute('href').slice(1);
-              const targetElement = document.getElementById(targetId);
-              if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
-              }
-            });
-          });
-        </script>
-      </body>
+            .author-avatar {
+              margin-right: 15px;
+              flex-shrink: 0;
+            }
+
+            .author-avatar img {
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              object-fit: cover;
+            }
+
+            .author-details {
+              flex-grow: 1;
+            }
+
+            .author-name {
+              font-weight: 600;
+              margin-bottom: 4px;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+            }
+
+            .author-name .author-fans {
+              color: var(--vscode-descriptionForeground);
+              font-size: 0.9em;
+            }
+
+            .author-bio {
+              font-size: 0.9em;
+              color: var(--vscode-descriptionForeground);
+            }
+
+            .author-link {
+              cursor: pointer;
+              color: var(--vscode-textLink-foreground);
+            }
+
+            .author-link:hover {
+              text-decoration: underline;
+            }
+          </style>
+        </head>
+        <body>
+          <header>
+            <h3>${this.escapeHtml(article.title)}</h3>
+            <div class="article-meta${hideImages ? " hide-avatar" : ""}">
+              ${authorHTML}
+              <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>
+            </div>
+          </header>
+
+          ${navigationHTML}
+
+          <div class="article-content${
+            hideImages ? " hide-image" : ""
+          }"">${processedContent}</div>
+
+          ${navigationHTML}
+
+          <div class="toolbar">
+            <div>
+              <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
+              <button class="button" onclick="backTop()">回到顶部</button>
+              <button class="button" onclick="refreshContent()" style="display: none">
+                刷新内容
+              </button>
+            </div>
+            <div>
+              <button
+                class="button image-display-toggle"
+                onclick="toggleImageDisplay()"
+              >
+                ${hideImages ? "显示图片" : "隐藏图片"}
+              </button>
+            </div>
+          </div>
+          <script>
+            const vscode = acquireVsCodeApi();
+
+            function backTop() {
+              window.scrollTo(0, 0);
+            }
+
+            function openInBrowser() {
+              vscode.postMessage({
+                command: "openInBrowser",
+                url: "${sourceUrl}",
+              });
+            }
+
+            function refreshContent() {
+              vscode.postMessage({ command: "requestContent" });
+            }
+
+            function toggleImageDisplay() {
+              // 向扩展发送消息
+              vscode.postMessage({ command: "toggleImageDisplay" });
+
+              // 在前端立即切换图片显示状态
+              // const allImages = document.querySelectorAll(".article-content img");
+              // const isHidden =
+              //   allImages.length > 0 &&
+              //   window.getComputedStyle(allImages[0]).display === "none";
+
+              // allImages.forEach((img) => {
+              //   img.style.display = isHidden ? "inline" : "none";
+              // });
+
+              // 更新按钮文本
+              // const toggleButton = document.querySelector(".image-display-toggle");
+              // if (toggleButton) {
+              //   toggleButton.textContent = isHidden ? "隐藏图片" : "显示图片";
+              // }
+            }
+
+            function openAuthorPage(url) {
+              vscode.postMessage({ command: "openInBrowser", url: url });
+            }
+
+            // 上一个回答按钮点击事件
+            function loadPreviousAnswer() {
+              vscode.postMessage({ command: "loadPreviousAnswer" });
+            }
+
+            // 下一个回答按钮点击事件
+            function loadNextAnswer() {
+              vscode.postMessage({ command: "loadNextAnswer" });
+            }
+          </script>
+        </body>
       </html>
     `;
   }
@@ -502,7 +452,10 @@ export class HtmlRenderer {
    * @param navState 导航状态
    * @returns 导航按钮的HTML字符串
    */
-  private static buildNavigationHtml(article: ArticleInfo): string {
+  private static buildNavigationHtml(
+    webview: WebViewItem,
+    article: ArticleInfo
+  ): string {
     // 添加导航状态信息显示
     let navInfoHtml = "";
 
@@ -515,21 +468,20 @@ export class HtmlRenderer {
         : "";
 
     // 如果正在加载更多，添加指示器
-    let loadingText = article.isLoading
-      ? '<span class="loading-indicator">(正在加载更多...)</span>'
+    let loadingIcon = webview.batchConfig.isLoadingBatch
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><!-- Icon from Material Line Icons by Vjacheslav Trushkin - https://github.com/cyberalien/line-md/blob/master/license.txt --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="16" stroke-dashoffset="16" d="M12 3c4.97 0 9 4.03 9 9"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="16;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path><path stroke-dasharray="64" stroke-dashoffset="64" stroke-opacity=".3" d="M12 3c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9c0 -4.97 4.03 -9 9 -9Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.2s" values="64;0"/></path></g></svg>'
       : "";
 
     navInfoHtml = `
         <div class="nav-info">
           <span>${currentIndexText}</span>
           <span class="separator">|</span>
-          <span>${loadedText}</span>
+          <div style="display: inline-flex; align-items: center; gap:5px">${loadedText}${loadingIcon}</div>
           ${
             totalText
               ? `<span class="separator">| </span><span>${totalText}</span>`
               : ""
           }
-          ${loadingText}
         </div>
       `;
 
@@ -564,6 +516,10 @@ export class HtmlRenderer {
     content: string,
     hideImages: boolean
   ): string {
+    if (!content) {
+      return "正在加载中，请稍候..."; // 返回加载提示
+    }
+
     // 如果启用无图模式，处理HTML内容
     if (hideImages) {
       // 使用cheerio解析HTML并删除所有图片标签
@@ -605,7 +561,7 @@ export class HtmlRenderer {
    * @returns 作者信息的HTML
    */
   private static buildAuthorHtml(author: AnswerAuthor): string {
-    if (!author.name) {
+    if (!author) {
       return "";
     }
 
@@ -629,11 +585,17 @@ export class HtmlRenderer {
 
     // 作者名称和简介
     // 如果有作者URL，将作者名字设为可点击链接
-    const authorTitleHtml = authorUrl
-      ? `<div class="author-name"><a href="${authorUrl}" onclick="openAuthorPage('${authorUrl}')" class="author-link">${this.escapeHtml(
-          authorName
-        )}</a></div>`
-      : `<div class="author-name">${this.escapeHtml(authorName)}</div>`;
+    const authorTitleHtml = `<div class="author-name">
+          ${
+            authorUrl
+              ? `<a href="${authorUrl}" onclick="openAuthorPage('${authorUrl}')" class="author-link">${this.escapeHtml(
+                  authorName
+                )}</a>`
+              : this.escapeHtml(authorName)
+          }
+          <span>|</span>
+          <span class="author-fans">粉丝数:${authorFollowersCount}</span>
+        </div>`;
 
     authorHTML += `
       <div class="author-details">
