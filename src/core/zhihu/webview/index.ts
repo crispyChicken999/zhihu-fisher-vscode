@@ -8,41 +8,65 @@ import { marked } from "marked";
 
 export class WebviewManager {
   private webview = null as unknown as WebViewItem;
+  private disposables: vscode.Disposable[] = []; // 添加一个数组来存储所有的订阅
 
   constructor() {}
 
-  public watchVscodeWindowEvents() {
-    vscode.window.onDidChangeActiveTextEditor(
-      this.onDidChangeActiveTextEditor,
-      this
-    );
-  }
+  // public watchVscodeWindowEvents() {
+  //   // 添加活动编辑器变化事件监听
+  //   const disposable = vscode.window.onDidChangeActiveTextEditor(
+  //     this.onDidChangeActiveTextEditor,
+  //     this
+  //   );
+  //   this.disposables.push(disposable);
+
+  //   // 添加活动窗口变化事件监听
+  //   const windowDisposable = vscode.window.onDidChangeWindowState(
+  //     this.onDidChangeWindowState,
+  //     this
+  //   );
+  //   this.disposables.push(windowDisposable);
+  // }
+
+  // 处理窗口状态变化事件
+  // private async onDidChangeWindowState(e: vscode.WindowState): Promise<void> {
+  //   if (e.focused) {
+  //     await this.activateWebviewBrowserTab();
+  //   }
+  // }
 
   // 处理活动编辑器变化事件
-  private async onDidChangeActiveTextEditor() {
-    // 当活动编辑器变化时，我们需要检查当前的活动面板是否是我们的WebView面板
-    let activeWebview: WebViewItem = null as unknown as WebViewItem;
-    Store.webviewMap.forEach((view) => {
-      if (view.webviewPanel.visible) {
-        activeWebview = view;
-      }
-    });
+  // private async onDidChangeActiveTextEditor(
+  //   editor?: vscode.TextEditor
+  // ): Promise<void> {
+  //   await this.activateWebviewBrowserTab();
+  // }
 
-    if (!activeWebview) {
-      console.log("没有活动的WebView面板，无法激活浏览器标签页。");
-      return;
-    }
+  // 提取出激活浏览器标签页的逻辑为单独的方法
+  // private async activateWebviewBrowserTab(): Promise<void> {
+  //   // 当活动编辑器变化时，我们需要检查当前的活动面板是否是我们的WebView面板
+  //   let activeWebview: WebViewItem = null as unknown as WebViewItem;
+  //   Store.webviewMap.forEach((view) => {
+  //     if (view.webviewPanel.visible) {
+  //       activeWebview = view;
+  //     }
+  //   });
 
-    const activePage = PuppeteerManager.getPageInstance(
-      activeWebview.id
-    ) as unknown as Puppeteer.Page;
-    console.log(`找到问题 ${activeWebview.id} 的浏览器页面，正在激活到前台...`);
-    try {
-      await activePage?.bringToFront();
-    } catch (error) {
-      console.error(`激活问题 ${activeWebview.id} 的浏览器标签页失败:`, error);
-    }
-  }
+  //   if (!activeWebview) {
+  //     console.log("没有活动的WebView面板，无法激活浏览器标签页。");
+  //     return;
+  //   }
+
+  //   const activePage = PuppeteerManager.getPageInstance(
+  //     activeWebview.id
+  //   ) as unknown as Puppeteer.Page;
+  //   console.log(`找到问题 ${activeWebview.id} 的浏览器页面，正在激活到前台...`);
+  //   try {
+  //     await activePage?.bringToFront();
+  //   } catch (error) {
+  //     console.error(`激活问题 ${activeWebview.id} 的浏览器标签页失败:`, error);
+  //   }
+  // }
 
   /** 在vscode编辑器中打开页面（新建一个窗口） */
   async openWebview(item: LinkItem): Promise<void> {
@@ -68,7 +92,7 @@ export class WebviewManager {
         enableScripts: true,
         retainContextWhenHidden: true,
         localResourceRoots: [
-          vscode.Uri.joinPath(vscode.Uri.file(__dirname), "../../../media"),
+          // vscode.Uri.joinPath(vscode.Uri.file(__dirname), "../../../media"),
         ],
       }
     );
@@ -211,24 +235,17 @@ export class WebviewManager {
         // 更新WebView内容
         this.updateWebview();
 
-        // 这里的逻辑是：如果当前回答索引大于等于当前批次已加载回答数量的一半，那么就加载更多回答，并且未在加载新批次
+        // 这里的逻辑是：如果当前回答索引大于等于当前批次已加载回答数量-5，则加载更多回答
         if (
-          this.webview.article.currentAnswerIndex %
-            this.webview.batchConfig.limitPerBatch >=
-          (this.webview.batchConfig.afterLoadCount -
-            this.webview.batchConfig.beforeLoadCount) /
-            2
+          this.webview.article.currentAnswerIndex >=
+          this.webview.article.loadedAnswerCount - 5
         ) {
           if (this.webview.batchConfig.isLoadingBatch) {
-            console.log("正在加载中，请稍候...");
+            console.log("批次正在加载中，跳过...");
             return;
           }
 
           const page = PuppeteerManager.getPageInstance(this.webview.id);
-
-          // 模拟滚动一下，加载更多回答，避免点太快没反应过来导致加载失败
-          // await PuppeteerManager.simulateHumanScroll(page);
-          // await PuppeteerManager.delay(1000); // 等待1秒钟，给页面加载时间
 
           // 初始化批次加载参数
           this.webview.batchConfig.beforeLoadCount =
@@ -250,7 +267,7 @@ export class WebviewManager {
   /** 从页面中解析全部的回答 */
   private async parseAllAnswers(page: Puppeteer.Page): Promise<void> {
     if (this.webview.article.isLoading) {
-      console.log("正在加载中，请稍候...");
+      console.log("正在解析回答中，请稍候...");
       return;
     }
 
@@ -508,6 +525,7 @@ export class WebviewManager {
           try {
             console.log(`视图关闭，关闭问题 ${this.webview.id} 的浏览器标签页`);
             await PuppeteerManager.closePage(this.webview.id);
+            Store.webviewMap.delete(this.webview.id); // 删除对应的WebView项
           } catch (error) {
             console.error("关闭浏览器时出错:", error);
           }

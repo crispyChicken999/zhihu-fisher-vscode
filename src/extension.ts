@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       const webviewManager = Store.webviewManager;
-      webviewManager.watchVscodeWindowEvents();
+      // webviewManager.watchVscodeWindowEvents();
       webviewManager.openWebview(item);
     }
   );

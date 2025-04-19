@@ -393,7 +393,7 @@ export class HtmlRenderer {
             const vscode = acquireVsCodeApi();
 
             function backTop() {
-              window.scrollTo(0, 0);
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }
 
             function openInBrowser() {
