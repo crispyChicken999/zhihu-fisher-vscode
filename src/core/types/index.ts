@@ -192,7 +192,7 @@ export class StatusTreeItem extends TreeItem {
     const statusItem: LinkItem = {
       id: `status-${Date.now()}`,
       title: label,
-      excerpt: "加载中，请稍后...",
+      excerpt: "爬虫读取中，请耐心等待...",
       url: "",
     };
 
