@@ -9,7 +9,7 @@ export class PuppeteerManager {
     if (!Store.browserInstance) {
       console.log("创建新的浏览器实例...");
       Store.browserInstance = await Puppeteer.launch({
-        headless: false,
+        headless: true,
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
