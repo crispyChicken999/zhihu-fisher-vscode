@@ -99,8 +99,7 @@ export class sidebarHotListDataProvider
     // 如果有缓存的热榜项目，直接返回
     if (list.length > 0) {
       return list.map(
-        (item) =>
-          new TreeItem(item, vscode.TreeItemCollapsibleState.None)
+        (item) => new TreeItem(item, vscode.TreeItemCollapsibleState.None)
       );
     }
 
@@ -131,6 +130,6 @@ export class sidebarHotListDataProvider
           title: "刷新知乎热榜",
         }
       ),
-    ]
+    ];
   }
 }
