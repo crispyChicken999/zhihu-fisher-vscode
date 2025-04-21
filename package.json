@@ -2,7 +2,7 @@
   "name": "zhihu-fisher",
   "displayName": "Zhihu Fisher",
   "description": "A VSCode extension for browsing Zhihu articles and hot lists",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.99.0"
