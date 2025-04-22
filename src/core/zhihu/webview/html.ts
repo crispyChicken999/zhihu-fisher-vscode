@@ -568,11 +568,21 @@ export class HtmlRenderer {
               vscode.postMessage({ command: "jumpToAnswer", index: index });
             }
 
+            // 在页面加载完成后自动设置焦点
+            window.addEventListener("load", function() {
+              // 或者也可以创建并聚焦一个隐藏的可聚焦元素
+              const focusCatcher = document.createElement('div');
+              focusCatcher.tabIndex = -1; // 使元素可聚焦
+              focusCatcher.style.outline = 'none'; // 隐藏焦点轮廓
+              document.body.appendChild(focusCatcher);
+              focusCatcher.focus();
+              window.scrollTo(0, 0); // 滚动到顶部
+            });
+
             // 监听键盘事件
             document.addEventListener("keyup", (event) => {
               // 只有当文档可见且不在输入框内时才处理键盘事件
               if (
-                document.visibilityState !== "visible" ||
                 event.target.tagName === "INPUT" ||
                 event.target.tagName === "TEXTAREA"
               ) {
