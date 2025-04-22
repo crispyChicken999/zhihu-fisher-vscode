@@ -16,6 +16,8 @@ export interface ContentStore {
   browserInstance: Puppeteer.Browser | null;
   /** Puppeteer页面实例列表 */
   pagesInstance: Map<string, Puppeteer.Page>;
+  /** 状态栏项目映射表 */
+  statusBarMap: Map<string, vscode.StatusBarItem>;
 
   /** 知乎相关 */
   Zhihu: {

@@ -118,6 +118,9 @@ export class WebviewManager {
       statusBarItem.text = `$(sync~spin) 加载文章: ${shortTitle}`;
       statusBarItem.show();
 
+      // 保存状态栏项目的引用
+      Store.statusBarMap.set(webviewId, statusBarItem);
+
       // 关键步骤！
       // 这里使用 Puppeteer来获取文章内容
       const page = await PuppeteerManager.createPage();
@@ -133,6 +136,9 @@ export class WebviewManager {
       console.log("页面加载完成，开始读取页面...");
       webviewItem.isLoading = false;
       webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
+
+      // 隐藏状态栏加载提示
+      this.hideStatusBarItem(webviewId);
 
       // 全部回答的总数量
       const totalAnswerCount = await page.evaluate(() => {
@@ -153,13 +159,28 @@ export class WebviewManager {
       await this.parseAllAnswers(webviewId, page); // 解析页面中的全部回答
 
       await this.loadMoreAnswers(webviewId, page); // 加载更多回答
+
     } catch (error) {
       const webviewItem = Store.webviewMap.get(webviewId);
       if (webviewItem) {
         webviewItem.isLoading = false;
       }
+
+      // 隐藏状态栏加载提示，即使出错也应该隐藏
+      this.hideStatusBarItem(webviewId);
+
       console.error("加载内容时出错:", error);
       throw new Error("加载内容时出错:" + error);
+    }
+  }
+
+  /** 隐藏状态栏项目 */
+  private hideStatusBarItem(webviewId: string): void {
+    const statusBarItem = Store.statusBarMap.get(webviewId);
+    if (statusBarItem) {
+      statusBarItem.hide();
+      statusBarItem.dispose();
+      Store.statusBarMap.delete(webviewId);
     }
   }
 
@@ -248,6 +269,61 @@ export class WebviewManager {
         vscode.window.showErrorMessage("加载下一个回答时出错:" + error);
       } else {
         console.log("页面已关闭，忽略加载错误");
+      }
+    }
+  }
+
+  /** 跳转到指定回答 */
+  public async jumpToAnswer(
+    webviewId: string,
+    answerIndex: number
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 检查索引是否有效
+      if (
+        answerIndex >= 0 &&
+        answerIndex < webviewItem.article.loadedAnswerCount
+      ) {
+        // 设置当前回答索引
+        webviewItem.article.currentAnswerIndex = answerIndex;
+
+        // 更新webview内容
+        this.updateWebview(webviewId);
+
+        // 如果当前回答索引接近已加载回答的末尾，预加载更多回答
+        if (
+          answerIndex >= webviewItem.article.loadedAnswerCount - 5 &&
+          !webviewItem.article.loadComplete &&
+          !webviewItem.batchConfig.isLoadingBatch
+        ) {
+          console.log("当前回答接近末尾，尝试加载更多回答");
+
+          // 检查页面实例是否存在
+          const page = PuppeteerManager.getPageInstance(webviewId);
+          if (page) {
+            // 初始化批次加载参数
+            webviewItem.batchConfig.beforeLoadCount =
+              webviewItem.batchConfig.afterLoadCount =
+                webviewItem.article.answerList.length;
+            webviewItem.batchConfig.isLoadingBatch = true; // 设置为正在加载批次
+            this.updateWebview(webviewId); // 更新WebView内容
+
+            // 加载更多回答
+            await this.loadMoreAnswers(webviewId, page);
+          }
+        }
+      } else {
+        console.log(`无效的回答索引: ${answerIndex}`);
+      }
+    } catch (error) {
+      console.error("跳转到指定回答时出错:", error);
+      if (Store.webviewMap.has(webviewId)) {
+        vscode.window.showErrorMessage("跳转到指定回答时出错:" + error);
       }
     }
   }
@@ -576,6 +652,12 @@ export class WebviewManager {
           break;
         case "loadNextAnswer":
           await this.loadNextAnswer(webviewId);
+          break;
+        case "jumpToAnswer":
+          // 响应分页器的跳转请求，传入目标回答的索引
+          if (typeof message.index === "number") {
+            await this.jumpToAnswer(webviewId, message.index);
+          }
           break;
       }
     });

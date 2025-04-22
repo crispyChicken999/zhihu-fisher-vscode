@@ -1,17 +1,13 @@
 import { ContentStore, WebViewItem } from "./types";
-import { CookieManager } from "./zhihu/cookie";
-import { HotListManager } from "./zhihu/hot";
-import { RecommendListManager } from "./zhihu/recommend";
+import * as vscode from "vscode";
 import * as Puppeteer from "puppeteer";
-import { PuppeteerManager } from "./zhihu/puppeteer";
-import { WebviewManager } from "./zhihu/webview";
-
 
 export const Store: ContentStore = {
-  webviewMap: null as any,
+  webviewMap: new Map<string, WebViewItem>(),
   webviewManager: null as any,
   browserInstance: null,
-  pagesInstance: null as any,
+  pagesInstance: new Map<string, Puppeteer.Page>(),
+  statusBarMap: new Map<string, vscode.StatusBarItem>(),
   Zhihu: {
     hot: {
       list: [],

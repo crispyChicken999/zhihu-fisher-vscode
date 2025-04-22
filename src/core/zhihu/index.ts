@@ -12,8 +12,6 @@ export class ZhihuService {
   private hotListManager;
   private recommendListManager;
   private webviewManager;
-  private webviewMap: Map<string, WebViewItem>;
-  private pagesInstance: Map<string, Puppeteer.Page>;
 
   constructor() {
     this.cookieManager = Store.Zhihu.cookieManager = new CookieManager();
@@ -21,8 +19,6 @@ export class ZhihuService {
     this.recommendListManager = Store.Zhihu.recommendListManager =
       new RecommendListManager();
     this.webviewManager = Store.webviewManager = new WebviewManager();
-    this.webviewMap = Store.webviewMap = new Map<string, WebViewItem>();
-    this.pagesInstance = Store.pagesInstance = new Map<string, Puppeteer.Page>();
   }
 
   /** 设置Cookie */

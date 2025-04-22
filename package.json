@@ -5,7 +5,7 @@
   "version": "0.0.6",
   "author": "CrispyChicken",
   "engines": {
-    "vscode": "^1.99.0"
+    "vscode": "^1.0.0"
   },
   "repository": {
     "type": "git",
