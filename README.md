@@ -1,7 +1,7 @@
 # 知乎摸鱼 🐟 (Zhihu Fisher) 📚
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.0.6-green.svg)
+![Version](https://img.shields.io/badge/version-0.0.7-green.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。
 
@@ -29,6 +29,15 @@
 2. 加载知乎推荐
 3. 点击查看文章，支持切换上一个/下一个回答
 4. 提供显示/隐藏图片的功能，避免被发现
+5. 键盘左右箭头可以切换上一个/下一个回答
+
+## 💥 Changelog 💥
+
+- 0.0.7
+  - 修复了加载完成后，底部栏仍提示正在加载的问题。
+  - 优化了文章页面的样式，增加回答的点赞数、评论数等信息。
+  - 优化了文章加载页的样式，新增问题简介的滚动条，避免内容过长导致页面显示不全。
+  - 新增快捷键切换上一个/下一个回答，按键盘的`←`和`→`来切换。
 
 ## 📝 TODO 📝
 
