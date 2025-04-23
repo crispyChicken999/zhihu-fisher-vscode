@@ -28,10 +28,12 @@ export class SearchManager {
 
     // 创建并获取浏览器页面
     const page = await PuppeteerManager.createPage();
-    
+
     // 构建搜索URL（搜索回答内容）
-    const searchUrl = `https://www.zhihu.com/search?q=${encodeURIComponent(query)}&type=content&vertical=answer`;
-    
+    const searchUrl = `https://www.zhihu.com/search?q=${encodeURIComponent(
+      query
+    )}&type=content&vertical=answer`;
+
     console.log(`导航到知乎搜索页面: ${searchUrl}`);
     await page.goto(searchUrl, {
       waitUntil: "networkidle0",
@@ -116,54 +118,63 @@ export class SearchManager {
    * @param query 搜索关键词
    * @returns 搜索结果列表
    */
-  private async parseSearchResults(page: Puppeteer.Page, query: string): Promise<LinkItem[]> {
+  private async parseSearchResults(
+    page: Puppeteer.Page,
+    query: string
+  ): Promise<LinkItem[]> {
     const searchResults = await page.evaluate((searchQuery) => {
       const items: LinkItem[] = [];
-      
+
       // 查找所有搜索结果条目
       const resultItems = Array.from(document.querySelectorAll(".List-item"));
-      
+
       if (resultItems.length > 0) {
         console.log(`找到${resultItems.length}个搜索结果项`);
-        
+
         resultItems.forEach((item, index) => {
           try {
             // 提取问题信息
-            const questionMeta = item.querySelector('div[itemprop="zhihu:question"]');
+            const questionMeta = item.querySelector(
+              'div[itemprop="zhihu:question"]'
+            );
             if (!questionMeta) return;
-            
+
             // 提取问题URL和标题
             const urlMeta = questionMeta.querySelector('meta[itemprop="url"]');
-            const titleMeta = questionMeta.querySelector('meta[itemprop="name"]');
-            
+            const titleMeta = questionMeta.querySelector(
+              'meta[itemprop="name"]'
+            );
+
             if (!urlMeta || !titleMeta) return;
-            
+
             const url = (urlMeta as HTMLMetaElement).content || "";
             const title = (titleMeta as HTMLMetaElement).content || "";
             const id = `search-${url.split("/").pop()}-${index}`;
-            
+
             // 提取回答内容摘要
             const contentElement = item.querySelector(".RichText");
-            let excerpt = contentElement ? contentElement.textContent || "" : "";
-            
+            let excerpt = contentElement
+              ? contentElement.textContent || ""
+              : "";
+
             // 如果摘要太长，截断它
             if (excerpt.length > 150) {
               excerpt = excerpt.substring(0, 147) + "...";
             }
-            
+
             // 如果该结果已存在，则跳过
-            if (items.some(existingItem => existingItem.id === id)) {
+            if (items.some((existingItem) => existingItem.id === id)) {
               console.log(`搜索结果 #${index + 1} 已存在，跳过...`);
               return;
             }
-            
+
             items.push({
               id,
               url,
               title,
               excerpt,
             });
-            
+
             console.log(`成功解析搜索结果 #${index + 1}: ${title}`);
           } catch (error) {
             console.error(`解析搜索结果 #${index + 1} 时出错:`, error);
@@ -172,10 +183,10 @@ export class SearchManager {
       } else {
         console.log("未找到搜索结果");
       }
-      
+
       return items;
     }, query);
-    
+
     return searchResults;
   }
 

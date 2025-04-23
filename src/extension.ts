@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
       // 检查推荐列表是否正在加载中
       if (Store.Zhihu.recommend.isLoading) {
         vscode.window.showInformationMessage(
-          "推荐列表正在加载中，请稍候再试..."
+          "爬虫繁忙（推荐列表正在加载中，请稍候再试...）"
         );
         return;
       }

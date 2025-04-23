@@ -94,7 +94,7 @@ export class sidebarSearchListDataProvider
     if (Store.Zhihu.search.isLoading) {
       return [
         new StatusTreeItem(
-          "正在搜索知乎内容...",
+          `🔍正在知乎搜索【${Store.Zhihu.search.currentQuery}】🔍...`,
           new vscode.ThemeIcon("loading~spin"),
           null,
           "爬虫读取页面中，请稍候..."

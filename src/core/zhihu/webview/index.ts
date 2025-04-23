@@ -159,7 +159,6 @@ export class WebviewManager {
       await this.parseAllAnswers(webviewId, page); // 解析页面中的全部回答
 
       await this.loadMoreAnswers(webviewId, page); // 加载更多回答
-
     } catch (error) {
       const webviewItem = Store.webviewMap.get(webviewId);
       if (webviewItem) {

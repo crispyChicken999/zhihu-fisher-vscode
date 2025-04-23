@@ -5,7 +5,7 @@
   "version": "0.0.8",
   "author": "CrispyChicken",
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.82.0"
   },
   "repository": {
     "type": "git",
@@ -174,7 +174,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.82.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
     "@vscode/test-cli": "^0.0.10",
