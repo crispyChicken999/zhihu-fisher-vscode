@@ -4,12 +4,14 @@ import { PuppeteerManager } from "./puppeteer";
 import { CookieManager } from "./cookie";
 import { RecommendListManager } from "./recommend";
 import { HotListManager } from "./hot";
+import { SearchManager } from "./search";
 import { WebviewManager } from "./webview";
 
 export class ZhihuService {
   private cookieManager;
   private hotListManager;
   private recommendListManager;
+  private searchManager;
   private webviewManager;
 
   constructor() {
@@ -17,6 +19,7 @@ export class ZhihuService {
     this.hotListManager = Store.Zhihu.hotListManager = new HotListManager();
     this.recommendListManager = Store.Zhihu.recommendListManager =
       new RecommendListManager();
+    this.searchManager = Store.Zhihu.searchManager = new SearchManager();
     this.webviewManager = Store.webviewManager = new WebviewManager();
   }
 
@@ -38,6 +41,11 @@ export class ZhihuService {
   /** 获取热榜列表 */
   async getHotList() {
     return this.hotListManager.getHotList();
+  }
+
+  /** 搜索知乎内容 */
+  async searchContent(query: string) {
+    return this.searchManager.search(query);
   }
 
   /** 加载文章内容 */

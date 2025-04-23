@@ -312,6 +312,12 @@ export class HtmlRenderer {
               flex-shrink: 0;
               flex-wrap: nowrap;
             }
+            .navigation-buttons .prev:disabled,
+            .navigation-buttons .next:disabled {
+              background-color: var(--vscode-button-secondaryBackground);
+              color: var(--vscode-button-secondaryForeground);
+              cursor: not-allowed;
+            }
             .nav-info {
               color: var(--vscode-descriptionForeground);
               font-size: 0.9em;

@@ -2,6 +2,7 @@ import * as Puppeteer from "puppeteer";
 import { CookieManager } from "../zhihu/cookie";
 import { RecommendListManager } from "../zhihu/recommend";
 import { HotListManager } from "../zhihu/hot";
+import { SearchManager } from "../zhihu/search";
 import { PuppeteerManager } from "../zhihu/puppeteer";
 import { WebviewManager } from "../zhihu/webview";
 import * as vscode from "vscode";
@@ -40,6 +41,18 @@ export interface ContentStore {
     };
     /** 热榜管理器实例对象 */
     hotListManager: HotListManager;
+
+    /** 知乎搜索数据 */
+    search: {
+      /** 是否正在搜索 */
+      isLoading: boolean;
+      /** 当前搜索关键词 */
+      currentQuery: string;
+      /** 搜索结果列表 */
+      list: LinkItem[];
+    };
+    /** 搜索管理器实例对象 */
+    searchManager: SearchManager;
 
     /** 知乎的Cookie */
     cookieInfo: CookieInfo;
@@ -188,13 +201,14 @@ export class StatusTreeItem extends TreeItem {
   constructor(
     label: string,
     icon?: vscode.ThemeIcon,
-    command?: vscode.Command
+    command?: vscode.Command | null,
+    tooltip?: string
   ) {
     // 创建一个伪热榜项
     const statusItem: LinkItem = {
-      id: `status-${Date.now()}`,
+      id: `status-${Date.now()}-${Math.random()}`,
       title: label,
-      excerpt: "爬虫读取中，请耐心等待...",
+      excerpt: tooltip || "爬虫读取中，请耐心等待...",
       url: "",
     };
 

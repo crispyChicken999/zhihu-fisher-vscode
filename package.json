@@ -2,7 +2,7 @@
   "name": "zhihu-fisher",
   "displayName": "Zhihu Fisher",
   "description": "A VSCode extension for browsing Zhihu articles and hot lists",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.90.0"
@@ -29,6 +29,11 @@
         "command": "zhihu-fisher.refreshRecommendList",
         "title": "刷新推荐",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.searchContent",
+        "title": "搜索知乎内容",
+        "icon": "$(search)"
       },
       {
         "command": "zhihu-fisher.openArticle",
@@ -75,6 +80,12 @@
           "name": "热榜",
           "icon": "$(flame)",
           "contextualTitle": "知乎热榜"
+        },
+        {
+          "id": "zhihuSearchList",
+          "name": "搜索",
+          "icon": "$(search)",
+          "contextualTitle": "知乎搜索"
         }
       ]
     },
@@ -86,6 +97,10 @@
       {
         "view": "zhihuRecommendList",
         "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshRecommendList)\n[设置Cookie](command:zhihu-fisher.setCookie)"
+      },
+      {
+        "view": "zhihuSearchList",
+        "contents": "点击搜索按钮查找知乎内容...\n[搜索](command:zhihu-fisher.searchContent)\n[设置Cookie](command:zhihu-fisher.setCookie)"
       }
     ],
     "menus": {
@@ -101,16 +116,21 @@
           "group": "navigation@1"
         },
         {
+          "command": "zhihu-fisher.searchContent",
+          "when": "view == zhihuSearchList",
+          "group": "navigation@1"
+        },
+        {
           "command": "zhihu-fisher.setCookie",
-          "when": "view == zhihuHotList || view == zhihuRecommendList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         },
         {
           "command": "zhihu-fisher.clearCookie",
-          "when": "view == zhihuHotList || view == zhihuRecommendList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         },
         {
           "command": "zhihu-fisher.toggleImageDisplay",
-          "when": "view == zhihuHotList || view == zhihuRecommendList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         }
       ]
     },

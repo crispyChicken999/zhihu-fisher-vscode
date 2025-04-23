@@ -19,6 +19,12 @@ export const Store: ContentStore = {
       isLoading: false,
     },
     recommendListManager: null as any,
+    search: {
+      list: [],
+      isLoading: false,
+      currentQuery: "",
+    },
+    searchManager: null as any,
     cookieInfo: {
       cookie: "",
       lastUpdated: null,

@@ -4,6 +4,7 @@ import { LinkItem } from "./core/types";
 import { ZhihuService } from "./core/zhihu/index";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
+import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("🐟知乎摸鱼🐟 已激活！");
@@ -27,6 +28,14 @@ export function activate(context: vscode.ExtensionContext) {
     showCollapseAll: false,
   });
 
+  // 创建知乎搜索视图提供者
+  const sidebarSearchList = new sidebarSearchListDataProvider();
+  // 注册知乎搜索视图
+  const searchListView = vscode.window.createTreeView("zhihuSearchList", {
+    treeDataProvider: sidebarSearchList,
+    showCollapseAll: false,
+  });
+
   // 注册刷新热榜命令
   const refreshHotListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshHotList",
@@ -42,6 +51,37 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       sidebarRecommendList.refresh();
       vscode.window.showInformationMessage("正在刷新知乎推荐...");
+    }
+  );
+
+  // 注册搜索命令
+  const searchContentCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.searchContent",
+    async () => {
+      const query = await vscode.window.showInputBox({
+        prompt: "请输入要搜索的内容",
+        placeHolder: "输入关键词搜索知乎内容",
+      });
+
+      // 检查热榜列表是否正在加载中
+      if (Store.Zhihu.hot.isLoading) {
+        vscode.window.showInformationMessage(
+          "热榜列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查推荐列表是否正在加载中
+      if (Store.Zhihu.recommend.isLoading) {
+        vscode.window.showInformationMessage(
+          "推荐列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      if (query) {
+        await sidebarSearchList.searchContent(query);
+      }
     }
   );
 
@@ -61,6 +101,14 @@ export function activate(context: vscode.ExtensionContext) {
       if (Store.Zhihu.recommend.isLoading) {
         vscode.window.showInformationMessage(
           "推荐列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查搜索列表是否正在加载中
+      if (Store.Zhihu.search.isLoading) {
+        vscode.window.showInformationMessage(
+          "搜索结果正在加载中，请稍候再试..."
         );
         return;
       }
@@ -130,8 +178,10 @@ export function activate(context: vscode.ExtensionContext) {
   // 将所有可处置对象添加到扩展上下文的订阅中
   context.subscriptions.push(hotListView);
   context.subscriptions.push(recommendListView);
+  context.subscriptions.push(searchListView);
   context.subscriptions.push(refreshHotListCommand);
   context.subscriptions.push(refreshRecommendListCommand);
+  context.subscriptions.push(searchContentCommand);
   context.subscriptions.push(openArticleCommand);
   context.subscriptions.push(setCookieCommand);
   context.subscriptions.push(clearCookieCommand);

@@ -508,8 +508,15 @@ export class WebviewManager {
     }
 
     const webviewItem = Store.webviewMap.get(webviewId);
-    if (!webviewItem || webviewItem.article.loadComplete) {
+    if (!webviewItem) {
+      return;
+    }
+
+    if (webviewItem.article.loadComplete) {
       console.log("全部回答已加载完成，停止加载更多。");
+      webviewItem.article.isLoading = false; // 设置为加载完成
+      webviewItem.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
+      this.updateWebview(webviewId); // 更新WebView内容
       return;
     }
 
