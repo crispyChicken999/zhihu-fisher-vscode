@@ -1,5 +1,7 @@
 import * as Puppeteer from "puppeteer";
 import { Store } from "../../stores";
+import * as vscode from "vscode";
+import * as path from "path";
 
 export class PuppeteerManager {
   /**
@@ -8,14 +10,72 @@ export class PuppeteerManager {
   static async getBrowserInstance(): Promise<Puppeteer.Browser> {
     if (!Store.browserInstance) {
       console.log("创建新的浏览器实例...");
-      Store.browserInstance = await Puppeteer.launch({
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--window-size=1000,700",
-        ],
-      });
+
+      function getChromiumPath() {
+        if (process.env.NODE_ENV === "development") {
+          // 开发环境下路径
+          return path.join(__dirname, "chrome-win64", "chrome.exe");
+        } else {
+          // 打包后路径
+          return path.join(
+            __dirname,
+            "..",
+            "..",
+            "..",
+            "resources",
+            "chrome-win64",
+            "chrome.exe"
+          );
+        }
+      }
+
+      try {
+        Store.browserInstance = await Puppeteer.launch({
+          executablePath: getChromiumPath(),
+          headless: true,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--window-size=1000,700",
+          ],
+        });
+      } catch (error) {
+        console.error("创建浏览器实例失败:", error);
+
+        // 显示错误通知，提示用户运行特定命令以获取浏览器缓存
+        const message = "无法创建浏览器实例，可能是因为找不到浏览器chrome.exe";
+        const action = "查看解决方案";
+
+        const selection = await vscode.window.showErrorMessage(message, action);
+
+        if (selection === action) {
+          // 打开终端并运行命令 npx puppeteer browsers install chrome@135.0.7049.84
+          const terminal = vscode.window.createTerminal("Puppeteer");
+          terminal.show();
+          terminal.sendText(
+            "npx puppeteer browsers install chrome@135.0.7049.84"
+          );
+          vscode.window.showInformationMessage(
+            "请在终端中运行命令：npx puppeteer browsers install chrome@135.0.7049.84"
+          );
+
+          // 安装完成后请重启VSCode
+          vscode.window
+            .showInformationMessage(
+              "安装完成后请重启VSCode以加载新的浏览器实例",
+              "重启VSCode"
+            )
+            .then((selection) => {
+              if (selection === "重启VSCode") {
+                vscode.commands.executeCommand("workbench.action.reloadWindow");
+              }
+            });
+        }
+
+        throw new Error(
+          "浏览器缺失，请运行命令：npx puppeteer browsers install chrome"
+        );
+      }
     }
     return Store.browserInstance;
   }
