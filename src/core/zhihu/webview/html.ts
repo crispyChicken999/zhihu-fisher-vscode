@@ -915,7 +915,9 @@ export class HtmlRenderer {
 
     // 美化时间格式，只保留年月日和时分
     const formatDateTime = (dateTimeStr: string): string => {
-      if (!dateTimeStr) return "";
+      if (!dateTimeStr) {
+        return "";
+      }
 
       // 尝试解析日期字符串
       try {

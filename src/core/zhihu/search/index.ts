@@ -137,7 +137,9 @@ export class SearchManager {
             const questionMeta = item.querySelector(
               'div[itemprop="zhihu:question"]'
             );
-            if (!questionMeta) return;
+            if (!questionMeta) {
+              return;
+            }
 
             // 提取问题URL和标题
             const urlMeta = questionMeta.querySelector('meta[itemprop="url"]');
@@ -145,7 +147,9 @@ export class SearchManager {
               'meta[itemprop="name"]'
             );
 
-            if (!urlMeta || !titleMeta) return;
+            if (!urlMeta || !titleMeta) {
+              return;
+            }
 
             const url = (urlMeta as HTMLMetaElement).content || "";
             const title = (titleMeta as HTMLMetaElement).content || "";
