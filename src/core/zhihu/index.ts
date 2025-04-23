@@ -1,11 +1,10 @@
 import { Store } from "../stores";
-import { LinkItem, WebViewItem } from "../types";
+import { LinkItem } from "../types";
 import { PuppeteerManager } from "./puppeteer";
 import { CookieManager } from "./cookie";
 import { RecommendListManager } from "./recommend";
 import { HotListManager } from "./hot";
 import { WebviewManager } from "./webview";
-import * as Puppeteer from "puppeteer";
 
 export class ZhihuService {
   private cookieManager;

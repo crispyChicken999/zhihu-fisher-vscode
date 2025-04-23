@@ -571,11 +571,12 @@ export class HtmlRenderer {
             // 在页面加载完成后自动设置焦点
             window.addEventListener("load", function() {
               // 或者也可以创建并聚焦一个隐藏的可聚焦元素
-              const focusCatcher = document.createElement('div');
-              focusCatcher.tabIndex = -1; // 使元素可聚焦
-              focusCatcher.style.outline = 'none'; // 隐藏焦点轮廓
-              document.body.appendChild(focusCatcher);
-              focusCatcher.focus();
+              const letsFocus = document.createElement('div');
+              letsFocus.tabIndex = -1; // 使元素可聚焦
+              letsFocus.style.outline = 'none'; // 隐藏焦点轮廓
+              letsFocus.style.position = 'absolute'; // 绝对定位
+              document.body.appendChild(letsFocus);
+              letsFocus.focus();
               window.scrollTo(0, 0); // 滚动到顶部
             });
 
