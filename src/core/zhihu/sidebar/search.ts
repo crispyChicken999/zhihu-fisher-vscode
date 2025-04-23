@@ -97,7 +97,7 @@ export class sidebarSearchListDataProvider
           `🔍正在知乎搜索【${Store.Zhihu.search.currentQuery}】🔍...`,
           new vscode.ThemeIcon("loading~spin"),
           null,
-          "爬虫读取页面中，请稍候..."
+          "你看，又急~你干嘛哎哟👉🤡"
         ),
       ];
     }
@@ -128,10 +128,15 @@ export class sidebarSearchListDataProvider
 
     // 初始状态，只显示搜索按钮
     return [
-      new StatusTreeItem("搜索知乎内容", new vscode.ThemeIcon("search"), {
-        command: "zhihu-fisher.searchContent",
-        title: "搜索知乎内容",
-      }),
+      new StatusTreeItem(
+        "点我搜索知乎内容",
+        new vscode.ThemeIcon("search"),
+        {
+          command: "zhihu-fisher.searchContent",
+          title: "搜索知乎内容",
+        },
+        "点我点我点我o(*￣▽￣*)o"
+      ),
     ];
   }
 }

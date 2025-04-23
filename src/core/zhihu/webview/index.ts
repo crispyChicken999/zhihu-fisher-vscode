@@ -528,8 +528,36 @@ export class WebviewManager {
 
     // 模拟滚动到底部加载更多回答
     try {
+      // 滚动前先拿一下当前的滚动高度
+      const scrollHeightBefore = await page.evaluate(() => {
+        return document.body.scrollHeight;
+      });
+
       await PuppeteerManager.simulateHumanScroll(page);
       await PuppeteerManager.delay(1000);
+
+      // 滚动后获取新的滚动高度
+      const scrollHeightAfter = await page.evaluate(() => {
+        return document.body.scrollHeight;
+      });
+
+      // 如果滚动高度没有变化，可能是加载完成了，认为是已经触及页面底部，那么应该中断加载
+      if (scrollHeightBefore === scrollHeightAfter) {
+        console.log(
+          "滚动后页面高度没有变化，可能已经加载完成，停止加载更多回答。"
+        );
+        webviewItem.article.loadComplete = true; // 设置为加载完成
+        webviewItem.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
+        // 更新已加载的回答数量，因为有时候页面中显示的回答总数和页面回答的实际数量不匹配，如果滚动到底部，数量不一致则以实际数量为准
+        webviewItem.article.totalAnswerCount =
+          webviewItem.article.loadedAnswerCount;
+        this.updateWebview(webviewId); // 更新WebView内容
+        return;
+      } else {
+        console.log(
+          `滚动后页面高度变化：${scrollHeightBefore}px -> ${scrollHeightAfter}px，认为有更多内容`
+        );
+      }
 
       // 滚动后再次检查页面是否已关闭
       if (!Store.webviewMap.has(webviewId)) {
