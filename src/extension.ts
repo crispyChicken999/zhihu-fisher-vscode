@@ -12,14 +12,6 @@ export function activate(context: vscode.ExtensionContext) {
   // 创建知乎服务实例
   const zhihuService = new ZhihuService();
 
-  // 创建知乎推荐视图提供者，让推荐先开始爬，热榜很快就加载完成的
-  const sidebarRecommendList = new sidebarRecommendListDataProvider();
-  // 注册知乎推荐视图
-  const recommendListView = vscode.window.createTreeView("zhihuRecommendList", {
-    treeDataProvider: sidebarRecommendList,
-    showCollapseAll: false,
-  });
-
   // 创建知乎热榜视图提供者
   const sidebarHotList = new sidebarHotListDataProvider();
   // 注册知乎热榜视图
@@ -33,6 +25,14 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册知乎搜索视图
   const searchListView = vscode.window.createTreeView("zhihuSearchList", {
     treeDataProvider: sidebarSearchList,
+    showCollapseAll: false,
+  });
+
+  // 创建知乎推荐视图提供者，让推荐先开始爬，热榜很快就加载完成的
+  const sidebarRecommendList = new sidebarRecommendListDataProvider();
+  // 注册知乎推荐视图
+  const recommendListView = vscode.window.createTreeView("zhihuRecommendList", {
+    treeDataProvider: sidebarRecommendList,
     showCollapseAll: false,
   });
 
@@ -54,19 +54,22 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // 注册重置搜索结果 resetSearchList
+  const resetSearchListCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.resetSearchList",
+    () => {
+      sidebarSearchList.refresh();
+    }
+  );
+
   // 注册搜索命令
   const searchContentCommand = vscode.commands.registerCommand(
     "zhihu-fisher.searchContent",
     async () => {
-      const query = await vscode.window.showInputBox({
-        prompt: "请输入要搜索的内容",
-        placeHolder: "输入关键词搜索知乎内容",
-      });
-
       // 检查热榜列表是否正在加载中
       if (Store.Zhihu.hot.isLoading) {
         vscode.window.showInformationMessage(
-          "热榜列表正在加载中，请稍候再试..."
+          "爬虫繁忙（热榜列表正在加载中，请稍候再试...）"
         );
         return;
       }
@@ -78,6 +81,11 @@ export function activate(context: vscode.ExtensionContext) {
         );
         return;
       }
+
+      const query = await vscode.window.showInputBox({
+        prompt: "请输入要搜索的内容",
+        placeHolder: "输入关键词搜索知乎内容",
+      });
 
       if (query) {
         await sidebarSearchList.searchContent(query);
@@ -125,9 +133,10 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       const success = await zhihuService.setCookie();
       if (success) {
-        // 设置Cookie成功后刷新热榜和推荐
+        // 设置Cookie成功后刷新热榜、推荐和搜索列表
         sidebarHotList.refresh();
         sidebarRecommendList.refresh();
+        sidebarSearchList.refresh();
       }
     }
   );
@@ -181,6 +190,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(searchListView);
   context.subscriptions.push(refreshHotListCommand);
   context.subscriptions.push(refreshRecommendListCommand);
+  context.subscriptions.push(resetSearchListCommand);
   context.subscriptions.push(searchContentCommand);
   context.subscriptions.push(openArticleCommand);
   context.subscriptions.push(setCookieCommand);

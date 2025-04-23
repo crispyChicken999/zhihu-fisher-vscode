@@ -31,6 +31,9 @@ export class ZhihuService {
   /** 清空Cookie */
   clearCookie(): void {
     this.cookieManager.clearCookie();
+    this.hotListManager.clearList();
+    this.recommendListManager.clearList();
+    this.searchManager.clearList();
   }
 
   /** 获取推荐列表 */

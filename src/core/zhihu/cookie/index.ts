@@ -76,7 +76,7 @@ export class CookieManager {
   // 设置cookie
   async setCookie(): Promise<boolean> {
     const result = await vscode.window.showInputBox({
-      prompt: "请输入知乎Cookie，可以从浏览器中复制",
+      prompt: "请输入知乎Cookie",
       placeHolder: "复制浏览器中的完整Cookie值",
       password: true, // 将输入框显示为密码框以保护隐私
     });
@@ -102,6 +102,8 @@ export class CookieManager {
     // 重新拿一下热榜和推荐
     vscode.commands.executeCommand("zhihu-fisher.refreshHotList");
     vscode.commands.executeCommand("zhihu-fisher.refreshRecommendList");
+    // reset search
+    vscode.commands.executeCommand("zhihu-fisher.resetSearchList");
   }
 
   // 获取当前 cookie

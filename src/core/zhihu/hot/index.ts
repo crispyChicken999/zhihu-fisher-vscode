@@ -147,4 +147,11 @@ export class HotListManager {
       Store.Zhihu.hot.isLoading = false;
     }
   }
+
+  // 清空热榜列表
+  clearList() {
+    console.log("清空知乎热榜列表");
+    Store.Zhihu.hot.list = []; // 清空热榜列表
+    Store.Zhihu.hot.isLoading = false; // 重置加载状态
+  }
 }

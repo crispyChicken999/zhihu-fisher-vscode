@@ -70,7 +70,6 @@ export class sidebarHotListDataProvider
 
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error("加载知乎热榜失败:", errorMsg);
-      vscode.window.showErrorMessage(`加载知乎热榜失败: ${errorMsg}`);
     }
   }
 
@@ -116,7 +115,8 @@ export class sidebarHotListDataProvider
           {
             command: "zhihu-fisher.setCookie",
             title: "设置知乎Cookie",
-          }
+          },
+          "点我设置Cookie\n【获取方式】去到知乎首页，登陆自己的账号，然后点击F12打开开发者工具，\n选择Network选项卡，刷新页面，点击一个请求，找到请求头Request Headers，\n里面Cookie字段，复制值的所有内容，粘贴到VSCode的输入框里面。\n"
         ),
       ];
     }
@@ -128,7 +128,8 @@ export class sidebarHotListDataProvider
         {
           command: "zhihu-fisher.refreshHotList",
           title: "刷新知乎热榜",
-        }
+        },
+        "点我刷新热榜"
       ),
     ];
   }

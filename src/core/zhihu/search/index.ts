@@ -226,4 +226,14 @@ export class SearchManager {
       }
     }
   }
+
+  /**
+   * 清空搜索列表
+   */
+  clearList(): void {
+    console.log("清空搜索列表...");
+    Store.Zhihu.search.list = []; // 清空搜索列表
+    Store.Zhihu.search.isLoading = false; // 重置加载状态
+    Store.Zhihu.search.currentQuery = ""; // 清空当前搜索词
+  }
 }

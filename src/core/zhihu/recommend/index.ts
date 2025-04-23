@@ -185,4 +185,11 @@ export class RecommendListManager {
       }
     }
   }
+
+  // 清空推荐列表
+  clearList(): void {
+    console.log("清空推荐列表...");
+    Store.Zhihu.recommend.list = [];
+    Store.Zhihu.recommend.isLoading = false;
+  }
 }

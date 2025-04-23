@@ -29,7 +29,7 @@ export class sidebarSearchListDataProvider
   // 刷新树视图
   refresh(): void {
     console.log("触发知乎搜索结果刷新...");
-    this._onDidChangeTreeData.fire();
+    this.searchContent("");
   }
 
   // 执行搜索
@@ -41,19 +41,14 @@ export class sidebarSearchListDataProvider
       return;
     }
 
-    // 如果没有输入关键词
-    if (!query) {
-      return;
-    }
-
     try {
       Store.Zhihu.search.isLoading = true;
       this.loadingStatusItem.show();
-
-      console.log(`开始搜索知乎内容: "${query}"`);
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
 
-      await Store.Zhihu.searchManager.search(query);
+      if (query) {
+        await Store.Zhihu.searchManager.search(query);
+      }
       const list = Store.Zhihu.search.list;
       console.log(`搜索完成，获取到${list.length}个搜索结果`);
 
@@ -66,7 +61,11 @@ export class sidebarSearchListDataProvider
           `搜索完成，共找到${list.length}条相关内容`
         );
       } else {
-        vscode.window.showInformationMessage(`未找到与"${query}"相关的内容`);
+        if (query) {
+          vscode.window.showInformationMessage(
+            `搜索完成，但没有找到与"${query}"相关的内容`
+          );
+        }
       }
     } catch (error) {
       Store.Zhihu.search.isLoading = false;
@@ -88,6 +87,25 @@ export class sidebarSearchListDataProvider
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (element) {
       return []; // 搜索结果项没有子项
+    }
+
+    // 如果没有数据也不在加载中，可能是初次加载失败，显示提示
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const cookie = config.get<string>("cookie") || "";
+
+    if (!cookie) {
+      // 如果没有设置cookie，显示需要设置cookie的提示
+      return [
+        new StatusTreeItem(
+          "需要设置知乎Cookie才能搜索内容",
+          new vscode.ThemeIcon("key"),
+          {
+            command: "zhihu-fisher.setCookie",
+            title: "设置知乎Cookie",
+          },
+          "点我设置Cookie\n【获取方式】去到知乎首页，登陆自己的账号，然后点击F12打开开发者工具，\n选择Network选项卡，刷新页面，点击一个请求，找到请求头Request Headers，\n里面Cookie字段，复制值的所有内容，粘贴到VSCode的输入框里面。\n"
+        ),
+      ];
     }
 
     // 如果正在加载，显示一个加载项
