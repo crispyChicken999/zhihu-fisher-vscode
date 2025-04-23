@@ -1,7 +1,7 @@
 # 🐟 知乎摸鱼 🐟 (Zhihu Fisher)
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.0.8-green.svg)
+![Version](https://img.shields.io/badge/version-0.0.9-green.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。
 
@@ -25,7 +25,6 @@
 > Cookie 获取方式：
 >
 > - 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可。
-> - 也可以在 Console 中输入`document.cookie`，然后复制粘贴到 VSCode 中输入框即可。
 
 ## 🚀 主要功能 🚀
 
@@ -36,6 +35,11 @@
 5. 键盘左右箭头可以切换上一个/下一个回答
 
 ## 💥 Changelog 💥
+
+- 0.0.9
+
+  - 优化了 Cookie 的处理方式，增加了获取 Cookie 的提示，避免用户输入错误。
+  - 对 Cookie 清除操作进行了优化，确保页面能够正确响应。
 
 - 0.0.8
 
@@ -61,6 +65,8 @@
 ## 🐞 已知问题 🐞
 
 1.  推荐列表可能加载不出来，可能跟 Cookie 中 BEC 参数有关，那么需要你前往知乎首页，点击推荐切换到推荐列表，然后刷新页面，获取新的 Cookie，粘贴到 VSCode 中即可。（我猜这个参数可能记录了用户的操作，比如之前切换到热榜列表，那么下次打开知乎也切到热榜，所以需要切到推荐后再拿 Cookie）
+2.  如果遇到卡住的问题，有可能是Cookie过期了，因为频繁获取信息可能会被知乎限制，那么重新打开知乎，获取新的 Cookie，粘贴到 VSCode 中即可。
+3.  欢迎在 Issues 中反馈问题，或者直接在插件中反馈问题，我会尽快修复。
 
 ## 🔧 实现原理 🔧
 
