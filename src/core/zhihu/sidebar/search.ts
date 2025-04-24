@@ -1,6 +1,9 @@
-import { StatusTreeItem, TreeItem } from "../../types";
 import * as vscode from "vscode";
+import * as Puppeteer from "puppeteer";
 import { Store } from "../../stores";
+import { CookieManager } from "../cookie";
+import { PuppeteerManager } from "../puppeteer";
+import { StatusTreeItem, TreeItem, LinkItem } from "../../types";
 
 /**
  * 侧边栏的知乎搜索-树数据提供者
@@ -17,6 +20,7 @@ export class sidebarSearchListDataProvider
   > = this._onDidChangeTreeData.event;
 
   private loadingStatusItem: vscode.StatusBarItem;
+  private canCreateBrowser: boolean = false; // 是否可以创建浏览器实例
 
   constructor() {
     this.loadingStatusItem = vscode.window.createStatusBarItem(
@@ -32,6 +36,11 @@ export class sidebarSearchListDataProvider
     this.searchContent("");
   }
 
+  // 检查浏览器是否可用
+  private async isBrowserAvaliable() {
+    this.canCreateBrowser = await PuppeteerManager.canCreateBrowser();
+  }
+
   // 执行搜索
   async searchContent(query: string): Promise<void> {
     // 避免重复加载
@@ -42,17 +51,17 @@ export class sidebarSearchListDataProvider
     }
 
     try {
-      Store.Zhihu.search.isLoading = true;
+      Store.Zhihu.search.isLoading = true; // 设置加载状态
       this.loadingStatusItem.show();
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
 
       if (query) {
-        await Store.Zhihu.searchManager.search(query);
+        await this.search(query);
       }
       const list = Store.Zhihu.search.list;
       console.log(`搜索完成，获取到${list.length}个搜索结果`);
 
-      Store.Zhihu.search.isLoading = false;
+      Store.Zhihu.search.isLoading = false; // 重置加载状态
       this.loadingStatusItem.hide();
       this._onDidChangeTreeData.fire(); // 再次触发更新UI，显示搜索结果
 
@@ -78,6 +87,232 @@ export class sidebarSearchListDataProvider
     }
   }
 
+  /**
+   * 执行知乎搜索
+   * @param query 搜索关键词
+   * @returns 搜索结果列表
+   */
+  async search(query: string): Promise<LinkItem[]> {
+    const isCookieSet = CookieManager.isCookieSet();
+    if (!isCookieSet) {
+      CookieManager.promptForNewCookie("需要知乎Cookie才能搜索内容，请设置");
+      throw new Error("需要设置知乎Cookie才能访问");
+    }
+
+    console.log(`开始搜索知乎内容: "${query}"`);
+
+    Store.Zhihu.search.isLoading = true; // 设置加载状态
+    Store.Zhihu.search.currentQuery = query; // 保存当前搜索词
+
+    // 创建并获取浏览器页面
+    const page = await PuppeteerManager.createPage();
+
+    // 构建搜索URL（搜索回答内容）
+    const searchUrl = `https://www.zhihu.com/search?q=${encodeURIComponent(
+      query
+    )}&type=content&vertical=answer`;
+
+    console.log(`导航到知乎搜索页面: ${searchUrl}`);
+    await page.goto(searchUrl, {
+      waitUntil: "networkidle0",
+      timeout: 30000, // 30秒超时
+    });
+
+    PuppeteerManager.setPageInstance("search", page); // 设置页面实例
+
+    try {
+      console.log("页面加载完成，开始读取页面...");
+      await PuppeteerManager.simulateHumanScroll(page);
+      await PuppeteerManager.delay(500);
+
+      // 检查是否有登录墙或验证码
+      const hasLoginWall = await page.evaluate(() => {
+        const loginElements =
+          document.querySelectorAll("button, a, div").length > 0
+            ? Array.from(document.querySelectorAll("button, a, div")).some(
+                (el) =>
+                  el.textContent?.includes("登录") &&
+                  (el.tagName === "BUTTON" ||
+                    el.classList.contains("SignContainer"))
+              )
+            : false;
+        const captchaElements =
+          document.querySelectorAll(
+            '[class*="captcha"], [class*="verify"], [class*="Captcha"], [class*="Verify"]'
+          ).length > 0;
+        return loginElements || captchaElements;
+      });
+
+      // 如果有登录墙
+      if (hasLoginWall) {
+        console.log("检测到登录墙或验证码");
+        if (isCookieSet) {
+          // 如果已经有cookie但仍然被拦截，可能是cookie过期
+          console.log("Cookie可能已失效，需要更新");
+          CookieManager.promptForNewCookie("您的知乎Cookie可能已过期，请更新");
+          throw new Error("知乎Cookie已失效，请更新");
+        } else {
+          // 如果没有cookie且被拦截
+          console.log("需要设置Cookie才能访问");
+          CookieManager.promptForNewCookie(
+            "需要知乎Cookie才能搜索内容，请设置"
+          );
+          throw new Error("需要设置知乎Cookie才能访问");
+        }
+      }
+
+      console.log("开始提取搜索结果内容...");
+
+      // 尝试滚动页面加载更多内容
+      await this.scrollToLoadMore(page);
+
+      const searchResults = await this.parseSearchResults(page, query);
+      console.log(`成功解析出${searchResults.length}个搜索结果`);
+      console.log("搜索结果解析完成，更新Store...");
+      Store.Zhihu.search.list = searchResults; // 更新搜索结果列表
+      return searchResults;
+    } catch (error) {
+      console.error("搜索失败:", error);
+      // 处理错误
+      if (error instanceof Puppeteer.TimeoutError) {
+        console.error("页面加载超时，可能是网络问题或知乎反爬虫机制");
+      } else {
+        console.error("发生错误:", (error as Error).message);
+      }
+      throw error;
+    } finally {
+      console.log("关闭知乎搜索页面...");
+      await page.close(); // 关闭页面
+      // 重置加载状态
+      Store.Zhihu.search.isLoading = false;
+    }
+  }
+
+  /**
+   * 解析搜索结果
+   * @param page Puppeteer页面实例
+   * @param query 搜索关键词
+   * @returns 搜索结果列表
+   */
+  private async parseSearchResults(
+    page: Puppeteer.Page,
+    query: string
+  ): Promise<LinkItem[]> {
+    const searchResults = await page.evaluate((searchQuery) => {
+      const items: LinkItem[] = [];
+
+      // 查找所有搜索结果条目
+      const resultItems = Array.from(document.querySelectorAll(".List-item"));
+
+      if (resultItems.length > 0) {
+        console.log(`找到${resultItems.length}个搜索结果项`);
+
+        resultItems.forEach((item, index) => {
+          try {
+            // 提取问题信息
+            const questionMeta = item.querySelector(
+              'div[itemprop="zhihu:question"]'
+            );
+            if (!questionMeta) {
+              return;
+            }
+
+            // 提取问题URL和标题
+            const urlMeta = questionMeta.querySelector('meta[itemprop="url"]');
+            const titleMeta = questionMeta.querySelector(
+              'meta[itemprop="name"]'
+            );
+
+            if (!urlMeta || !titleMeta) {
+              return;
+            }
+
+            const url = (urlMeta as HTMLMetaElement).content || "";
+            const title = (titleMeta as HTMLMetaElement).content || "";
+            const id = `search-${url.split("/").pop()}-${index}`;
+
+            // 提取回答内容摘要
+            const contentElement = item.querySelector(".RichText");
+            let excerpt = contentElement
+              ? contentElement.textContent || ""
+              : "";
+
+            // 如果摘要太长，截断它
+            if (excerpt.length > 150) {
+              excerpt = excerpt.substring(0, 147) + "...";
+            }
+
+            // 如果该结果已存在，则跳过
+            if (items.some((existingItem) => existingItem.id === id)) {
+              console.log(`搜索结果 #${index + 1} 已存在，跳过...`);
+              return;
+            }
+
+            items.push({
+              id,
+              url,
+              title,
+              excerpt,
+            });
+
+            console.log(`成功解析搜索结果 #${index + 1}: ${title}`);
+          } catch (error) {
+            console.error(`解析搜索结果 #${index + 1} 时出错:`, error);
+          }
+        });
+      } else {
+        console.log("未找到搜索结果");
+      }
+
+      return items;
+    }, query);
+
+    return searchResults;
+  }
+
+  /**
+   * 滚动页面加载更多内容
+   * @param page Puppeteer页面实例
+   */
+  private async scrollToLoadMore(page: Puppeteer.Page) {
+    let scrollAttempts = 3; // 滚动尝试次数
+    for (let i = 0; i < scrollAttempts; i++) {
+      console.log(`执行页面滚动 #${i + 1}/${scrollAttempts}`);
+      const scrollHeight = await page.evaluate(() => {
+        return document.body.scrollHeight;
+      });
+
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
+      await PuppeteerManager.delay(500); // 等待加载
+
+      const newScrollHeight = await page.evaluate(() => {
+        return document.body.scrollHeight;
+      });
+
+      if (newScrollHeight > scrollHeight) {
+        console.log(
+          `滚动高度: ${scrollHeight}px -> ${newScrollHeight}px，认为有更多内容`
+        );
+        console.log("成功加载更多内容");
+      } else {
+        console.log("没有更多内容可加载");
+      }
+    }
+  }
+
+  /**
+   * 清空搜索列表
+   */
+  clearList(): void {
+    console.log("清空搜索列表...");
+    Store.Zhihu.search.list = []; // 清空搜索列表
+    Store.Zhihu.search.isLoading = false; // 重置加载状态
+    Store.Zhihu.search.currentQuery = ""; // 清空当前搜索词
+  }
+
   // 获取树项
   getTreeItem(element: TreeItem): vscode.TreeItem {
     return element;
@@ -89,11 +324,25 @@ export class sidebarSearchListDataProvider
       return []; // 搜索结果项没有子项
     }
 
-    // 如果没有数据也不在加载中，可能是初次加载失败，显示提示
-    const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    const cookie = config.get<string>("cookie") || "";
+    // 检查浏览器是否可用
+    await this.isBrowserAvaliable();
+    if (!this.canCreateBrowser) {
+      // 如果不能创建浏览器，显示提示
+      return [
+        new StatusTreeItem(
+          "无法创建浏览器，点我安装爬虫浏览器",
+          new vscode.ThemeIcon("error"),
+          {
+            command: "zhihu-fisher.installBrowser",
+            title: "安装爬虫浏览器",
+          },
+          "点我安装爬虫浏览器\n 【原因】：\n插件依赖Puppeteer去爬取页面数据，如果没有安装浏览器，或者安装的浏览器版本不匹配，\n就会导致无法创建浏览器实例，进而无法爬取数据。\n 【解决方法】：\n点我开始安装~马上就愉快摸鱼啦。\n 爬虫浏览器的安装目录为：C:\\Users\\用户名\\.cache\\puppeteer\\chrome\\win64-135.0.7049.84\\chrome-win64\\chrome.exe\n【注意】：\n安装完成后，请重启VSCode。"
+        ),
+      ];
+    }
 
-    if (!cookie) {
+    const isCookieSet = CookieManager.isCookieSet();
+    if (!isCookieSet) {
       // 如果没有设置cookie，显示需要设置cookie的提示
       return [
         new StatusTreeItem(

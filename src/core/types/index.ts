@@ -1,8 +1,5 @@
 import * as Puppeteer from "puppeteer";
 import { CookieManager } from "../zhihu/cookie";
-import { RecommendListManager } from "../zhihu/recommend";
-import { HotListManager } from "../zhihu/hot";
-import { SearchManager } from "../zhihu/search";
 import { PuppeteerManager } from "../zhihu/puppeteer";
 import { WebviewManager } from "../zhihu/webview";
 import * as vscode from "vscode";
@@ -29,8 +26,6 @@ export interface ContentStore {
       /** 推荐列表 */
       list: LinkItem[];
     };
-    /** 推荐列表管理器实例对象 */
-    recommendListManager: RecommendListManager;
 
     /** 知乎热榜列表数据 */
     hot: {
@@ -39,8 +34,6 @@ export interface ContentStore {
       /** 热榜列表 */
       list: LinkItem[];
     };
-    /** 热榜管理器实例对象 */
-    hotListManager: HotListManager;
 
     /** 知乎搜索数据 */
     search: {
@@ -51,8 +44,6 @@ export interface ContentStore {
       /** 搜索结果列表 */
       list: LinkItem[];
     };
-    /** 搜索管理器实例对象 */
-    searchManager: SearchManager;
 
     /** 知乎的Cookie */
     cookieInfo: CookieInfo;

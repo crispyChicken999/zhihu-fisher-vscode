@@ -1,7 +1,9 @@
-import * as Puppeteer from "puppeteer";
-import { Store } from "../../stores";
 import * as vscode from "vscode";
+import * as fs from "fs";
 import * as path from "path";
+import { Store } from "../../stores";
+import * as Puppeteer from "puppeteer";
+import { CookieManager } from "../cookie";
 
 export class PuppeteerManager {
   /**
@@ -11,27 +13,9 @@ export class PuppeteerManager {
     if (!Store.browserInstance) {
       console.log("创建新的浏览器实例...");
 
-      function getChromiumPath() {
-        if (process.env.NODE_ENV === "development") {
-          // 开发环境下路径
-          return path.join(__dirname, "chrome-win64", "chrome.exe");
-        } else {
-          // 打包后路径
-          return path.join(
-            __dirname,
-            "..",
-            "..",
-            "..",
-            "resources",
-            "chrome-win64",
-            "chrome.exe"
-          );
-        }
-      }
-
       try {
         Store.browserInstance = await Puppeteer.launch({
-          executablePath: getChromiumPath(),
+          executablePath: Puppeteer.executablePath(),
           headless: true,
           args: [
             "--no-sandbox",
@@ -42,42 +26,42 @@ export class PuppeteerManager {
       } catch (error) {
         console.error("创建浏览器实例失败:", error);
 
-        // 显示错误通知，提示用户运行特定命令以获取浏览器缓存
-        const message = "无法创建浏览器实例，可能是因为找不到浏览器chrome.exe";
-        const action = "查看解决方案";
-
+        // 显示错误通知，提示用户运行特定命令以获取浏览器
+        const message =
+          "无法创建爬虫浏览器，可能是找不到爬虫浏览器的chrome.exe路径";
+        const action = "点击安装爬虫浏览器";
         const selection = await vscode.window.showErrorMessage(message, action);
 
+        // 用户点击了安装浏览器的操作，执行安装命令
         if (selection === action) {
-          // 打开终端并运行命令 npx puppeteer browsers install chrome@135.0.7049.84
-          const terminal = vscode.window.createTerminal("Puppeteer");
-          terminal.show();
-          terminal.sendText(
-            "npx puppeteer browsers install chrome@135.0.7049.84"
-          );
-          vscode.window.showInformationMessage(
-            "请在终端中运行命令：npx puppeteer browsers install chrome@135.0.7049.84"
-          );
-
-          // 安装完成后请重启VSCode
-          vscode.window
-            .showInformationMessage(
-              "安装完成后请重启VSCode以加载新的浏览器实例",
-              "重启VSCode"
-            )
-            .then((selection) => {
-              if (selection === "重启VSCode") {
-                vscode.commands.executeCommand("workbench.action.reloadWindow");
-              }
-            });
+          vscode.commands.executeCommand("zhihu-fisher.installBrowser");
         }
-
         throw new Error(
-          "浏览器缺失，请运行命令：npx puppeteer browsers install chrome"
+          "浏览器缺失，请运行命令：npx puppeteer browsers install chrome@135.0.7049.84"
         );
       }
     }
     return Store.browserInstance;
+  }
+
+  /**
+   * 可以创建浏览器，说明系统中有安装浏览器，那么就继续执行下一步操作
+   * @returns 是否可以创建浏览器实例
+   */
+  static async canCreateBrowser(): Promise<boolean> {
+    const executablePath = Puppeteer.executablePath();
+    // console.log("Puppeteer里面的executablePath: ", executablePath);
+    const normalizedPath = path.normalize(executablePath);
+    // console.log("规范化后的浏览器路径: ", normalizedPath);
+    // console.log('666',fs.existsSync("C:\\Users"));
+
+    if (fs.existsSync(normalizedPath)) {
+      console.log("可以创建浏览器实例");
+      return true;
+    } else {
+      console.error("无法创建浏览器实例，浏览器路径不存在:", normalizedPath);
+      return false;
+    }
   }
 
   /**
@@ -104,6 +88,13 @@ export class PuppeteerManager {
    * 创建新的页面
    */
   static async createPage(): Promise<Puppeteer.Page> {
+    // 创建页面前先看看能不能创建浏览器实例
+    const canCreateBrowser = await PuppeteerManager.canCreateBrowser();
+    if (!canCreateBrowser) {
+      console.error("无法创建浏览器实例，无法创建页面");
+      throw new Error("无法创建浏览器实例，无法创建页面");
+    }
+
     const browser = await PuppeteerManager.getBrowserInstance();
 
     console.log("打开新页面...");
@@ -118,7 +109,7 @@ export class PuppeteerManager {
     );
 
     // 如果有cookie，设置到页面
-    const cookie = Store.Zhihu.cookieManager.getCookie();
+    const cookie = CookieManager.getCookie();
     if (cookie) {
       await PuppeteerManager.addCookiesToPage(cookie);
     } else {

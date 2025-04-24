@@ -13,18 +13,15 @@ export const Store: ContentStore = {
       list: [],
       isLoading: false,
     },
-    hotListManager: null as any,
     recommend: {
       list: [],
       isLoading: false,
     },
-    recommendListManager: null as any,
     search: {
       list: [],
       isLoading: false,
       currentQuery: "",
     },
-    searchManager: null as any,
     cookieInfo: {
       cookie: "",
       lastUpdated: null,

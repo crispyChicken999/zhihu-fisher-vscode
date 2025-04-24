@@ -3,13 +3,10 @@ import { CookieInfo } from "../../types";
 import { Store } from "../../stores";
 
 export class CookieManager {
-  constructor() {
-    // 初始化时读取已有的cookie
-    this.loadCookie();
-  }
+  static isAlerting: boolean = false; // 是否正在提醒更新cookie
 
   // 加载已保存的cookie
-  private loadCookie(): void {
+  static loadCookie(): void {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const cookie = config.get<string>("cookie") || "";
 
@@ -21,7 +18,7 @@ export class CookieManager {
         Store.Zhihu.cookieInfo = cookieInfo;
 
         // 检查cookie是否过期
-        this.checkCookieExpiration();
+        CookieManager.checkCookieExpiration();
       } catch {
         // 如果解析失败，说明cookie是直接存储的字符串
         Store.Zhihu.cookieInfo = {
@@ -30,13 +27,13 @@ export class CookieManager {
         };
 
         // 更新格式
-        this.saveCookieInfo();
+        CookieManager.saveCookieInfo();
       }
     }
   }
 
   // 检查cookie是否需要更新
-  private checkCookieExpiration(): void {
+  private static checkCookieExpiration(): void {
     if (!Store.Zhihu.cookieInfo.lastUpdated) {
       return;
     }
@@ -64,7 +61,7 @@ export class CookieManager {
   }
 
   // 保存cookie信息
-  private saveCookieInfo(): void {
+  private static saveCookieInfo(): void {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     config.update(
       "cookie",
@@ -74,7 +71,7 @@ export class CookieManager {
   }
 
   // 设置cookie
-  async setCookie(): Promise<boolean> {
+  static async setCookie(): Promise<boolean> {
     const result = await vscode.window.showInputBox({
       prompt: "请输入知乎Cookie",
       placeHolder: "复制浏览器中的完整Cookie值",
@@ -86,7 +83,7 @@ export class CookieManager {
         cookie: result,
         lastUpdated: Date.now(),
       };
-      this.saveCookieInfo();
+      CookieManager.saveCookieInfo();
       vscode.window.showInformationMessage("知乎Cookie设置成功");
       return true;
     }
@@ -94,7 +91,7 @@ export class CookieManager {
   }
 
   // 清除cookie
-  clearCookie(): void {
+  static clearCookie(): void {
     Store.Zhihu.cookieInfo = { cookie: "" };
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     config.update("cookie", "", vscode.ConfigurationTarget.Global);
@@ -102,23 +99,35 @@ export class CookieManager {
     // 重新拿一下热榜和推荐
     vscode.commands.executeCommand("zhihu-fisher.refreshHotList");
     vscode.commands.executeCommand("zhihu-fisher.refreshRecommendList");
-    // reset search
+    // 重新刷新一下搜索列表
     vscode.commands.executeCommand("zhihu-fisher.resetSearchList");
   }
 
   // 获取当前 cookie
-  getCookie(): string {
+  static getCookie(): string {
     return Store.Zhihu.cookieInfo.cookie;
   }
 
+  // 查看vscode配置看看cookie有没有设置，isCookieSet
+  static isCookieSet(): boolean {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const cookie = config.get<string>("cookie") || "";
+    return !!cookie;
+  }
+
   // 提示用户更新Cookie
-  promptForNewCookie(message: string): void {
+  static promptForNewCookie(message: string): void {
+    CookieManager.isAlerting = true; // 设置正在提醒更新cookie的状态
     vscode.window
-      .showWarningMessage(message, "设置Cookie", "忽略")
+      .showWarningMessage(message, "设置Cookie")
       .then((selection) => {
         if (selection === "设置Cookie") {
           vscode.commands.executeCommand("zhihu-fisher.setCookie");
         }
       });
+
+    setTimeout(() => {
+      CookieManager.isAlerting = false; // 5秒后重置提醒状态
+    }, 5000); // 5秒后重置提醒状态
   }
 }

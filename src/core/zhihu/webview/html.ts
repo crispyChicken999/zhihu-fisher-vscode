@@ -48,6 +48,8 @@ export class HtmlRenderer {
             align-items: center;
             justify-content: center;
             height: 80vh;
+            min-height: 500px;
+            overflow: auto;
           }
           .loading-spinner {
             flex: 0 0 auto;
@@ -499,7 +501,14 @@ export class HtmlRenderer {
                       p-id="6782"
                     ></path>
                   </svg>
-                  <span>键盘⬅ ➡切换上/下一条</span>
+                  <div style="display: inline-flex; align-items: center; gap: 5px;">
+                    <span>键盘</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE --><path fill="currentColor" d="m7 12l5-5v3h4v4h-4v3zm14-7v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2m-2 0H5v14h14z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE --><path fill="currentColor" d="m17 12l-5 5v-3H8v-4h4V7zM3 19V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2m2 0h14V5H5z"/></svg>
+                    <span>切换上/下一条，</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Remix Icon by Remix Design - https://github.com/Remix-Design/RemixIcon/blob/master/License --><path fill="currentColor" d="M5 2a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3zM4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5.723 13L16.58 6h-2.303L7.42 18z"/></svg>
+                    <span>显示/隐藏图片</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -611,6 +620,9 @@ export class HtmlRenderer {
                   loadNextAnswer();
                   event.preventDefault(); // 阻止默认行为
                 }
+              } else if (event.key === "/") {
+                toggleImageDisplay();
+                event.preventDefault(); // 阻止默认行为
               }
             });
           </script>
