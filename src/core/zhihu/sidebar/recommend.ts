@@ -45,21 +45,23 @@ export class sidebarRecommendListDataProvider
     this.canCreateBrowser = await PuppeteerManager.canCreateBrowser();
     if (!this.canCreateBrowser) {
       console.log("无法创建浏览器实例，推荐加载失败");
-      Store.Zhihu.hot.isLoading = false; // 重置加载状态
+      Store.Zhihu.recommend.isLoading = false; // 重置加载状态
+      Store.Zhihu.recommend.list = []; // 清空推荐列表
       vscode.window.showErrorMessage(
         "无法创建浏览器实例，推荐加载失败，请检查浏览器安装情况。"
       );
+      this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
       return;
     }
 
     // 避免重复加载
     if (Store.Zhihu.recommend.isLoading) {
       console.log("正在加载中推荐，请稍候...");
+      vscode.window.showInformationMessage("正在加载中推荐，请稍候...");
       return;
     }
 
     try {
-      Store.Zhihu.recommend.isLoading = true; // 设置加载状态
       this.loadingStatusItem.show();
 
       console.log("开始加载知乎推荐数据");
@@ -69,7 +71,6 @@ export class sidebarRecommendListDataProvider
       const list = Store.Zhihu.recommend.list;
       console.log(`加载完成，获取到${list.length}个推荐项目`);
 
-      Store.Zhihu.recommend.isLoading = false; // 重置加载状态
       this.loadingStatusItem.hide();
       this._onDidChangeTreeData.fire(); // 再次触发更新UI，显示加载结果
 
@@ -281,6 +282,23 @@ export class sidebarRecommendListDataProvider
       return []; // 推荐项没有子项
     }
 
+    const isUserSetCustomPath = PuppeteerManager.isUserSetCustomPath();
+    const isUserChromePathValid = PuppeteerManager.isUserChromePathValid();
+    if (isUserSetCustomPath && !isUserChromePathValid) {
+      // 如果用户设置了自定义路径，并且路径无效，显示提示
+      return [
+        new StatusTreeItem(
+          "自定义浏览器路径无效，请重新设置",
+          new vscode.ThemeIcon("error"),
+          {
+            command: "zhihu-fisher.setCustomChromePath",
+            title: "设置自定义浏览器路径",
+          },
+          "你设置的自定义路径无效，请重新设置。\n 【解决方法】：\n点我重新设置~\n 如果不想用自定义路径，直接输入框留空回车即可。\n 【注意】：\n设置完成后，请重启VSCode。"
+        ),
+      ];
+    }
+
     if (!this.canCreateBrowser) {
       // 如果不能创建浏览器，显示提示
       return [
@@ -317,7 +335,9 @@ export class sidebarRecommendListDataProvider
       return [
         new StatusTreeItem(
           "正在加载知乎推荐...",
-          new vscode.ThemeIcon("loading~spin")
+          new vscode.ThemeIcon("loading~spin"),
+          null,
+          "Puppeteer正在后台访问知乎首页~\n获取推荐数据，请稍候...\n 【注意】：\n如果长时间没有响应，请检查设置中的浏览器路径配置，或者点击标题栏中的刷新按钮。"
         ),
       ];
     }

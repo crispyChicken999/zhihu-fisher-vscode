@@ -52,21 +52,23 @@ export class sidebarHotListDataProvider
     if (!this.canCreateBrowser) {
       console.log("无法创建浏览器实例，热榜加载失败");
       Store.Zhihu.hot.isLoading = false; // 重置加载状态
+      Store.Zhihu.hot.list = []; // 清空热榜列表
       vscode.window.showErrorMessage(
         "无法创建浏览器实例，热榜加载失败，请检查浏览器安装情况。"
       );
+      this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
       return;
     }
 
     // 避免重复加载
     if (Store.Zhihu.hot.isLoading) {
       console.log("正在加载中热榜，请稍候...");
+      vscode.window.showInformationMessage("正在加载知乎热榜，请稍候...");
       return;
     }
 
     try {
       console.log("开始加载知乎热榜数据");
-      Store.Zhihu.hot.isLoading = true; // 设置加载状态
       this.loadingStatusItem.show();
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
 
@@ -74,7 +76,6 @@ export class sidebarHotListDataProvider
       const list = Store.Zhihu.hot.list;
       console.log(`加载完成，获取到${list.length}个热榜项目`);
 
-      Store.Zhihu.hot.isLoading = false; // 重置加载状态
       this.loadingStatusItem.hide();
       this._onDidChangeTreeData.fire(); // 再次触发更新UI，显示加载结果
 
@@ -245,6 +246,23 @@ export class sidebarHotListDataProvider
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (element) {
       return []; // 热榜项没有子项
+    }
+
+    const isUserSetCustomPath = PuppeteerManager.isUserSetCustomPath();
+    const isUserChromePathValid = PuppeteerManager.isUserChromePathValid();
+    if (isUserSetCustomPath && !isUserChromePathValid) {
+      // 如果用户设置了自定义路径，并且路径无效，显示提示
+      return [
+        new StatusTreeItem(
+          "自定义浏览器路径无效，请重新设置",
+          new vscode.ThemeIcon("error"),
+          {
+            command: "zhihu-fisher.setCustomChromePath",
+            title: "设置自定义浏览器路径",
+          },
+          "你设置的自定义路径无效，请重新设置。\n 【解决方法】：\n点我重新设置~\n 如果不想用自定义路径，直接输入框留空回车即可。\n 【注意】：\n设置完成后，请重启VSCode。"
+        ),
+      ];
     }
 
     if (!this.canCreateBrowser) {

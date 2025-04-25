@@ -85,11 +85,11 @@ export class HtmlRenderer {
         <div class="loading-container">
           <div class="loading-spinner"></div>
           <h2>正在加载文章内容...</h2>
-          <h3 style="text-align:center;max-width:500px;">${this.escapeHtml(
+          <h3 style="text-align:center;max-width:600px;">${this.escapeHtml(
             title
           )}</h3>
-          <div style="border: 1px solid var(--vscode-panel-border); width: 80%; max-width:500px; margin: 10px 50px;"></div>
-          <p style="text-align:center;max-width:500px;max-height:200px;overflow:auto;">${this.escapeHtml(
+          <div style="border: 1px solid var(--vscode-panel-border); width:60%; max-width:600px; margin: 10px 30px;"></div>
+          <p style="text-align:center;max-width:600px;max-height:300px;overflow:auto;">${this.escapeHtml(
             excerpt
           )}</p>
           <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
@@ -502,12 +502,16 @@ export class HtmlRenderer {
                     ></path>
                   </svg>
                   <div style="display: inline-flex; align-items: center; gap: 5px;">
-                    <span>键盘</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE --><path fill="currentColor" d="m7 12l5-5v3h4v4h-4v3zm14-7v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2m-2 0H5v14h14z"/></svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE --><path fill="currentColor" d="m17 12l-5 5v-3H8v-4h4V7zM3 19V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2m2 0h14V5H5z"/></svg>
-                    <span>切换上/下一条，</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Remix Icon by Remix Design - https://github.com/Remix-Design/RemixIcon/blob/master/License --><path fill="currentColor" d="M5 2a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3zM4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5.723 13L16.58 6h-2.303L7.42 18z"/></svg>
-                    <span>显示/隐藏图片</span>
+                    <span style="flex: 0 0 auto;">键盘</span>
+                    <div style="display: inline-flex; align-items: center;flex: 0 0 auto;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE --><path fill="currentColor" d="m7 12l5-5v3h4v4h-4v3zm14-7v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2m-2 0H5v14h14z"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE --><path fill="currentColor" d="m17 12l-5 5v-3H8v-4h4V7zM3 19V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2m2 0h14V5H5z"/></svg>
+                    </div>
+                    <span style="flex: 0 0 auto;">切换上/下一条，</span>
+                    <span style="flex: 0 0 auto; display: inline-flex; align-items: center;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Remix Icon by Remix Design - https://github.com/Remix-Design/RemixIcon/blob/master/License --><path fill="currentColor" d="M5 2a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3zM4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5.723 13L16.58 6h-2.303L7.42 18z"/></svg>
+                    </span>
+                    <span style="flex: 0 0 auto;">显示/隐藏图片</span>
                   </div>
                 </div>
               </div>
@@ -808,9 +812,22 @@ export class HtmlRenderer {
     if (!content) {
       return "正在加载中，请稍候..."; // 返回加载提示
     }
-    // 使用cheerio解析HTML并删除所有图片标签
+    // 使用cheerio解析
     const $ = cheerio.load(content);
-    $(".GifPlayer").remove(); // 删除GifPlayer元素
+    // 删除GifPlayer元素
+    $(".GifPlayer").remove();
+    // 如果是svg并且里面有个circle和path元素，则认为是加载视频的按钮，应该去掉这个svg
+    $("svg").each(function () {
+      const hasCircle = $(this).find("circle").length > 0;
+      const hasPath = $(this).find("path").length > 0;
+      if (hasCircle && hasPath) {
+        $(this).remove(); // 删除svg元素
+      }
+    });
+    // 给每个视频加上controls属性以显示视频控件
+    $("video").each(function () {
+      $(this).attr("controls", "controls");
+    });
 
     // 如果启用无图模式，处理HTML内容
     if (hideImages) {

@@ -7,6 +7,53 @@ import { CookieManager } from "../cookie";
 
 export class PuppeteerManager {
   /**
+   * 获取用户配置的Chrome浏览器路径
+   */
+  static getUserChromePath(): string {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    return config.get<string>("customChromePath", "");
+  }
+
+  /**
+   * 设置用户自定义Chrome路径
+   * @param path Chrome可执行文件的绝对路径
+   */
+  static async setUserChromePath(path: string): Promise<void> {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    await config.update(
+      "customChromePath",
+      path,
+      vscode.ConfigurationTarget.Global
+    );
+    if(!path) {
+      console.log("已清除自定义Chrome路径设置");
+    } else {
+      console.log("已设置自定义Chrome路径:", path);
+    }
+  }
+
+  /**
+   * 用户是否设置了自定义Chrome路径
+   * @returns 是否设置了自定义路径
+   */
+  static isUserSetCustomPath(): boolean {
+    const userChromePath = PuppeteerManager.getUserChromePath();
+    return userChromePath !== undefined && userChromePath !== "";
+  }
+
+  /**
+   * 用户自定义的Chrome路径是否合法
+   * @returns 是否存在
+   */
+  static isUserChromePathValid(): boolean {
+    const userChromePath = PuppeteerManager.getUserChromePath();
+    if (userChromePath) {
+      return fs.existsSync(userChromePath);
+    }
+    return false;
+  }
+
+  /**
    * 获取或创建浏览器实例（单例模式）
    */
   static async getBrowserInstance(): Promise<Puppeteer.Browser> {
@@ -14,8 +61,17 @@ export class PuppeteerManager {
       console.log("创建新的浏览器实例...");
 
       try {
+        // 优先获取用户配置的Chrome路径
+        const userChromePath = PuppeteerManager.getUserChromePath();
+        const executablePath = userChromePath || Puppeteer.executablePath();
+
+        // 检查路径是否存在
+        if (userChromePath && !fs.existsSync(userChromePath)) {
+          throw new Error(`自定义Chrome路径不存在: ${userChromePath}`);
+        }
+
         Store.browserInstance = await Puppeteer.launch({
-          executablePath: Puppeteer.executablePath(),
+          executablePath: executablePath,
           headless: true,
           args: [
             "--no-sandbox",
@@ -26,18 +82,53 @@ export class PuppeteerManager {
       } catch (error) {
         console.error("创建浏览器实例失败:", error);
 
-        // 显示错误通知，提示用户运行特定命令以获取浏览器
-        const message =
-          "无法创建爬虫浏览器，可能是找不到爬虫浏览器的chrome.exe路径";
-        const action = "点击安装爬虫浏览器";
-        const selection = await vscode.window.showErrorMessage(message, action);
+        // 获取用户当前的自定义路径设置
+        const userChromePath = PuppeteerManager.getUserChromePath();
 
-        // 用户点击了安装浏览器的操作，执行安装命令
-        if (selection === action) {
-          vscode.commands.executeCommand("zhihu-fisher.installBrowser");
+        // 如果是自定义路径导致的错误，显示特定错误消息
+        if (userChromePath) {
+          const message = `您的自定义Chrome浏览器 "${userChromePath}" 无法正常工作。`;
+          const useDefault = "安装默认浏览器";
+          const changeCustomPath = "更改浏览器路径";
+
+          const selection = await vscode.window.showErrorMessage(
+            message,
+            { modal: true },
+            useDefault,
+            changeCustomPath
+          );
+
+          if (selection === useDefault) {
+            // 清除自定义路径设置
+            await PuppeteerManager.setUserChromePath("");
+            vscode.commands.executeCommand("zhihu-fisher.installBrowser");
+          } else if (selection === changeCustomPath) {
+            vscode.commands.executeCommand("zhihu-fisher.setCustomChromePath");
+          }
+        } else {
+          // 显示标准的错误提示
+          const message =
+            "无法创建爬虫浏览器，可能是找不到爬虫浏览器的chrome.exe路径";
+          const installAction = "安装爬虫浏览器";
+          const useCustomAction = "使用自己的浏览器";
+
+          const selection = await vscode.window.showErrorMessage(
+            message,
+            { modal: true },
+            installAction,
+            useCustomAction
+          );
+
+          // 根据用户选择执行操作
+          if (selection === installAction) {
+            vscode.commands.executeCommand("zhihu-fisher.installBrowser");
+          } else if (selection === useCustomAction) {
+            vscode.commands.executeCommand("zhihu-fisher.setCustomChromePath");
+          }
         }
+
         throw new Error(
-          "浏览器缺失，请运行命令：npx puppeteer browsers install chrome@135.0.7049.84"
+          "无法创建浏览器实例，请设置有效的Chrome浏览器路径或安装Puppeteer浏览器"
         );
       }
     }
@@ -49,11 +140,22 @@ export class PuppeteerManager {
    * @returns 是否可以创建浏览器实例
    */
   static async canCreateBrowser(): Promise<boolean> {
+    // 优先检查用户配置的Chrome路径
+    const userChromePath = PuppeteerManager.getUserChromePath();
+    if (userChromePath) {
+      console.log("用户设置了自定义Chrome浏览器路径:", userChromePath);
+      if (fs.existsSync(userChromePath)) {
+        console.log("可以创建浏览器实例");
+        return true;
+      } else {
+        console.error("无法创建浏览器实例，浏览器路径不存在:", userChromePath);
+        return false;
+      }
+    }
+
+    // 如果没有自定义路径，检查Puppeteer默认路径
     const executablePath = Puppeteer.executablePath();
-    // console.log("Puppeteer里面的executablePath: ", executablePath);
     const normalizedPath = path.normalize(executablePath);
-    // console.log("规范化后的浏览器路径: ", normalizedPath);
-    // console.log('666',fs.existsSync("C:\\Users"));
 
     if (fs.existsSync(normalizedPath)) {
       console.log("可以创建浏览器实例");

@@ -52,23 +52,30 @@
       {
         "command": "zhihu-fisher.toggleImageDisplay",
         "title": "显示/隐藏图片",
-        "icon": {
-          "light": "$(image)",
-          "dark": "$(image)"
-        }
+        "icon": "$(eye)"
+      },
+      {
+        "command": "zhihu-fisher.installBrowser",
+        "title": "安装浏览器",
+        "icon": "$(browser)"
+      },
+      {
+        "command": "zhihu-fisher.setCustomChromePath",
+        "title": "自定义爬虫浏览器",
+        "icon": "$(folder-opened)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "zhihu-fisher",
+          "id": "zhihuFisher",
           "title": "知乎摸鱼",
           "icon": "$(book)"
         }
       ]
     },
     "views": {
-      "zhihu-fisher": [
+      "zhihuFisher": [
         {
           "id": "zhihuRecommendList",
           "name": "推荐",
@@ -91,34 +98,35 @@
     },
     "viewsWelcome": [
       {
-        "view": "zhihuHotList",
-        "contents": "加载知乎热榜中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[设置Cookie](command:zhihu-fisher.setCookie)"
+        "view": "zhihuRecommendList",
+        "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[设置Cookie](command:zhihu-fisher.setCookie)\n\n如果遇到浏览器问题，可以尝试：\n[安装默认爬虫浏览器](command:zhihu-fisher.installBrowser)\n[设置本地浏览器路径](command:zhihu-fisher.setCustomChromePath)"
       },
       {
-        "view": "zhihuRecommendList",
-        "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshRecommendList)\n[设置Cookie](command:zhihu-fisher.setCookie)"
+        "view": "zhihuHotList",
+        "contents": "加载知乎热榜中..."
       },
       {
         "view": "zhihuSearchList",
-        "contents": "点击搜索按钮查找知乎内容...\n[搜索](command:zhihu-fisher.searchContent)\n[设置Cookie](command:zhihu-fisher.setCookie)"
+        "contents": "点击搜索按钮查找知乎内容..."
       }
     ],
+    "submenus": [],
     "menus": {
       "view/title": [
         {
           "command": "zhihu-fisher.refreshHotList",
           "when": "view == zhihuHotList",
-          "group": "navigation@1"
+          "group": "navigation"
         },
         {
           "command": "zhihu-fisher.refreshRecommendList",
           "when": "view == zhihuRecommendList",
-          "group": "navigation@1"
+          "group": "navigation"
         },
         {
           "command": "zhihu-fisher.searchContent",
           "when": "view == zhihuSearchList",
-          "group": "navigation@1"
+          "group": "navigation"
         },
         {
           "command": "zhihu-fisher.setCookie",
@@ -130,6 +138,14 @@
         },
         {
           "command": "zhihu-fisher.toggleImageDisplay",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+        },
+        {
+          "command": "zhihu-fisher.installBrowser",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+        },
+        {
+          "command": "zhihu-fisher.setCustomChromePath",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         }
       ]
@@ -152,6 +168,12 @@
           "type": "number",
           "default": 30,
           "description": "Cookie过期提醒天数（设置cookie后多少天提醒更新）",
+          "scope": "machine"
+        },
+        "zhihu-fisher.customChromePath": {
+          "type": "string",
+          "default": "",
+          "description": "自定义Chrome浏览器路径。如果设置，插件将使用此路径，而不是Puppeteer安装的Chrome",
           "scope": "machine"
         }
       }

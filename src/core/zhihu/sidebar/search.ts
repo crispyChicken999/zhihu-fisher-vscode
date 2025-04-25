@@ -30,10 +30,18 @@ export class sidebarSearchListDataProvider
     this.loadingStatusItem.text = "$(sync~spin) 加载知乎搜索结果中...";
   }
 
-  // 刷新树视图
+  /**
+   * @deprecated 触发刷新搜索结果，用reset()代替
+   */
   refresh(): void {
     console.log("触发知乎搜索结果刷新...");
     this.searchContent("");
+  }
+
+  // 重置搜索状态
+  reset(): void {
+    console.log("重置搜索列表状态");
+    this._onDidChangeTreeData.fire(); // 触发更新UI
   }
 
   // 检查浏览器是否可用
@@ -43,10 +51,23 @@ export class sidebarSearchListDataProvider
 
   // 执行搜索
   async searchContent(query: string): Promise<void> {
+    // 看看能不能创建浏览器实例，不能则认为加载不出搜索结果
+    this.canCreateBrowser = await PuppeteerManager.canCreateBrowser();
+    if (!this.canCreateBrowser) {
+      console.log("无法创建浏览器实例，获取搜索结果失败");
+      Store.Zhihu.search.isLoading = false; // 重置加载状态
+      Store.Zhihu.search.list = []; // 清空搜索结果
+      vscode.window.showErrorMessage(
+        "无法创建浏览器实例，获取搜索结果失败，请检查浏览器安装情况。"
+      );
+      this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
+      return;
+    }
+
     // 避免重复加载
     if (Store.Zhihu.search.isLoading) {
       console.log("正在加载中搜索结果，请稍候...");
-      vscode.window.showInformationMessage("正在搜索中，请稍候...");
+      vscode.window.showInformationMessage("正在加载搜索结果中，请稍候...");
       return;
     }
 
@@ -324,6 +345,23 @@ export class sidebarSearchListDataProvider
       return []; // 搜索结果项没有子项
     }
 
+    const isUserSetCustomPath = PuppeteerManager.isUserSetCustomPath();
+    const isUserChromePathValid = PuppeteerManager.isUserChromePathValid();
+    if (isUserSetCustomPath && !isUserChromePathValid) {
+      // 如果用户设置了自定义路径，并且路径无效，显示提示
+      return [
+        new StatusTreeItem(
+          "自定义浏览器路径无效，请重新设置",
+          new vscode.ThemeIcon("error"),
+          {
+            command: "zhihu-fisher.setCustomChromePath",
+            title: "设置自定义浏览器路径",
+          },
+          "你设置的自定义路径无效，请重新设置。\n 【解决方法】：\n点我重新设置~\n 如果不想用自定义路径，直接输入框留空回车即可。\n 【注意】：\n设置完成后，请重启VSCode。"
+        ),
+      ];
+    }
+
     // 检查浏览器是否可用
     await this.isBrowserAvaliable();
     if (!this.canCreateBrowser) {
@@ -364,7 +402,7 @@ export class sidebarSearchListDataProvider
           `🔍正在知乎搜索【${Store.Zhihu.search.currentQuery}】🔍...`,
           new vscode.ThemeIcon("loading~spin"),
           null,
-          "你看，又急~你干嘛哎哟👉🤡"
+          "你看，又急~你干嘛哎哟👉🤡\n Puppeteer正在后台访问知乎搜索结果~ 马上就好啦(～￣▽￣)～"
         ),
       ];
     }

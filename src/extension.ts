@@ -6,6 +6,8 @@ import { PuppeteerManager } from "./core/zhihu/puppeteer";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
+import * as fs from "fs";
+import * as path from "path";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("🐟知乎摸鱼🐟 已激活！");
@@ -49,7 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册重置搜索结果
   const resetSearchListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.resetSearchList",
-    () => sidebarSearch.refresh()
+    () => sidebarSearch.reset()
   );
 
   // 注册搜索命令
@@ -142,7 +144,7 @@ export function activate(context: vscode.ExtensionContext) {
         // 设置Cookie成功后刷新热榜、推荐和搜索列表
         sidebarHot.refresh();
         sidebarRecommend.refresh();
-        sidebarSearch.refresh();
+        sidebarSearch.reset();
       }
     }
   );
@@ -154,8 +156,7 @@ export function activate(context: vscode.ExtensionContext) {
       zhihuService.clearCookie();
       sidebarHot.refresh();
       sidebarRecommend.refresh();
-      sidebarSearch.refresh();
-      vscode.window.showInformationMessage("已清除知乎Cookie");
+      sidebarSearch.reset();
     }
   );
 
@@ -185,25 +186,32 @@ export function activate(context: vscode.ExtensionContext) {
   const installBrowserCommand = vscode.commands.registerCommand(
     "zhihu-fisher.installBrowser",
     async () => {
-      const title = "安装Puppeteer内置浏览器";
+      const title = "安装Puppeteer默认浏览器";
       const message =
         "请在终端中运行以下命令安装浏览器：\n" +
         "npx puppeteer browsers install chrome@135.0.7049.84\n" +
         "\n" +
         "点击【安装浏览器】按钮会自动开始安装\n" +
         "\n" +
-        "【安装目录】\n" +
+        "【安装目录】(～￣▽￣)～\n" +
         "C:\\Users\\{USERNAME}\\.cache\\puppeteer\\chrome\n" +
         "\\win64-135.0.7049.84\\chrome-win64\\chrome.exe\n" +
         "\n" +
-        "【注意】安装完成后，请重启VSCode。\n" +
-        "\n" +
-        "【可能遇到的问题】\n" +
+        "【可能遇到的问题】(っ °Д °;)っ\n" +
         "1. 如果提示 npx 指令运行失败：请检查是否安装了 Node.js 和 NPM \n" +
         "2. Node.js 和 npm 已安装，但仍然提示 npx 指令运行失败：那么可以使用\n" +
-        "   npm install -g npx 来安装 NPX\n";
+        "   npm install -g npx 来安装 NPX\n" +
+        "\n" +
+        "【指定自己的浏览器】(╯‵□′)╯︵┻━┻\n" +
+        "1. 如果你已经安装了 Chrome 浏览器，并且想要使用自己的浏览器\n" +
+        "2. 请点击【设置自定义Chrome路径】按钮\n" +
+        "3. 然后输入 Chrome 浏览器的可执行文件路径，例如：\n" +
+        "   C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\n" +
+        "\n" +
+        "【注意】🎉设置完成后，请重启VSCode。🎉\n";
       const installBrowserAction = "安装浏览器";
       const installNpxAction = "安装NPX";
+      const setCustomChromePathAction = "设置自定义Chrome路径";
 
       const selection = await vscode.window.showInformationMessage(
         title,
@@ -212,7 +220,8 @@ export function activate(context: vscode.ExtensionContext) {
           detail: message,
         },
         installBrowserAction,
-        installNpxAction
+        installNpxAction,
+        setCustomChromePathAction
       );
 
       if (selection === installBrowserAction) {
@@ -248,6 +257,88 @@ export function activate(context: vscode.ExtensionContext) {
             "npx 安装完成后，请重新点击侧边栏安装浏览器"
           );
         }, 5000);
+      } else if (selection === setCustomChromePathAction) {
+        // 用户选择设置自定义Chrome路径
+        vscode.commands.executeCommand("zhihu-fisher.setCustomChromePath");
+      }
+    }
+  );
+
+  // 注册设置自定义Chrome路径命令
+  const setCustomChromePathCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.setCustomChromePath",
+    async () => {
+      // 创建输入框让用户输入Chrome路径
+      const options: vscode.InputBoxOptions = {
+        title: "设置自定义Chrome路径",
+        prompt:
+          "请输入本地谷歌浏览器Chrome.exe的绝对路径【想清空设置请按 ESC 退出即可】",
+        placeHolder:
+          "例如: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        ignoreFocusOut: true,
+        validateInput: async (input) => {
+          // 验证路径是否存在且是否为Chrome可执行文件
+          if (!input) {
+            return "请输入Chrome浏览器的路径";
+          }
+
+          if (!fs.existsSync(input)) {
+            return "找不到指定的文件";
+          }
+
+          const fileName = path.basename(input).toLowerCase();
+          if (!fileName.includes("chrome")) {
+            return "文件名似乎不是Chrome浏览器(应包含chrome字样)";
+          }
+
+          return null; // 验证通过
+        },
+      };
+
+      // 获取当前设置的路径作为默认值
+      const currentPath = PuppeteerManager.getUserChromePath();
+      if (currentPath) {
+        options.value = currentPath;
+      }
+
+      const chromePath = await vscode.window.showInputBox(options);
+      if (!chromePath) {
+        // 清除自定义路径
+        await PuppeteerManager.setUserChromePath("");
+        // 用户取消输入
+        const cancelMessage =
+          "已清除自定义Chrome路径，将使用爬虫的默认浏览器，如果没安装请安装";
+        const installBrowserAction = "安装浏览器";
+
+        vscode.window
+          .showInformationMessage(cancelMessage, installBrowserAction)
+          .then((selection) => {
+            if (selection === installBrowserAction) {
+              vscode.commands.executeCommand("zhihu-fisher.installBrowser");
+            }
+          });
+        return;
+      }
+
+      try {
+        // 保存自定义路径
+        if (chromePath) {
+          await PuppeteerManager.setUserChromePath(chromePath);
+          // 重置浏览器实例以使用新路径
+          await PuppeteerManager.closeBrowserInstance();
+          vscode.window
+            .showInformationMessage(
+              `已设置自定义Chrome路径，最好重启一下避免出现bug。`,
+              "重启VSCode"
+            )
+            .then((selection) => {
+              if (selection === "重启VSCode") {
+                vscode.commands.executeCommand("workbench.action.reloadWindow");
+              }
+            });
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(`设置Chrome路径失败: ${error}`);
       }
     }
   );
@@ -261,7 +352,7 @@ export function activate(context: vscode.ExtensionContext) {
     ) {
       sidebarHot.refresh();
       sidebarRecommend.refresh();
-      sidebarSearch.refresh();
+      sidebarSearch.reset();
     }
   });
 
@@ -278,6 +369,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(clearCookieCommand);
   context.subscriptions.push(toggleImageDisplayCommand);
   context.subscriptions.push(installBrowserCommand);
+  context.subscriptions.push(setCustomChromePathCommand);
 }
 
 // 清理资源或执行其他必要的操作
