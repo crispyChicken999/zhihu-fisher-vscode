@@ -21,19 +21,26 @@
 
 1. 安装后在 VSCode 侧边栏中找到 📖 图标
 2. 按照指示安装 Puppeteer 的 Chrome 浏览器，安装完成后重启 VSCode
-   > - 关于这个浏览器，因为用到这个 Puppeteer 这个库，其原理就是在后台模拟打开知乎，模拟人在浏览，没浏览器就没办法加载页面了😥。
+
+   > - 关于这个浏览器，因为用到这个 Puppeteer 这个库，其原理就是在后台模拟打开知乎，模拟人在浏览，没浏览器就没办法加载页面了 😥。
    > - 这个浏览器安装完成后会在：`C:\Users\用户名\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`。
    > - 你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置。
    >   - 类似这样：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾。
+   >   - 获取本地 Chrome 浏览器路径的方法：
+   >   1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"。
+   >   2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径。
+   >   3. 将路径中的`"C:\Program Files\Google\Chrome\Application\chrome.exe"`去掉引号，保留路径部分即可。
+   >   - 如果还是不清楚，可以参照下图：
+   >   - ![获取本地浏览器路径的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png)
 
 3. 输入知乎的 Cookie，然后就会自动加载推荐及热榜内容
 
    > - **Cookie 获取方式**：
    > - 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可。
    > - 如果还是不清楚，可以参照下图：
-   > - ![获取Cookie的方式](https://raw.githubusercontent.com/crispyChicken999/crispyChicken999.github.io/refs/heads/main/cookie.webp)
+   > - ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
 
-4. 加载完成后点击内容即可查看，就可以愉快🐟摸鱼🐟啦~
+4. 加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
 
 ## 🚀 主要功能 🚀
 
@@ -47,10 +54,11 @@
 ## 💥 Changelog 💥
 
 - 0.1.1
+
   - 支持使用本地的 Chrome 浏览器，可以不用安装 Puppeteer 的 Chrome 浏览器了。
   - 优化流程及提示，避免没安装浏览器/配置浏览器地址出错后，页面卡住导致用户懵逼。
   - 在标题栏的`...`处增加"安装浏览器"和“自定义爬虫浏览器”的入口，方便用户操作。
-  - 优化了自定义爬虫浏览器的change事件，及时更新视图。
+  - 优化了自定义爬虫浏览器的 change 事件，及时更新视图。
 
 - 0.1.0
 
@@ -102,4 +110,4 @@
 
 💰 一分也是爱，您的支持是我更新的最大动力！如果帮到你麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 
-![赞赏码](https://raw.githubusercontent.com/crispyChicken999/crispyChicken999.github.io/main/code.jpg)
+![赞赏码](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg)
