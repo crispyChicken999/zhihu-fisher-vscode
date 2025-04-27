@@ -50,9 +50,19 @@
         "icon": "$(trash)"
       },
       {
-        "command": "zhihu-fisher.toggleImageDisplay",
-        "title": "显示/隐藏图片",
+        "command": "zhihu-fisher.setMediaModeNormal",
+        "title": "正常显示媒体",
         "icon": "$(eye)"
+      },
+      {
+        "command": "zhihu-fisher.setMediaModeMini",
+        "title": "迷你媒体模式",
+        "icon": "$(screen-normal)"
+      },
+      {
+        "command": "zhihu-fisher.setMediaModeNone",
+        "title": "不显示媒体",
+        "icon": "$(eye-closed)"
       },
       {
         "command": "zhihu-fisher.configureBrowser",
@@ -110,7 +120,12 @@
         "contents": "点击搜索按钮查找知乎内容..."
       }
     ],
-    "submenus": [],
+    "submenus": [
+      {
+        "id": "zhihu-fisher.mediaDisplayMenu",
+        "label": "媒体显示模式"
+      }
+    ],
     "menus": {
       "view/title": [
         {
@@ -137,7 +152,7 @@
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         },
         {
-          "command": "zhihu-fisher.toggleImageDisplay",
+          "submenu": "zhihu-fisher.mediaDisplayMenu",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         },
         {
@@ -148,15 +163,30 @@
           "command": "zhihu-fisher.setCustomChromePath",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         }
+      ],
+      "zhihu-fisher.mediaDisplayMenu": [
+        {
+          "command": "zhihu-fisher.setMediaModeNormal",
+          "group": "1_media"
+        },
+        {
+          "command": "zhihu-fisher.setMediaModeMini",
+          "group": "1_media"
+        },
+        {
+          "command": "zhihu-fisher.setMediaModeNone",
+          "group": "1_media"
+        }
       ]
     },
     "configuration": {
       "title": "知乎摸鱼",
       "properties": {
-        "zhihu-fisher.hideImages": {
-          "type": "boolean",
-          "default": false,
-          "description": "无图片模式：启用后加载文章时不显示图片"
+        "zhihu-fisher.mediaDisplayMode": {
+          "type": "string",
+          "enum": ["none", "mini", "normal"],
+          "default": "normal",
+          "description": "媒体显示模式：none - 无媒体模式(不显示图片视频)；mini - 迷你模式(图片视频显示为50%大小)；normal - 正常模式(正常显示图片视频)"
         },
         "zhihu-fisher.cookie": {
           "type": "string",

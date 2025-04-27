@@ -160,25 +160,79 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // 注册切换图片显示命令
-  const toggleImageDisplayCommand = vscode.commands.registerCommand(
-    "zhihu-fisher.toggleImageDisplay",
+  // 注册切换媒体显示模式命令
+  const toggleMediaCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.toggleMedia",
     () => {
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
-      const currentValue = config.get<boolean>("hideImages", false);
+      const currentMode = config.get<string>("mediaDisplayMode", "normal");
 
-      // 切换值
+      // 三种模式循环切换：normal -> mini -> none -> normal
+      let newMode: string;
+      switch (currentMode) {
+        case "normal":
+          newMode = "mini";
+          break;
+        case "mini":
+          newMode = "none";
+          break;
+        case "none":
+        default:
+          newMode = "normal";
+          break;
+      }
+
+      // 更新配置
       config
-        .update("hideImages", !currentValue, vscode.ConfigurationTarget.Global)
+        .update("mediaDisplayMode", newMode, vscode.ConfigurationTarget.Global)
         .then(() => {
-          // 提示用户
-          const statusText = !currentValue
-            ? "已关闭图片显示"
-            : "已启用图片显示";
+          // 根据不同模式显示不同提示
+          let statusText = "";
+          switch (newMode) {
+            case "normal":
+              statusText = "已切换到正常媒体模式";
+              break;
+            case "mini":
+              statusText = "已切换到迷你媒体模式";
+              break;
+            case "none":
+              statusText = "已切换到隐藏媒体模式";
+              break;
+          }
           vscode.window.showInformationMessage(
-            `${statusText}，重新打开文章可应用设置`
+            `${statusText}，重新打开文章来查看效果。`
           );
         });
+    }
+  );
+
+  // 注册设置正常媒体模式命令
+  const setMediaModeNormalCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.setMediaModeNormal",
+    async () => {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update("mediaDisplayMode", "normal", vscode.ConfigurationTarget.Global);
+      vscode.window.showInformationMessage("图片和视频正常展示~");
+    }
+  );
+
+  // 注册设置迷你媒体模式命令
+  const setMediaModeMiniCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.setMediaModeMini",
+    async () => {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update("mediaDisplayMode", "mini", vscode.ConfigurationTarget.Global);
+      vscode.window.showInformationMessage("图片和视频将缩小尺寸展示，方便偷偷看哈哈~");
+    }
+  );
+
+  // 注册设置无媒体模式命令
+  const setMediaModeNoneCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.setMediaModeNone",
+    async () => {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update("mediaDisplayMode", "none", vscode.ConfigurationTarget.Global);
+      vscode.window.showInformationMessage("图片和视频将不再展示~");
     }
   );
 
@@ -379,10 +433,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
-    // 只在非hideImages的配置变更时才刷新热榜和推荐
+    // 只在非mediaDisplayMode的配置变更时才刷新热榜和推荐及搜索列表
     if (
       e.affectsConfiguration("zhihu-fisher") &&
-      !e.affectsConfiguration("zhihu-fisher.hideImages")
+      !e.affectsConfiguration("zhihu-fisher.mediaDisplayMode")
     ) {
       sidebarHot.refresh();
       sidebarRecommend.refresh();
@@ -401,7 +455,10 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(openArticleCommand);
   context.subscriptions.push(setCookieCommand);
   context.subscriptions.push(clearCookieCommand);
-  context.subscriptions.push(toggleImageDisplayCommand);
+  context.subscriptions.push(toggleMediaCommand);
+  context.subscriptions.push(setMediaModeNormalCommand);
+  context.subscriptions.push(setMediaModeMiniCommand);
+  context.subscriptions.push(setMediaModeNoneCommand);
   context.subscriptions.push(configureBrowserCommand);
   context.subscriptions.push(setCustomChromePathCommand);
 }

@@ -630,20 +630,51 @@ export class WebviewManager {
     return title.length > 15 ? `${title.substring(0, 15)}...` : title;
   }
 
-  /** 切换图片显示 */
-  private async toggleImageDisplay(webviewId: string): Promise<void> {
+  /** 切换媒体显示模式 */
+  private async toggleMedia(webviewId: string): Promise<void> {
     // 获取当前配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    const currentValue = config.get<boolean>("hideImages", false);
+    const currentMode = config.get<string>("mediaDisplayMode", "normal");
 
-    // 切换值
+    // 三种模式循环切换：normal -> mini -> none -> normal
+    let newMode: string;
+    switch (currentMode) {
+      case "normal":
+        newMode = "mini";
+        break;
+      case "mini":
+        newMode = "none";
+        break;
+      case "none":
+      default:
+        newMode = "normal";
+        break;
+    }
+
+    // 更新配置
     await config.update(
-      "hideImages",
-      !currentValue,
+      "mediaDisplayMode",
+      newMode,
       vscode.ConfigurationTarget.Global
     );
 
     // 重新加载文章内容（不触发网络请求，仅重新处理已获取的内容）
+    this.updateWebview(webviewId);
+  }
+
+  /** 设置媒体显示模式 */
+  private async setMediaMode(webviewId: string, mode: string): Promise<void> {
+    // 处理直接设置媒体模式的消息
+    if (!mode) {
+      return;
+    }
+
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    await config.update(
+      "mediaDisplayMode",
+      mode,
+      vscode.ConfigurationTarget.Global
+    );
     this.updateWebview(webviewId);
   }
 
@@ -677,8 +708,12 @@ export class WebviewManager {
             );
           }
           break;
-        case "toggleImageDisplay":
-          await this.toggleImageDisplay(webviewId);
+        case "toggleMedia":
+          await this.toggleMedia(webviewId);
+          break;
+
+        case "setMediaMode":
+          await this.setMediaMode(webviewId, message.mode);
           break;
 
         case "loadPreviousAnswer":

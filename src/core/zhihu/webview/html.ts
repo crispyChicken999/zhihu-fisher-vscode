@@ -113,7 +113,7 @@ export class HtmlRenderer {
    * 生成文章HTML内容
    * @param article 文章内容对象
    * @param url 文章URL
-   * @param hideImages 是否隐藏图片
+   * @param mediaDisplayMode 媒体显示模式
    * @param navState 导航状态（添加上一个/下一个回答导航功能）
    * @returns 文章内容的HTML字符串
    */
@@ -122,7 +122,15 @@ export class HtmlRenderer {
     const webview = Store.webviewMap.get(webviewId) as WebViewItem;
     const article = webview.article;
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    const hideImages = config.get<boolean>("hideImages", false);
+    const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+
+    // CSS类映射
+    const mediaModeClass =
+      {
+        none: "hide-media",
+        mini: "mini-media",
+        normal: "",
+      }[mediaDisplayMode] || "";
 
     // 当前的回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];
@@ -130,7 +138,7 @@ export class HtmlRenderer {
     // 处理文章内容中的图片
     let processedContent = this.processArticleContent(
       currentAnswer?.content,
-      hideImages
+      mediaDisplayMode
     );
 
     // 构建作者信息HTML
@@ -246,7 +254,10 @@ export class HtmlRenderer {
             .article-meta.hide-avatar .author-avatar {
               display: none;
             }
-
+            .article-meta.mini-avatar .author-avatar {
+              width: 30px;
+              height: 30px;
+            }
             .article-content {
               margin-top: 20px;
             }
@@ -273,7 +284,7 @@ export class HtmlRenderer {
               opacity: 0.5;
               cursor: not-allowed;
             }
-            .image-display-toggle {
+            .media-display-toggle {
               margin-right: 10px;
             }
             .article-content img.formula {
@@ -281,7 +292,7 @@ export class HtmlRenderer {
               vertical-align: middle;
               text-align: center;
             }
-            .article-content.hide-image img {
+            .article-content.hide-media img, .article-content.hide-media video {
               display: none;
             }
             .empty-container {
@@ -362,6 +373,12 @@ export class HtmlRenderer {
               height: 40px;
               border-radius: 50%;
               object-fit: cover;
+              cursor: pointer;
+            }
+
+            .author-avatar img:hover {
+              filter: brightness(1.1) saturate(1.1);
+              transform: scale(1.05) translateY(-2px);
             }
 
             .author-details {
@@ -475,12 +492,42 @@ export class HtmlRenderer {
               opacity: 0.8;
               font-size: 0.9em;
             }
+
+            .media-display-select {
+              background-color: var(--vscode-button-background);
+              color: var(--vscode-button-foreground);
+              border: none;
+              padding: 6px 12px;
+              border-radius: 2px;
+              cursor: pointer;
+              margin-right: 8px;
+              appearance: auto; /* 保留下拉箭头 */
+            }
+
+            .media-display-select:hover {
+              background-color: var(--vscode-button-hoverBackground);
+            }
+
+            .media-display-select:focus {
+              outline: 1px solid var(--vscode-focusBorder);
+            }
+
+            .media-display-select option {
+              background-color: var(--vscode-dropdown-background);
+              color: var(--vscode-dropdown-foreground);
+            }
           </style>
         </head>
         <body>
           <header>
             <h3>${this.escapeHtml(article.title)}</h3>
-            <div class="article-meta${hideImages ? " hide-avatar" : ""}">
+            <div class="article-meta${
+              mediaDisplayMode === "none"
+                ? " hide-avatar"
+                : mediaDisplayMode === "mini"
+                ? " mini-avatar"
+                : ""
+            }">
               ${authorHTML}
               <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
                 <div>来源: <a href="${sourceUrl}" target="_blank">知乎</a></div>
@@ -511,7 +558,7 @@ export class HtmlRenderer {
                     <span style="flex: 0 0 auto; display: inline-flex; align-items: center;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Remix Icon by Remix Design - https://github.com/Remix-Design/RemixIcon/blob/master/License --><path fill="currentColor" d="M5 2a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3zM4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5.723 13L16.58 6h-2.303L7.42 18z"/></svg>
                     </span>
-                    <span style="flex: 0 0 auto;">显示/隐藏图片</span>
+                    <span style="flex: 0 0 auto;">切换媒体展示</span>
                   </div>
                 </div>
               </div>
@@ -522,9 +569,7 @@ export class HtmlRenderer {
 
           ${answerMetaHTML}
 
-          <div class="article-content${
-            hideImages ? " hide-image" : ""
-          }"">${processedContent}</div>
+          <div class="article-content ${mediaModeClass}">${processedContent}</div>
 
           ${navigationHTML}
 
@@ -537,12 +582,21 @@ export class HtmlRenderer {
               </button>
             </div>
             <div>
-              <button
-                class="button image-display-toggle"
-                onclick="toggleImageDisplay()"
+              <select
+                class="button media-display-select"
+                onchange="changeMediaMode(this.value)"
+                title="选择媒体显示模式"
               >
-                ${hideImages ? "显示图片" : "隐藏图片"}
-              </button>
+                <option value="normal" ${
+                  mediaDisplayMode === "normal" ? "selected" : ""
+                }>正常显示媒体</option>
+                <option value="mini" ${
+                  mediaDisplayMode === "mini" ? "selected" : ""
+                }>迷你媒体模式</option>
+                <option value="none" ${
+                  mediaDisplayMode === "none" ? "selected" : ""
+                }>不显示媒体</option>
+              </select>
             </div>
           </div>
           <script>
@@ -559,13 +613,25 @@ export class HtmlRenderer {
               });
             }
 
+            function openPage(url) {
+              vscode.postMessage({ command: "openInBrowser", url: url });
+            }
+
             function refreshContent() {
               vscode.postMessage({ command: "requestContent" });
             }
 
-            function toggleImageDisplay() {
+            function toggleMedia() {
               // 向扩展发送消息
-              vscode.postMessage({ command: "toggleImageDisplay" });
+              vscode.postMessage({ command: "toggleMedia" });
+            }
+
+            function changeMediaMode(mode) {
+              // 向扩展发送消息，带上选定的模式
+              vscode.postMessage({
+                command: "setMediaMode",
+                mode: mode
+              });
             }
 
             function openAuthorPage(url) {
@@ -574,16 +640,19 @@ export class HtmlRenderer {
 
             // 上一个回答按钮点击事件
             function loadPreviousAnswer() {
+              window.scrollTo(0, 0); // 滚动到顶部
               vscode.postMessage({ command: "loadPreviousAnswer" });
             }
 
             // 下一个回答按钮点击事件
             function loadNextAnswer() {
+              window.scrollTo(0, 0); // 滚动到顶部
               vscode.postMessage({ command: "loadNextAnswer" });
             }
 
             // 跳转到指定回答
             function jumpToAnswer(index) {
+              window.scrollTo(0, 0); // 滚动到顶部
               vscode.postMessage({ command: "jumpToAnswer", index: index });
             }
 
@@ -625,7 +694,7 @@ export class HtmlRenderer {
                   event.preventDefault(); // 阻止默认行为
                 }
               } else if (event.key === "/") {
-                toggleImageDisplay();
+                toggleMedia();
                 event.preventDefault(); // 阻止默认行为
               }
             });
@@ -802,20 +871,22 @@ export class HtmlRenderer {
   /**
    * 处理文章内容，包括图片处理
    * @param content 原始文章内容
-   * @param hideImages 是否隐藏图片
+   * @param mediaDisplayMode 媒体显示模式
    * @returns 处理后的文章内容
    */
   private static processArticleContent(
     content: string,
-    hideImages: boolean
+    mediaDisplayMode: string
   ): string {
     if (!content) {
       return "正在加载中，请稍候..."; // 返回加载提示
     }
     // 使用cheerio解析
     const $ = cheerio.load(content);
+
     // 删除GifPlayer元素
     $(".GifPlayer").remove();
+
     // 如果是svg并且里面有个circle和path元素，则认为是加载视频的按钮，应该去掉这个svg
     $("svg").each(function () {
       const hasCircle = $(this).find("circle").length > 0;
@@ -824,41 +895,69 @@ export class HtmlRenderer {
         $(this).remove(); // 删除svg元素
       }
     });
-    // 给每个视频加上controls属性以显示视频控件
-    $("video").each(function () {
-      $(this).attr("controls", "controls");
+
+    // 处理图片元素
+    $("img").each(function () {
+      // 无媒体模式时直接移除
+      if (mediaDisplayMode === "none") {
+        $(this).remove();
+        return;
+      }
+
+      // 处理图片源地址
+      const actualSrc = $(this).attr("data-actualsrc");
+      const originalSrc = $(this).attr("data-original");
+
+      // 优先使用data-actualsrc，其次使用data-original
+      if (actualSrc) {
+        $(this).attr("src", actualSrc);
+        $(this).attr("data-actualsrc-processed", "true");
+      } else if (originalSrc) {
+        $(this).attr("src", originalSrc);
+        $(this).attr("data-original-processed", "true");
+      }
+
+      // 添加no-referrer属性以避免跨域问题
+      $(this).attr("referrerpolicy", "no-referrer");
+
+      // 设置图片的父盒子div text-align:center
+      $(this).parent().css("text-align", "center");
+
+      // 根据模式设置缩放
+      if (mediaDisplayMode === "mini") {
+        $(this).css("width", "calc(50%)");
+      } else {
+        $(this).css("transform", "");
+      }
     });
 
-    // 如果启用无图模式，处理HTML内容
-    if (hideImages) {
-      $("img").each(function () {
-        $(this).remove(); // 完全删除图片标签，不保留占位符
-      });
-      return $.html();
-    } else {
-      /** @todo 待优化应该可以删除，估计没影响 */
-      // 处理知乎特有的图片属性：data-actualsrc
-      $("img").each(function () {
-        const actualSrc = $(this).attr("data-actualsrc");
-        const originalSrc = $(this).attr("data-original");
+    // 处理视频元素
+    $("video").each(function () {
+      // 无媒体模式时直接移除
+      if (mediaDisplayMode === "none") {
+        $(this).remove();
+        return;
+      }
 
-        // 优先使用 data-actualsrc
-        if (actualSrc) {
-          $(this).attr("src", actualSrc);
-          $(this).attr("data-actualsrc-processed", "true");
-        }
-        // 其次使用 data-original
-        else if (originalSrc) {
-          $(this).attr("src", originalSrc);
-          $(this).attr("data-original-processed", "true");
-        }
+      // 设置父盒子div的对齐方式为center
+      $(this)
+        .parent()
+        .css("display", "flex")
+        .css("justify-content", "center")
+        .css("align-items", "center");
 
-        // 添加no-referrer属性以避免跨域问题
-        $(this).attr("referrerpolicy", "no-referrer");
-      });
+      // 添加控件
+      $(this).attr("controls", "controls");
 
-      return $.html();
-    }
+      // 根据模式设置缩放
+      if (mediaDisplayMode === "mini") {
+        $(this).css("width", "calc(50%)");
+      } else {
+        $(this).css("transform", "");
+      }
+    });
+
+    return $.html();
   }
 
   /**
@@ -881,7 +980,7 @@ export class HtmlRenderer {
     // 如果有作者头像，显示头像
     if (author.avatar) {
       authorHTML += `
-        <div class="author-avatar">
+        <div class="author-avatar" onclick="openPage('${authorUrl}')">
           <img src="${authorAvatar}" alt="${this.escapeHtml(
         authorName
       )}" referrerpolicy="no-referrer" />
@@ -894,7 +993,7 @@ export class HtmlRenderer {
     const authorTitleHtml = `<div class="author-name">
           ${
             authorUrl
-              ? `<a href="${authorUrl}" onclick="openAuthorPage('${authorUrl}')" class="author-link">${this.escapeHtml(
+              ? `<a href="${authorUrl}" class="author-link">${this.escapeHtml(
                   authorName
                 )}</a>`
               : this.escapeHtml(authorName)
