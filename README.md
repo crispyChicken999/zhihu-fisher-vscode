@@ -8,10 +8,12 @@
 ## 🔮 背景 🔮
 
 - 其实就是想上班摸会鱼，直接网页刷知乎容易被抓包，而且网页有很多图片，别人一看你就知道是在摸鱼。
-- 然后就想在 VSCode 中刷知乎，结果发现那些插件基本都不更新了根本用不了，索性直接写了一个。
+- 然后就想在 VSCode 中刷知乎，结果发现市场中的那些插件，基本都不更新了或者根本用不了，索性直接写了一个。
 - 目前基本功能有了，但是写的有些乱，后续会慢慢优化。
 - 刚写完还有很多 bug，但是能用 😂，如果卡住了更多回答加载不出，那就关了再开。
-- 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！有更多的意见和建议欢迎评论。
+- 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！
+- 有更多的意见和建议欢迎[评论](https://marketplace.visualstudio.com/items?itemName=CrispyChicken.zhihu-fisher&ssr=false#review-details)，或者提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。
+- 如果觉得好用，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 
 ## 支持的 VSCode 版本
 
@@ -22,23 +24,35 @@
 1. 安装后在 VSCode 侧边栏中找到 📖 图标
 2. 按照指示安装 Puppeteer 的 Chrome 浏览器，安装完成后重启 VSCode
 
-   > - 关于这个浏览器，因为用到这个 Puppeteer 这个库，其原理就是在后台模拟打开知乎，模拟人在浏览，没浏览器就没办法加载页面了 😥。
-   > - 这个浏览器安装完成后会在：`C:\Users\用户名\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`。
-   > - 你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置。
-   >   - 类似这样：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾。
-   >   - 获取本地 Chrome 浏览器路径的方法：
+   > - 关于浏览器，因为用到这个 Puppeteer 这个库，其原理就是在后台模拟打开知乎，模拟人在浏览，没配置浏览器的话，就没法在后台加载页面了 😥。
+   > - 如果你选择了安装，那么这个浏览器安装完成后会在：
+   >   - Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`。
+   >   - Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`。
+   >   ***
+   > - 你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置，或者`ctrl/commend`+`,`打开设置，搜索框输入`zhihu`就可以配置路径了。
+   >   - 类似这样：
+   >   - Windows 用户：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾。
+   >   - Mac 用户：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`。
+   >   ***
+   >   - **【Windows 获取本地 Chrome 浏览器路径的方法】**：
    >   1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"。
    >   2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径。
    >   3. 将路径中的`"C:\Program Files\Google\Chrome\Application\chrome.exe"`去掉引号，保留路径部分即可。
    >   - 如果还是不清楚，可以参照下图：
    >   - ![获取本地浏览器路径的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png)
+   >   ***
+   > - **【Mac 获取本地 Chrome 浏览器路径的方法】**：
+   >   1. 打开终端（Terminal），输入以下命令：`ls /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`。
+   >   2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置。
+   >   3. 如果没有安装，可以在终端中输入以下命令进行安装：`brew install --cask google-chrome`。
+   >   4. 安装完成后，重新运行第一步的命令即可。(如果找不到请百度，因为手头没有 Mac 电脑，无法测试。)
 
 3. 输入知乎的 Cookie，然后就会自动加载推荐及热榜内容
 
-   > - **Cookie 获取方式**：
-   > - 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可。
-   > - 如果还是不清楚，可以参照下图：
-   > - ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
+   > - **【Cookie 获取方式】**：
+   >   - 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可。
+   >   - 如果还是不清楚，可以参照下图：
+   >   - ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
 
 4. 加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
 
@@ -52,6 +66,12 @@
 6. 提供快捷键，键盘左右箭头可以切换上一个/下一个回答，按`/`可以切换图片的显示和隐藏
 
 ## 💥 Changelog 💥
+
+- 0.1.2
+
+  - 修改了自定义浏览器路径的校验规则，避免 Mac 系统无法配置路径的问题。
+  - 添加了 Mac 系统配置自定义浏览器的说明，指引用户如何获取路径及如何配置。
+  - 修改了标题栏按钮的名称，优化了弹窗的文案，使其更加符合逻辑。
 
 - 0.1.1
 
@@ -105,6 +125,11 @@
 ## 🔧 实现原理 🔧
 
 基于 VSCode 插件脚手架，使用 Puppeteer 来模拟浏览知乎，抓取内容并渲染成 HTML，最后在 VSCode 中显示。
+
+## 反馈问题
+
+1. 在[插件市场问答页](https://marketplace.visualstudio.com/items?itemName=CrispyChicken.zhihu-fisher&ssr=false#qna)中`Ask a Question`，提问即可。
+2. 在[GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)中提交问题，我看到会尽快回复。
 
 ## 💖 欢迎赞赏 💖
 

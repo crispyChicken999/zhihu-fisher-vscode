@@ -58,7 +58,7 @@ export class sidebarSearchListDataProvider
       Store.Zhihu.search.isLoading = false; // 重置加载状态
       Store.Zhihu.search.list = []; // 清空搜索结果
       vscode.window.showErrorMessage(
-        "无法创建浏览器实例，获取搜索结果失败，请检查浏览器安装情况。"
+        "无法创建浏览器实例，获取搜索结果失败，请检查浏览器配置情况。"
       );
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
       return;
@@ -357,7 +357,13 @@ export class sidebarSearchListDataProvider
             command: "zhihu-fisher.setCustomChromePath",
             title: "设置自定义浏览器路径",
           },
-          "你设置的自定义路径无效，请重新设置。\n 【解决方法】：\n点我重新设置~\n 如果不想用自定义路径，直接输入框留空回车即可。\n 【注意】：\n设置完成后，请重启VSCode。"
+          "您设置的自定义浏览器路径无效，请重新设置。\n " +
+            "【解决方法】\n" +
+            "  点我重新设置~ 如果不想用自定义路径，点我然后直接按ESC即可清空设置。\n " +
+            "  清空设置后，插件会尝试使用默认位置的浏览器，如果没安装，会提示你安装。\n" +
+            "【注意】\n" +
+            "  设置完成后，请重启VSCode。避免出现bug。\n" +
+            "  优先级是：自定义路径 > 默认安装路径 \n"
         ),
       ];
     }
@@ -368,13 +374,21 @@ export class sidebarSearchListDataProvider
       // 如果不能创建浏览器，显示提示
       return [
         new StatusTreeItem(
-          "无法创建浏览器，点我安装爬虫浏览器",
+          "爬虫无法创建浏览器，点我去配置浏览器",
           new vscode.ThemeIcon("error"),
           {
-            command: "zhihu-fisher.installBrowser",
-            title: "安装爬虫浏览器",
+            command: "zhihu-fisher.configureBrowser",
+            title: "配置浏览器",
           },
-          "点我安装爬虫浏览器\n 【原因】：\n插件依赖Puppeteer去爬取页面数据，如果没有安装浏览器，或者安装的浏览器版本不匹配，\n就会导致无法创建浏览器实例，进而无法爬取数据。\n 【解决方法】：\n点我开始安装~马上就愉快摸鱼啦。\n 爬虫浏览器的安装目录为：C:\\Users\\用户名\\.cache\\puppeteer\\chrome\\win64-135.0.7049.84\\chrome-win64\\chrome.exe\n【注意】：\n安装完成后，请重启VSCode。"
+          "点我配置爬虫浏览器\n " +
+            "【原因】\n" +
+            "  插件依赖Puppeteer去爬取页面数据，如果没有安装浏览器，或者配置的浏览器不是谷歌原版Chrome浏览器，\n" +
+            "  就会导致爬虫无法在后台创建浏览器实例，进而无法爬取数据。\n " +
+            "【解决方法】\n" +
+            "  点我去配置浏览器，提供两种方式：\n" +
+            "  在弹出的窗口中你可以选择安装默认的浏览器，或者选择自定义路径。\n" +
+            "【注意】\n" +
+            "  设置完成后，请重启VSCode。避免出现bug。\n"
         ),
       ];
     }
@@ -390,7 +404,16 @@ export class sidebarSearchListDataProvider
             command: "zhihu-fisher.setCookie",
             title: "设置知乎Cookie",
           },
-          "点我设置Cookie\n【获取方式】去到知乎首页，登陆自己的账号，然后点击F12打开开发者工具，\n选择Network选项卡，刷新页面，点击一个请求，找到请求头Request Headers，\n里面Cookie字段，复制值的所有内容，粘贴到VSCode的输入框里面。\n"
+          "点我设置Cookie\n" +
+            "【获取方式】\n" +
+            "  去到知乎首页，登陆自己的账号，然后点击F12打开开发者工具\n" +
+            "  选择 Network 选项卡，刷新页面，点击一个请求，找到请求头Request Headers，\n" +
+            "  里面 Cookie 字段，复制值的所有内容，粘贴到 VSCode 的输入框里面。\n" +
+            "【注意】\n" +
+            "  设置完成后，请重启VSCode。避免出现bug。\n" +
+            "【tips】\n" +
+            "  主包主包，我还是看不懂咋办啊TAT？\n" +
+            "  打开扩展，搜zhihu fisher，点开来，里面有设置 Cookie 的说明图。"
         ),
       ];
     }

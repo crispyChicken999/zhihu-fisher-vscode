@@ -1,11 +1,67 @@
-import * as vscode from "vscode";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
+import * as vscode from "vscode";
 import { Store } from "../../stores";
 import * as Puppeteer from "puppeteer";
 import { CookieManager } from "../cookie";
 
+interface ChromePathExample {
+  /** Puppeteer安装的浏览器位置 */
+  default: string;
+  /** 用户自定义的Chrome路径 */
+  custom: string;
+}
+
 export class PuppeteerManager {
+  /**
+   * 获取当前操作系统类型
+   * @returns 操作系统类型："windows" | "macos" | "unknown"
+   */
+  static getOSType(): "Windows" | "MacOS" | "unsupported" {
+    const platform = os.platform();
+
+    switch (platform) {
+      case "win32":
+        return "Windows";
+      case "darwin":
+        return "MacOS";
+      default:
+        return "unsupported";
+    }
+  }
+
+  /**
+   * 获取Chrome浏览器路径示例
+   * @returns {default: string, custom: string}
+   * - default: Puppeteer安装的浏览器位置
+   * - custom: 用户自定义的Chrome路径
+   */
+  static getChromeExamplePath(): ChromePathExample {
+    const osType = PuppeteerManager.getOSType();
+
+    switch (osType) {
+      case "Windows":
+        return {
+          default:
+            "C:\\Users\\[用户名]\\.cache\\puppeteer\\chrome\\win64-135.0.7049.84\\chrome-win64\\chrome.exe",
+          custom: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        };
+      case "MacOS":
+        return {
+          default:
+            "/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome",
+          custom:
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        };
+      default:
+        return {
+          default: "unsupported",
+          custom: "unsupported",
+        };
+    }
+  }
+
   /**
    * 获取用户配置的Chrome浏览器路径
    */
@@ -25,7 +81,7 @@ export class PuppeteerManager {
       path,
       vscode.ConfigurationTarget.Global
     );
-    if(!path) {
+    if (!path) {
       console.log("已清除自定义Chrome路径设置");
     } else {
       console.log("已设置自定义Chrome路径:", path);
@@ -101,16 +157,14 @@ export class PuppeteerManager {
           if (selection === useDefault) {
             // 清除自定义路径设置
             await PuppeteerManager.setUserChromePath("");
-            vscode.commands.executeCommand("zhihu-fisher.installBrowser");
+            vscode.commands.executeCommand("zhihu-fisher.configureBrowser");
           } else if (selection === changeCustomPath) {
             vscode.commands.executeCommand("zhihu-fisher.setCustomChromePath");
           }
         } else {
-          // 显示标准的错误提示
-          const message =
-            "无法创建爬虫浏览器，可能是找不到爬虫浏览器的chrome.exe路径";
-          const installAction = "安装爬虫浏览器";
-          const useCustomAction = "使用自己的浏览器";
+          const message = "无法创建爬虫浏览器，可能是找不到浏览器的Chrome路径";
+          const installAction = "安装默认浏览器";
+          const useCustomAction = "自定义浏览器路径";
 
           const selection = await vscode.window.showErrorMessage(
             message,
@@ -121,7 +175,7 @@ export class PuppeteerManager {
 
           // 根据用户选择执行操作
           if (selection === installAction) {
-            vscode.commands.executeCommand("zhihu-fisher.installBrowser");
+            vscode.commands.executeCommand("zhihu-fisher.configureBrowser");
           } else if (selection === useCustomAction) {
             vscode.commands.executeCommand("zhihu-fisher.setCustomChromePath");
           }

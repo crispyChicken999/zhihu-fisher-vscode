@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://www.github.com/CrispyChicken999/zhihu-fisher"
+    "url": "https://github.com/crispyChicken999/zhihu-fisher-vscode"
   },
   "icon": "./icon.png",
   "publisher": "CrispyChicken",
@@ -55,13 +55,13 @@
         "icon": "$(eye)"
       },
       {
-        "command": "zhihu-fisher.installBrowser",
-        "title": "安装浏览器",
+        "command": "zhihu-fisher.configureBrowser",
+        "title": "配置浏览器",
         "icon": "$(browser)"
       },
       {
         "command": "zhihu-fisher.setCustomChromePath",
-        "title": "自定义爬虫浏览器",
+        "title": "自定义浏览器路径",
         "icon": "$(folder-opened)"
       }
     ],
@@ -99,7 +99,7 @@
     "viewsWelcome": [
       {
         "view": "zhihuRecommendList",
-        "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[设置Cookie](command:zhihu-fisher.setCookie)\n\n如果遇到浏览器问题，可以尝试：\n[安装默认爬虫浏览器](command:zhihu-fisher.installBrowser)\n[设置本地浏览器路径](command:zhihu-fisher.setCustomChromePath)"
+        "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[设置Cookie](command:zhihu-fisher.setCookie)\n\n如果遇到浏览器问题，可以尝试：\n[安装浏览器](command:zhihu-fisher.configureBrowser)\n[自定义浏览器路径](command:zhihu-fisher.setCustomChromePath)"
       },
       {
         "view": "zhihuHotList",
@@ -141,7 +141,7 @@
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         },
         {
-          "command": "zhihu-fisher.installBrowser",
+          "command": "zhihu-fisher.configureBrowser",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         },
         {
