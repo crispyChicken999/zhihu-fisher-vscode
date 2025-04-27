@@ -1,7 +1,7 @@
 # 🐟 知乎摸鱼 🐟 (Zhihu Fisher)
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.1.1-green.svg)
+![Version](https://img.shields.io/badge/version-0.1.2-green.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。
 
