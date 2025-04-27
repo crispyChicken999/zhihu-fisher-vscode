@@ -38,8 +38,7 @@ export class CookieManager {
       return;
     }
 
-    const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    const expirationDays = config.get<number>("cookieExpirationReminder") || 30;
+    const expirationDays =  30;
 
     const now = Date.now();
     const daysPassed =

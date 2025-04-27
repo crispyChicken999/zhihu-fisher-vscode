@@ -164,12 +164,6 @@
           "description": "知乎Cookie，用于访问需要登录的内容",
           "scope": "machine"
         },
-        "zhihu-fisher.cookieExpirationReminder": {
-          "type": "number",
-          "default": 30,
-          "description": "Cookie过期提醒天数（设置cookie后多少天提醒更新）",
-          "scope": "machine"
-        },
         "zhihu-fisher.customChromePath": {
           "type": "string",
           "default": "",
