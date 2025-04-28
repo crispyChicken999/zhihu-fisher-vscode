@@ -425,7 +425,10 @@ export class sidebarSearchListDataProvider
           `🔍正在知乎搜索【${Store.Zhihu.search.currentQuery}】🔍...`,
           new vscode.ThemeIcon("loading~spin"),
           null,
-          "你看，又急~你干嘛哎哟👉🤡\n Puppeteer正在后台访问知乎搜索结果~ 马上就好啦(～￣▽￣)～"
+          "爬虫正在后台加载知乎搜索结果(～￣▽￣)～\n" +
+          "模拟滚动加载更多中，请耐心等待...\n"+
+          "【注意】\n" +
+          "如果长时间没有响应，请确保浏览器正确配置，或者重新搜索~"
         ),
       ];
     }

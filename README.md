@@ -1,7 +1,12 @@
+<p align="center">
+  <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250428102917058-270629388.png" alt="zhihu-fisher"  width="200" height="200" />
+</p>
+
 # 🐟 知乎摸鱼 🐟 (Zhihu Fisher)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.1.2-green.svg)
+![License](https://img.shields.io/badge/License-MIT-orange.svg)
+![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
+![Version](https://img.shields.io/badge/Version-0.1.2-green.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。
 
@@ -15,46 +20,71 @@
 - 有更多的意见和建议欢迎[评论](https://marketplace.visualstudio.com/items?itemName=CrispyChicken.zhihu-fisher&ssr=false#review-details)，或者提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。
 - 如果觉得好用，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 
-## 支持的 VSCode 版本
+## 🎯 支持的 VSCode 版本 🎯
 
 - **1.82.0** 及以上版本
 
 ## 🎉 使用方式 🎉
 
-1. 安装后在 VSCode 侧边栏中找到 📖 图标
-2. 按照指示安装 Puppeteer 的 Chrome 浏览器，安装完成后重启 VSCode
+### 1. 安装插件
 
-   > - 关于浏览器，因为用到这个 Puppeteer 这个库，其原理就是在后台模拟打开知乎，模拟人在浏览，没配置浏览器的话，就没法在后台加载页面了 😥。
-   > - 如果你选择了安装，那么这个浏览器安装完成后会在：
-   >   - Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`。
-   >   - Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`。
-   >   ***
-   > - 你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置，或者`ctrl/commend`+`,`打开设置，搜索框输入`zhihu`就可以配置路径了。
-   >   - 类似这样：
-   >   - Windows 用户：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾。
-   >   - Mac 用户：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`。
-   >   ***
-   >   - **【Windows 获取本地 Chrome 浏览器路径的方法】**：
-   >   1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"。
-   >   2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径。
-   >   3. 将路径中的`"C:\Program Files\Google\Chrome\Application\chrome.exe"`去掉引号，保留路径部分即可。
-   >   - 如果还是不清楚，可以参照下图：
-   >   - ![获取本地浏览器路径的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png)
-   >   ***
-   > - **【Mac 获取本地 Chrome 浏览器路径的方法】**：
-   >   1. 打开终端（Terminal），输入以下命令：`ls /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`。
-   >   2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置。
-   >   3. 如果没有安装，可以在终端中输入以下命令进行安装：`brew install --cask google-chrome`。
-   >   4. 安装完成后，重新运行第一步的命令即可。(如果找不到请百度，因为手头没有 Mac 电脑，无法测试。)
+安装后在 VSCode 侧边栏中找到 📖 图标
 
-3. 输入知乎的 Cookie，然后就会自动加载推荐及热榜内容
+### 2. 配置浏览器
 
-   > - **【Cookie 获取方式】**：
-   >   - 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可。
-   >   - 如果还是不清楚，可以参照下图：
-   >   - ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
+按照指示配置插件使用的 Chrome 浏览器，配置完成后重启 VSCode 以应用规则。
 
-4. 加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
+> 因为用到这个 Puppeteer 这个库，其原理就是在后台模拟打开知乎，模拟人在浏览，没配置浏览器的话，就没法在后台加载页面了 😥。
+
+#### 2.1 配置方式
+
+插件提供两种配置方式：`安装浏览器` 和 `使用本地浏览器`。
+
+#### 2.2 安装浏览器
+
+如果你选择了安装，那么这个浏览器安装完成后会在：
+
+- Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`
+- Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`
+
+#### 2.3 使用本地浏览器
+
+你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置，或者`Ctrl/Commend`+`,`打开设置，搜索框输入`zhihu`，找到`Custom Chrome Path`，输入本地浏览器的路径即可。
+
+本地浏览器地址类似：
+
+- Windows 用户：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
+- Mac 用户：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
+
+##### 2.3.1 Windows 获取本地 Chrome 浏览器路径的方法
+
+1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"
+2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径
+3. 将路径中的`"C:\Program Files\Google\Chrome\Application\chrome.exe"`去掉引号，保留路径部分即可
+
+- 如果还是不清楚，可以参照下图：
+  ![获取本地浏览器路径的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png)
+
+##### 2.3.2 Mac 获取本地 Chrome 浏览器路径的方法
+
+1. 打开终端（Terminal），输入以下命令：`ls /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`
+2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
+3. 如果没有安装，可以在终端中输入以下命令进行安装：`brew install --cask google-chrome`
+4. 安装完成后，重新运行第一步的命令即可（如果找不到请百度，因为手头没有 Mac 电脑，无法测试）
+
+### 3. 配置 Cookie
+
+输入知乎的 Cookie，然后就会自动加载推荐及热榜内容
+
+#### 3.1 Cookie 获取方式
+
+- 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可
+- 如果还是不清楚，可以参照下图：
+  ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
+
+### 4. 开始使用
+
+加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
 
 ## 🚀 主要功能 🚀
 
@@ -62,71 +92,35 @@
 2. 加载知乎推荐
 3. 加载搜索结果
 4. 查看知乎回答的内容，支持切换上一个/下一个回答
-5. 提供显示/隐藏图片的功能，避免摸鱼被发现
+5. 提供切换媒体（图片、视频等）模式（隐藏|迷你|正常）的功能，避免摸鱼被发现
 6. 提供快捷键，键盘左右箭头可以切换上一个/下一个回答，按`/`可以切换图片的显示和隐藏
+7. 文章可以调整字体大小、颜色等样式
 
-## 💥 Changelog 💥
+## 💥 更新日志 💥
 
-- 0.1.2
-
-  - 修改了自定义浏览器路径的校验规则，避免 Mac 系统无法配置路径的问题。
-  - 添加了 Mac 系统配置自定义浏览器的说明，指引用户如何获取路径及如何配置。
-  - 修改了标题栏按钮的名称，优化了弹窗的文案，使其更加符合逻辑。
-
-- 0.1.1
-
-  - 支持使用本地的 Chrome 浏览器，可以不用安装 Puppeteer 的 Chrome 浏览器了。
-  - 优化流程及提示，避免没安装浏览器/配置浏览器地址出错后，页面卡住导致用户懵逼。
-  - 在标题栏的`...`处增加"安装浏览器"和“自定义爬虫浏览器”的入口，方便用户操作。
-  - 优化了自定义爬虫浏览器的 change 事件，及时更新视图。
-
-- 0.1.0
-
-  - 修复了没有安装 Puppeteer 的 Chrome 浏览器时，加载文章卡住、推荐列表加载失败等的问题。
-  - 优化了在没有安装爬虫浏览器时的流程处理，引导用户安装，确保功能的正常使用。
-  - 重构了代码，数据加载更加顺畅。
-  - 添加了文章切换图片显示的快捷键，为`/`，按下后可以切换图片的显示和隐藏。
-
-- 0.0.9
-
-  - 优化了 Cookie 的处理方式，增加了获取 Cookie 的提示，避免用户输入错误。
-  - 对 Cookie 清除操作进行了优化，确保页面能够正确响应。
-
-- 0.0.8
-
-  - 修复了页面加载完成后，需要点一下才能左右切换上一个/下一个回答的问题。
-  - 优化了上一条/下一条按钮的样式，增加了 disabled 效果。
-  - 新增搜索功能，侧边栏可以搜索相关问题。
-
-- 0.0.7
-
-  - 修复了加载完成后，底部栏仍提示正在加载的问题。
-  - 优化了文章页面的样式，增加回答的点赞数、评论数等信息。
-  - 优化了文章加载页的样式，新增问题简介的滚动条，避免内容过长导致页面显示不全。
-  - 新增快捷键切换上一个/下一个回答，按键盘的`←`和`→`来切换。
-  - 支持更多版本的 VSCode，更新报错的话请卸载重装。
+查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
 
 ## 📝 TODO 📝
 
-1. ~~重构代码，简化流程~~ **(v0.0.6 已重构)**
-2. ~~增加更多功能，比如搜索~~、收藏等 **(v0.0.8 已实现搜索功能)**
-3. ~~详情页面添加回答跳转功能~~ **(v0.0.7 已实现分页跳转)**
-4. ~~支持快捷键切换图片隐藏和显示~~ **(v0.1.0 已实现)**
-5. ~~支持用户指定自己的 Chrome.exe 浏览器地址，就不用下载新的了~~ **(v0.1.1 已实现)**
-6. 支持小图模式，比如想要摸鱼，但是也想偷偷看图片
-7. 支持设置文章的各种样式，比如字体大小、颜色等
+- ~~重构代码，简化流程~~ **(v0.0.6 已重构)**
+- ~~增加更多功能，比如搜索~~、收藏等 **(v0.0.8 已实现搜索功能)**
+- ~~详情页面添加回答跳转功能~~ **(v0.0.7 已实现分页跳转)**
+- ~~支持快捷键切换图片隐藏和显示~~ **(v0.1.0 已实现)**
+- ~~支持用户指定自己的 Chrome.exe 浏览器地址，就不用下载新的了~~ **(v0.1.1 已实现)**
+- ~~支持小图模式，比如想要摸鱼，但是也想偷偷看图片~~ **(v0.1.3 已实现)**
+- ~~支持设置文章的各种样式，比如字体大小、颜色等~~ **(v0.1.3 已实现)**
+- 支持爬回答的评论等。
 
 ## 🐞 已知问题 🐞
 
 1.  推荐列表可能加载不出来，可能跟 Cookie 中 BEC 参数有关，那么需要你前往知乎首页，点击推荐切换到推荐列表，然后刷新页面，获取新的 Cookie，粘贴到 VSCode 中即可。（我猜这个参数可能记录了用户的操作，比如之前切换到热榜列表，那么下次打开知乎也切到热榜，所以需要切到推荐后再拿 Cookie）
-2.  ~~文章和推荐列表加载出不来，可能是由于 puppeteer 没安装浏览器，CMD 运行一下`npx puppeteer browsers install chrome@135.0.7049.84`，安装浏览器，安装完成后重启一下 VSCode。~~**（v0.1.0 已修复）**
-3.  欢迎在 Issues 中反馈问题，或者直接在插件中反馈问题，我会尽快修复。
+2.  欢迎在 Issues 中反馈问题，或者直接在插件中反馈问题，我会尽快修复。
 
 ## 🔧 实现原理 🔧
 
 基于 VSCode 插件脚手架，使用 Puppeteer 来模拟浏览知乎，抓取内容并渲染成 HTML，最后在 VSCode 中显示。
 
-## 反馈问题
+## 📬 反馈问题 📬
 
 1. 在[插件市场问答页](https://marketplace.visualstudio.com/items?itemName=CrispyChicken.zhihu-fisher&ssr=false#qna)中`Ask a Question`，提问即可。
 2. 在[GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)中提交问题，我看到会尽快回复。

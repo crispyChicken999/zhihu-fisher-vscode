@@ -324,7 +324,11 @@ export class sidebarHotListDataProvider
       return [
         new StatusTreeItem(
           "正在加载知乎热榜...",
-          new vscode.ThemeIcon("loading~spin")
+          new vscode.ThemeIcon("loading~spin"),
+          null,
+          "热榜加载中，请稍候...\n"+
+          "热榜加载速度是最快的，通常在5秒内就能加载完成。\n"+
+          "因为无需模拟滚动加载更多数据(≧∇≦)ﾉ\n"
         ),
       ];
     }

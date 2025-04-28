@@ -211,7 +211,11 @@ export function activate(context: vscode.ExtensionContext) {
     "zhihu-fisher.setMediaModeNormal",
     async () => {
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
-      await config.update("mediaDisplayMode", "normal", vscode.ConfigurationTarget.Global);
+      await config.update(
+        "mediaDisplayMode",
+        "normal",
+        vscode.ConfigurationTarget.Global
+      );
       vscode.window.showInformationMessage("图片和视频正常展示~");
     }
   );
@@ -221,8 +225,14 @@ export function activate(context: vscode.ExtensionContext) {
     "zhihu-fisher.setMediaModeMini",
     async () => {
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
-      await config.update("mediaDisplayMode", "mini", vscode.ConfigurationTarget.Global);
-      vscode.window.showInformationMessage("图片和视频将缩小尺寸展示，方便偷偷看哈哈~");
+      await config.update(
+        "mediaDisplayMode",
+        "mini",
+        vscode.ConfigurationTarget.Global
+      );
+      vscode.window.showInformationMessage(
+        "图片和视频将缩小尺寸展示，方便偷偷看哈哈~"
+      );
     }
   );
 
@@ -231,7 +241,11 @@ export function activate(context: vscode.ExtensionContext) {
     "zhihu-fisher.setMediaModeNone",
     async () => {
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
-      await config.update("mediaDisplayMode", "none", vscode.ConfigurationTarget.Global);
+      await config.update(
+        "mediaDisplayMode",
+        "none",
+        vscode.ConfigurationTarget.Global
+      );
       vscode.window.showInformationMessage("图片和视频将不再展示~");
     }
   );
@@ -436,7 +450,8 @@ export function activate(context: vscode.ExtensionContext) {
     // 只在非mediaDisplayMode的配置变更时才刷新热榜和推荐及搜索列表
     if (
       e.affectsConfiguration("zhihu-fisher") &&
-      !e.affectsConfiguration("zhihu-fisher.mediaDisplayMode")
+      (!e.affectsConfiguration("zhihu-fisher.mediaDisplayMode") &&
+        !e.affectsConfiguration("zhihu-fisher.hideImages"))
     ) {
       sidebarHot.refresh();
       sidebarRecommend.refresh();

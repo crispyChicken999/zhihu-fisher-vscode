@@ -193,6 +193,9 @@ export class HtmlRenderer {
               padding-bottom: 0.3em;
               border-bottom: 1px solid var (--vscode-panel-border);
             }
+            h3 {
+              font-size: 16px;
+            }
             a {
               color: var(--vscode-textLink-foreground);
               text-decoration: none;
@@ -497,7 +500,7 @@ export class HtmlRenderer {
               background-color: var(--vscode-button-background);
               color: var(--vscode-button-foreground);
               border: none;
-              padding: 6px 12px;
+              padding: 8px 12px;
               border-radius: 2px;
               cursor: pointer;
               margin-right: 8px;
@@ -515,6 +518,185 @@ export class HtmlRenderer {
             .media-display-select option {
               background-color: var(--vscode-dropdown-background);
               color: var(--vscode-dropdown-foreground);
+            }
+
+            /* 样式设置面板 */
+            .style-panel {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 350px;
+              max-width: 90%;
+              font-size: 12px;
+              background-color: var(--vscode-editor-background);
+              border: 1px solid var(--vscode-panel-border);
+              border-radius: 6px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+              z-index: 1000;
+              display: none;
+              flex-direction: column;
+              transition: all 0.2s ease-in-out;
+              user-select: none;
+            }
+
+            .style-panel-mask {
+              display: none;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background-color: rgba(0, 0, 0, 0.1);
+            }
+
+            .style-panel.visible {
+              display: flex;
+            }
+
+            .style-panel-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 10px 15px;
+              border-bottom: 1px solid var(--vscode-panel-border);
+            }
+
+            .style-panel-header h4 {
+              margin: 0;
+            }
+
+            .close-button {
+              background: transparent;
+              border: none;
+              color: var(--vscode-foreground);
+              font-size: 18px;
+              cursor: pointer;
+              padding: 0 5px;
+              line-height: 1;
+            }
+
+            .close-button:hover {
+              background: var(--vscode-button-secondaryBackground);
+              border-radius: 4px;
+              color: var(--vscode-button-foreground);
+            }
+
+            .style-panel-tips {
+              font-size: 12px;
+              color: var(--vscode-descriptionForeground);
+              margin: 0 15px;
+              padding: 5px 0;
+              display: flex;
+              gap: 5px;
+              justify-content: center;
+              background: var(--vscode-activityBar-background);
+              margin-top: 15px;
+              border-radius: 4px;
+            }
+
+            .style-panel-content {
+              padding: 15px;
+              max-height: 80vh;
+              overflow-y: auto;
+            }
+
+            .style-setting {
+              margin-bottom: 20px;
+            }
+
+            .style-setting label {
+              display: block;
+              margin-bottom: 8px;
+              font-weight: 500;
+            }
+
+            .slider-container {
+              display: flex;
+              align-items: center;
+              gap: 15px;
+            }
+
+            .slider {
+              flex: 1;
+              -webkit-appearance: none;
+              width: 100%;
+              height: 6px;
+              border-radius: 3px;
+              background: var(--vscode-scrollbarSlider-background);
+              outline: none;
+              box-shadow: none;
+            }
+
+            .slider:focus {
+              outline: none !important;
+            }
+
+            .slider::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              appearance: none;
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              background: var(--vscode-button-background);
+              cursor: pointer;
+            }
+
+            .slider-value {
+              min-width: 50px;
+              text-align: right;
+            }
+
+            .select-input {
+              width: 100%;
+              padding: 8px;
+              border-radius: 4px;
+              border: 1px solid var(--vscode-panel-border);
+              background-color: var(--vscode-input-background);
+              color: var(--vscode-input-foreground);
+            }
+
+            .color-picker-container {
+              display: flex;
+              align-items: center;
+              gap: 15px;
+            }
+
+            .color-picker {
+              -webkit-appearance: none;
+              width: 40px;
+              height: 40px;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+            }
+
+            .color-value {
+              flex: 1;
+            }
+
+            .radio-group {
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: space-between;
+              align-items: center;
+              gap: 15px;
+            }
+
+            .radio-label {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+              cursor: pointer;
+              margin: 0;
+            }
+
+            .radio-label input {
+              margin: 0;
+            }
+
+            .reset-button {
+              width: 100%;
             }
           </style>
         </head>
@@ -574,11 +756,15 @@ export class HtmlRenderer {
           ${navigationHTML}
 
           <div class="toolbar">
-            <div>
+            <div style="display: flex; gap: 5px; align-items: center;">
               <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
               <button class="button" onclick="backTop()">回到顶部</button>
               <button class="button" onclick="refreshContent()" style="display: none">
                 刷新内容
+              </button>
+              <button class="button" onclick="toggleStylePanel()" title="设置页面样式" style="display: flex; align-items: center; gap: 5px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE --><path fill="currentColor" d="M10.825 22q-.675 0-1.162-.45t-.588-1.1L8.85 18.8q-.325-.125-.612-.3t-.563-.375l-1.55.65q-.625.275-1.25.05t-.975-.8l-1.175-2.05q-.35-.575-.2-1.225t.675-1.075l1.325-1Q4.5 12.5 4.5 12.337v-.675q0-.162.025-.337l-1.325-1Q2.675 9.9 2.525 9.25t.2-1.225L3.9 5.975q.35-.575.975-.8t1.25.05l1.55.65q.275-.2.575-.375t.6-.3l.225-1.65q.1-.65.588-1.1T10.825 2h2.35q.675 0 1.163.45t.587 1.1l.225 1.65q.325.125.613.3t.562.375l1.55-.65q.625-.275 1.25-.05t.975.8l1.175 2.05q.35.575.2 1.225t-.675 1.075l-1.325 1q.025.175.025.338v.674q0 .163-.05.338l1.325 1q.525.425.675 1.075t-.2 1.225l-1.2 2.05q-.35.575-.975.8t-1.25-.05l-1.5-.65q-.275.2-.575.375t-.6.3l-.225 1.65q-.1.65-.587 1.1t-1.163.45zM11 20h1.975l.35-2.65q.775-.2 1.438-.587t1.212-.938l2.475 1.025l.975-1.7l-2.15-1.625q.125-.35.175-.737T17.5 12t-.05-.787t-.175-.738l2.15-1.625l-.975-1.7l-2.475 1.05q-.55-.575-1.212-.962t-1.438-.588L13 4h-1.975l-.35 2.65q-.775.2-1.437.588t-1.213.937L5.55 7.15l-.975 1.7l2.15 1.6q-.125.375-.175.75t-.05.8q0 .4.05.775t.175.75l-2.15 1.625l.975 1.7l2.475-1.05q.55.575 1.213.963t1.437.587zm1.05-4.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.487 1.025T8.55 12t1.013 2.475T12.05 15.5M12 12"/></svg>
+                样式设置
               </button>
             </div>
             <div>
@@ -599,8 +785,149 @@ export class HtmlRenderer {
               </select>
             </div>
           </div>
+
+          <!-- 样式设置面板遮罩层 -->
+          <div class="style-panel-mask" onclick="toggleStylePanel()"></div>
+          <!-- 样式设置面板 -->
+          <div id="style-panel" class="style-panel">
+            <div class="style-panel-header">
+              <h4>
+                页面样式设置
+              </h4>
+              <button class="close-button" onclick="toggleStylePanel()">×</button>
+            </div>
+            <div class="style-panel-tips">
+              <span style="flex: 0 0 auto;">使用键盘</span>
+              <span style="flex: 0 0 auto; display: inline-flex; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0"/></g></svg>
+              </span>
+              <span style="flex: 0 0 auto;">快速设置页面样式</span>
+            </div>
+            <div class="style-panel-content">
+              <div class="style-setting">
+                <label for="title-font-size">标题字体大小</label>
+                <div class="slider-container">
+                  <input
+                    type="range"
+                    id="title-font-size"
+                    min="8"
+                    max="36"
+                    value="16"
+                    class="slider"
+                    oninput="updateStyle('title-font-size', this.value + 'px', 'fontSize', 'h3')"
+                  >
+                  <span class="slider-value" id="title-font-size-value">16</span>
+                </div>
+              </div>
+
+              <div class="style-setting">
+                <label for="font-family">全文字体类型</label>
+                <select
+                  id="font-family"
+                  class="select-input"
+                  onchange="updateStyle('font-family', this.value, 'fontFamily', 'body')"
+                >
+                  <option value="-apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif">系统默认</option>
+                  <option value="'Microsoft YaHei', 'PingFang SC', sans-serif">微软雅黑</option>
+                  <option value="'SimSun', serif">宋体</option>
+                  <option value="'KaiTi', serif">楷体</option>
+                  <option value="'SimHei', sans-serif">黑体</option>
+                  <option value="'NSimSun', monospace">新宋体</option>
+                </select>
+              </div>
+
+              <div class="style-setting">
+                <label for="content-font-size">文章字体大小</label>
+                <div class="slider-container">
+                  <input
+                    type="range"
+                    id="content-font-size"
+                    min="8"
+                    max="24"
+                    value="13"
+                    class="slider"
+                    oninput="updateStyle('content-font-size', this.value + 'px', 'fontSize', '.article-content')"
+                  >
+                  <span class="slider-value" id="content-font-size-value">13</span>
+                </div>
+              </div>
+
+              <div class="style-setting">
+                <label for="content-color">文章字体颜色</label>
+                <div class="color-picker-container">
+                  <input
+                    type="color"
+                    id="content-color"
+                    value="#000000"
+                    class="color-picker"
+                    oninput="updateStyle('content-color', this.value, 'color', '.article-content')"
+                  >
+                  <span class="color-value" id="content-color-value">#000000</span>
+                </div>
+              </div>
+
+              <div class="style-setting">
+                <label>文字对齐方式</label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="text-align"
+                      value="left"
+                      checked
+                      onclick="updateStyle('text-align', 'left', 'textAlign', '.article-content')"
+                    >
+                    <span>左对齐</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="text-align"
+                      value="center"
+                      onclick="updateStyle('text-align', 'center', 'textAlign', '.article-content')"
+                    >
+                    <span>居中</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="text-align"
+                      value="right"
+                      onclick="updateStyle('text-align', 'right', 'textAlign', '.article-content')"
+                    >
+                    <span>右对齐</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="text-align"
+                      value="justify"
+                      onclick="updateStyle('text-align', 'justify', 'textAlign', '.article-content')"
+                    >
+                    <span>两端对齐</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="style-setting" style="margin-bottom: 0;">
+                <button class="button reset-button" onclick="resetStyles()">重置样式</button>
+              </div>
+            </div>
+          </div>
           <script>
             const vscode = acquireVsCodeApi();
+
+            // 默认的字体颜色
+            const defaultTextColor = getComputedStyle(document.body).getPropertyValue('--vscode-foreground').trim();
+            // 默认的标题字体大小
+            const defaultTitleFontSize = 16;
+            // 默认的文章字体大小
+            const defaultContentFontSize = 13;
+            // 默认的文章对齐方式
+            const defaultTextAlign = 'left';
+
+            document.querySelector('.color-picker').value = defaultTextColor;
+            document.getElementById('content-color-value').textContent = defaultTextColor;
 
             function backTop() {
               window.scrollTo({ top: 0, behavior: "smooth" });
@@ -656,10 +983,118 @@ export class HtmlRenderer {
               vscode.postMessage({ command: "jumpToAnswer", index: index });
             }
 
-            // 在页面加载完成后自动设置焦点
+            // 切换样式设置面板
+            function toggleStylePanel() {
+              const stylePanel = document.getElementById('style-panel');
+              stylePanel.classList.toggle('visible');
+              const panelMask = document.querySelector('.style-panel-mask');
+              panelMask.style.display = stylePanel.classList.contains('visible') ? 'block' : 'none';
+            }
+
+            // 更新样式并实时应用到页面
+            function updateStyle(settingId, value, cssProperty, selector) {
+              // 更新显示值
+              if (settingId === 'title-font-size' || settingId === 'content-font-size') {
+                document.getElementById(settingId+'-value').textContent = value;
+
+                if (settingId === 'title-font-size') {
+                  document.querySelector('.author-info').style.fontSize = value.replace('px', '') > 12 ? '12px' : value;
+                } else {
+                  document.querySelector('.answer-meta').style.fontSize = value;
+                }
+              } else if (settingId === 'content-color') {
+                document.getElementById(settingId+'-value').textContent = value;
+              }
+
+              // 应用样式到页面元素
+              const elements = document.querySelectorAll(selector);
+              elements.forEach(element => {
+                element.style[cssProperty] = value;
+              });
+
+              // 保存设置到本地存储
+              const styleSettings = JSON.parse(localStorage.getItem('zhihu-fisher-styles') || '{}');
+              styleSettings[settingId] = {
+                value,
+                cssProperty,
+                selector
+              };
+              localStorage.setItem('zhihu-fisher-styles', JSON.stringify(styleSettings));
+
+              document.querySelector('#focus-element').focus(); // 设置焦点方便键盘事件生效
+            }
+
+            // 重置所有样式
+            function resetStyles() {
+              // 重置标题字体大小
+              document.getElementById('title-font-size').value = defaultTitleFontSize;
+              updateStyle('title-font-size', defaultTitleFontSize + 'px', 'fontSize', 'h3');
+
+              // 重置全文字体类型
+              const defaultFont = "-apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif";
+              document.getElementById('font-family').value = defaultFont;
+              updateStyle('font-family', defaultFont, 'fontFamily', 'body');
+
+              // 重置文章字体大小
+              document.getElementById('content-font-size').value = defaultContentFontSize;
+              updateStyle('content-font-size', defaultContentFontSize + 'px', 'fontSize', '.article-content');
+
+              // 重置文章字体颜色
+              document.getElementById('content-color').value = defaultTextColor;
+              updateStyle('content-color', defaultTextColor, 'color', '.article-content');
+
+              // 重置文章对齐方式
+              document.querySelector('input[name="text-align"][value="left"]').checked = true;
+              updateStyle('text-align', defaultTextAlign, 'textAlign', '.article-content');
+
+              // 清除本地存储的样式设置
+              localStorage.removeItem('zhihu-fisher-styles');
+            }
+
+            // 加载保存的样式设置
+            function loadSavedStyles() {
+              const styleSettings = JSON.parse(localStorage.getItem('zhihu-fisher-styles') || '{}');
+
+              // 遍历保存的样式并应用
+              Object.keys(styleSettings).forEach(settingId => {
+                const { value, cssProperty, selector } = styleSettings[settingId];
+
+                // 更新控件值
+                if (settingId === 'title-font-size' || settingId === 'content-font-size') {
+                  const inputElement = document.getElementById(settingId);
+                  inputElement.value = parseInt(value, 10);
+                  document.getElementById(settingId+'-value').textContent = value;
+
+                  if (settingId === 'title-font-size') {
+                    document.querySelector('.author-info').style.fontSize = value.replace('px', '') > 12 ? '12px' : value;
+                  } else {
+                    document.querySelector('.answer-meta').style.fontSize = value;
+                  }
+                } else if (settingId === 'font-family') {
+                  document.getElementById(settingId).value = value;
+                } else if (settingId === 'content-color') {
+                  document.getElementById(settingId).value = value;
+                  document.getElementById(settingId+'-value').textContent = value;
+                } else if (settingId === 'text-align') {
+                  document.querySelector(\`input[name="text-align"][value=\$\{value\}]\`).checked = true;
+                }
+
+                // 应用样式到页面元素
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(element => {
+                  element.style[cssProperty] = value;
+                });
+              });
+            }
+
+            // 在页面加载完成后自动设置焦点并加载保存的样式
             window.addEventListener("load", function() {
-              // 或者也可以创建并聚焦一个隐藏的可聚焦元素
+              // 加载保存的样式
+              loadSavedStyles();
+
+              // 设置焦点
               const letsFocus = document.createElement('div');
+              letsFocus.setAttribute('id', 'focus-element');
               letsFocus.tabIndex = -1; // 使元素可聚焦
               letsFocus.style.outline = 'none'; // 隐藏焦点轮廓
               letsFocus.style.position = 'absolute'; // 绝对定位
@@ -695,6 +1130,9 @@ export class HtmlRenderer {
                 }
               } else if (event.key === "/") {
                 toggleMedia();
+                event.preventDefault(); // 阻止默认行为
+              } else if (event.key === '.') {
+                toggleStylePanel();
                 event.preventDefault(); // 阻止默认行为
               }
             });

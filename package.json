@@ -61,7 +61,7 @@
       },
       {
         "command": "zhihu-fisher.setMediaModeNone",
-        "title": "不显示媒体",
+        "title": "隐藏媒体模式",
         "icon": "$(eye-closed)"
       },
       {
@@ -185,19 +185,24 @@
         "zhihu-fisher.mediaDisplayMode": {
           "type": "string",
           "enum": ["none", "mini", "normal"],
+          "enumDescriptions": [
+            "隐藏模式(不显示图片视频)",
+            "迷你模式(图片视频显示为原来的50%大小)",
+            "正常模式(正常显示图片视频)"
+          ],
           "default": "normal",
-          "description": "媒体显示模式：none - 无媒体模式(不显示图片视频)；mini - 迷你模式(图片视频显示为50%大小)；normal - 正常模式(正常显示图片视频)"
+          "description": "文章中媒体资源（图片、视频等）的显示方式。"
         },
         "zhihu-fisher.cookie": {
           "type": "string",
           "default": "",
-          "description": "知乎Cookie，用于访问需要登录的内容",
+          "description": "知乎Cookie，用于访问需要登录的内容。",
           "scope": "machine"
         },
         "zhihu-fisher.customChromePath": {
           "type": "string",
           "default": "",
-          "description": "自定义Chrome浏览器路径。如果设置，插件将使用此路径，而不是Puppeteer安装的Chrome",
+          "description": "自定义谷歌Chrome 浏览器路径。如果设置了，插件将使用此路径的浏览器，而不是 Puppeteer 安装的 Chrome 浏览器。",
           "scope": "machine"
         }
       }
