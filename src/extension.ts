@@ -445,15 +445,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // test getComments
-  const getCommentsCommand = vscode.commands.registerCommand(
-    "zhihu-fisher.getComments",
-    async () => {
-      const comments = await zhihuService.getComments();
-      console.log(comments);
-    }
-  );
-
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
     // 只在非mediaDisplayMode的配置变更时才刷新热榜和推荐及搜索列表
@@ -485,7 +476,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(setMediaModeNoneCommand);
   context.subscriptions.push(configureBrowserCommand);
   context.subscriptions.push(setCustomChromePathCommand);
-  context.subscriptions.push(getCommentsCommand);
 }
 
 // 清理资源或执行其他必要的操作

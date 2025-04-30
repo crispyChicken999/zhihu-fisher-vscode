@@ -1,9 +1,10 @@
-import { Store } from "../../stores";
-import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 import * as vscode from "vscode";
+import * as Puppeteer from "puppeteer";
 import { HtmlRenderer } from "./html";
 import { PuppeteerManager } from "../puppeteer";
-import * as Puppeteer from "puppeteer";
+import { LinkItem, WebViewItem, CommentItem, AnswerItem } from "../../types";
+import { Store } from "../../stores";
+import { CommentsManager } from "./comments";
 import { marked } from "marked";
 
 export class WebviewManager {
@@ -447,6 +448,16 @@ export class WebviewManager {
                     timeZone: "Asia/Shanghai",
                   })
                 : "",
+              commentList: [],
+              commentPaging: {
+                current: 0,
+                limit: 20,
+                is_end: false,
+                is_start: true,
+                next: null,
+                previous: null,
+                totals: 0,
+              },
               updateTime: updateTime
                 ? new Date(updateTime).toLocaleString("zh-CN", {
                     timeZone: "Asia/Shanghai",
@@ -454,15 +465,11 @@ export class WebviewManager {
                 : "",
               content: contentHtml,
             });
-
-            // 把这个元素从页面中删除，避免获后续获取回答元素时重复
-            // element.remove();
           } catch (error) {
             console.error("解析回答时出错:", error);
             throw new Error("解析回答时出错:" + error);
           }
         });
-
         return list;
       });
 
@@ -687,9 +694,6 @@ export class WebviewManager {
 
     // 处理WebView消息
     webviewItem.webviewPanel.webview.onDidReceiveMessage(async (message) => {
-      // console.log(
-      //   `接收到WebView Command: ${JSON.stringify(message)}，即将开始处理...`
-      // );
       switch (message.command) {
         case "requestContent":
           await this.crawlingURLData(webviewId);
@@ -727,6 +731,22 @@ export class WebviewManager {
           if (typeof message.index === "number") {
             await this.jumpToAnswer(webviewId, message.index);
           }
+          break;
+        // 加载评论
+        case "loadComments":
+          await this.loadComments(
+            webviewId,
+            message.answerId,
+            message.offset || 0
+          );
+          break;
+        // 加载子评论
+        case "loadChildComments":
+          await this.loadChildComments(
+            webviewId,
+            message.commentId,
+            message.offset || 0
+          );
           break;
       }
     });
@@ -796,5 +816,157 @@ export class WebviewManager {
   /** 设置面板关闭回调 */
   public setOnDidDisposeCallback(callback: (id: string) => void): void {
     this.onDidDisposeCallback = callback;
+  }
+
+  /**
+   * 加载评论
+   * @param webviewId - WebView的ID
+   * @param answerId - 回答的ID
+   * @param offset - 分页偏移量
+   */
+  public async loadComments(
+    webviewId: string,
+    answerId: string,
+    offset: number = 0
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 获取评论数据
+      const { comments, paging } = await CommentsManager.getComments(
+        answerId,
+        offset
+      );
+
+      webviewItem.article.answerList[webviewItem.article.currentAnswerIndex].commentPaging = {
+        ...paging,
+        current: offset,
+        limit: 20,
+      };
+
+
+      // 更新回答的评论列表
+      const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
+      const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
+
+      if (currentAnswer && currentAnswer.id === answerId) {
+        currentAnswer.commentList = comments;
+      }
+
+      // 生成评论HTML
+      const commentsHtml = CommentsManager.generateCommentsHTML(
+        comments,
+        answerId,
+        paging
+      );
+
+      // 更新Webview中的评论区
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateComments",
+        html: commentsHtml,
+      });
+    } catch (error) {
+      console.error("加载评论时出错:", error);
+
+      // 显示错误提示
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateComments",
+        html: `
+          <div class="zhihu-comments-container">
+            <h3>评论加载失败</h3>
+            <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
+              ${error}
+            </div>
+            <button class="zhihu-load-comments-btn" onclick="loadComments('${answerId}')">
+              重新加载
+            </button>
+          </div>
+        `,
+      });
+    }
+  }
+
+  /**
+   * 加载子评论
+   * @param webviewId - WebView的ID
+   * @param commentId - 评论的ID
+   * @param offset - 分页偏移量
+   */
+  public async loadChildComments(
+    webviewId: string,
+    commentId: string,
+    offset: number = 0
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 获取评论数据
+      const { comments, paging } = await CommentsManager.getChildComments(
+        commentId,
+        offset
+      );
+
+      // 查找父评论
+      const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
+      const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
+      let parentComment = null;
+
+      if (currentAnswer && currentAnswer.commentList.length) {
+        // 在顶层评论中查找
+        parentComment = currentAnswer.commentList.find(
+          (comment) => comment.id == commentId
+        );
+      }
+
+      if (!parentComment) {
+        throw new Error("找不到对应的父评论");
+      }
+
+      // 更新父评论的子评论列表
+      parentComment.total_child_comments = comments;
+
+      // 生成子评论弹窗HTML
+      const modalHtml = CommentsManager.generateChildCommentsModalHTML(
+        parentComment,
+        comments,
+        paging
+      );
+
+      // 更新Webview中的子评论弹窗
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateChildCommentsModal",
+        html: modalHtml,
+      });
+    } catch (error) {
+      console.error("加载子评论时出错:", error);
+
+      // 显示错误提示
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateChildCommentsModal",
+        html: `
+          <div class="zhihu-comments-modal">
+            <div class="zhihu-comments-modal-content">
+              <div class="zhihu-comments-modal-header">
+                <h3>加载失败</h3>
+                <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
+              </div>
+              <div style="text-align: center; padding: 40px; color: var(--vscode-errorForeground);">
+                加载子评论失败: ${error}
+                <div style="margin-top: 20px;">
+                  <button class="button" onclick="loadAllChildComments('${commentId}')">重试</button>
+                  <button class="button" onclick="closeCommentsModal()" style="margin-left: 10px;">关闭</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+      });
+    }
   }
 }

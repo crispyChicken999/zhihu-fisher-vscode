@@ -26,17 +26,4 @@ export class ZhihuService {
   async getArticleContent(item: LinkItem) {
     this.webviewManager.openWebview(item);
   }
-
-  /** getComments */
-  async getComments() {
-    return CommentsManager.getComments()
-      .then((res) => {
-        console.log(res);
-        return res;
-      })
-      .catch((err) => {
-        console.error(err);
-        throw err;
-      });
-  }
 }

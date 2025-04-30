@@ -1,7 +1,14 @@
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
 import { Store } from "../../stores";
-import { AnswerAuthor, ArticleInfo, WebViewItem } from "../../types";
+import {
+  AnswerAuthor,
+  ArticleInfo,
+  WebViewItem,
+  CommentItem,
+} from "../../types";
+import * as fs from "fs";
+import * as path from "path";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -152,6 +159,15 @@ export class HtmlRenderer {
 
     // 回答的来源URL
     const sourceUrl = currentAnswer?.url || webview.url || "";
+
+    // 获取评论样式
+    let commentsCssPath = path.join(__dirname, "../src/core/zhihu/webview/comments/comments.css");
+    let commentsCSS = "";
+    try {
+      commentsCSS = fs.readFileSync(commentsCssPath, "utf8");
+    } catch (error) {
+      console.error("无法加载评论样式文件:", error);
+    }
 
     return `
       <!DOCTYPE html>
@@ -503,7 +519,6 @@ export class HtmlRenderer {
               padding: 8px 12px;
               border-radius: 2px;
               cursor: pointer;
-              margin-right: 8px;
               appearance: auto; /* 保留下拉箭头 */
             }
 
@@ -699,6 +714,9 @@ export class HtmlRenderer {
               width: 100%;
             }
           </style>
+          <style>
+            ${commentsCSS}
+          </style>
         </head>
         <body>
           <header>
@@ -752,6 +770,15 @@ export class HtmlRenderer {
           ${answerMetaHTML}
 
           <div class="article-content ${mediaModeClass}">${processedContent}</div>
+
+          <!-- 评论区 -->
+          <div id="comments-container">
+            <button class="zhihu-load-comments-btn" onclick="loadComments('${
+              currentAnswer?.id
+            }')" data-answer-id="${currentAnswer?.id}">
+              加载评论 (${currentAnswer?.commentCount || 0})
+            </button>
+          </div>
 
           ${navigationHTML}
 
@@ -914,6 +941,10 @@ export class HtmlRenderer {
               </div>
             </div>
           </div>
+
+          <!-- 评论弹窗容器 -->
+          <div id="comments-modal-container"></div>
+
           <script>
             const vscode = acquireVsCodeApi();
 
@@ -981,6 +1012,51 @@ export class HtmlRenderer {
             function jumpToAnswer(index) {
               window.scrollTo(0, 0); // 滚动到顶部
               vscode.postMessage({ command: "jumpToAnswer", index: index });
+            }
+
+            // 加载评论
+            function loadComments(answerId) {
+              const commentsContainer = document.getElementById('comments-container');
+              commentsContainer.innerHTML = '<div class="zhihu-comments-loading"><div class="zhihu-comments-loading-spinner"></div>加载评论中...</div>';
+              vscode.postMessage({
+                command: "loadComments",
+                answerId: answerId
+              });
+            }
+
+            // 加载更多评论（分页）
+            function loadMoreComments(answerId, offset) {
+              vscode.postMessage({
+                command: "loadComments",
+                answerId: answerId,
+                offset: offset
+              });
+            }
+
+            // 查看全部子评论
+            function loadAllChildComments(commentId) {
+              const modalContainer = document.getElementById('comments-modal-container');
+              modalContainer.innerHTML = '<div class="zhihu-comments-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;"><div class="zhihu-comments-loading-spinner"></div>加载子评论中...</div>';
+
+              vscode.postMessage({
+                command: "loadChildComments",
+                commentId: commentId
+              });
+            }
+
+            // 加载子评论的更多页
+            function loadMoreChildComments(commentId, offset) {
+              vscode.postMessage({
+                command: "loadChildComments",
+                commentId: commentId,
+                offset: offset
+              });
+            }
+
+            // 关闭子评论弹窗
+            function closeCommentsModal() {
+              const modalContainer = document.getElementById('comments-modal-container');
+              modalContainer.innerHTML = '';
             }
 
             // 切换样式设置面板
@@ -1134,6 +1210,24 @@ export class HtmlRenderer {
               } else if (event.key === '.') {
                 toggleStylePanel();
                 event.preventDefault(); // 阻止默认行为
+              }
+            });
+
+            // 监听来自扩展的消息
+            window.addEventListener('message', event => {
+              const message = event.data;
+
+              // 处理更新评论的消息
+              if (message.command === 'updateComments') {
+                const commentsContainer = document.getElementById('comments-container');
+                commentsContainer.innerHTML = message.html;
+                window.scrollTo(0, document.body.scrollHeight); // 滚动到底部
+              }
+
+              // 处理更新子评论弹窗的消息
+              else if (message.command === 'updateChildCommentsModal') {
+                const modalContainer = document.getElementById('comments-modal-container');
+                modalContainer.innerHTML = message.html;
               }
             });
           </script>

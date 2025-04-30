@@ -130,7 +130,26 @@ export interface AnswerItem {
   /** 回答的评论数 */
   commentCount: number;
   /** 回答的评论列表 */
-  commnetList?: CommentItem[];
+  commentList: CommentItem[];
+  /** 回答的评论分页参数 */
+  commentPaging: {
+    /** 是否到最后一页了 */
+    is_end: boolean;
+    /** 是否是第一页 */
+    is_start: boolean;
+    /** 下一页的接口URL */
+    next: string | null;
+    /** 上一页的接口URL */
+    previous: string | null;
+    /** 全部的评论数量 */
+    totals: number;
+    /** 已加载的评论数量 (由commentList.length + commentList.reduce((acc,cur)=> acc += cur.child_comment_count),0)决定) 作为中断条件，判断是否触及底部*/
+    // loadedTotals: number;
+    /** 当前页码 */
+    current: number;
+    /** 每页大小 */
+    limit: number;
+  };
   /** 回答的发布时间 */
   publishTime: string;
   /** 回答的更新时间 */
@@ -161,36 +180,48 @@ export interface CommentItem {
   id: string;
   /** 评论的内容 */
   content: string;
+  /** 评论的发布时间 */
+  created_time: number;
   /** 评论的作者信息 */
   author: {
-    // id: string;
-    // //* 作者主页URL */
-    // url: string;
-    // /** 作者的名称 */
-    // name: string;
-    // /** 作者的签名 headline */
-    // signature: string;
-    // /** 作者的头像 avatar_url */
-    // avatar: string;
-    member: {
-      /** 作者的ID */
-      id: string;
-      /** 作者主页URL 需要replace 'api/v4/comment_v5' 为空  */
-      url: string;
-      /** 作者的名称 */
-      name: string;
-      /** 作者的签名 */
-      headline: string;
-      /** 作者的头像 */
-      avatar_url: string;
-    }
+    /** 作者的ID */
+    id: string;
+    /** 作者主页URL 需要replace 'api/v4/comment_v5' 为空  */
+    url: string;
+    /** 作者的名称 */
+    name: string;
+    /** 作者的签名 */
+    headline: string;
+    /** 作者的头像 */
+    avatar_url: string;
   };
   /** 评论的点赞数 */
   vote_count: number;
+  /** 评论的分页参数（用于子评论） */
+  commentPaging: {
+    /** 是否到最后一页了 */
+    is_end: boolean;
+    /** 是否是第一页 */
+    is_start: boolean;
+    /** 下一页的接口URL */
+    next: string | null;
+    /** 上一页的接口URL */
+    previous: string | null;
+    /** 全部的评论数量 */
+    totals: number;
+    /** 已加载的评论数量(由total_child_comments决定) 作为中断条件，判断是否触及底部*/
+    // loadedTotals: number;
+    /** 当前页码 */
+    current: number;
+    /** 每页大小 */
+    limit: number;
+  };
   /** 该条评论的回复 */
   child_comments: CommentItem[];
-  /** 该条评论的回复总数 */
+  /** 该条评论的回复总数，如果总数大于child_comments的length则认为有更多的回答 */
   child_comment_count: number;
+  /** 全部的子评论，因为是分页数据，还是不要和之前的child_comments进行混淆，分开存放 */
+  total_child_comments: CommentItem[];
   /** 评论的点赞数 */
   like_count: number;
 }
