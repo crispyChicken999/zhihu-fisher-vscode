@@ -129,13 +129,13 @@ export interface AnswerItem {
   likeCount: number;
   /** 回答的评论数 */
   commentCount: number;
-  /** 回答的评论列表 */
+  /** 回答的评论列表（存储所有已加载的评论） */
   commentList: CommentItem[];
   /** 回答的评论分页参数 */
   commentPaging: {
-    /** 是否到最后一页了 */
+    /** 是否到最后一页了（当已加载的评论数量 commentList.length + commentList评论中的子评论数量总和 >= totals时为true） */
     is_end: boolean;
-    /** 是否是第一页 */
+    /** 是否是第一页（当current为1时为true） */
     is_start: boolean;
     /** 下一页的接口URL */
     next: string | null;
@@ -143,8 +143,8 @@ export interface AnswerItem {
     previous: string | null;
     /** 全部的评论数量 */
     totals: number;
-    /** 已加载的评论数量 (由commentList.length + commentList.reduce((acc,cur)=> acc += cur.child_comment_count),0)决定) 作为中断条件，判断是否触及底部*/
-    // loadedTotals: number;
+    /** 已加载的评论数量（由commentList.length + commentList.reduce((acc,cur)=> acc += cur.child_comment_count),0)决定） */
+    loadedTotals: number;
     /** 当前页码 */
     current: number;
     /** 每页大小 */
@@ -199,9 +199,9 @@ export interface CommentItem {
   vote_count: number;
   /** 评论的分页参数（用于子评论） */
   commentPaging: {
-    /** 是否到最后一页了 */
+    /** 是否到最后一页了（当total_child_comments.length >= child_comment_count时为true） */
     is_end: boolean;
-    /** 是否是第一页 */
+    /** 是否是第一页（当current为1时为true） */
     is_start: boolean;
     /** 下一页的接口URL */
     next: string | null;
@@ -209,18 +209,22 @@ export interface CommentItem {
     previous: string | null;
     /** 全部的评论数量 */
     totals: number;
-    /** 已加载的评论数量(由total_child_comments决定) 作为中断条件，判断是否触及底部*/
-    // loadedTotals: number;
+    /** 已加载的评论数量（total_child_comments.length） */
+    loadedTotals: number;
     /** 当前页码 */
     current: number;
     /** 每页大小 */
     limit: number;
+    /** 下一页的api请求参数 */
+    next_offset: string | null;
+    /** 上一页的api请求参数 */
+    previous_offset: string | null;
   };
-  /** 该条评论的回复 */
+  /** 接口返回的当前分页子评论（用于临时存储API返回的当前页评论） */
   child_comments: CommentItem[];
-  /** 该条评论的回复总数，如果总数大于child_comments的length则认为有更多的回答 */
+  /** 该条评论的回复总数，如果总数大于total_child_comments.length则认为有更多的回答 */
   child_comment_count: number;
-  /** 全部的子评论，因为是分页数据，还是不要和之前的child_comments进行混淆，分开存放 */
+  /** 已加载的所有子评论（存储所有已加载的子评论） */
   total_child_comments: CommentItem[];
   /** 评论的点赞数 */
   like_count: number;

@@ -457,6 +457,7 @@ export class WebviewManager {
                 next: null,
                 previous: null,
                 totals: 0,
+                loadedTotals: 0,
               },
               updateTime: updateTime
                 ? new Date(updateTime).toLocaleString("zh-CN", {
@@ -737,7 +738,12 @@ export class WebviewManager {
           await this.loadComments(
             webviewId,
             message.answerId,
-            message.offset || 0
+            // 前端可能传递page或offset，统一转换为page
+            typeof message.page === "number"
+              ? message.page
+              : typeof message.offset === "number"
+              ? Math.floor(message.offset / 20) + 1
+              : 1
           );
           break;
         // 加载子评论
@@ -745,7 +751,12 @@ export class WebviewManager {
           await this.loadChildComments(
             webviewId,
             message.commentId,
-            message.offset || 0
+            // 前端可能传递page或offset，统一转换为page
+            typeof message.page === "number"
+              ? message.page
+              : typeof message.offset === "number"
+              ? Math.floor(message.offset / 20) + 1
+              : 1
           );
           break;
       }
@@ -822,12 +833,12 @@ export class WebviewManager {
    * 加载评论
    * @param webviewId - WebView的ID
    * @param answerId - 回答的ID
-   * @param offset - 分页偏移量
+   * @param page - 页码，从1开始
    */
   public async loadComments(
     webviewId: string,
     answerId: string,
-    offset: number = 0
+    page: number = 1
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -835,39 +846,84 @@ export class WebviewManager {
     }
 
     try {
+      // 根据页码计算offset
+      const limit = 20;
+      const offset = (page - 1) * limit;
+
       // 获取评论数据
       const { comments, paging } = await CommentsManager.getComments(
         answerId,
         offset
       );
 
-      webviewItem.article.answerList[webviewItem.article.currentAnswerIndex].commentPaging = {
-        ...paging,
-        current: offset,
-        limit: 20,
-      };
-
-
       // 更新回答的评论列表
       const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
       const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
 
       if (currentAnswer && currentAnswer.id === answerId) {
-        currentAnswer.commentList = comments;
+        // 判断是否是第一页
+        const is_start = page === 1;
+
+        if (is_start) {
+          // 如果是第一页，则初始化评论列表
+          currentAnswer.commentList = [...comments];
+        } else {
+          // 如果不是第一页，则增量添加评论
+          // 去重逻辑：通过id判断评论是否已经存在
+          const existingIds = new Set(
+            currentAnswer.commentList.map((comment) => comment.id)
+          );
+          const newComments = comments.filter(
+            (comment) => !existingIds.has(comment.id)
+          );
+          currentAnswer.commentList = [
+            ...currentAnswer.commentList,
+            ...newComments,
+          ];
+        }
+
+        // 计算已加载的评论总数
+        const loadedTotals = currentAnswer.commentList.reduce(
+          (acc, cur) => acc + (cur.child_comment_count || 0),
+          currentAnswer.commentList.length
+        );
+
+        // 更新分页信息
+        const totalPages = Math.ceil(paging.totals / limit);
+        currentAnswer.commentPaging = {
+          ...paging,
+          current: page,
+          limit,
+          loadedTotals,
+          is_start: page === 1,
+          // 如果已加载的评论总数(包括子评论) >= 总评论数，或者当前页已经是最后一页，则认为已加载完成
+          is_end: loadedTotals >= paging.totals || page >= totalPages,
+        };
+
+        // 根据当前页码截取要显示的评论
+        const startIndex = (page - 1) * limit;
+        const endIndex = Math.min(
+          startIndex + limit,
+          currentAnswer.commentList.length
+        );
+        const displayComments = currentAnswer.commentList.slice(
+          startIndex,
+          endIndex
+        );
+
+        // 生成评论HTML，只传递当前页的评论用于展示
+        const commentsHtml = CommentsManager.generateCommentsHTML(
+          displayComments, // 使用当前页的评论列表进行展示
+          answerId,
+          currentAnswer.commentPaging
+        );
+
+        // 更新Webview中的评论区
+        webviewItem.webviewPanel.webview.postMessage({
+          command: "updateComments",
+          html: commentsHtml,
+        });
       }
-
-      // 生成评论HTML
-      const commentsHtml = CommentsManager.generateCommentsHTML(
-        comments,
-        answerId,
-        paging
-      );
-
-      // 更新Webview中的评论区
-      webviewItem.webviewPanel.webview.postMessage({
-        command: "updateComments",
-        html: commentsHtml,
-      });
     } catch (error) {
       console.error("加载评论时出错:", error);
 
@@ -893,12 +949,12 @@ export class WebviewManager {
    * 加载子评论
    * @param webviewId - WebView的ID
    * @param commentId - 评论的ID
-   * @param offset - 分页偏移量
+   * @param page - 页码，从1开始
    */
   public async loadChildComments(
     webviewId: string,
     commentId: string,
-    offset: number = 0
+    page: number = 1
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -906,12 +962,6 @@ export class WebviewManager {
     }
 
     try {
-      // 获取评论数据
-      const { comments, paging } = await CommentsManager.getChildComments(
-        commentId,
-        offset
-      );
-
       // 查找父评论
       const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
       const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
@@ -928,14 +978,65 @@ export class WebviewManager {
         throw new Error("找不到对应的父评论");
       }
 
-      // 更新父评论的子评论列表
-      parentComment.total_child_comments = comments;
+      // 确定合适的offset参数
+      let offset: string | number = 0;
+      
+      if (page === 1) {
+        // 第一页使用默认的offset=0
+        offset = 0;
+      } else if (page > 1) {
+        offset = parentComment.commentPaging.next_offset || 0;
+      }
+
+      // 获取子评论数据
+      const { comments, paging } = await CommentsManager.getChildComments(
+        commentId,
+        offset
+      );
+
+      // 判断是否是第一页
+      const is_start = page === 1;
+        
+      if (is_start) {
+        // 如果是第一页，初始化子评论列表
+        parentComment.total_child_comments = [...comments];
+      } else {
+        // 如果不是第一页，则增量添加子评论
+        // 去重逻辑，通过id判断评论是否已经存在
+        if (!parentComment.total_child_comments) {
+          parentComment.total_child_comments = [];
+        }
+        
+
+        
+        const existingIds = new Set(parentComment.total_child_comments.map(comment => comment.id));
+        const newComments = comments.filter(comment => !existingIds.has(comment.id));
+        parentComment.total_child_comments = [...parentComment.total_child_comments, ...newComments];
+      }
+
+      // 更新分页信息
+      parentComment.commentPaging = {
+        ...paging,
+        current: page,
+        limit: 20,
+        loadedTotals: parentComment.total_child_comments.length,
+        is_start: is_start,
+        // 判断是否已加载完全部子评论
+        is_end: paging.is_end || parentComment.total_child_comments.length >= parentComment.child_comment_count,
+        next_offset: paging.next_offset || null,
+        previous_offset: paging.previous_offset || null,
+      };
+      
+      // 根据当前页码截取要显示的子评论
+      // 这里特别注意: 由于知乎API返回的评论顺序可能和页码不完全对应
+      // 我们直接使用API返回的当前页评论进行展示，而不是从累积的评论中截取
+      const displayChildComments = [...comments];
 
       // 生成子评论弹窗HTML
       const modalHtml = CommentsManager.generateChildCommentsModalHTML(
         parentComment,
-        comments,
-        paging
+        displayChildComments,  // 只展示当前页的子评论
+        parentComment.commentPaging  // 使用更新后的分页信息
       );
 
       // 更新Webview中的子评论弹窗

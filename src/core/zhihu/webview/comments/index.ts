@@ -24,12 +24,12 @@ export class CommentsManager {
   /**
    * 获取子评论的URL模板
    * @param commentId 评论ID
-   * @param offset 起始偏移量（分页用）
+   * @param offset 起始偏移量（分页用），可能是数字或字符串
    * @param limit 每页数量限制
    */
   private static getChildCommentsURL(
     commentId: string,
-    offset: number = 0,
+    offset: number | string = 0,
     limit: number = 20
   ): string {
     return `https://www.zhihu.com/api/v4/comment_v5/comment/${commentId}/child_comment?order=normal&limit=${limit}&offset=${offset}&status=open`;
@@ -95,12 +95,12 @@ export class CommentsManager {
   /**
    * 获取子评论列表
    * @param commentId 评论ID
-   * @param offset 起始偏移量
+   * @param offset 起始偏移量，可能是数字或字符串
    * @param limit 每页数量限制
    */
   public static async getChildComments(
     commentId: string,
-    offset: number = 0,
+    offset: number | string = 0,
     limit: number = 20
   ): Promise<{
     comments: CommentItem[];
@@ -110,6 +110,8 @@ export class CommentsManager {
       next: string | null;
       previous: string | null;
       totals: number;
+      next_offset: string | null; // 下一页的offset值
+      previous_offset: string | null; // 上一页的offset值
     };
   }> {
     try {
@@ -122,14 +124,33 @@ export class CommentsManager {
         },
       });
 
+      // 从next和previous URL中提取offset参数
+      const extractOffset = (url: string | null): string | null => {
+        if (!url) return null;
+        try {
+          const match = url.match(/offset=([^&]*)/);
+          return match ? match[1] : null;
+        } catch {
+          return null;
+        }
+      };
+
+      // 检查是否为最后一页
+      // 如果返回的数据为空或数据长度小于请求的limit，或者没有next链接，则认为是最后一页
+      const is_end = response.data.data.length === 0 || 
+                    response.data.data.length < limit || 
+                    !response.data.paging.next;
+
       return {
         comments: response.data.data,
         paging: {
-          is_end: response.data.paging.is_end,
-          is_start: response.data.paging.is_start,
+          is_end: is_end,
+          is_start: offset === 0 || offset === '0' || !offset,
           next: response.data.paging.next,
           previous: response.data.paging.previous,
           totals: response.data.counts.total_counts,
+          next_offset: extractOffset(response.data.paging.next),
+          previous_offset: extractOffset(response.data.paging.previous)
         },
       };
     } catch (error) {
@@ -313,38 +334,31 @@ export class CommentsManager {
 
   /**
    * 生成分页按钮HTML
+   * @param paging 分页信息
    * @param answerId 回答ID
    */
   private static generatePaginationHTML(paging: any, answerId: string): string {
-    // 从URL中提取offset参数
-    const getOffset = (url: string | null): number => {
-      if (!url) return 0;
-      try {
-        const match = url.match(/offset=(\d+)/);
-        return match ? parseInt(match[1], 10) : 0;
-      } catch (error) {
-        return 0;
-      }
-    };
-
-    // 获取下一页和上一页的offset
-    const nextOffset = getOffset(paging.next);
-    const prevOffset = getOffset(paging.previous);
+    // 当前页码和分页信息
+    const currentPage = paging.current || 1;
+    const totalPages = Math.ceil(paging.totals / paging.limit) || 1;
+    const isFirstPage = currentPage === 1;
+    const isLastPage = paging.is_end || currentPage >= totalPages;
 
     return `
       <div class="zhihu-comment-pagination">
         <button
-          ${paging.is_start ? "disabled" : ""}
-          onclick="loadMoreComments('${answerId}', ${prevOffset})"
+          ${isFirstPage ? "disabled" : ""}
+          onclick="loadMoreComments('${answerId}', ${currentPage - 1})"
           class="prev-button"
           title="上一页"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           上一页
         </button>
+        <span class="page-info">第 ${currentPage}/${totalPages} 页</span>
         <button
-          ${paging.is_end ? "disabled" : ""}
-          onclick="loadMoreComments('${answerId}', ${nextOffset})"
+          ${isLastPage ? "disabled" : ""}
+          onclick="loadMoreComments('${answerId}', ${currentPage + 1})"
           class="next-button"
           title="下一页"
         >
@@ -418,33 +432,26 @@ export class CommentsManager {
       .join("");
 
     // 分页按钮
-    const getOffset = (url: string | null): number => {
-      if (!url) return 0;
-      try {
-        const match = url.match(/offset=(\d+)/);
-        return match ? parseInt(match[1], 10) : 0;
-      } catch (error) {
-        return 0;
-      }
-    };
-
-    const nextOffset = paging.next ? getOffset(paging.next) : 0;
-    const prevOffset = paging.previous ? getOffset(paging.previous) : 0;
+    const currentPage = paging.current || 1;
+    const totalPages = Math.ceil(paging.totals / paging.limit) || 1;
+    const isFirstPage = paging.is_start;
+    const isLastPage = paging.is_end;
 
     const paginationHtml = `
       <div class="zhihu-modal-pagination">
         <button
-          ${paging.is_start ? "disabled" : ""}
-          onclick="loadMoreChildComments('${parentComment.id}', ${prevOffset})"
+          ${isFirstPage ? "disabled" : ""}
+          onclick="loadMoreChildComments('${parentComment.id}', ${currentPage - 1})"
           class="prev-button"
           title="上一页"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           上一页
         </button>
+        <span class="page-info">第 ${currentPage}/${totalPages} 页</span>
         <button
-          ${paging.is_end ? "disabled" : ""}
-          onclick="loadMoreChildComments('${parentComment.id}', ${nextOffset})"
+          ${isLastPage ? "disabled" : ""}
+          onclick="loadMoreChildComments('${parentComment.id}', ${currentPage + 1})"
           class="next-button"
           title="下一页"
         >
