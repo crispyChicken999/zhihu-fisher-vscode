@@ -65,6 +65,9 @@ export class CommentsManager {
         },
       });
 
+      // 简化判断逻辑：当返回的数据长度小于请求的limit，则认为是最后一页
+      const is_end = response.data.data.length < limit;
+
       return {
         comments: response.data.data.map((comment: any) => {
           return {
@@ -79,7 +82,7 @@ export class CommentsManager {
           };
         }),
         paging: {
-          is_end: response.data.data.length < limit,
+          is_end: is_end,
           is_start: offset === 0,
           next: response.data.paging.next,
           previous: response.data.paging.previous,
@@ -271,7 +274,7 @@ export class CommentsManager {
                   <img class="zhihu-child-comment-avatar" src="${childAvatarUrl}" alt="${childAuthorName}" referrerpolicy="no-referrer">
                   <div>
                     <div class="zhihu-child-comment-author-name">
-                      <a href="#" onclick="openPage('${childAuthorUrl}')">${childAuthorName}</a>
+                      <a href="${childAuthorUrl}" title="查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
                     </div>
                   </div>
                 </div>
@@ -340,9 +343,9 @@ export class CommentsManager {
   private static generatePaginationHTML(paging: any, answerId: string): string {
     // 当前页码和分页信息
     const currentPage = paging.current || 1;
-    const totalPages = Math.ceil(paging.totals / paging.limit) || 1;
     const isFirstPage = currentPage === 1;
-    const isLastPage = paging.is_end || currentPage >= totalPages;
+    // 简化逻辑：只要当前请求回来的评论数据小于limit，就认为是最后一页
+    const isLastPage = paging.is_end;
 
     return `
       <div class="zhihu-comment-pagination">
@@ -355,7 +358,7 @@ export class CommentsManager {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           上一页
         </button>
-        <span class="page-info">第 ${currentPage}/${totalPages} 页</span>
+        <span class="page-info">第 ${currentPage} 页</span>
         <button
           ${isLastPage ? "disabled" : ""}
           onclick="loadMoreComments('${answerId}', ${currentPage + 1})"
@@ -383,6 +386,7 @@ export class CommentsManager {
     // 父评论信息
     const author = parentComment.author;
     const avatarUrl = author.avatar_url || "";
+    const authorUrl = author.url?.replace("api/v4/", "") || "";
     const authorName = author.name || "匿名用户";
     const authorHeadline = author.headline || "";
     const formattedContent = parentComment.content || "";
@@ -408,7 +412,7 @@ export class CommentsManager {
             <img class="zhihu-comment-avatar" src="${childAvatarUrl}" alt="${childAuthorName}" referrerpolicy="no-referrer">
             <div class="zhihu-comment-author">
               <div class="zhihu-comment-author-name">
-                <a href="#" onclick="openPage('${childAuthorUrl}')">${childAuthorName}</a>
+                <a href="${childAuthorUrl}" title="查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
               </div>
               ${
                 childAuthorHeadline
@@ -433,8 +437,8 @@ export class CommentsManager {
 
     // 分页按钮
     const currentPage = paging.current || 1;
-    const totalPages = Math.ceil(paging.totals / paging.limit) || 1;
     const isFirstPage = paging.is_start;
+    // 简化逻辑：只要当前请求回来的评论数据小于limit，就认为是最后一页
     const isLastPage = paging.is_end;
 
     const paginationHtml = `
@@ -448,7 +452,7 @@ export class CommentsManager {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           上一页
         </button>
-        <span class="page-info">第 ${currentPage}/${totalPages} 页</span>
+        <span class="page-info">第 ${currentPage} 页</span>
         <button
           ${isLastPage ? "disabled" : ""}
           onclick="loadMoreChildComments('${parentComment.id}', ${currentPage + 1})"
@@ -473,8 +477,10 @@ export class CommentsManager {
           <div class="zhihu-comments-modal-parent-comment">
             <div class="zhihu-comment-header">
               <img class="zhihu-comment-avatar" src="${avatarUrl}" alt="${authorName}" referrerpolicy="no-referrer">
-              <div>
-                <div class="zhihu-comment-author-name">${authorName}</div>
+              <div class="zhihu-comment-author">
+                <div class="zhihu-comment-author-name">
+                  <a href="${authorUrl}" title="查看作者【${authorName}】知乎首页">${authorName}</a>
+                </div>
                 ${
                   authorHeadline
                     ? `<div class="zhihu-comment-author-headline">${authorHeadline}</div>`

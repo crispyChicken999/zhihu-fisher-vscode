@@ -161,7 +161,10 @@ export class HtmlRenderer {
     const sourceUrl = currentAnswer?.url || webview.url || "";
 
     // 获取评论样式
-    let commentsCssPath = path.join(__dirname, "../src/core/zhihu/webview/comments/comments.css");
+    let commentsCssPath = path.join(
+      __dirname,
+      "../src/core/zhihu/webview/comments/comments.css"
+    );
     let commentsCSS = "";
     try {
       commentsCSS = fs.readFileSync(commentsCssPath, "utf8");
@@ -772,7 +775,7 @@ export class HtmlRenderer {
           <div class="article-content ${mediaModeClass}">${processedContent}</div>
 
           <!-- 评论区 -->
-          <div id="comments-container">
+          <div class="comments-container ${mediaModeClass}">
             <button class="zhihu-load-comments-btn" onclick="loadComments('${
               currentAnswer?.id
             }')" data-answer-id="${currentAnswer?.id}">
@@ -943,7 +946,7 @@ export class HtmlRenderer {
           </div>
 
           <!-- 评论弹窗容器 -->
-          <div id="comments-modal-container"></div>
+          <div class="comments-modal-container ${mediaModeClass}"></div>
 
           <script>
             const vscode = acquireVsCodeApi();
@@ -1020,7 +1023,7 @@ export class HtmlRenderer {
 
             // 加载评论
             function loadComments(answerId, page = 1) {
-              const commentsContainer = document.getElementById('comments-container');
+              const commentsContainer = document.querySelector('.comments-container');
               commentsContainer.innerHTML = '<div class="zhihu-comments-loading"><div class="zhihu-comments-loading-spinner"></div>加载评论中...</div>';
               vscode.postMessage({
                 command: "loadComments",
@@ -1040,7 +1043,7 @@ export class HtmlRenderer {
 
             // 查看全部子评论
             function loadAllChildComments(commentId) {
-              const modalContainer = document.getElementById('comments-modal-container');
+              const modalContainer = document.querySelector('.comments-modal-container');
               modalContainer.innerHTML = '<div class="zhihu-comments-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;"><div class="zhihu-comments-loading-spinner"></div>加载子评论中...</div>';
 
               vscode.postMessage({
@@ -1226,23 +1229,26 @@ export class HtmlRenderer {
 
               // 处理更新评论的消息
               if (message.command === 'updateComments') {
-                const commentsContainer = document.getElementById('comments-container');
+                const commentsContainer = document.querySelector('.comments-container');
                 commentsContainer.innerHTML = message.html;
                 window.scrollTo(0, document.body.scrollHeight); // 滚动到底部
               }
 
               // 处理更新子评论弹窗的消息
               else if (message.command === 'updateChildCommentsModal') {
+                const mb = document.querySelector('.comments-modal-container');
+                mb.innerHTML= '';
+
                 // 先移除已存在的弹窗
-                const existingModal = document.querySelector('.zhihu-comments-modal');
-                if (existingModal) {
-                  existingModal.remove();
-                }
+                // const existingModal = document.querySelector('.zhihu-comments-modal');
+                // if (existingModal) {
+                //   existingModal.remove();
+                // }
 
                 // 添加新弹窗
-                const modalContainer = document.createElement('div');
-                modalContainer.innerHTML = message.html;
-                document.body.appendChild(modalContainer.firstElementChild);
+                // const modalContainer = document.createElement('div');
+                mb.innerHTML = message.html;
+                // document.body.appendChild(modalContainer.firstElementChild);
               }
             });
           </script>

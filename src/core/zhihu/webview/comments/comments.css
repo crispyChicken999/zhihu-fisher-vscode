@@ -17,8 +17,8 @@
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
   border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
+  border-radius: 2px;
+  padding: 6px 12px;
   font-size: 14px;
   cursor: pointer;
   display: inline-flex;
@@ -52,7 +52,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 评论列表样式 */
@@ -74,6 +76,10 @@
   background-color: var(--vscode-editor-background);
 }
 
+.zhihu-comment:last-of-type {
+  margin-bottom: 15px;
+}
+
 .zhihu-comment:hover {
   background-color: var(--vscode-list-hoverBackground);
 }
@@ -81,7 +87,7 @@
 /* 评论头部：头像和作者信息 */
 .zhihu-comment-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -140,22 +146,15 @@
 }
 
 /* 媒体模式应用到评论内容 */
-.article-content.hide-media .zhihu-comment-content img,
-.article-content.hide-media .zhihu-comment-content video,
-.hide-media .zhihu-comment-content img,
-.hide-media .zhihu-comment-content video {
+.comments-container.hide-media img,
+.comments-modal-container.hide-media img {
   display: none !important;
 }
 
-.article-content.mini-media .zhihu-comment-content img,
-.mini-media .zhihu-comment-content img {
-  width: calc(50%) !important;
-  height: auto !important;
-}
-
-.article-content.mini-media .zhihu-comment-content video,
-.mini-media .zhihu-comment-content video {
-  width: calc(50%) !important;
+.comments-container.mini-media img,
+.comments-modal-container.mini-media img {
+  display: block !important;
+  width: 20px !important;
   height: auto !important;
 }
 
@@ -365,6 +364,7 @@
   padding: 10px 15px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 10px;
   border-top: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
@@ -397,4 +397,3 @@
   height: 16px;
   fill: var(--vscode-button-secondaryForeground);
 }
-

@@ -897,7 +897,7 @@ export class WebviewManager {
           loadedTotals,
           is_start: page === 1,
           // 如果已加载的评论总数(包括子评论) >= 总评论数，或者当前页已经是最后一页，则认为已加载完成
-          is_end: loadedTotals >= paging.totals || page >= totalPages,
+          is_end: loadedTotals >= paging.totals || page >= totalPages || paging.totals <= limit,
         };
 
         // 根据当前页码截取要显示的评论
@@ -980,7 +980,7 @@ export class WebviewManager {
 
       // 确定合适的offset参数
       let offset: string | number = 0;
-      
+
       if (page === 1) {
         // 第一页使用默认的offset=0
         offset = 0;
@@ -996,7 +996,7 @@ export class WebviewManager {
 
       // 判断是否是第一页
       const is_start = page === 1;
-        
+
       if (is_start) {
         // 如果是第一页，初始化子评论列表
         parentComment.total_child_comments = [...comments];
@@ -1006,12 +1006,17 @@ export class WebviewManager {
         if (!parentComment.total_child_comments) {
           parentComment.total_child_comments = [];
         }
-        
 
-        
-        const existingIds = new Set(parentComment.total_child_comments.map(comment => comment.id));
-        const newComments = comments.filter(comment => !existingIds.has(comment.id));
-        parentComment.total_child_comments = [...parentComment.total_child_comments, ...newComments];
+        const existingIds = new Set(
+          parentComment.total_child_comments.map((comment) => comment.id)
+        );
+        const newComments = comments.filter(
+          (comment) => !existingIds.has(comment.id)
+        );
+        parentComment.total_child_comments = [
+          ...parentComment.total_child_comments,
+          ...newComments,
+        ];
       }
 
       // 更新分页信息
@@ -1022,11 +1027,14 @@ export class WebviewManager {
         loadedTotals: parentComment.total_child_comments.length,
         is_start: is_start,
         // 判断是否已加载完全部子评论
-        is_end: paging.is_end || parentComment.total_child_comments.length >= parentComment.child_comment_count,
+        is_end:
+          paging.is_end ||
+          parentComment.total_child_comments.length >=
+            parentComment.child_comment_count,
         next_offset: paging.next_offset || null,
         previous_offset: paging.previous_offset || null,
       };
-      
+
       // 根据当前页码截取要显示的子评论
       // 这里特别注意: 由于知乎API返回的评论顺序可能和页码不完全对应
       // 我们直接使用API返回的当前页评论进行展示，而不是从累积的评论中截取
@@ -1035,8 +1043,8 @@ export class WebviewManager {
       // 生成子评论弹窗HTML
       const modalHtml = CommentsManager.generateChildCommentsModalHTML(
         parentComment,
-        displayChildComments,  // 只展示当前页的子评论
-        parentComment.commentPaging  // 使用更新后的分页信息
+        displayChildComments, // 只展示当前页的子评论
+        parentComment.commentPaging // 使用更新后的分页信息
       );
 
       // 更新Webview中的子评论弹窗
