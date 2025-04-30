@@ -2,6 +2,7 @@ import { Store } from "../stores";
 import { LinkItem } from "../types";
 import { CookieManager } from "./cookie";
 import { WebviewManager } from "./webview";
+import { CommentsManager } from "./webview/comments";
 
 export class ZhihuService {
   private webviewManager;
@@ -24,5 +25,18 @@ export class ZhihuService {
   /** 加载文章内容 */
   async getArticleContent(item: LinkItem) {
     this.webviewManager.openWebview(item);
+  }
+
+  /** getComments */
+  async getComments() {
+    return CommentsManager.getComments()
+      .then((res) => {
+        console.log(res);
+        return res;
+      })
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      });
   }
 }

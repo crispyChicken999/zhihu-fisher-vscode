@@ -38,7 +38,7 @@ export class CookieManager {
       return;
     }
 
-    const expirationDays =  30;
+    const expirationDays = 30;
 
     const now = Date.now();
     const daysPassed =
@@ -128,5 +128,27 @@ export class CookieManager {
     setTimeout(() => {
       CookieManager.isAlerting = false; // 5秒后重置提醒状态
     }, 5000); // 5秒后重置提醒状态
+  }
+
+  /**
+   * 获取cookie中的指定字段
+   * @param key cookie字段名
+   * @returns cookie字段值，如果不存在则返回null
+   */
+  static async getCookieValue(key: string): Promise<string | null> {
+    const cookie = CookieManager.getCookie();
+    if (!cookie) {
+      return null;
+    }
+
+    const cookies = cookie.split("; ");
+    let result = null;
+    for (const c of cookies) {
+      const [k, v] = c.split("=");
+      if (k === key) {
+        result = v;
+      }
+    }
+    return result;
   }
 }

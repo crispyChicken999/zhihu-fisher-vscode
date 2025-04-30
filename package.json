@@ -73,6 +73,11 @@
         "command": "zhihu-fisher.setCustomChromePath",
         "title": "自定义浏览器路径",
         "icon": "$(folder-opened)"
+      },
+      {
+        "command": "zhihu-fisher.getComments",
+        "title": "获取评论",
+        "icon": "$(comment-discussion)"
       }
     ],
     "viewsContainers": {
@@ -162,6 +167,10 @@
         {
           "command": "zhihu-fisher.setCustomChromePath",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+        },
+        {
+          "command": "zhihu-fisher.getComments",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         }
       ],
       "zhihu-fisher.mediaDisplayMenu": [
@@ -184,7 +193,11 @@
       "properties": {
         "zhihu-fisher.mediaDisplayMode": {
           "type": "string",
-          "enum": ["none", "mini", "normal"],
+          "enum": [
+            "none",
+            "mini",
+            "normal"
+          ],
           "enumDescriptions": [
             "隐藏模式(不显示图片视频)",
             "迷你模式(图片视频显示为原来的50%大小)",
@@ -238,6 +251,7 @@
   "dependencies": {
     "axios": "^1.8.4",
     "cheerio": "^1.0.0",
+    "jsdom": "^26.1.0",
     "marked": "^15.0.8",
     "puppeteer": "^24.6.1"
   }

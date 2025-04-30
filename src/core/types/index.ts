@@ -129,6 +129,8 @@ export interface AnswerItem {
   likeCount: number;
   /** 回答的评论数 */
   commentCount: number;
+  /** 回答的评论列表 */
+  commnetList?: CommentItem[];
   /** 回答的发布时间 */
   publishTime: string;
   /** 回答的更新时间 */
@@ -153,6 +155,45 @@ export interface AnswerAuthor {
   followersCount: number;
 }
 
+/** 评论数据结构 */
+export interface CommentItem {
+  /** 评论的ID */
+  id: string;
+  /** 评论的内容 */
+  content: string;
+  /** 评论的作者信息 */
+  author: {
+    // id: string;
+    // //* 作者主页URL */
+    // url: string;
+    // /** 作者的名称 */
+    // name: string;
+    // /** 作者的签名 headline */
+    // signature: string;
+    // /** 作者的头像 avatar_url */
+    // avatar: string;
+    member: {
+      /** 作者的ID */
+      id: string;
+      /** 作者主页URL 需要replace 'api/v4/comment_v5' 为空  */
+      url: string;
+      /** 作者的名称 */
+      name: string;
+      /** 作者的签名 */
+      headline: string;
+      /** 作者的头像 */
+      avatar_url: string;
+    }
+  };
+  /** 评论的点赞数 */
+  vote_count: number;
+  /** 该条评论的回复 */
+  child_comments: CommentItem[];
+  /** 该条评论的回复总数 */
+  child_comment_count: number;
+  /** 评论的点赞数 */
+  like_count: number;
+}
 /** Cookie对象信息 */
 export interface CookieInfo {
   cookie: string;
