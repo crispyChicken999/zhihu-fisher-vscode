@@ -255,13 +255,8 @@ export class sidebarSearchListDataProvider
             // 提取回答内容摘要
             const contentElement = item.querySelector(".RichText");
             let excerpt = contentElement
-              ? contentElement.textContent || ""
+              ? `【${title}】\n\n` + contentElement.textContent || ""
               : "";
-
-            // 如果摘要太长，截断它
-            if (excerpt.length > 150) {
-              excerpt = excerpt.substring(0, 147) + "...";
-            }
 
             // 如果该结果已存在，则跳过
             if (items.some((existingItem) => existingItem.id === id)) {

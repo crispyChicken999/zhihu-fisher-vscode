@@ -203,7 +203,35 @@ export const componentsCss = `
   font-size: 0.9em;
 }
 
-/* 工具栏样式 */
+.fixed-toolbar {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.fixed-toolbar button {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fixed-toolbar button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+#scroll-to-top {
+  display: none;
+}
+
 .media-display-select {
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
@@ -272,7 +300,7 @@ export const componentsCss = `
   border: 1px solid var(--vscode-panel-border);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
+  z-index: 9999;
   display: none;
   flex-direction: column;
   transition: all 0.2s ease-in-out;
@@ -308,7 +336,8 @@ export const componentsCss = `
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.25);
+  z-index: 9998;
 }
 
 .style-panel.visible,

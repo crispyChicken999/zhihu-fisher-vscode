@@ -21,6 +21,7 @@ const articleId = "\${ARTICLE_ID}";
 document.addEventListener("DOMContentLoaded", function() {
   setupKeyboardNavigation();
   setupStylePanel();
+  setupBackTopButton();
 
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
@@ -46,10 +47,38 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+// 监听来自扩展的消息
+window.addEventListener('message', event => {
+  const message = event.data;
+
+  // 处理更新评论的消息
+  if (message.command === 'updateComments') {
+    const commentsContainer = document.querySelector('.comments-container');
+    commentsContainer.innerHTML = message.html;
+    window.scrollTo(0, document.body.scrollHeight); // 滚动到底部
+  }
+
+  // 处理更新子评论弹窗的消息
+  else if (message.command === 'updateChildCommentsModal') {
+    const mb = document.querySelector('.comments-modal-container');
+    mb.innerHTML = message.html;
+  }
+});
+
 /**
  * 设置键盘导航
  */
 function setupKeyboardNavigation() {
+  // 设置焦点，以便触发键盘事件，就不用需要点一下才能触发了
+  const letsFocus = document.createElement('div');
+  letsFocus.setAttribute('id', 'focus-element');
+  letsFocus.tabIndex = -1; // 使元素可聚焦
+  letsFocus.style.outline = 'none'; // 隐藏焦点轮廓
+  letsFocus.style.position = 'absolute'; // 绝对定位
+  document.body.appendChild(letsFocus);
+  letsFocus.focus();
+  window.scrollTo(0, 0); // 滚动到顶部
+
   document.addEventListener('keyup', function(event) {
     // 左箭头 - 上一个回答
     if (event.key === 'ArrowLeft') {
@@ -96,7 +125,11 @@ function setupStylePanel() {
     document.body.style.maxWidth = savedStyles.maxWidth;
     document.body.style.fontFamily = savedStyles.fontFamily;
     document.querySelector('.article-content').style.color = savedStyles.contentColor;
+    document.querySelector('.comments-container').style.color = savedStyles.contentColor;
+    document.querySelector('.comments-modal-container').style.color = savedStyles.contentColor;
     document.querySelector('.article-content').style.textAlign = savedStyles.textAlign;
+    document.querySelector('.comments-container').style.textAlign = savedStyles.textAlign;
+    document.querySelector('.comments-modal-container').style.textAlign = savedStyles.textAlign;
   }
 
   const updateLocalStorage = () => {
@@ -191,6 +224,8 @@ function setupStylePanel() {
         const color = this.value;
         colorValue.textContent = color;
         document.querySelector('.article-content').style.color = color;
+        document.querySelector('.comments-container').style.color = color;
+        document.querySelector('.comments-modal-container').style.color = color;
         updateLocalStorage();
       });
 
@@ -206,6 +241,8 @@ function setupStylePanel() {
       radio.addEventListener('change', function() {
         const textAlign = this.value;
         document.querySelector('.article-content').style.textAlign = textAlign;
+        document.querySelector('.comments-container').style.textAlign = textAlign;
+        document.querySelector('.comments-modal-container').style.textAlign = textAlign;
         updateLocalStorage();
       });
 
@@ -227,7 +264,11 @@ function setupStylePanel() {
       document.body.style.maxWidth = defaultStyles.maxWidth;
       document.body.style.fontFamily = defaultStyles.fontFamily;
       document.querySelector('.article-content').style.color = defaultStyles.contentColor;
+      document.querySelector('.comments-container').style.color = defaultStyles.contentColor;
+      document.querySelector('.comments-modal-container').style.color = defaultStyles.contentColor;
       document.querySelector('.article-content').style.textAlign = defaultStyles.textAlign;
+      document.querySelector('.comments-container').style.textAlign = defaultStyles.textAlign;
+      document.querySelector('.comments-modal-container').style.textAlign = defaultStyles.textAlign;
 
       // 重置控件值
       if (fontSizeSlider && fontSizeValue) {
@@ -247,6 +288,15 @@ function setupStylePanel() {
 
       if (fontFamilySelect) {
         fontFamilySelect.value = defaultStyles.fontFamily;
+
+        // 设置默认选中项
+        const options = fontFamilySelect.options;
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].value === fontFamilySelect.value) {
+            options[i].selected = true;
+            break;
+          }
+        }
       }
 
       if (contentColorPicker) {
@@ -266,6 +316,29 @@ function setupStylePanel() {
       localStorage.removeItem('savedStyles');
     });
   }
+}
+
+
+/**
+ * 设置返回顶部按钮
+ */
+function setupBackTopButton() {
+  const scrollToTopBtn = document.getElementById('scroll-to-top');
+
+  document.addEventListener('scroll', function() {
+    // 当页面滚动超过100px时显示按钮，否则隐藏
+    if (window.scrollY > 100) {
+      scrollToTopBtn.style.display = 'block';
+    } else {
+      scrollToTopBtn.style.display = 'none';
+    }
+  });
+}
+
+
+// 回到顶部
+function backTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /**
@@ -489,6 +562,54 @@ function toggleStylePanel() {
       panel.classList.add('visible');
       mask.classList.add('visible');
     }
+  }
+}
+
+// 加载评论
+function loadComments(answerId, page = 1) {
+  const commentsContainer = document.querySelector('.comments-container');
+  commentsContainer.innerHTML = '<div class="zhihu-comments-loading"><div class="zhihu-comments-loading-spinner"></div>加载评论中...</div>';
+  vscode.postMessage({
+    command: "loadComments",
+    answerId: answerId,
+    page: page
+  });
+}
+
+// 加载更多评论（分页）
+function loadMoreComments(answerId, page) {
+  vscode.postMessage({
+    command: "loadComments",
+    answerId: answerId,
+    page: page
+  });
+}
+
+// 查看全部子评论
+function loadAllChildComments(commentId) {
+  const modalContainer = document.querySelector('.comments-modal-container');
+  modalContainer.innerHTML = '<div class="zhihu-comments-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;"><div class="zhihu-comments-loading-spinner"></div>加载子评论中...</div>';
+
+  vscode.postMessage({
+    command: "loadChildComments",
+    commentId: commentId
+  });
+}
+
+// 加载子评论的更多页
+function loadMoreChildComments(commentId, page) {
+  vscode.postMessage({
+    command: "loadChildComments",
+    commentId: commentId,
+    page: page
+  });
+}
+
+// 关闭子评论弹窗
+function closeCommentsModal() {
+  const modal = document.querySelector('.zhihu-comments-modal');
+  if (modal) {
+    modal.remove();
   }
 }
 `;

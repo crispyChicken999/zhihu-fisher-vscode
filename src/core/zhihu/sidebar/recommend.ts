@@ -209,7 +209,7 @@ export class sidebarRecommendListDataProvider
 
           const excerptElement = item.querySelector(".RichContent .RichText");
           const excerpt = excerptElement
-            ? ((excerptElement as HTMLMetaElement).textContent as string)
+            ? `【${title}】\n\n` + ((excerptElement as HTMLMetaElement).textContent as string)
             : "未知摘要";
 
           // 原因是首页推荐，展示的是回答，那么热门的话题可能会出现多次，导致提取重复

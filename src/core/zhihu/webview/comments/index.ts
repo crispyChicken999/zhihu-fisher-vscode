@@ -74,6 +74,10 @@ export class CommentsManager {
             ...comment,
             author: comment.author.member,
             child_comments: comment.child_comments.map((child: any) => {
+              child.author.member.url = child.author.member.url.replace(
+                "api/v4/",
+                ""
+              );
               return {
                 ...child,
                 author: child.author.member,
@@ -140,20 +144,21 @@ export class CommentsManager {
 
       // 检查是否为最后一页
       // 如果返回的数据为空或数据长度小于请求的limit，或者没有next链接，则认为是最后一页
-      const is_end = response.data.data.length === 0 || 
-                    response.data.data.length < limit || 
-                    !response.data.paging.next;
+      const is_end =
+        response.data.data.length === 0 ||
+        response.data.data.length < limit ||
+        !response.data.paging.next;
 
       return {
         comments: response.data.data,
         paging: {
           is_end: is_end,
-          is_start: offset === 0 || offset === '0' || !offset,
+          is_start: offset === 0 || offset === "0" || !offset,
           next: response.data.paging.next,
           previous: response.data.paging.previous,
           totals: response.data.counts.total_counts,
           next_offset: extractOffset(response.data.paging.next),
-          previous_offset: extractOffset(response.data.paging.previous)
+          previous_offset: extractOffset(response.data.paging.previous),
         },
       };
     } catch (error) {
@@ -264,7 +269,7 @@ export class CommentsManager {
               const childAvatarUrl = childAuthor.avatar_url || "";
               const childAuthorName = childAuthor.name || "匿名用户";
               const childAuthorUrl =
-                childAuthor.url?.replace("api/v4/comment_v5", "") || "";
+                childAuthor.url?.replace("api/v4/", "") || "";
               const childFormattedContent = child.content || "";
               const childVoteCount = child.vote_count || 0;
 
@@ -274,7 +279,7 @@ export class CommentsManager {
                   <img class="zhihu-child-comment-avatar" src="${childAvatarUrl}" alt="${childAuthorName}" referrerpolicy="no-referrer">
                   <div>
                     <div class="zhihu-child-comment-author-name">
-                      <a href="${childAuthorUrl}" title="查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
+                      <a href="${childAuthorUrl}" title="点击查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
                     </div>
                   </div>
                 </div>
@@ -311,7 +316,7 @@ export class CommentsManager {
           <img class="zhihu-comment-avatar" src="${avatarUrl}" alt="${authorName}" referrerpolicy="no-referrer">
           <div class="zhihu-comment-author">
             <div class="zhihu-comment-author-name">
-              <a href="#" onclick="openPage('${authorUrl}')">${authorName}</a>
+              <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
             </div>
             ${
               authorHeadline
@@ -400,10 +405,10 @@ export class CommentsManager {
         const childAvatarUrl = childAuthor.avatar_url || "";
         const childAuthorName = childAuthor.name || "匿名用户";
         const childAuthorUrl =
-          childAuthor.url?.replace("api/v4/comment_v5", "") || "";
+          childAuthor.url?.replace("api/v4/comment_v5/", "") || "";
         const childAuthorHeadline = childAuthor.headline || "";
         const childFormattedContent = child.content || "";
-        const childVoteCount = child.vote_count || 0;
+        const childVoteCount = child.like_count || 0;
         const childCreatedTime = this.formatTime(child.created_time);
 
         return `
@@ -412,7 +417,7 @@ export class CommentsManager {
             <img class="zhihu-comment-avatar" src="${childAvatarUrl}" alt="${childAuthorName}" referrerpolicy="no-referrer">
             <div class="zhihu-comment-author">
               <div class="zhihu-comment-author-name">
-                <a href="${childAuthorUrl}" title="查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
+                <a href="${childAuthorUrl}" title="点击查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
               </div>
               ${
                 childAuthorHeadline
@@ -445,7 +450,9 @@ export class CommentsManager {
       <div class="zhihu-modal-pagination">
         <button
           ${isFirstPage ? "disabled" : ""}
-          onclick="loadMoreChildComments('${parentComment.id}', ${currentPage - 1})"
+          onclick="loadMoreChildComments('${parentComment.id}', ${
+      currentPage - 1
+    })"
           class="prev-button"
           title="上一页"
         >
@@ -455,7 +462,9 @@ export class CommentsManager {
         <span class="page-info">第 ${currentPage} 页</span>
         <button
           ${isLastPage ? "disabled" : ""}
-          onclick="loadMoreChildComments('${parentComment.id}', ${currentPage + 1})"
+          onclick="loadMoreChildComments('${parentComment.id}', ${
+      currentPage + 1
+    })"
           class="next-button"
           title="下一页"
         >
@@ -479,7 +488,7 @@ export class CommentsManager {
               <img class="zhihu-comment-avatar" src="${avatarUrl}" alt="${authorName}" referrerpolicy="no-referrer">
               <div class="zhihu-comment-author">
                 <div class="zhihu-comment-author-name">
-                  <a href="${authorUrl}" title="查看作者【${authorName}】知乎首页">${authorName}</a>
+                  <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
                 </div>
                 ${
                   authorHeadline

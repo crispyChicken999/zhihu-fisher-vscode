@@ -13,6 +13,7 @@ import { scriptsTemplate } from "./templates/scripts";
 // 导入样式文件
 import { mainCss } from "./styles/main";
 import { componentsCss } from "./styles/components";
+import { commentsCss } from "./styles/comments";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -42,6 +43,7 @@ export class HtmlRenderer {
    * @returns 加载中的HTML字符串
    */
   public static getLoadingHtml(title: string, excerpt: string): string {
+    const excerptText = excerpt.split('\n\n')[1] || "没找到问题摘要(っ °Д °;)っ";
     const loadingHtml = `
       <!DOCTYPE html>
       <html lang="zh-CN">
@@ -52,17 +54,20 @@ export class HtmlRenderer {
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
-            padding: 0 20px;
+            padding: 10px;
             line-height: 1.6;
             color: var(--vscode-foreground);
             background-color: var(--vscode-editor-background);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
           }
           .loading-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 80vh;
             min-height: 500px;
             overflow: auto;
           }
@@ -105,7 +110,7 @@ export class HtmlRenderer {
           )}</h3>
           <div style="border: 1px solid var(--vscode-panel-border); width:60%; max-width:600px; margin: 10px 30px;"></div>
           <p style="text-align:center;max-width:600px;max-height:300px;overflow:auto;">${this.escapeHtml(
-            excerpt
+            excerptText
           )}</p>
           <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
         </div>
@@ -163,6 +168,14 @@ export class HtmlRenderer {
     );
     const stylePanelComponent = new StylePanelComponent();
 
+    // 媒体模式类
+    const mediaModeClass =
+      {
+        none: "hide-media",
+        mini: "mini-media",
+        normal: "",
+      }[mediaDisplayMode] || "";
+
     // 生成JavaScript代码
     const scriptContent = scriptsTemplate
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
@@ -174,21 +187,26 @@ export class HtmlRenderer {
       .replace("${ARTICLE_ID}", webview.id || "");
 
     // 评论组件占位符
-    const commentsComponent = ""; // 暂时留空，评论功能将在单独的组件中实现
+    const commentsComponent = `
+      <!-- 评论区容器 内容|加载按钮 -->
+      <div class="comments-container ${mediaModeClass}">
+        <button class="zhihu-load-comments-btn" onclick="loadComments('${
+          currentAnswer?.id
+        }')" data-answer-id="${currentAnswer?.id}">
+          加载评论 (${currentAnswer?.commentCount || 0})
+        </button>
+      </div>
 
-    // 媒体模式类
-    const mediaModeClass =
-      {
-        none: "hide-media",
-        mini: "mini-media",
-        normal: "",
-      }[mediaDisplayMode] || "";
+      <!-- 评论弹窗容器 -->
+      <div class="comments-modal-container ${mediaModeClass}"></div>
+    `;
 
     // 填充模板
     return articleTemplate
       .replaceAll("${TITLE}", this.escapeHtml(article.title))
       .replace("${MAIN_CSS}", mainCss)
       .replace("${COMPONENTS_CSS}", componentsCss)
+      .replace("${COMMENTS_CSS}", commentsCss)
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replace("${META_COMPONENT}", metaComponent.render())

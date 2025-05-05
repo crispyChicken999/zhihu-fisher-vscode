@@ -14,6 +14,9 @@ export const articleTemplate = `
     <style>
       \${COMPONENTS_CSS}
     </style>
+    <style>
+      \${COMMENTS_CSS}
+    </style>
   </head>
   <body>
     <header>
