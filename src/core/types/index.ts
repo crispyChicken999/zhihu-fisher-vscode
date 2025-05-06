@@ -131,6 +131,8 @@ export interface AnswerItem {
   commentCount: number;
   /** 回答的评论列表（存储所有已加载的评论） */
   commentList: CommentItem[];
+  /** 评论区的状态，收起|展开 */
+  commentStatus: "collapsed" | "expanded";
   /** 回答的评论分页参数 */
   commentPaging: {
     /** 是否到最后一页了（当已加载的评论数量 commentList.length + commentList评论中的子评论数量总和 >= totals时为true） */

@@ -124,7 +124,7 @@ table tr:nth-child(2n) {
 }
 
 .article-content {
-  margin-top: 20px;
+  margin: 20px 0;
 }
 
 .article-content.hide-media img, .article-content.hide-media video {

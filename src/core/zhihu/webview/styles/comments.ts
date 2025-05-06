@@ -1,7 +1,6 @@
 export const commentsCss = `
 /* 评论容器样式 */
 .zhihu-comments-container {
-  margin-top: 30px;
   padding: 15px 0;
   border-top: 1px solid var(--vscode-panel-border);
 }
@@ -32,7 +31,7 @@ export const commentsCss = `
 }
 
 /* 加载评论按钮 */
-.zhihu-load-comments-btn {
+.zhihu-load-comments-btn, .zhihu-expand-comments-btn {
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
   border: none;
@@ -46,7 +45,7 @@ export const commentsCss = `
   transition: background-color 0.2s;
 }
 
-.zhihu-load-comments-btn:hover {
+.zhihu-load-comments-btn:hover, .zhihu-expand-comments-btn:hover {
   background-color: var(--vscode-button-hoverBackground);
 }
 

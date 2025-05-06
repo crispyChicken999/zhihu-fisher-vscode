@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { CookieInfo } from "../../types";
 import { Store } from "../../stores";
+import * as Puppeteer from "puppeteer";
 
 export class CookieManager {
   static isAlerting: boolean = false; // 是否正在提醒更新cookie
@@ -150,5 +151,25 @@ export class CookieManager {
       }
     }
     return result;
+  }
+
+  /**
+   * 检查页面是否包含登录按钮，如果有的话说明页面要用户登录，也就是cookie失效了/没设置cookie
+   * @param page Puppeteer.Page 实例
+   * @return {Promise<boolean>} 如果页面包含登录元素，返回true，否则返回false
+   * @throws {Error} 如果检查过程中发生错误，抛出错误
+   */
+  static async checkIfPageHasLoginElement(
+    page: Puppeteer.Page
+  ): Promise<boolean> {
+    try {
+      // 检查页面是否包含登录元素
+      const loginSelector = ".SignFlow-submitButton"; // 登录元素的选择器
+      const element = await page.$(loginSelector);
+      return !!element; // 如果找到了元素，返回true，否则返回false
+    } catch (error) {
+      console.error("Error checking for login element:", error);
+      return false;
+    }
   }
 }

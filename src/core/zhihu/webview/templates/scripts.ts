@@ -67,6 +67,21 @@ window.addEventListener('message', event => {
 });
 
 /**
+ * 判断元素是否在视口内
+ * @param {HTMLElement} el 元素
+ * * @returns {boolean} 是否在视口内
+ */
+function isElementInViewport(el) {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
+}
+
+/**
  * 设置键盘导航
  */
 function setupKeyboardNavigation() {
@@ -101,18 +116,26 @@ function setupKeyboardNavigation() {
       toggleStylePanel();
     }
 
-    // 按逗号键查看评论区
+    // 按逗号键切换评论区显示（展开/收起）
     if (event.key === ',') {
       const commentsContainer = document.querySelector('.comments-container');
       const loadCommentsBtn = document.querySelector('.zhihu-load-comments-btn');
-      const answerId = loadCommentsBtn ? loadCommentsBtn.getAttribute('data-answer-id') : null;
 
       if (loadCommentsBtn) {
-        // 如果找到按钮，那么说明没有加载评论
-        loadCommentsBtn.click();
+        // 如果找到按钮，那么说明没有加载评论，点击按钮加载评论
+        const answerId = commentsContainer.getAttribute('data-answer-id');
+        loadComments(answerId);
       } else {
-        // 如果已经加载评论了，那么就滚动到评论区
-        commentsContainer.scrollIntoView({ behavior: 'smooth' });
+        // 如果已经加载评论了，判断是否滚动到评论区
+        const isInViewport = isElementInViewport(commentsContainer);
+        if (isInViewport) {
+          // 如果评论区在可视范围内，则收起评论
+          const answerId = commentsContainer.getAttribute('data-answer-id');
+          toggleCommentStatus(answerId);
+        } else {
+          // 如果评论区不在可视范围内，则滚动到评论区
+          commentsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     }
   });
@@ -593,6 +616,14 @@ function loadComments(answerId, page = 1) {
   });
 }
 
+// 切换评论区的展开/收起状态
+function toggleCommentStatus(answerId) {
+  vscode.postMessage({
+    command: "toggleCommentStatus",
+    answerId: answerId
+  });
+}
+
 // 加载更多评论（分页）
 function loadMoreComments(answerId, page) {
   vscode.postMessage({
@@ -628,5 +659,20 @@ function closeCommentsModal() {
   if (modal) {
     modal.remove();
   }
+}
+
+/**
+ * 判断元素是否在可视范围内
+ * @param {HTMLElement} el 元素
+ * @returns {boolean} 是否在可视范围内
+ */
+function isElementInViewport(el) {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
 }
 `;

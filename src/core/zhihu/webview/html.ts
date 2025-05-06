@@ -7,6 +7,7 @@ import { MetaComponent } from "./components/meta";
 import { ArticleContentComponent } from "./components/article";
 import { ToolbarComponent } from "./components/toolbar";
 import { StylePanelComponent } from "./components/style-panel";
+import { CommentsManager } from "./components/comments";
 // 导入模板文件
 import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts";
@@ -43,7 +44,8 @@ export class HtmlRenderer {
    * @returns 加载中的HTML字符串
    */
   public static getLoadingHtml(title: string, excerpt: string): string {
-    const excerptText = excerpt.split('\n\n')[1] || "没找到问题摘要(っ °Д °;)っ";
+    const excerptText =
+      excerpt.split("\n\n")[1] || "没找到问题摘要(っ °Д °;)っ";
     const loadingHtml = `
       <!DOCTYPE html>
       <html lang="zh-CN">
@@ -168,6 +170,12 @@ export class HtmlRenderer {
       renderOptions
     );
     const stylePanelComponent = new StylePanelComponent();
+    const commentsComponent = CommentsManager.createCommentsContainerComponent(
+      webviewId,
+      currentAnswer?.id,
+      currentAnswer?.commentCount || 0,
+      renderOptions
+    );
 
     // 媒体模式类
     const mediaModeClass =
@@ -187,21 +195,6 @@ export class HtmlRenderer {
       )
       .replace("${ARTICLE_ID}", webview.id || "");
 
-    // 评论组件占位符
-    const commentsComponent = `
-      <!-- 评论区容器 内容|加载按钮 -->
-      <div class="comments-container ${mediaModeClass}">
-        <button class="zhihu-load-comments-btn" onclick="loadComments('${
-          currentAnswer?.id
-        }')" data-answer-id="${currentAnswer?.id}">
-          加载评论 (${currentAnswer?.commentCount || 0})
-        </button>
-      </div>
-
-      <!-- 评论弹窗容器 -->
-      <div class="comments-modal-container ${mediaModeClass}"></div>
-    `;
-
     // 填充模板
     return articleTemplate
       .replaceAll("${TITLE}", this.escapeHtml(article.title))
@@ -212,7 +205,7 @@ export class HtmlRenderer {
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replace("${META_COMPONENT}", metaComponent.render())
       .replace("${ARTICLE_CONTENT}", contentComponent.render())
-      .replace("${COMMENTS_COMPONENT}", commentsComponent)
+      .replace("${COMMENTS_COMPONENT}", commentsComponent.render())
       .replace("${TOOLBAR_COMPONENT}", toolbarComponent.render())
       .replace("${STYLE_PANEL_COMPONENT}", stylePanelComponent.render())
       .replace("${SOURCE_URL}", currentAnswer?.url || webview.url || "")

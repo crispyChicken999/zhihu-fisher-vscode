@@ -141,18 +141,10 @@ export class sidebarHotListDataProvider
     const $ = cheerio.load(response.data);
 
     // 检查是否有登录墙或验证码
-    const loginElements =
-      $("button:contains('登录')").length || $(".SignContainer").length;
-    const captchaElements = $("body").find(
-      "[class*='captcha'],[class*='verify'],[class*='Captcha'],[class*='Verify']"
-    ).length;
+    const isNeedLogin = !!$(".SignFlow-submitButton").length;
 
-    if (
-      (loginElements > 0 && $(".HotList-list").length === 0) ||
-      captchaElements > 0
-    ) {
+    if (isNeedLogin) {
       console.log("检测到登录墙或验证码");
-
       if (cookie) {
         // 如果已经有cookie但仍然被拦截，可能是cookie过期
         console.log("Cookie可能已失效，需要更新");
@@ -186,7 +178,9 @@ export class sidebarHotListDataProvider
             const title = titleElement.text().trim();
             const url = linkElement.attr("href") || "";
             const id = `hot-${url.split("/").pop()}` || `hot-${index}`;
-            const excerpt =  `【${title}】\n\n` + $(element).find(".HotItem-excerpt").text().trim();
+            const excerpt =
+              `【${title}】\n\n` +
+              $(element).find(".HotItem-excerpt").text().trim();
             const hotValue = $(element).find(".HotItem-metrics").text().trim();
             const imgUrl =
               $(element).find(".HotItem-img img").attr("src") || "";
@@ -326,9 +320,9 @@ export class sidebarHotListDataProvider
           "正在加载知乎热榜...",
           new vscode.ThemeIcon("loading~spin"),
           null,
-          "热榜加载中，请稍候...\n"+
-          "热榜加载速度是最快的，通常在5秒内就能加载完成。\n"+
-          "因为无需模拟滚动加载更多数据(≧∇≦)ﾉ\n"
+          "热榜加载中，请稍候...\n" +
+            "热榜加载速度是最快的，通常在5秒内就能加载完成。\n" +
+            "因为无需模拟滚动加载更多数据(≧∇≦)ﾉ\n"
         ),
       ];
     }

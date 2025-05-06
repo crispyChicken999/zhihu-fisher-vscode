@@ -2,10 +2,11 @@ import * as vscode from "vscode";
 import * as Puppeteer from "puppeteer";
 import { HtmlRenderer } from "./html";
 import { PuppeteerManager } from "../puppeteer";
-import { LinkItem, WebViewItem, CommentItem, AnswerItem } from "../../types";
+import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 import { Store } from "../../stores";
-import { CommentsManager } from "./comments";
+import { CommentsManager } from "./components/comments";
 import { marked } from "marked";
+import { CookieManager } from "../cookie";
 
 export class WebviewManager {
   constructor() {}
@@ -33,9 +34,7 @@ export class WebviewManager {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [
-          // vscode.Uri.joinPath(vscode.Uri.file(__dirname), "../../../media"),
-        ],
+        localResourceRoots: []
       }
     );
 
@@ -137,6 +136,15 @@ export class WebviewManager {
       console.log("页面加载完成，开始读取页面...");
       webviewItem.isLoading = false;
       webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
+
+      const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
+        page
+      );
+      if (isCookieExpired) {
+        console.log("Cookie过期，请重新登录！");
+        webviewItem.webviewPanel.webview.html = `Cookie已过期，请重新设置Cookie！`;
+        return;
+      }
 
       // 隐藏状态栏加载提示
       this.hideStatusBarItem(webviewId);
@@ -349,7 +357,7 @@ export class WebviewManager {
 
       console.log("开始解析回答列表...");
 
-      // 解析回答列表 @todo 可能有问题，因为获取完了以后就删除了元素，导致了scrollHeight发生了变化，那么滚动加载更多可能无法生效
+      // 解析回答列表
       const answerList = await page.evaluate(() => {
         // 处理页面内容，获取回答列表
         const answerElements = document.querySelectorAll(
@@ -449,6 +457,7 @@ export class WebviewManager {
                   })
                 : "",
               commentList: [],
+              commentStatus: "collapsed", // 默认收起评论
               commentPaging: {
                 current: 0,
                 limit: 20,
@@ -477,9 +486,21 @@ export class WebviewManager {
       answerList.forEach((item) => {
         // 解析markdown格式的内容，因为evaluate时在浏览器环境中，并不存在我们import的这个库，所以需要出来再parse
         item.content = marked.parse(item.content) as string;
+
+        // 找到当前已加载的回答
+        const existingAnswer = webviewItem.article.answerList.find(
+          (v) => v.id === item.id
+        );
+
+        // 如果当前回答已经存在，则恢复评论列表和分页参数，后续有参数需要保留可以在这里添加
+        if (existingAnswer) {
+          item.commentStatus = existingAnswer.commentStatus; // 恢复评论状态
+          item.commentList = existingAnswer.commentList; // 恢复评论列表
+          item.commentPaging = existingAnswer.commentPaging; // 恢复评论分页参数
+        }
       });
 
-      webviewItem.article.answerList = [...answerList];
+      webviewItem.article.answerList = answerList;
       webviewItem.article.isLoading = false;
 
       // 更新批次加载数量参数，便于中断循环
@@ -699,6 +720,7 @@ export class WebviewManager {
         case "requestContent":
           await this.crawlingURLData(webviewId);
           break;
+
         case "openInBrowser":
           const webviewItemForBrowser = Store.webviewMap.get(webviewId);
           if (!webviewItemForBrowser) {
@@ -713,6 +735,7 @@ export class WebviewManager {
             );
           }
           break;
+
         case "toggleMedia":
           await this.toggleMedia(webviewId);
           break;
@@ -724,41 +747,36 @@ export class WebviewManager {
         case "loadPreviousAnswer":
           await this.loadPreviousAnswer(webviewId);
           break;
+
         case "loadNextAnswer":
           await this.loadNextAnswer(webviewId);
           break;
+
         case "jumpToAnswer":
           // 响应分页器的跳转请求，传入目标回答的索引
           if (typeof message.index === "number") {
             await this.jumpToAnswer(webviewId, message.index);
           }
           break;
-        // 加载评论
+
         case "loadComments":
-          await this.loadComments(
+          await CommentsManager.loadComments(
             webviewId,
             message.answerId,
-            // 前端可能传递page或offset，统一转换为page
-            typeof message.page === "number"
-              ? message.page
-              : typeof message.offset === "number"
-              ? Math.floor(message.offset / 20) + 1
-              : 1
+            message.page
           );
           break;
-        // 加载子评论
+
         case "loadChildComments":
-          await this.loadChildComments(
+          await CommentsManager.loadChildComments(
             webviewId,
             message.commentId,
-            // 前端可能传递page或offset，统一转换为page
-            typeof message.page === "number"
-              ? message.page
-              : typeof message.offset === "number"
-              ? Math.floor(message.offset / 20) + 1
-              : 1
+            message.page
           );
           break;
+
+        case "toggleCommentStatus":
+          CommentsManager.toggleCommentStatus(webviewId, message.answerId);
       }
     });
   }
@@ -827,255 +845,5 @@ export class WebviewManager {
   /** 设置面板关闭回调 */
   public setOnDidDisposeCallback(callback: (id: string) => void): void {
     this.onDidDisposeCallback = callback;
-  }
-
-  /**
-   * 加载评论
-   * @param webviewId - WebView的ID
-   * @param answerId - 回答的ID
-   * @param page - 页码，从1开始
-   */
-  public async loadComments(
-    webviewId: string,
-    answerId: string,
-    page: number = 1
-  ): Promise<void> {
-    const webviewItem = Store.webviewMap.get(webviewId);
-    if (!webviewItem) {
-      return;
-    }
-
-    try {
-      // 根据页码计算offset
-      const limit = 20;
-      const offset = (page - 1) * limit;
-
-      // 获取评论数据
-      const { comments, paging } = await CommentsManager.getComments(
-        answerId,
-        offset
-      );
-
-      // 更新回答的评论列表
-      const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
-      const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
-
-      if (currentAnswer && currentAnswer.id === answerId) {
-        // 判断是否是第一页
-        const is_start = page === 1;
-
-        if (is_start) {
-          // 如果是第一页，则初始化评论列表
-          currentAnswer.commentList = [...comments];
-        } else {
-          // 如果不是第一页，则增量添加评论
-          // 去重逻辑：通过id判断评论是否已经存在
-          const existingIds = new Set(
-            currentAnswer.commentList.map((comment) => comment.id)
-          );
-          const newComments = comments.filter(
-            (comment) => !existingIds.has(comment.id)
-          );
-          currentAnswer.commentList = [
-            ...currentAnswer.commentList,
-            ...newComments,
-          ];
-        }
-
-        // 计算已加载的评论总数
-        const loadedTotals = currentAnswer.commentList.reduce(
-          (acc, cur) => acc + (cur.child_comment_count || 0),
-          currentAnswer.commentList.length
-        );
-
-        // 更新分页信息
-        const totalPages = Math.ceil(paging.totals / limit);
-        currentAnswer.commentPaging = {
-          ...paging,
-          current: page,
-          limit,
-          loadedTotals,
-          is_start: page === 1,
-          // 如果已加载的评论总数(包括子评论) >= 总评论数，或者当前页已经是最后一页，则认为已加载完成
-          is_end: loadedTotals >= paging.totals || page >= totalPages || paging.totals <= limit,
-        };
-
-        // 根据当前页码截取要显示的评论
-        const startIndex = (page - 1) * limit;
-        const endIndex = Math.min(
-          startIndex + limit,
-          currentAnswer.commentList.length
-        );
-        const displayComments = currentAnswer.commentList.slice(
-          startIndex,
-          endIndex
-        );
-
-        // 生成评论HTML，只传递当前页的评论用于展示
-        const commentsHtml = CommentsManager.generateCommentsHTML(
-          displayComments, // 使用当前页的评论列表进行展示
-          answerId,
-          currentAnswer.commentPaging
-        );
-
-        // 更新Webview中的评论区
-        webviewItem.webviewPanel.webview.postMessage({
-          command: "updateComments",
-          html: commentsHtml,
-        });
-      }
-    } catch (error) {
-      console.error("加载评论时出错:", error);
-
-      // 显示错误提示
-      webviewItem.webviewPanel.webview.postMessage({
-        command: "updateComments",
-        html: `
-          <div class="zhihu-comments-container">
-            <h3>评论加载失败</h3>
-            <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
-              ${error}
-            </div>
-            <button class="zhihu-load-comments-btn" onclick="loadComments('${answerId}')">
-              重新加载
-            </button>
-          </div>
-        `,
-      });
-    }
-  }
-
-  /**
-   * 加载子评论
-   * @param webviewId - WebView的ID
-   * @param commentId - 评论的ID
-   * @param page - 页码，从1开始
-   */
-  public async loadChildComments(
-    webviewId: string,
-    commentId: string,
-    page: number = 1
-  ): Promise<void> {
-    const webviewItem = Store.webviewMap.get(webviewId);
-    if (!webviewItem) {
-      return;
-    }
-
-    try {
-      // 查找父评论
-      const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
-      const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
-      let parentComment = null;
-
-      if (currentAnswer && currentAnswer.commentList.length) {
-        // 在顶层评论中查找
-        parentComment = currentAnswer.commentList.find(
-          (comment) => comment.id == commentId
-        );
-      }
-
-      if (!parentComment) {
-        throw new Error("找不到对应的父评论");
-      }
-
-      // 确定合适的offset参数
-      let offset: string | number = 0;
-
-      if (page === 1) {
-        // 第一页使用默认的offset=0
-        offset = 0;
-      } else if (page > 1) {
-        offset = parentComment.commentPaging.next_offset || 0;
-      }
-
-      // 获取子评论数据
-      const { comments, paging } = await CommentsManager.getChildComments(
-        commentId,
-        offset
-      );
-
-      // 判断是否是第一页
-      const is_start = page === 1;
-
-      if (is_start) {
-        // 如果是第一页，初始化子评论列表
-        parentComment.total_child_comments = [...comments];
-      } else {
-        // 如果不是第一页，则增量添加子评论
-        // 去重逻辑，通过id判断评论是否已经存在
-        if (!parentComment.total_child_comments) {
-          parentComment.total_child_comments = [];
-        }
-
-        const existingIds = new Set(
-          parentComment.total_child_comments.map((comment) => comment.id)
-        );
-        const newComments = comments.filter(
-          (comment) => !existingIds.has(comment.id)
-        );
-        parentComment.total_child_comments = [
-          ...parentComment.total_child_comments,
-          ...newComments,
-        ];
-      }
-
-      // 更新分页信息
-      parentComment.commentPaging = {
-        ...paging,
-        current: page,
-        limit: 20,
-        loadedTotals: parentComment.total_child_comments.length,
-        is_start: is_start,
-        // 判断是否已加载完全部子评论
-        is_end:
-          paging.is_end ||
-          parentComment.total_child_comments.length >=
-            parentComment.child_comment_count,
-        next_offset: paging.next_offset || null,
-        previous_offset: paging.previous_offset || null,
-      };
-
-      // 根据当前页码截取要显示的子评论
-      // 这里特别注意: 由于知乎API返回的评论顺序可能和页码不完全对应
-      // 我们直接使用API返回的当前页评论进行展示，而不是从累积的评论中截取
-      const displayChildComments = [...comments];
-
-      // 生成子评论弹窗HTML
-      const modalHtml = CommentsManager.generateChildCommentsModalHTML(
-        parentComment,
-        displayChildComments, // 只展示当前页的子评论
-        parentComment.commentPaging // 使用更新后的分页信息
-      );
-
-      // 更新Webview中的子评论弹窗
-      webviewItem.webviewPanel.webview.postMessage({
-        command: "updateChildCommentsModal",
-        html: modalHtml,
-      });
-    } catch (error) {
-      console.error("加载子评论时出错:", error);
-
-      // 显示错误提示
-      webviewItem.webviewPanel.webview.postMessage({
-        command: "updateChildCommentsModal",
-        html: `
-          <div class="zhihu-comments-modal">
-            <div class="zhihu-comments-modal-content">
-              <div class="zhihu-comments-modal-header">
-                <h3>加载失败</h3>
-                <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
-              </div>
-              <div style="text-align: center; padding: 40px; color: var(--vscode-errorForeground);">
-                加载子评论失败: ${error}
-                <div style="margin-top: 20px;">
-                  <button class="button" onclick="loadAllChildComments('${commentId}')">重试</button>
-                  <button class="button" onclick="closeCommentsModal()" style="margin-left: 10px;">关闭</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `,
-      });
-    }
   }
 }

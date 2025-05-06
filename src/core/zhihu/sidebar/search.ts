@@ -146,27 +146,10 @@ export class sidebarSearchListDataProvider
       await PuppeteerManager.simulateHumanScroll(page);
       await PuppeteerManager.delay(500);
 
-      // 检查是否有登录墙或验证码
-      const hasLoginWall = await page.evaluate(() => {
-        const loginElements =
-          document.querySelectorAll("button, a, div").length > 0
-            ? Array.from(document.querySelectorAll("button, a, div")).some(
-                (el) =>
-                  el.textContent?.includes("登录") &&
-                  (el.tagName === "BUTTON" ||
-                    el.classList.contains("SignContainer"))
-              )
-            : false;
-        const captchaElements =
-          document.querySelectorAll(
-            '[class*="captcha"], [class*="verify"], [class*="Captcha"], [class*="Verify"]'
-          ).length > 0;
-        return loginElements || captchaElements;
-      });
-
-      // 如果有登录墙
-      if (hasLoginWall) {
+      const isCookieExpired  = await CookieManager.checkIfPageHasLoginElement(page);
+      if (isCookieExpired) {
         console.log("检测到登录墙或验证码");
+        console.log("Cookie过期，请重新登录！");
         if (isCookieSet) {
           // 如果已经有cookie但仍然被拦截，可能是cookie过期
           console.log("Cookie可能已失效，需要更新");
@@ -176,7 +159,7 @@ export class sidebarSearchListDataProvider
           // 如果没有cookie且被拦截
           console.log("需要设置Cookie才能访问");
           CookieManager.promptForNewCookie(
-            "需要知乎Cookie才能搜索内容，请设置"
+            "需要知乎Cookie才能获取推荐内容，请设置"
           );
           throw new Error("需要设置知乎Cookie才能访问");
         }
