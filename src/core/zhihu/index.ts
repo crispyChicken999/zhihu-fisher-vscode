@@ -2,7 +2,6 @@ import { Store } from "../stores";
 import { LinkItem } from "../types";
 import { CookieManager } from "./cookie";
 import { WebviewManager } from "./webview";
-import { CommentsManager } from "./webview/comments";
 
 export class ZhihuService {
   private webviewManager;
