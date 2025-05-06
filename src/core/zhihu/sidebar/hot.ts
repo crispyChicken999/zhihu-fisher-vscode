@@ -178,9 +178,11 @@ export class sidebarHotListDataProvider
             const title = titleElement.text().trim();
             const url = linkElement.attr("href") || "";
             const id = `hot-${url.split("/").pop()}` || `hot-${index}`;
-            const excerpt =
-              `【${title}】\n\n` +
-              $(element).find(".HotItem-excerpt").text().trim();
+            const excerpt = `【${title}】\n\n${
+              $(element).find(".HotItem-excerpt").text().trim()
+                ? $(element).find(".HotItem-excerpt").text().trim()
+                : "没找到问题摘要(っ °Д °;)っ"
+            }`;
             const hotValue = $(element).find(".HotItem-metrics").text().trim();
             const imgUrl =
               $(element).find(".HotItem-img img").attr("src") || "";

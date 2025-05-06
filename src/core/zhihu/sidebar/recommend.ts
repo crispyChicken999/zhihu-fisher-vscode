@@ -117,7 +117,9 @@ export class sidebarRecommendListDataProvider
       await PuppeteerManager.simulateHumanScroll(page);
       await PuppeteerManager.delay(500);
 
-      const isCookieExpired  = await CookieManager.checkIfPageHasLoginElement(page);
+      const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
+        page
+      );
       if (isCookieExpired) {
         console.log("检测到登录墙或验证码");
         console.log("Cookie过期，请重新登录！");
@@ -192,8 +194,12 @@ export class sidebarRecommendListDataProvider
 
           const excerptElement = item.querySelector(".RichContent .RichText");
           const excerpt = excerptElement
-            ? `【${title}】\n\n` + ((excerptElement as HTMLMetaElement).textContent as string)
-            : "未知摘要";
+            ? `【${title}】\n\n${
+                (excerptElement as HTMLMetaElement).textContent
+                  ? (excerptElement as HTMLMetaElement).textContent
+                  : "没找到问题摘要(っ °Д °;)っ"
+              }`
+            : "没找到问题摘要(っ °Д °;)っ";
 
           // 原因是首页推荐，展示的是回答，那么热门的话题可能会出现多次，导致提取重复
           if (items.some((item) => item.id === id)) {
@@ -344,10 +350,10 @@ export class sidebarRecommendListDataProvider
           new vscode.ThemeIcon("loading~spin"),
           null,
           "爬虫正在后台访问知乎首页(～￣▽￣)～\n" +
-          "模拟滚动加载更多中，请耐心等待加载完成...\n"+
-          "╰(￣ω￣ｏ)暂时不允许打开文章，避免列表加载卡住和出现bug。\n" +
-          "【注意】\n" +
-          "如果长时间没有响应，请确保浏览器正确配置，或者点击标题栏中的刷新按钮。"
+            "模拟滚动加载更多中，请耐心等待加载完成...\n" +
+            "╰(￣ω￣ｏ)暂时不允许打开文章，避免列表加载卡住和出现bug。\n" +
+            "【注意】\n" +
+            "如果长时间没有响应，请确保浏览器正确配置，或者点击标题栏中的刷新按钮。"
         ),
       ];
     }

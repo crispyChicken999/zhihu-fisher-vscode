@@ -146,7 +146,9 @@ export class sidebarSearchListDataProvider
       await PuppeteerManager.simulateHumanScroll(page);
       await PuppeteerManager.delay(500);
 
-      const isCookieExpired  = await CookieManager.checkIfPageHasLoginElement(page);
+      const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
+        page
+      );
       if (isCookieExpired) {
         console.log("检测到登录墙或验证码");
         console.log("Cookie过期，请重新登录！");
@@ -238,8 +240,12 @@ export class sidebarSearchListDataProvider
             // 提取回答内容摘要
             const contentElement = item.querySelector(".RichText");
             let excerpt = contentElement
-              ? `【${title}】\n\n` + contentElement.textContent || ""
-              : "";
+              ? `【${title}】\n\n${
+                  contentElement.textContent
+                    ? contentElement.textContent
+                    : "没找到问题摘要(っ °Д °;)っ"
+                }`
+              : "没找到问题摘要(っ °Д °;)っ";
 
             // 如果该结果已存在，则跳过
             if (items.some((existingItem) => existingItem.id === id)) {
@@ -404,9 +410,9 @@ export class sidebarSearchListDataProvider
           new vscode.ThemeIcon("loading~spin"),
           null,
           "爬虫正在后台加载知乎搜索结果(～￣▽￣)～\n" +
-          "模拟滚动加载更多中，请耐心等待...\n"+
-          "【注意】\n" +
-          "如果长时间没有响应，请确保浏览器正确配置，或者重新搜索~"
+            "模拟滚动加载更多中，请耐心等待...\n" +
+            "【注意】\n" +
+            "如果长时间没有响应，请确保浏览器正确配置，或者重新搜索~"
         ),
       ];
     }
