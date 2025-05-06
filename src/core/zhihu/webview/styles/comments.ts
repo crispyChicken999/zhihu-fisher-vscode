@@ -6,11 +6,29 @@ export const commentsCss = `
   border-top: 1px solid var(--vscode-panel-border);
 }
 
-.zhihu-comments-container h3 {
-  margin-top: 0;
+.zhihu-comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   margin-bottom: 15px;
-  font-size: 18px;
+}
+
+.zhihu-comments-header h3 {
+  margin: 0;
+  font-size: 14px;
   font-weight: 600;
+}
+
+.zhihu-comments-header .zhihu-comments-tips {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+  background-color: var(--vscode-editor-background);
+  padding: 5px 10px;
 }
 
 /* 加载评论按钮 */

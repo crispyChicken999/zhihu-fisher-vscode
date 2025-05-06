@@ -55,7 +55,8 @@ window.addEventListener('message', event => {
   if (message.command === 'updateComments') {
     const commentsContainer = document.querySelector('.comments-container');
     commentsContainer.innerHTML = message.html;
-    window.scrollTo(0, document.body.scrollHeight); // 滚动到底部
+    // 滚动到评论区
+    commentsContainer.scrollIntoView({ behavior: 'smooth' });
   }
 
   // 处理更新子评论弹窗的消息
@@ -95,8 +96,24 @@ function setupKeyboardNavigation() {
       toggleMediaDisplay();
     }
 
+    // 按.键切换样式面板
     if (event.key === '.') {
       toggleStylePanel();
+    }
+
+    // 按逗号键查看评论区
+    if (event.key === ',') {
+      const commentsContainer = document.querySelector('.comments-container');
+      const loadCommentsBtn = document.querySelector('.zhihu-load-comments-btn');
+      const answerId = loadCommentsBtn ? loadCommentsBtn.getAttribute('data-answer-id') : null;
+
+      if (loadCommentsBtn) {
+        // 如果找到按钮，那么说明没有加载评论
+        loadCommentsBtn.click();
+      } else {
+        // 如果已经加载评论了，那么就滚动到评论区
+        commentsContainer.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   });
 }

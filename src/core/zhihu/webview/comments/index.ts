@@ -180,8 +180,17 @@ export class CommentsManager {
   ): string {
     if (paging.is_end && (!comments || comments.length === 0)) {
       return `
-        <div class="zhihu-comments-container">
-          <h3>评论 (0)</h3>
+        <div class="zhihu-comments-container" data-answer-id="${answerId}">
+          <div class="zhihu-comments-header">
+            <h3>全部评论 (0)</h3>
+            <div class="zhihu-comments-tips">
+              <span>键盘</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="m10 17l2-4H9V7h6v6l-2 4zM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 2v14h14V5z"/>
+                </svg>
+              <span>快速展开/收起评论</span>
+            </div>
+          </div>
           <div class="zhihu-comments-list">
             <div style="text-align: center; padding: 20px; color: var(--vscode-descriptionForeground);">
               暂无评论
@@ -202,8 +211,17 @@ export class CommentsManager {
     const paginationHtml = this.generatePaginationHTML(paging, answerId);
 
     return `
-      <div class="zhihu-comments-container">
-        <h3>评论 (${paging.totals})</h3>
+      <div class="zhihu-comments-container" data-answer-id="${answerId}">
+        <div class="zhihu-comments-header">
+          <h3>全部评论 (${paging.totals})</h3>
+          <div class="zhihu-comments-tips">
+            <span>键盘</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                <path fill="currentColor" d="m10 17l2-4H9V7h6v6l-2 4zM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 2v14h14V5z"/>
+              </svg>
+            <span>快速展开/收起评论</span>
+          </div>
+        </div>
         ${paginationHtml}
         <div class="zhihu-comments-list">
           ${commentsHtml}

@@ -67,6 +67,7 @@ export class HtmlRenderer {
             display: flex;
             flex-direction: column;
             align-items: center;
+            height: 95vh;
             justify-content: center;
             min-height: 500px;
             overflow: auto;
