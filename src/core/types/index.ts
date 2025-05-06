@@ -1,15 +1,11 @@
 import * as Puppeteer from "puppeteer";
-import { CookieManager } from "../zhihu/cookie";
-import { PuppeteerManager } from "../zhihu/puppeteer";
-import { WebviewManager } from "../zhihu/webview";
 import * as vscode from "vscode";
 
 /** 全局状态管理 */
 export interface ContentStore {
   /** 打开的所有页面构成的列表 */
   webviewMap: Map<string, WebViewItem>;
-  /** Webview管理器实例对象 */
-  webviewManager: WebviewManager;
+
   /** Puppeteer浏览器实例 */
   browserInstance: Puppeteer.Browser | null;
   /** Puppeteer页面实例列表 */
@@ -47,10 +43,6 @@ export interface ContentStore {
 
     /** 知乎的Cookie */
     cookieInfo: CookieInfo;
-    /** Cookie管理器 */
-    cookieManager: CookieManager;
-    /** Puppeteer管理器 */
-    puppeteerManager: PuppeteerManager;
   };
 }
 

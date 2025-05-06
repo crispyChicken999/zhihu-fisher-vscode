@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { Store } from "./core/stores";
 import { LinkItem } from "./core/types";
 import { ZhihuService } from "./core/zhihu/index";
+import { WebviewManager } from "./core/zhihu/webview";
 import { PuppeteerManager } from "./core/zhihu/puppeteer";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
@@ -121,8 +122,7 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      const webviewManager = Store.webviewManager;
-      webviewManager.openWebview(item);
+      WebviewManager.openWebview(item);
     }
   );
 

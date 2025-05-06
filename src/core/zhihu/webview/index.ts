@@ -9,10 +9,8 @@ import { marked } from "marked";
 import { CookieManager } from "../cookie";
 
 export class WebviewManager {
-  constructor() {}
-
   /** 在vscode编辑器中打开页面（新建一个窗口） */
-  async openWebview(item: LinkItem): Promise<void> {
+  static async openWebview(item: LinkItem): Promise<void> {
     console.log(`开始获取文章内容: ${item.url}`);
 
     // 检查是否已经打开了这篇文章
@@ -83,7 +81,7 @@ export class WebviewManager {
   }
 
   /** 更新内容显示 */
-  private updateWebview(webviewId: string): void {
+  private static updateWebview(webviewId: string): void {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -95,7 +93,7 @@ export class WebviewManager {
   }
 
   /** 从URL中爬取数据 */
-  private async crawlingURLData(webviewId: string): Promise<void> {
+  private static async crawlingURLData(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -183,7 +181,7 @@ export class WebviewManager {
   }
 
   /** 隐藏状态栏项目 */
-  private hideStatusBarItem(webviewId: string): void {
+  private static hideStatusBarItem(webviewId: string): void {
     const statusBarItem = Store.statusBarMap.get(webviewId);
     if (statusBarItem) {
       statusBarItem.hide();
@@ -193,7 +191,7 @@ export class WebviewManager {
   }
 
   /** 加载上一个回答 */
-  public async loadPreviousAnswer(webviewId: string): Promise<void> {
+  public static async loadPreviousAnswer(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -215,7 +213,7 @@ export class WebviewManager {
   }
 
   /** 加载下一个回答 */
-  public async loadNextAnswer(webviewId: string): Promise<void> {
+  public static async loadNextAnswer(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -282,7 +280,7 @@ export class WebviewManager {
   }
 
   /** 跳转到指定回答 */
-  public async jumpToAnswer(
+  public static async jumpToAnswer(
     webviewId: string,
     answerIndex: number
   ): Promise<void> {
@@ -337,7 +335,7 @@ export class WebviewManager {
   }
 
   /** 从页面中解析全部的回答 */
-  private async parseAllAnswers(
+  private static async parseAllAnswers(
     webviewId: string,
     page: Puppeteer.Page
   ): Promise<void> {
@@ -525,7 +523,7 @@ export class WebviewManager {
    * @param webviewId - WebView的ID
    * @param page - Puppeteer的Page实例
    */
-  private async loadMoreAnswers(
+  private static async loadMoreAnswers(
     webviewId: string,
     page: Puppeteer.Page
   ): Promise<void> {
@@ -655,12 +653,12 @@ export class WebviewManager {
   }
 
   /** 获取短标题，避免文章标题过长，截取前15个字符 */
-  private getShortTitle(title: string): string {
+  private static getShortTitle(title: string): string {
     return title.length > 15 ? `${title.substring(0, 15)}...` : title;
   }
 
   /** 切换媒体显示模式 */
-  private async toggleMedia(webviewId: string): Promise<void> {
+  private static async toggleMedia(webviewId: string): Promise<void> {
     // 获取当前配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const currentMode = config.get<string>("mediaDisplayMode", "normal");
@@ -692,7 +690,7 @@ export class WebviewManager {
   }
 
   /** 设置媒体显示模式 */
-  private async setMediaMode(webviewId: string, mode: string): Promise<void> {
+  private static async setMediaMode(webviewId: string, mode: string): Promise<void> {
     // 处理直接设置媒体模式的消息
     if (!mode) {
       return;
@@ -708,7 +706,7 @@ export class WebviewManager {
   }
 
   /** 设置WebView消息处理 */
-  private setupMessageHandling(webviewId: string): void {
+  private static setupMessageHandling(webviewId: string): void {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -782,7 +780,7 @@ export class WebviewManager {
   }
 
   /** 设置面板关闭处理 */
-  private setupPanelCloseHandler(webviewId: string): void {
+  private static setupPanelCloseHandler(webviewId: string): void {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -814,7 +812,7 @@ export class WebviewManager {
         }
 
         // 通知外部调用者面板已关闭
-        this.onDidDisposeCallback?.(webviewId);
+        WebviewManager.onDidDisposeCallback?.(webviewId);
       },
       null,
       []
@@ -822,7 +820,7 @@ export class WebviewManager {
   }
 
   /** 设置视图状态变化处理 */
-  private setupViewStateChangeHandler(webviewId: string): void {
+  private static setupViewStateChangeHandler(webviewId: string): void {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -840,10 +838,10 @@ export class WebviewManager {
   }
 
   /** 回调函数，用于通知视图管理器面板已关闭 */
-  private onDidDisposeCallback?: (id: string) => void;
+  private static onDidDisposeCallback?: (id: string) => void;
 
   /** 设置面板关闭回调 */
-  public setOnDidDisposeCallback(callback: (id: string) => void): void {
-    this.onDidDisposeCallback = callback;
+  public static setOnDidDisposeCallback(callback: (id: string) => void): void {
+    WebviewManager.onDidDisposeCallback = callback;
   }
 }

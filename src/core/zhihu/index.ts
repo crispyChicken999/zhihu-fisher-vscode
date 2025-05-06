@@ -4,10 +4,7 @@ import { CookieManager } from "./cookie";
 import { WebviewManager } from "./webview";
 
 export class ZhihuService {
-  private webviewManager;
-
   constructor() {
-    this.webviewManager = Store.webviewManager = new WebviewManager();
     CookieManager.loadCookie(); // 初始化时加载cookie
   }
 
@@ -23,6 +20,6 @@ export class ZhihuService {
 
   /** 加载文章内容 */
   async getArticleContent(item: LinkItem) {
-    this.webviewManager.openWebview(item);
+    WebviewManager.openWebview(item);
   }
 }

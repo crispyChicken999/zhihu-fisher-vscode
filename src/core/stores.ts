@@ -4,7 +4,6 @@ import * as Puppeteer from "puppeteer";
 
 export const Store: ContentStore = {
   webviewMap: new Map<string, WebViewItem>(),
-  webviewManager: null as any,
   browserInstance: null,
   pagesInstance: new Map<string, Puppeteer.Page>(),
   statusBarMap: new Map<string, vscode.StatusBarItem>(),
@@ -26,7 +25,5 @@ export const Store: ContentStore = {
       cookie: "",
       lastUpdated: null,
     },
-    cookieManager: null as any,
-    puppeteerManager: null as any,
   },
 };
