@@ -15,6 +15,12 @@ import { scriptsTemplate } from "./templates/scripts";
 import { mainCss } from "./styles/main";
 import { componentsCss } from "./styles/components";
 import { commentsCss } from "./styles/comments";
+import { articleCss } from "./styles/article";
+import { authorCss } from "./styles/author";
+import { navigationCss } from "./styles/navigation";
+import { toolbarCss } from "./styles/toolbar";
+import { mediaCss } from "./styles/media";
+import { panelCss } from "./styles/panel";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -201,6 +207,12 @@ export class HtmlRenderer {
       .replace("${MAIN_CSS}", mainCss)
       .replace("${COMPONENTS_CSS}", componentsCss)
       .replace("${COMMENTS_CSS}", commentsCss)
+      .replace("${ARTICLE_CSS}", articleCss)
+      .replace("${AUTHOR_CSS}", authorCss)
+      .replace("${NAVIGATION_CSS}", navigationCss)
+      .replace("${TOOLBAR_CSS}", toolbarCss)
+      .replace("${MEDIA_CSS}", mediaCss)
+      .replace("${PANEL_CSS}", panelCss)
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replace("${META_COMPONENT}", metaComponent.render())

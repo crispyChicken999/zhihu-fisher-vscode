@@ -10,11 +10,13 @@ export const articleTemplate = `
     <title>\${TITLE}</title>
     <style>
       \${MAIN_CSS}
-    </style>
-    <style>
       \${COMPONENTS_CSS}
-    </style>
-    <style>
+      \${ARTICLE_CSS}
+      \${AUTHOR_CSS}
+      \${NAVIGATION_CSS}
+      \${TOOLBAR_CSS}
+      \${MEDIA_CSS}
+      \${PANEL_CSS}
       \${COMMENTS_CSS}
     </style>
   </head>

@@ -1,0 +1,94 @@
+/**
+ * 样式设置面板相关样式
+ */
+export const panelCss = `
+/* 样式设置面板 */
+.style-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.style-panel-header-close {
+  background: transparent;
+  border: none;
+  color: var(--vscode-foreground);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.style-panel-header-close:hover {
+  background: var(--vscode-button-secondaryBackground);
+  border-radius: 4px;
+  color: var(--vscode-button-foreground);
+}
+
+.color-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.style-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  max-width: 90%;
+  font-size: 12px;
+  background-color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+}
+
+.font-family-select {
+  width: 100%;
+  padding: 5px;
+  border-radius: 4px;
+  background-color: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border);
+}
+
+.style-panel-tips {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin: 15px 15px 0;
+  padding: 5px 0;
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  background: var(--vscode-activityBar-background);
+  border-radius: 4px;
+  align-items: center;
+}
+
+.style-panel-mask {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  z-index: 9998;
+}
+
+.style-panel.visible,
+.style-panel-mask.visible {
+  display: flex;
+}
+`;
