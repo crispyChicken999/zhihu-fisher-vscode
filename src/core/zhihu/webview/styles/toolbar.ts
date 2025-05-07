@@ -5,7 +5,6 @@ export const toolbarCss = `
 /* 工具栏样式 */
 .toolbar {
   display: flex;
-  justify-content: space-between;
   margin: 10px 0;
   padding: 10px 0;
   border-top: 1px solid var(--vscode-panel-border);
