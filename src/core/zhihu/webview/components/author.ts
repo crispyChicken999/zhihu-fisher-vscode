@@ -24,7 +24,10 @@ export class AuthorComponent implements Component {
    * @returns 转义后的安全字符串
    */
   private escapeHtml(unsafe: string): string {
-    if (!unsafe) return "";
+    if (!unsafe) {
+      return "";
+    }
+
     return unsafe
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -47,14 +50,16 @@ export class AuthorComponent implements Component {
     const authorBio = this.author.signature || "";
     const authorFollowersCount = this.author.followersCount || 0;
     const authorUrl = this.author.url || "";
-    
+
     let authorHTML = `<div class="author-info">`;
 
     // 如果有作者头像，显示头像
     if (this.author.avatar) {
       authorHTML += `
         <div class="author-avatar" onclick="openPage('${authorUrl}')">
-          <img src="${authorAvatar}" alt="${this.escapeHtml(authorName)}" referrerpolicy="no-referrer" />
+          <img src="${authorAvatar}" alt="${this.escapeHtml(
+        authorName
+      )}" referrerpolicy="no-referrer" />
         </div>
       `;
     }
@@ -64,7 +69,9 @@ export class AuthorComponent implements Component {
     const authorTitleHtml = `<div class="author-name">
       ${
         authorUrl
-          ? `<a href="${authorUrl}" class="author-link">${this.escapeHtml(authorName)}</a>`
+          ? `<a href="${authorUrl}" class="author-link">${this.escapeHtml(
+              authorName
+            )}</a>`
           : this.escapeHtml(authorName)
       }
       <span>|</span>

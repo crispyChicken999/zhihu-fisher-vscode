@@ -673,7 +673,10 @@ export class CommentsManager {
 
       // 从next和previous URL中提取offset参数
       const extractOffset = (url: string | null): string | null => {
-        if (!url) return null;
+        if (!url) {
+          return null;
+        }
+
         try {
           const match = url.match(/offset=([^&]*)/);
           return match ? match[1] : null;
@@ -918,7 +921,7 @@ export class CommentsManager {
       if (currentAnswer && currentAnswer.commentList.length) {
         // 在顶层评论中查找
         parentComment = currentAnswer.commentList.find(
-          (comment) => comment.id == commentId
+          (comment) => String(comment.id) === commentId
         );
       }
 
@@ -1013,7 +1016,7 @@ export class CommentsManager {
                 </div>
                 <div style="text-align: center; padding: 40px; color: var(--vscode-errorForeground);">
                   加载子评论失败: ${error}
-                  <div style="margin-top: 20px;">
+                  <div style="margin-top: 20px; display: flex; justify-content: center;">
                     <button class="button" onclick="loadAllChildComments('${commentId}')">重试</button>
                     <button class="button" onclick="closeCommentsModal()" style="margin-left: 10px;">关闭</button>
                   </div>
