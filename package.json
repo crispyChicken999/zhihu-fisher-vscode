@@ -51,17 +51,17 @@
       },
       {
         "command": "zhihu-fisher.setMediaModeNormal",
-        "title": "正常显示媒体",
+        "title": "正常显示",
         "icon": "$(eye)"
       },
       {
         "command": "zhihu-fisher.setMediaModeMini",
-        "title": "迷你媒体模式",
+        "title": "图片视频大小为原来的50%",
         "icon": "$(screen-normal)"
       },
       {
         "command": "zhihu-fisher.setMediaModeNone",
-        "title": "隐藏媒体模式",
+        "title": "不显示图片视频",
         "icon": "$(eye-closed)"
       },
       {
@@ -123,7 +123,7 @@
     "submenus": [
       {
         "id": "zhihu-fisher.mediaDisplayMenu",
-        "label": "媒体显示模式"
+        "label": "图片视频显示方式"
       }
     ],
     "menus": {

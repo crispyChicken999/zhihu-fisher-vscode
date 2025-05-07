@@ -7,6 +7,7 @@
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
 ![Version](https://img.shields.io/badge/Version-0.1.3-green.svg)
+![Supported](https://img.shields.io/badge/Supported-Windows_MacOS-purple.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。
 
@@ -14,10 +15,8 @@
 
 - 其实就是想上班摸会鱼，直接网页刷知乎容易被抓包，而且网页有很多图片，别人一看你就知道是在摸鱼。
 - 然后就想在 VSCode 中刷知乎，结果发现市场中的那些插件，基本都不更新了或者根本用不了，索性直接写了一个。
-- 目前基本功能有了，但是写的有些乱，后续会慢慢优化。
-- 刚写完还有很多 bug，但是能用 😂，如果卡住了更多回答加载不出，那就关了再开。
 - 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！
-- 有更多的意见和建议欢迎[评论](https://marketplace.visualstudio.com/items?itemName=CrispyChicken.zhihu-fisher&ssr=false#review-details)，或者提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。
+- 有更多的意见和建议，欢迎提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。
 - 如果觉得好用，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 
 ## 🎯 支持的 VSCode 版本 🎯
@@ -95,6 +94,8 @@
 5. 提供切换媒体（图片、视频等）模式（隐藏|迷你|正常）的功能，避免摸鱼被发现
 6. 提供快捷键，键盘左右箭头可以切换上一个/下一个回答，按`/`可以切换图片的显示和隐藏
 7. 文章可以调整字体大小、颜色等样式
+8. 支持查看评论区
+9. 提供沉浸模式，隐藏其他不重要的信息，只显示问题标题和回答内容
 
 ## 💥 更新日志 💥
 
@@ -109,21 +110,20 @@
 - ~~支持用户指定自己的 Chrome.exe 浏览器地址，就不用下载新的了~~ **(v0.1.1 已实现)**
 - ~~支持小图模式，比如想要摸鱼，但是也想偷偷看图片~~ **(v0.1.3 已实现)**
 - ~~支持设置文章的各种样式，比如字体大小、颜色等~~ **(v0.1.3 已实现)**
-- 支持爬回答的评论等。
+- ~~支持爬回答的评论等。~~ **(v0.1.4 已实现)**
 
 ## 🐞 已知问题 🐞
 
 1.  推荐列表可能加载不出来，可能跟 Cookie 中 BEC 参数有关，那么需要你前往知乎首页，点击推荐切换到推荐列表，然后刷新页面，获取新的 Cookie，粘贴到 VSCode 中即可。（我猜这个参数可能记录了用户的操作，比如之前切换到热榜列表，那么下次打开知乎也切到热榜，所以需要切到推荐后再拿 Cookie）
 2.  欢迎在 Issues 中反馈问题，或者直接在插件中反馈问题，我会尽快修复。
 
-## 🔧 实现原理 🔧
+## ⚙ 实现原理 ⚙
 
 基于 VSCode 插件脚手架，使用 Puppeteer 来模拟浏览知乎，抓取内容并渲染成 HTML，最后在 VSCode 中显示。
 
 ## 📬 反馈问题 📬
 
-1. 在[插件市场问答页](https://marketplace.visualstudio.com/items?itemName=CrispyChicken.zhihu-fisher&ssr=false#qna)中`Ask a Question`，提问即可。
-2. 在[GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)中提交问题，我看到会尽快回复。
+- 在[GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)中提交问题，我看到会尽快回复和修复。
 
 ## 💖 欢迎赞赏 💖
 

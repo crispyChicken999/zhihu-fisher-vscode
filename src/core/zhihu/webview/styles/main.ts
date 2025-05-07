@@ -83,7 +83,7 @@ blockquote {
 hr {
   height: 0.25em;
   padding: 0;
-  margin: 24px 0;
+  margin: 12px 0;
   background-color: var(--vscode-panel-border);
   border: 0;
 }

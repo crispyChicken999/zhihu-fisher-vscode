@@ -35,10 +35,19 @@ export const panelCss = `
   gap: 15px;
 }
 
+.color-picker-container .color-picker {
+  width: 50px;
+  height: 40px;
+  border-radius: 4px;
+  border: 1px solid var(--vscode-dropdown-border);
+  cursor: pointer;
+}
+
 .style-panel {
   position: fixed;
   top: 50%;
   left: 50%;
+  line-height: 1.5;
   transform: translate(-50%, -50%);
   width: 350px;
   max-width: 90%;
@@ -54,7 +63,7 @@ export const panelCss = `
   user-select: none;
 }
 
-.font-family-select {
+.panel-select {
   width: 100%;
   padding: 5px;
   border-radius: 4px;
@@ -74,6 +83,17 @@ export const panelCss = `
   background: var(--vscode-activityBar-background);
   border-radius: 4px;
   align-items: center;
+}
+
+.style-panel-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.style-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 0 15px 15px;
 }
 
 .style-panel-mask {

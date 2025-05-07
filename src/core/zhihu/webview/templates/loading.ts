@@ -57,6 +57,17 @@ export const loadingTemplate = `
     .button:hover {
       background-color: var(--vscode-button-hoverBackground);
     }
+    .cookie-warning {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: var(--vscode-inputValidation-warningBackground);
+      color: var(--vscode-inputValidation-warningForeground);
+      border: 1px solid var(--vscode-inputValidation-warningBorder);
+      border-radius: 3px;
+      text-align: center;
+      max-width: 500px;
+    }
   </style>
 </head>
 <body>
@@ -67,6 +78,12 @@ export const loadingTemplate = `
     <div style="border: 1px solid var(--vscode-panel-border); width:60%; max-width:600px; margin: 10px 30px;"></div>
     <p style="text-align:center;max-width:600px;max-height:300px;overflow:auto;">\${EXCERPT}</p>
     <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
+
+    <div id="cookieWarning" class="cookie-warning">
+      <p><strong>提示：</strong>内容加载时间过长，可能是知乎Cookie已失效。</p>
+      <p>请尝试更新您的Cookie信息后重新打开页面。</p>
+      <button class="button" onclick="updateCookie()">更新Cookie</button>
+    </div>
   </div>
   <script>
     const vscode = acquireVsCodeApi();
@@ -74,8 +91,17 @@ export const loadingTemplate = `
     // 通知扩展加载内容
     vscode.postMessage({ command: 'requestContent' });
 
+    // 10秒后显示Cookie提示
+    setTimeout(() => {
+      document.getElementById('cookieWarning').style.display = 'block';
+    }, 10000);
+
     function openInBrowser() {
       vscode.postMessage({ command: 'openInBrowser' });
+    }
+
+    function updateCookie() {
+      vscode.postMessage({ command: 'updateCookie' });
     }
   </script>
 </body>

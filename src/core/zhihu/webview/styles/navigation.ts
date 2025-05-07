@@ -42,7 +42,7 @@ export const navigationCss = `
 .navigation {
   display: flex;
   justify-content: space-between;
-  margin: 20px 0;
+  margin: 10px 0;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -102,11 +102,12 @@ export const navigationCss = `
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .nav-info {
     width: 100%;
     justify-content: center;
     margin-top: 10px;
+    flex-wrap: wrap;
   }
 }
 `;

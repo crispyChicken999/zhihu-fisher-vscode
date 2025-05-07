@@ -1,11 +1,10 @@
 import axios from "axios";
+import * as vscode from "vscode";
+import { Store } from "../../../stores";
 import { CommentItem } from "../../../types";
+import { WebViewItem } from "../../../types";
 import { CookieManager } from "../../cookie";
 import { Component, RenderOptions } from "./base";
-import { Store } from "../../../stores";
-import { WebViewItem } from "../../../types";
-import * as vscode from "vscode";
-import { HtmlRenderer } from "../html";
 
 /**
  * 评论容器组件
@@ -55,7 +54,7 @@ export class CommentsContainerComponent implements Component {
     // 评论区容器
     let commentsContainer = `
       <div class="comments-container ${this.modalContainerClass}" data-answer-id="${this.answerId}">
-        <button class="zhihu-load-comments-btn" onclick="loadComments('${this.answerId}')">
+        <button class="zhihu-load-comments-btn" onclick="loadComments('${this.answerId}')" tooltip="按(，)加载评论" placement="right">
           加载评论 (${this.commentCount})
         </button>
       </div>
@@ -89,7 +88,9 @@ export class CommentsContainerComponent implements Component {
         );
 
         commentsContainer = `
-          <div class="comments-container ${this.modalContainerClass}" data-answer-id="${this.answerId}">
+          <div class="comments-container ${
+            this.modalContainerClass
+          }" data-answer-id="${this.answerId}">
             ${CommentsManager.createCommentsComponent(
               displayComments,
               this.answerId,
@@ -102,7 +103,7 @@ export class CommentsContainerComponent implements Component {
         // 如果评论区是收起状态，则显示展开按钮
         commentsContainer = `
           <div class="comments-container ${this.modalContainerClass}" data-answer-id="${this.answerId}">
-            <button class="zhihu-load-comments-btn" onclick="toggleCommentStatus('${this.answerId}')" data-answer-id="${this.answerId}">
+            <button class="zhihu-load-comments-btn" onclick="toggleCommentStatus('${this.answerId}')" data-answer-id="${this.answerId}" tooltip="按(，)展开/收起评论" placement="right">
               展开评论 (${this.commentCount})
             </button>
           </div>
@@ -600,7 +601,10 @@ export class CommentsManager {
       });
 
       // 简化判断逻辑：当返回的数据长度小于请求的limit，则认为是最后一页
-      const is_end = response.data.data.length < limit;
+      const is_end =
+        response.data.data.length < limit ||
+        response.data.data.length === 0 ||
+        !response.data.data;
 
       return {
         comments: response.data.data.map((comment: any) => {
@@ -682,6 +686,7 @@ export class CommentsManager {
       const is_end =
         response.data.data.length === 0 ||
         response.data.data.length < limit ||
+        !response.data.data ||
         !response.data.paging.next;
 
       // 计算当前页码，这里需要根据API的特性做调整
@@ -819,11 +824,17 @@ export class CommentsManager {
           limit,
           loadedTotals,
           is_start: page === 1,
-          // 如果已加载的评论总数(包括子评论) >= 总评论数，或者当前页已经是最后一页，则认为已加载完成
+          /**
+           * 如果已加载的评论总数(包括子评论) >= 总评论数，或者当前页已经是最后一页，则认为已加载完成
+           * 这个条件比较复杂因为用的是旧版接口，没有正确的能够使用的分页信息，只能自己判断一下
+           * 用这个接口是因为他没有反爬机制，直接用就完了。
+           */
           is_end:
             loadedTotals >= paging.totals ||
             page >= totalPages ||
-            paging.totals <= limit,
+            paging.totals <= limit ||
+            comments.length < limit ||
+            !comments,
         };
 
         // 根据当前页码截取要显示的评论

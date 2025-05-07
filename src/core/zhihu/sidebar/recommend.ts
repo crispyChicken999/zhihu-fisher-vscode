@@ -106,7 +106,7 @@ export class sidebarRecommendListDataProvider
 
     console.log("导航到知乎首页...");
     await page.goto("https://www.zhihu.com/", {
-      waitUntil: "networkidle0",
+      waitUntil: "networkidle0", // "domcontentloaded"
       timeout: 30000, // 30秒超时
     });
 
@@ -353,7 +353,9 @@ export class sidebarRecommendListDataProvider
             "模拟滚动加载更多中，请耐心等待加载完成...\n" +
             "╰(￣ω￣ｏ)暂时不允许打开文章，避免列表加载卡住和出现bug。\n" +
             "【注意】\n" +
-            "如果长时间没有响应，请确保浏览器正确配置，或者点击标题栏中的刷新按钮。"
+            "如果长时间没有响应，请确保浏览器正确配置，或者点击标题栏中的刷新按钮。\n" +
+            "如果还不行那么可能是Cookie失效了，去知乎首页看看需不需要登录。\n" +
+            "如果需要登录，说明Cookie失效了，请重新设置Cookie。\n"
         ),
       ];
     }

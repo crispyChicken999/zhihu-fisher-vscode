@@ -17,11 +17,15 @@ let loadedAnswerCount = \${LOADED_ANSWER_COUNT};
 // 文章ID
 const articleId = "\${ARTICLE_ID}";
 
+// 沉浸模式状态
+let isImmersiveMode = false;
+
 // 文档加载完成后执行
 document.addEventListener("DOMContentLoaded", function() {
   setupKeyboardNavigation();
   setupStylePanel();
   setupBackTopButton();
+  setupImmersiveMode();
 
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
@@ -40,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // 向扩展发送消息，带上选定的模式
         vscode.postMessage({
           command: "setMediaMode",
-          mode: mode
+          mode: currentMediaMode
         });
       }
     });
@@ -67,9 +71,66 @@ window.addEventListener('message', event => {
 });
 
 /**
+ * 设置沉浸模式
+ */
+function setupImmersiveMode() {
+  // 从localStorage获取沉浸模式状态
+  isImmersiveMode = localStorage.getItem('zhihu-fisher-immersive-mode') === 'true';
+
+  // 如果沉浸模式已开启，应用沉浸模式样式
+  if (isImmersiveMode) {
+    document.body.classList.add('immersive-mode');
+  }
+}
+
+/**
+ * 切换沉浸模式
+ */
+function toggleImmersiveMode() {
+  isImmersiveMode = !isImmersiveMode;
+
+  if (isImmersiveMode) {
+    document.body.classList.add('immersive-mode');
+  } else {
+    document.body.classList.remove('immersive-mode');
+  }
+
+  // 保存状态到localStorage
+  localStorage.setItem('zhihu-fisher-immersive-mode', isImmersiveMode);
+
+  // 回到顶部
+  window.scrollTo(0, 0);
+}
+
+/**
+ * 加载评论|收起评论|展开评论
+ */
+function hanldeCommentsToggle() {
+  const commentsContainer = document.querySelector('.comments-container');
+  const loadCommentsBtn = document.querySelector('.zhihu-load-comments-btn');
+
+  if (loadCommentsBtn) {
+    // 如果找到按钮，那么说明没有加载评论，点击按钮加载评论
+    const answerId = commentsContainer.getAttribute('data-answer-id');
+    loadComments(answerId);
+  } else {
+    // 如果已经加载评论了，判断是否滚动到评论区
+    const isInViewport = isElementInViewport(commentsContainer);
+    if (isInViewport) {
+      // 如果评论区在可视范围内，则收起评论
+      const answerId = commentsContainer.getAttribute('data-answer-id');
+      toggleCommentStatus(answerId);
+    } else {
+      // 如果评论区不在可视范围内，则滚动到评论区
+      commentsContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+}
+
+/**
  * 判断元素是否在视口内
  * @param {HTMLElement} el 元素
- * * @returns {boolean} 是否在视口内
+ * @returns {boolean} 是否在视口内
  */
 function isElementInViewport(el) {
   const rect = el.getBoundingClientRect();
@@ -118,25 +179,33 @@ function setupKeyboardNavigation() {
 
     // 按逗号键切换评论区显示（展开/收起）
     if (event.key === ',') {
-      const commentsContainer = document.querySelector('.comments-container');
-      const loadCommentsBtn = document.querySelector('.zhihu-load-comments-btn');
+      hanldeCommentsToggle();
+    }
 
-      if (loadCommentsBtn) {
-        // 如果找到按钮，那么说明没有加载评论，点击按钮加载评论
-        const answerId = commentsContainer.getAttribute('data-answer-id');
-        loadComments(answerId);
-      } else {
-        // 如果已经加载评论了，判断是否滚动到评论区
-        const isInViewport = isElementInViewport(commentsContainer);
-        if (isInViewport) {
-          // 如果评论区在可视范围内，则收起评论
-          const answerId = commentsContainer.getAttribute('data-answer-id');
-          toggleCommentStatus(answerId);
-        } else {
-          // 如果评论区不在可视范围内，则滚动到评论区
-          commentsContainer.scrollIntoView({ behavior: 'smooth' });
-        }
+    // 按x键切换沉浸模式
+    if (event.key === 'x') {
+      toggleImmersiveMode();
+    }
+
+    // 按c键复制链接
+    if (event.key === 'c') {
+      const copyButton = document.querySelector('.copy-button');
+      if (copyButton) {
+        copyButton.click();
       }
+    }
+
+    // 按b键浏览器打开链接
+    if (event.key === 'b') {
+      const openButton = document.querySelector('.open-button');
+      if (openButton) {
+        openButton.click();
+      }
+    }
+
+    // 按v键回到顶部
+    if (event.key === 'v') {
+      backTop();
     }
   });
 }
@@ -375,7 +444,6 @@ function setupBackTopButton() {
   });
 }
 
-
 // 回到顶部
 function backTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -489,18 +557,20 @@ function openPage(url) {
  * 复制链接到剪贴板
  * @param {string} url 链接URL
  */
-function copyLink(button,url) {
+function copyLink(button, url, isImmersiveMode = false) {
   // 使用Clipboard API复制链接
-  const tempInput = document.createElement('input');
+  const tempInput = document.createElement("input");
   tempInput.value = url;
   document.body.appendChild(tempInput);
   tempInput.select();
-  document.execCommand('copy');
+  document.execCommand("copy");
   document.body.removeChild(tempInput);
 
   // 暂时改变按钮文字
   const originalText = button.innerHTML;
-  button.innerHTML = \`
+  button.innerHTML = isImmersiveMode
+    ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M18.333 6A3.667 3.667 0 0 1 22 9.667v8.666A3.667 3.667 0 0 1 18.333 22H9.667A3.667 3.667 0 0 1 6 18.333V9.667A3.667 3.667 0 0 1 9.667 6zM15 2c1.094 0 1.828.533 2.374 1.514a1 1 0 1 1-1.748.972C15.405 4.088 15.284 4 15 4H5c-.548 0-1 .452-1 1v9.998c0 .32.154.618.407.805l.1.065a1 1 0 1 1-.99 1.738A3 3 0 0 1 2 15V5c0-1.652 1.348-3 3-3zm1.293 9.293L13 14.585l-1.293-1.292a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414"/></svg>'
+    : \`
     <div style="display: flex; align-items: center; gap: 5px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M18.333 6A3.667 3.667 0 0 1 22 9.667v8.666A3.667 3.667 0 0 1 18.333 22H9.667A3.667 3.667 0 0 1 6 18.333V9.667A3.667 3.667 0 0 1 9.667 6zM15 2c1.094 0 1.828.533 2.374 1.514a1 1 0 1 1-1.748.972C15.405 4.088 15.284 4 15 4H5c-.548 0-1 .452-1 1v9.998c0 .32.154.618.407.805l.1.065a1 1 0 1 1-.99 1.738A3 3 0 0 1 2 15V5c0-1.652 1.348-3 3-3zm1.293 9.293L13 14.585l-1.293-1.292a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414"/></svg>
       <span>已复制</span>

@@ -1,9 +1,15 @@
-import { Component } from "./base";
+import { Component, RenderOptions } from "./base";
 
 /**
  * 样式设置面板组件
  */
 export class StylePanelComponent implements Component {
+  private mediaDisplayMode: string = "normal";
+
+  constructor(renderOptions: RenderOptions) {
+    this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
+  }
+
   /**
    * 渲染样式设置面板
    * @returns 样式设置面板HTML
@@ -11,6 +17,7 @@ export class StylePanelComponent implements Component {
   public render(): string {
     return `
       <div class="style-panel-mask" onclick="toggleStylePanel()"></div>
+
       <div class="style-panel" id="style-panel">
         <div class="style-panel-header">
           <h3 style="margin:10px 0; font-weight: bold;">外观设置</h3>
@@ -35,7 +42,7 @@ export class StylePanelComponent implements Component {
             <label for="font-size-slider" style="display: block; margin-bottom: 5px;">字体大小</label>
             <div style="display: flex; align-items: center; gap: 10px;">
               <input type="range" id="font-size-slider" min="8" max="24" value="14" style="flex: 1;">
-              <span id="font-size-value">16px</span>
+              <span id="font-size-value" style="width: 30px;">16px</span>
             </div>
           </div>
 
@@ -43,21 +50,21 @@ export class StylePanelComponent implements Component {
             <label for="line-height-slider" style="display: block; margin-bottom: 5px;">行高</label>
             <div style="display: flex; align-items: center; gap: 10px;">
               <input type="range" id="line-height-slider" min="1" max="2.5" value="1.6" step="0.1" style="flex: 1;">
-              <span id="line-height-value">1.6</span>
+              <span id="line-height-value" style="width: 30px;">1.6</span>
             </div>
           </div>
 
           <div class="style-option" style="margin: 10px 0;">
             <label for="max-width-slider" style="display: block; margin-bottom: 5px;">最大宽度</label>
             <div style="display: flex; align-items: center; gap: 10px;">
-              <input type="range" id="max-width-slider" min="500" max="2000" value="800" step="50" style="flex: 1;">
-              <span id="max-width-value">800px</span>
+              <input type="range" id="max-width-slider" min="300" max="2400" value="800" step="50" style="flex: 1;">
+              <span id="max-width-value" style="width: 30px;">800px</span>
             </div>
           </div>
 
           <div class="style-option" style="margin: 10px 0;">
             <label for="font-family-select" style="display: block; margin-bottom: 5px;">字体</label>
-            <select id="font-family-select" placeholder="点击设置显示字体" class="font-family-select">
+            <select id="font-family-select" placeholder="点击设置显示字体" class="panel-select">
               <option value="">系统默认</option>
               <option value="'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif">微软雅黑</option>
               <option value="'Noto Serif SC', 'Source Han Serif SC', 'Source Han Serif CN', STSong, SimSun, serif">中文宋体</option>
@@ -70,7 +77,7 @@ export class StylePanelComponent implements Component {
           </div>
 
           <div class="style-option">
-            <label for="content-color-picker" style="display: block; margin-bottom: 10px;">文章字体颜色</label>
+            <label for="content-color-picker" style="display: block; margin-bottom: 10px;">字体颜色</label>
             <div id="content-color-picker" class="color-picker-container">
               <input
                 type="color"
@@ -83,21 +90,23 @@ export class StylePanelComponent implements Component {
           </div>
 
           <div class="style-option" style="margin: 20px 0 10px 0;">
-            <label style="display: block; margin-bottom: 10px;">媒体（图片、视频等）显示方式</label>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="media-display" value="none">
-                <span>隐藏模式</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="media-display" value="mini">
-                <span>迷你模式</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="media-display" value="normal" checked>
-                <span>正常模式</span>
-              </label>
-            </div>
+            <label style="display: block; margin-bottom: 10px;" for="media-display-select">媒体（图片、视频等）显示方式</label>
+            <select
+              id="media-display-select"
+              class="panel-select"
+              onchange="changeMediaMode(this.value)"
+              title="选择图片、视频等媒体的显示方式"
+            >
+              <option value="normal" ${
+                this.mediaDisplayMode === "normal" ? "selected" : ""
+              }>正常显示图片和视频</option>
+              <option value="mini" ${
+                this.mediaDisplayMode === "mini" ? "selected" : ""
+              }>图片、视频以原尺寸的50%展示</option>
+              <option value="none" ${
+                this.mediaDisplayMode === "none" ? "selected" : ""
+              }>图片、视频全部隐藏</option>
+            </select>
           </div>
 
           <div class="style-option" style="margin: 20px 0 10px 0;">
@@ -121,10 +130,10 @@ export class StylePanelComponent implements Component {
               </label>
             </div>
           </div>
+        </div>
 
-          <div class="style-buttons" style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="button" id="style-reset-button" style="flex: 1;">重置样式</button>
-          </div>
+        <div class="style-buttons" >
+          <button class="button" id="style-reset-button" style="flex: 1;">重置样式</button>
         </div>
       </div>
     `;

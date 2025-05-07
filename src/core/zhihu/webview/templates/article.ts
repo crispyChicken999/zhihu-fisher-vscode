@@ -41,7 +41,7 @@ export const articleTemplate = `
               <span style="flex: 0 0 auto; display: inline-flex; align-items: center;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M5 2a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3zM4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5.723 13L16.58 6h-2.303L7.42 18z"/></svg>
               </span>
-              <span style="flex: 0 0 auto;">切换媒体展示</span>
+              <span style="flex: 0 0 auto;">调整图片/视频显示</span>
             </div>
           </div>
         </div>

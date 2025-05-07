@@ -20,7 +20,11 @@ export const articleCss = `
 
 /* 文章内容样式 */
 .article-content {
-  margin: 20px 0;
+  margin: 10px 0;
+}
+
+.article-content p {
+  margin: 10px 0;
 }
 
 .article-content.hide-media img, .article-content.hide-media video {
@@ -62,7 +66,7 @@ export const articleCss = `
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  margin: 12px 0;
+  margin: 10px 0;
   padding: 6px 10px;
   border-radius: 4px;
   background-color: var(--vscode-editor-inactiveSelectionBackground);

@@ -1,12 +1,12 @@
-import * as vscode from "vscode";
-import * as Puppeteer from "puppeteer";
-import { HtmlRenderer } from "./html";
-import { PuppeteerManager } from "../puppeteer";
-import { LinkItem, WebViewItem, AnswerItem } from "../../types";
-import { Store } from "../../stores";
-import { CommentsManager } from "./components/comments";
 import { marked } from "marked";
+import * as vscode from "vscode";
+import { Store } from "../../stores";
+import { HtmlRenderer } from "./html";
+import * as Puppeteer from "puppeteer";
 import { CookieManager } from "../cookie";
+import { PuppeteerManager } from "../puppeteer";
+import { CommentsManager } from "./components/comments";
+import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
@@ -717,6 +717,18 @@ export class WebviewManager {
       switch (message.command) {
         case "requestContent":
           await this.crawlingURLData(webviewId);
+          break;
+
+        case "updateCookie":
+          // 处理更新Cookie的请求
+          await vscode.commands.executeCommand("zhihu-fisher.setCookie");
+          // 刷新当前页面
+          if (webviewItem) {
+            webviewItem.webviewPanel.webview.html = HtmlRenderer.getLoadingHtml(
+              webviewItem.article.title,
+              webviewItem.article.excerpt
+            );
+          }
           break;
 
         case "openInBrowser":

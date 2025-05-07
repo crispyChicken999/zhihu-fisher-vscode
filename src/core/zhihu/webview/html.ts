@@ -1,27 +1,27 @@
 import * as vscode from "vscode";
 import { Store } from "../../stores";
-import { ArticleInfo, WebViewItem } from "../../types";
-import { AuthorComponent } from "./components/author";
-import { NavigationComponent } from "./components/navigation";
+import { WebViewItem } from "../../types";
 import { MetaComponent } from "./components/meta";
-import { ArticleContentComponent } from "./components/article";
-import { ToolbarComponent } from "./components/toolbar";
-import { StylePanelComponent } from "./components/style-panel";
+import { AuthorComponent } from "./components/author";
 import { CommentsManager } from "./components/comments";
+import { ToolbarComponent } from "./components/toolbar";
+import { NavigationComponent } from "./components/navigation";
+import { ArticleContentComponent } from "./components/article";
+import { StylePanelComponent } from "./components/style-panel";
 // 导入模板文件
 import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts";
 import { loadingTemplate } from "./templates/loading";
 // 导入样式文件
 import { mainCss } from "./styles/main";
-import { componentsCss } from "./styles/components";
-import { commentsCss } from "./styles/comments";
-import { articleCss } from "./styles/article";
-import { authorCss } from "./styles/author";
-import { navigationCss } from "./styles/navigation";
-import { toolbarCss } from "./styles/toolbar";
-import { mediaCss } from "./styles/media";
 import { panelCss } from "./styles/panel";
+import { mediaCss } from "./styles/media";
+import { authorCss } from "./styles/author";
+import { articleCss } from "./styles/article";
+import { toolbarCss } from "./styles/toolbar";
+import { commentsCss } from "./styles/comments";
+import { navigationCss } from "./styles/navigation";
+import { componentsCss } from "./styles/components";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -92,9 +92,10 @@ export class HtmlRenderer {
     );
     const toolbarComponent = new ToolbarComponent(
       currentAnswer?.url || webview.url || "",
-      renderOptions
+      renderOptions,
+      currentAnswer
     );
-    const stylePanelComponent = new StylePanelComponent();
+    const stylePanelComponent = new StylePanelComponent(renderOptions);
     const commentsComponent = CommentsManager.createCommentsContainerComponent(
       webviewId,
       currentAnswer?.id,
