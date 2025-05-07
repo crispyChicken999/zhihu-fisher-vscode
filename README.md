@@ -6,18 +6,19 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.1.3-green.svg)
+![Version](https://img.shields.io/badge/Version-0.1.4-green.svg)
+
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS-purple.svg)
 
-使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。
+使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。提供沉浸模式、评论区、图片视频切换等功能，避免摸鱼被发现。
 
 ## 🔮 背景 🔮
 
 - 其实就是想上班摸会鱼，直接网页刷知乎容易被抓包，而且网页有很多图片，别人一看你就知道是在摸鱼。
 - 然后就想在 VSCode 中刷知乎，结果发现市场中的那些插件，基本都不更新了或者根本用不了，索性直接写了一个。
-- 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！
-- 有更多的意见和建议，欢迎提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。
-- 如果觉得好用，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
+- 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！🤣 独摸摸不如众摸摸~
+- 如果有更多的意见和建议，欢迎提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。
+- 觉得好用，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 
 ## 🎯 支持的 VSCode 版本 🎯
 
