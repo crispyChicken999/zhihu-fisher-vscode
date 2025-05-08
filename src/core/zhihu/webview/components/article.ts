@@ -142,6 +142,31 @@ export class ArticleContentComponent implements Component {
       mathEl.addClass("latex-formula");
     });
 
+    // 处理引用链接
+    $("a.LinkCard").each((i, el) => {
+      const linkCard = $(el);
+      const text = linkCard.attr("data-text") || "";
+      let href = linkCard.attr("href") || "";
+
+      // 处理知乎重定向链接
+      if (href.includes("link.zhihu.com/?target=")) {
+        try {
+          const targetParam = new URL(href).searchParams.get("target");
+          if (targetParam) {
+            href = decodeURIComponent(targetParam);
+          }
+        } catch (e) {
+          // 如果解析失败，保留原始链接
+        }
+      }
+
+      // 清空原有内容并设置为简化链接
+      linkCard.empty();
+      linkCard.text(text || href);
+      linkCard.attr("href", href);
+      linkCard.addClass("zhihu-processed-link");
+    });
+
     return $.html();
   }
 }

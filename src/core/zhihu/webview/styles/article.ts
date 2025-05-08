@@ -102,4 +102,33 @@ export const articleCss = `
   opacity: 0.8;
   font-size: 0.9em;
 }
+
+.RichText-LinkCardContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.RichText-LinkCardContainer a {
+  width: fit-content;
+  padding: 8px 15px;
+  border-radius: 8px;
+  max-width: 500px;
+  background: var(--vscode-textPreformat-background);
+  color: var(--vscode-textLink-activeForeground);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.RichText-LinkCardContainer a:before {
+  content: "引用链接：";
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+  margin-right: 5px;
+}
+
+.RichText-LinkCardContainer a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
 `;
