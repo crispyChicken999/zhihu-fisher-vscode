@@ -2,6 +2,15 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.1.5] - 2025-05-15
+
+### Bug Fixes
+
+- 修复了 Puppeteer 启动浏览器提示 ProtocolError: Connection closed 的问题，延长了浏览器的超时时间
+- 修复了 Puppeteer 的启动页面提示 Input.dispatchMouseEvent timed out 的问题，跟上一点应该是同样的问题
+  > 因为查看 Puppeteer 的 [issues](https://github.com/puppeteer/puppeteer/issues/10144)，发现这是一个概率问题，所以我们添加了重试机制，失败了就再试一次，就能尽可能避免这个问题
+- 修复了文章页面，回答中的引用链接显示为空白的问题，优化了样式并能够显示其标题
+
 ## [0.1.4] - 2025-05-07
 
 ### Features
