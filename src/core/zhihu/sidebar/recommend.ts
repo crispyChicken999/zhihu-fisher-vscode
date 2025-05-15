@@ -107,7 +107,7 @@ export class sidebarRecommendListDataProvider
     console.log("导航到知乎首页...");
     await page.goto("https://www.zhihu.com/", {
       waitUntil: "networkidle0", // "domcontentloaded"
-      timeout: 30000, // 30秒超时
+      timeout: 60000, // 60秒超时
     });
 
     PuppeteerManager.setPageInstance("recommend", page); // 设置页面实例

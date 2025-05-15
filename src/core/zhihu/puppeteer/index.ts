@@ -126,15 +126,44 @@ export class PuppeteerManager {
           throw new Error(`自定义Chrome路径不存在: ${userChromePath}`);
         }
 
-        Store.browserInstance = await Puppeteer.launch({
-          executablePath: executablePath,
-          headless: true,
-          args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--window-size=1000,700",
-          ],
-        });
+        const browserStartAttempts = 5;
+        for (let i = 0; i < browserStartAttempts; i++) {
+          try {
+            console.log(`尝试启动浏览器，第${i + 1}次尝试...`);
+            // 尝试启动浏览器
+            Store.browserInstance = await Puppeteer.launch({
+              executablePath: executablePath,
+              headless: true,
+              args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--window-size=1000,700",
+              ],
+              protocolTimeout: 60000, // 设置协议超时时间为60秒
+            });
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒钟
+            // console.log("浏览器实例创建成功！")
+            console.log(`第${i + 1}次尝试后，成功启动浏览器！`);
+            break; // 成功启动后跳出循环
+          } catch (error) {
+            console.error("尝试启动浏览器失败:", error);
+
+            const browser = Store.browserInstance;
+            if (browser && browser.connected) {
+              console.error("正在关闭已启动的浏览器...");
+              await browser.close();
+            }
+
+            Store.browserInstance = null;
+
+            if (i === browserStartAttempts - 1) {
+              console.error("5次尝试启动浏览器均失败，请稍候重试");
+              throw new Error("5次尝试启动浏览器均失败，请稍候重试，可能是网络问题");
+            }
+            console.log("等待5秒后重试...");
+            await new Promise((resolve) => setTimeout(resolve, 5000)); // 等待5秒钟
+          }
+        }
       } catch (error) {
         console.error("创建浏览器实例失败:", error);
 
@@ -186,6 +215,8 @@ export class PuppeteerManager {
         );
       }
     }
+
+    // @ts-ignore
     return Store.browserInstance;
   }
 

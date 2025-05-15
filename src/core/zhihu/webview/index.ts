@@ -127,7 +127,7 @@ export class WebviewManager {
       // 前往页面
       await page.goto(webviewItem.url, {
         waitUntil: "networkidle0",
-        timeout: 30000, // 30秒超时
+        timeout: 60000, // 60秒超时
       });
 
       // 到这一步，页面加载完成，开始处理内容

@@ -136,7 +136,7 @@ export class sidebarSearchListDataProvider
     console.log(`导航到知乎搜索页面: ${searchUrl}`);
     await page.goto(searchUrl, {
       waitUntil: "networkidle0",
-      timeout: 30000, // 30秒超时
+      timeout: 60000, // 60秒超时
     });
 
     PuppeteerManager.setPageInstance("search", page); // 设置页面实例
