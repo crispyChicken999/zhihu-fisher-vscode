@@ -193,7 +193,6 @@ export class CommentsComponent implements Component {
         <div class="zhihu-comments-list">
           ${commentsHtml}
         </div>
-        ${paginationHtml}
       </div>
     `;
   }

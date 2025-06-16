@@ -81,7 +81,7 @@ export const commentsCss = `
   flex-direction: column;
   gap: 15px;
   overflow-y: auto;
-  max-height: 65vh;
+  max-height: 70vh;
   padding-right: 10px;
 }
 
@@ -328,7 +328,7 @@ export const commentsCss = `
   border-radius: 8px;
   width: 90%;
   max-width: 600px;
-  max-height: 80vh;
+  max-height: 95vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;

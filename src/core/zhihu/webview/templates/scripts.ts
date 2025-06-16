@@ -233,6 +233,7 @@ function setupStylePanel() {
     document.body.style.lineHeight = savedStyles.lineHeight;
     document.body.style.maxWidth = savedStyles.maxWidth;
     document.body.style.fontFamily = savedStyles.fontFamily;
+    document.querySelector('header').style.color = savedStyles.contentColor;
     document.querySelector('.article-content').style.color = savedStyles.contentColor;
     document.querySelector('.comments-container').style.color = savedStyles.contentColor;
     document.querySelector('.comments-modal-container').style.color = savedStyles.contentColor;
@@ -372,6 +373,7 @@ function setupStylePanel() {
       document.body.style.lineHeight = defaultStyles.lineHeight;
       document.body.style.maxWidth = defaultStyles.maxWidth;
       document.body.style.fontFamily = defaultStyles.fontFamily;
+      document.querySelector('header').style.color = 'inherit';
       document.querySelector('.article-content').style.color = defaultStyles.contentColor;
       document.querySelector('.comments-container').style.color = defaultStyles.contentColor;
       document.querySelector('.comments-modal-container').style.color = defaultStyles.contentColor;

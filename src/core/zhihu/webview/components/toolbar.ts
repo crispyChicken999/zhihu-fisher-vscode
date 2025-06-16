@@ -96,6 +96,22 @@ export class ToolbarComponent implements Component {
           </button>
         </div>
         <div class="toolbar-right">
+          <button class="button feedback-button" onclick="openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')" tooltip="问题反馈和建议" placement="top">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 16 16"
+            >
+              <!-- Icon from Gravity UI Icons by YANDEX LLC - https://github.com/gravity-ui/icons/blob/main/LICENSE -->
+              <path
+                fill="currentColor"
+                fill-rule="evenodd"
+                d="M10 9.5h.621l.44.44l1.51 1.51a.174.174 0 0 0 .295-.136l-.112-1.454l-.062-.809l.642-.495C14.037 8.016 14.5 7.211 14.5 6c0-1.214-.465-2.019-1.17-2.56c-.754-.578-1.902-.94-3.33-.94s-2.576.362-3.33.94C5.966 3.98 5.5 4.786 5.5 6s.465 2.019 1.17 2.56c.754.578 1.902.94 3.33.94m.52 2.02l.99.99a1.673 1.673 0 0 0 2.851-1.312l-.111-1.453C15.33 8.91 16 7.663 16 6c0-3.333-2.686-5-6-5c-2.127 0-3.995.687-5.06 2.06C2.131 3.384 0 5.03 0 8c0 1.663.669 2.911 1.75 3.745l-.111 1.453A1.673 1.673 0 0 0 4.49 14.51L6 13c1.803 0 3.42-.493 4.52-1.48M4.143 4.736Q4.001 5.32 4 6c0 2.905 2.04 4.544 4.759 4.918c-.717.366-1.654.582-2.759.582h-.621l-.44.44l-1.51 1.51a.174.174 0 0 1-.295-.136l.112-1.454l.062-.809l-.642-.495C1.963 10.016 1.5 9.211 1.5 8c0-1.214.465-2.019 1.17-2.56c.391-.3.887-.541 1.473-.704"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
           <button class="button immersive-toggle" onclick="toggleImmersiveMode()" tooltip="沉浸模式(X)" placement="top">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
               <path fill="currentColor" d="M4 3a1 1 0 0 0-1 1v4h2V5h3V3zm16 0h-4v2h3v3h2V4a1 1 0 0 0-1-1M5 16v3h3v2H4a1 1 0 0 1-1-1v-4zm14 0v3h-3v2h4a1 1 0 0 0 1-1v-4zm-9-7a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/>
@@ -163,6 +179,23 @@ export class ToolbarComponent implements Component {
         <button class="button immersive-button style-button" onclick="toggleStylePanel()" tooltip="外观设置(。)" placement="left">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12 5q-.425 0-.712-.288T11 4V2q0-.425.288-.712T12 1t.713.288T13 2v2q0 .425-.288.713T12 5m4.95 2.05q-.275-.275-.275-.687t.275-.713l1.4-1.425q.3-.3.712-.3t.713.3q.275.275.275.7t-.275.7L18.35 7.05q-.275.275-.7.275t-.7-.275M20 13q-.425 0-.713-.288T19 12t.288-.712T20 11h2q.425 0 .713.288T23 12t-.288.713T22 13zm-8 10q-.425 0-.712-.288T11 22v-2q0-.425.288-.712T12 19t.713.288T13 20v2q0 .425-.288.713T12 23M5.65 7.05l-1.425-1.4q-.3-.3-.3-.725t.3-.7q.275-.275.7-.275t.7.275L7.05 5.65q.275.275.275.7t-.275.7q-.3.275-.7.275t-.7-.275m12.7 12.725l-1.4-1.425q-.275-.3-.275-.712t.275-.688t.688-.275t.712.275l1.425 1.4q.3.275.288.7t-.288.725q-.3.3-.725.3t-.7-.3M2 13q-.425 0-.712-.288T1 12t.288-.712T2 11h2q.425 0 .713.288T5 12t-.288.713T4 13zm2.225 6.775q-.275-.275-.275-.7t.275-.7L5.65 16.95q.275-.275.687-.275t.713.275q.3.3.3.713t-.3.712l-1.4 1.4q-.3.3-.725.3t-.7-.3M12 18q-2.5 0-4.25-1.75T6 12t1.75-4.25T12 6t4.25 1.75T18 12t-1.75 4.25T12 18m0-2q1.65 0 2.825-1.175T16 12t-1.175-2.825T12 8T9.175 9.175T8 12t1.175 2.825T12 16m0-4"/>
+          </svg>
+        </button>
+
+        <button class="button immersive-button feedback-button" onclick="openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')" tooltip="问题反馈和建议" placement="left">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 16 16"
+          >
+            <!-- Icon from Gravity UI Icons by YANDEX LLC - https://github.com/gravity-ui/icons/blob/main/LICENSE -->
+            <path
+              fill="currentColor"
+              fill-rule="evenodd"
+              d="M10 9.5h.621l.44.44l1.51 1.51a.174.174 0 0 0 .295-.136l-.112-1.454l-.062-.809l.642-.495C14.037 8.016 14.5 7.211 14.5 6c0-1.214-.465-2.019-1.17-2.56c-.754-.578-1.902-.94-3.33-.94s-2.576.362-3.33.94C5.966 3.98 5.5 4.786 5.5 6s.465 2.019 1.17 2.56c.754.578 1.902.94 3.33.94m.52 2.02l.99.99a1.673 1.673 0 0 0 2.851-1.312l-.111-1.453C15.33 8.91 16 7.663 16 6c0-3.333-2.686-5-6-5c-2.127 0-3.995.687-5.06 2.06C2.131 3.384 0 5.03 0 8c0 1.663.669 2.911 1.75 3.745l-.111 1.453A1.673 1.673 0 0 0 4.49 14.51L6 13c1.803 0 3.42-.493 4.52-1.48M4.143 4.736Q4.001 5.32 4 6c0 2.905 2.04 4.544 4.759 4.918c-.717.366-1.654.582-2.759.582h-.621l-.44.44l-1.51 1.51a.174.174 0 0 1-.295-.136l.112-1.454l.062-.809l-.642-.495C1.963 10.016 1.5 9.211 1.5 8c0-1.214.465-2.019 1.17-2.56c.391-.3.887-.541 1.473-.704"
+              clip-rule="evenodd"
+            />
           </svg>
         </button>
 
