@@ -73,6 +73,11 @@
         "command": "zhihu-fisher.setCustomChromePath",
         "title": "自定义浏览器路径",
         "icon": "$(folder-opened)"
+      },
+      {
+        "command": "zhihu-fisher.openFeedback",
+        "title": "问题反馈与建议",
+        "icon": "$(feedback)"
       }
     ],
     "viewsContainers": {
@@ -161,6 +166,10 @@
         },
         {
           "command": "zhihu-fisher.setCustomChromePath",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+        },
+        {
+          "command": "zhihu-fisher.openFeedback",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         }
       ],

@@ -375,7 +375,7 @@ export const commentsCss = `
 .zhihu-comments-modal-child-comments {
   padding: 15px;
   overflow-y: auto;
-  max-height: 50vh;
+  max-height: 65vh;
   display: flex;
   flex-direction: column;
   gap: 10px;

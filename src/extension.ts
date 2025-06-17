@@ -445,6 +445,19 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // 注册意见反馈命令
+  const openFeedbackCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.openFeedback",
+    async () => {
+      const feedbackUrl =
+        "https://github.com/crispyChicken999/zhihu-fisher-vscode/issues";
+      vscode.env.openExternal(vscode.Uri.parse(feedbackUrl));
+      vscode.window.showInformationMessage(
+        "已打开GitHub Issues页面，欢迎提出问题和建议！"
+      );
+    }
+  );
+
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
     // 只在非mediaDisplayMode的配置变更时才刷新热榜和推荐及搜索列表
@@ -476,6 +489,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(setMediaModeNoneCommand);
   context.subscriptions.push(configureBrowserCommand);
   context.subscriptions.push(setCustomChromePathCommand);
+  context.subscriptions.push(openFeedbackCommand);
 }
 
 // 清理资源或执行其他必要的操作
