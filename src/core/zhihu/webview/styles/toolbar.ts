@@ -49,9 +49,12 @@ export const toolbarCss = `
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   gap: 10px;
+  height: 95vh;
+  max-height: 432px;
+  flex-wrap: wrap-reverse;
 }
 
 .fixed-toolbar button {
