@@ -111,6 +111,7 @@ export const articleCss = `
 
 .RichText-LinkCardContainer a {
   width: fit-content;
+  margin: 10px auto;
   padding: 8px 15px;
   border-radius: 8px;
   max-width: 500px;

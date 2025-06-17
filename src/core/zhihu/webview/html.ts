@@ -12,6 +12,7 @@ import { StylePanelComponent } from "./components/style-panel";
 import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts";
 import { loadingTemplate } from "./templates/loading";
+import { cookieTipsTemplate } from "./templates/cookieTips";
 // 导入样式文件
 import { mainCss } from "./styles/main";
 import { panelCss } from "./styles/panel";
@@ -57,6 +58,14 @@ export class HtmlRenderer {
     return loadingTemplate
       .replace(/\${TITLE}/g, this.escapeHtml(title))
       .replace("${EXCERPT}", this.escapeHtml(excerptText));
+  }
+
+  /**
+   * 生成Cookie过期提示的HTML内容
+   * @returns Cookie过期提示的HTML字符串
+   */
+  public static getCookieExpiredHtml(): string {
+    return cookieTipsTemplate;
   }
 
   /**

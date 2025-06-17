@@ -32,7 +32,7 @@ export class WebviewManager {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: []
+        localResourceRoots: [],
       }
     );
 
@@ -140,7 +140,8 @@ export class WebviewManager {
       );
       if (isCookieExpired) {
         console.log("Cookie过期，请重新登录！");
-        webviewItem.webviewPanel.webview.html = `Cookie已过期，请重新设置Cookie！`;
+        webviewItem.webviewPanel.webview.html =
+          HtmlRenderer.getCookieExpiredHtml();
         return;
       }
 
@@ -690,7 +691,10 @@ export class WebviewManager {
   }
 
   /** 设置媒体显示模式 */
-  private static async setMediaMode(webviewId: string, mode: string): Promise<void> {
+  private static async setMediaMode(
+    webviewId: string,
+    mode: string
+  ): Promise<void> {
     // 处理直接设置媒体模式的消息
     if (!mode) {
       return;
