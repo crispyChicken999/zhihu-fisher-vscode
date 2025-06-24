@@ -22,13 +22,16 @@ export function activate(context: vscode.ExtensionContext) {
     treeDataProvider: sidebarRecommend,
     showCollapseAll: false,
   });
-
+  // 将 TreeView 引用传递给数据提供者，用于更新标题
+  sidebarRecommend.setTreeView(recommendListView);
   // 侧边栏 热榜 列表
   const sidebarHot = new sidebarHotListDataProvider();
   const hotListView = vscode.window.createTreeView("zhihuHotList", {
     treeDataProvider: sidebarHot,
     showCollapseAll: false,
   });
+  // 将 TreeView 引用传递给数据提供者，用于更新标题
+  sidebarHot.setTreeView(hotListView);
 
   // 侧边栏 搜索 列表
   const sidebarSearch = new sidebarSearchListDataProvider();
@@ -36,6 +39,8 @@ export function activate(context: vscode.ExtensionContext) {
     treeDataProvider: sidebarSearch,
     showCollapseAll: false,
   });
+  // 将 TreeView 引用传递给数据提供者，用于更新标题
+  sidebarSearch.setTreeView(searchListView);
 
   // 注册刷新热榜命令
   const refreshHotListCommand = vscode.commands.registerCommand(
@@ -123,6 +128,46 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       WebviewManager.openWebview(item);
+    }
+  );
+
+  // 注册在浏览器中打开命令
+  const openInBrowserCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.openInBrowser",
+    (item: any) => {
+      if (item && item.listItem && item.listItem.url) {
+        vscode.env.openExternal(vscode.Uri.parse(item.listItem.url));
+        // vscode.window.showInformationMessage(`已在浏览器中打开: ${item.hotListItem.title}`);
+      } else {
+        vscode.window.showErrorMessage("无法获取链接地址");
+      }
+    }
+  );
+
+  // 注册查看大图命令
+  const showFullImageCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.showFullImage",
+    (item: any) => {
+      if (item && item.listItem && item.listItem.url) {
+        // createImageWebview(item);
+        const panel = vscode.window.createWebviewPanel(
+          "previewImage",
+          `缩略图预览 - ${item.listItem.title.substring(0, 10)}`,
+          vscode.ViewColumn.Active, // 修改为在当前编辑组显示
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            localResourceRoots: [],
+          }
+        );
+
+        // 设置Webview内容
+        panel.webview.html = `
+          <img src="${item.listItem.imgUrl}" style="width: 100%; height: auto; display: block; margin: 20px auto;" />
+        `
+      } else {
+        vscode.window.showInformationMessage("该项目没有图片");
+      }
     }
   );
 
@@ -481,6 +526,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(resetSearchListCommand);
   context.subscriptions.push(searchContentCommand);
   context.subscriptions.push(openArticleCommand);
+  context.subscriptions.push(openInBrowserCommand);
+  context.subscriptions.push(showFullImageCommand);
   context.subscriptions.push(setCookieCommand);
   context.subscriptions.push(clearCookieCommand);
   context.subscriptions.push(toggleMediaCommand);

@@ -230,29 +230,86 @@ export interface CookieInfo {
 }
 
 /**
- * 知乎热榜树节点类
+ * 知乎树节点类
  */
 export class TreeItem extends vscode.TreeItem {
   constructor(
-    public readonly hotListItem: LinkItem,
+    public readonly listItem: LinkItem,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
-    super(hotListItem.title, collapsibleState);
+    super(listItem.title, collapsibleState);
 
-    this.tooltip = hotListItem.excerpt || hotListItem.title;
-    this.description = hotListItem.hotValue;
-    this.id = hotListItem.id;
+    // 设置图标：如果有缩略图则使用缩略图，否则使用默认图标
+    if (listItem.imgUrl && listItem.imgUrl.trim()) {
+      try {
+        this.iconPath = vscode.Uri.parse(listItem.imgUrl);
+      } catch (error) {
+        console.warn(`解析图片URL失败: ${listItem.imgUrl}`, error);
+        this.iconPath = new vscode.ThemeIcon("comment-discussion");
+      }
+    } else {
+      this.iconPath = new vscode.ThemeIcon("comment-discussion");
+    }
+
+    // 设置工具提示：如果有缩略图，在 tooltip 中包含图片预览
+    if (listItem.imgUrl && listItem.imgUrl.trim()) {
+      const markdownTooltip = new vscode.MarkdownString();
+      markdownTooltip.appendMarkdown(`#### **${listItem.title}**\n\n`);
+
+      if (listItem.hotValue) {
+        markdownTooltip.appendMarkdown(`🔥 ${listItem.hotValue} 🔥\n\n`);
+      }
+
+      markdownTooltip.appendMarkdown("\n ___ \n\n");
+
+      if (listItem.excerpt) {
+        const excerptPreview = listItem.excerpt;
+        markdownTooltip.appendMarkdown(`${excerptPreview}\n\n`);
+      }
+
+      markdownTooltip.appendMarkdown(
+        `<img src="${listItem.imgUrl}" alt="预览图" width="150" />\n`
+      );
+
+      markdownTooltip.supportHtml = true;
+      markdownTooltip.isTrusted = true;
+      this.tooltip = markdownTooltip;
+    } else {
+      // 没有图片时的简单tooltip
+      const simpleTooltip = new vscode.MarkdownString();
+      simpleTooltip.appendMarkdown(`#### **${listItem.title}**\n\n`);
+
+      if (listItem.hotValue) {
+        simpleTooltip.appendMarkdown(`🔥 ${listItem.hotValue} 🔥\n\n`);
+      }
+
+      simpleTooltip.appendMarkdown("\n ___ \n\n");
+
+      if (listItem.excerpt) {
+        simpleTooltip.appendMarkdown(listItem.excerpt);
+      }
+      this.tooltip = simpleTooltip;
+    }
+
+    // 只有当热度值存在且不为空时才显示
+    this.description =
+      listItem.hotValue && listItem.hotValue.trim()
+        ? listItem.hotValue.trim()
+        : undefined;
+
+    this.id = listItem.id;
     this.command = {
       command: "zhihu-fisher.openArticle",
       title: "打开文章",
-      arguments: [hotListItem],
+      arguments: [listItem],
     };
+
+    // 根据是否有图片设置不同的 contextValue
+    this.contextValue =
+      listItem.imgUrl && listItem.imgUrl.trim()
+        ? "TreeItemWithImage"
+        : "TreeItem";
   }
-
-  // 使用问答图标
-  iconPath = new vscode.ThemeIcon("comment-discussion");
-
-  contextValue = "TreeItem";
 }
 
 /**
@@ -266,10 +323,10 @@ export class StatusTreeItem extends TreeItem {
     tooltip?: string
   ) {
     // 创建一个伪热榜项
-    const statusItem: LinkItem = {
+    const statusItem: any = {
       id: `status-${Date.now()}-${Math.random()}`,
       title: label,
-      excerpt: tooltip || "爬虫读取中，请耐心等待...",
+      excerpt: "爬虫读取中，请耐心等待...",
       url: "",
     };
 
@@ -278,6 +335,13 @@ export class StatusTreeItem extends TreeItem {
     // 覆盖默认图标
     if (icon) {
       this.iconPath = icon;
+    }
+
+    // 覆盖默认tooltip
+    if (tooltip) {
+      this.tooltip = tooltip;
+    } else {
+      this.tooltip = new vscode.MarkdownString(label);
     }
 
     // 覆盖默认命令

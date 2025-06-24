@@ -21,6 +21,7 @@ export class sidebarRecommendListDataProvider
 
   private loadingStatusItem: vscode.StatusBarItem;
   private canCreateBrowser: boolean = false; // 是否可以创建浏览器实例
+  private treeView?: vscode.TreeView<TreeItem>; // TreeView 引用，用于更新标题
 
   constructor() {
     this.loadingStatusItem = vscode.window.createStatusBarItem(
@@ -31,6 +32,27 @@ export class sidebarRecommendListDataProvider
 
     // 初始加载
     this.getSideBarRecommendList();
+  }
+
+  // 设置 TreeView 引用
+  setTreeView(treeView: vscode.TreeView<TreeItem>): void {
+    this.treeView = treeView;
+  }
+
+  // 更新侧边栏标题
+  private updateTitle(): void {
+    if (this.treeView) {
+      const isLoading = Store.Zhihu.recommend.isLoading;
+      const list = Store.Zhihu.recommend.list;
+
+      if (isLoading) {
+        this.treeView.title = "推荐(加载中...)";
+      } else if (list.length > 0) {
+        this.treeView.title = `推荐(${list.length}条)`;
+      } else {
+        this.treeView.title = "推荐";
+      }
+    }
   }
 
   // 刷新树视图
@@ -47,6 +69,7 @@ export class sidebarRecommendListDataProvider
       console.log("无法创建浏览器实例，推荐加载失败");
       Store.Zhihu.recommend.isLoading = false; // 重置加载状态
       Store.Zhihu.recommend.list = []; // 清空推荐列表
+      this.updateTitle(); // 更新标题
       vscode.window.showErrorMessage(
         "无法创建浏览器实例，推荐加载失败，请检查浏览器配置情况。"
       );
@@ -60,18 +83,18 @@ export class sidebarRecommendListDataProvider
       vscode.window.showInformationMessage("正在加载中推荐，请稍候...");
       return;
     }
-
     try {
       this.loadingStatusItem.show();
 
       console.log("开始加载知乎推荐数据");
+      this.updateTitle(); // 开始加载时更新标题为加载中
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
 
       await this.getRecommendList();
       const list = Store.Zhihu.recommend.list;
       console.log(`加载完成，获取到${list.length}个推荐项目`);
-
       this.loadingStatusItem.hide();
+      this.updateTitle(); // 更新标题显示条数
       this._onDidChangeTreeData.fire(); // 再次触发更新UI，显示加载结果
 
       if (list.length > 0) {
@@ -82,6 +105,7 @@ export class sidebarRecommendListDataProvider
     } catch (error) {
       Store.Zhihu.recommend.isLoading = false;
       this.loadingStatusItem.hide();
+      this.updateTitle(); // 出错时也要更新标题
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示错误状态
 
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -94,6 +118,7 @@ export class sidebarRecommendListDataProvider
     console.log("开始获取知乎首页推荐...");
 
     Store.Zhihu.recommend.isLoading = true; // 设置加载状态
+    this.updateTitle(); // 设置加载状态后更新标题
 
     const isCookieSet = CookieManager.isCookieSet();
     if (!isCookieSet) {
@@ -167,15 +192,29 @@ export class sidebarRecommendListDataProvider
   private async parseRecommendList(page: Puppeteer.Page): Promise<LinkItem[]> {
     const recommendList = await page.evaluate(() => {
       const items: LinkItem[] = [];
-
       const feedItems = Array.from(
         document.querySelectorAll(".TopstoryItem-isRecommend .Feed")
       );
 
-      if (feedItems.length > 0) {
-        console.log(`找到${feedItems.length}个Feed项`);
+      // 过滤掉包含ArticleItem的项目，只保留包含AnswerItem的项目
+      const filteredFeedItems = feedItems.filter((item) => {
+        const hasArticleItem = item.querySelector(".ArticleItem");
+        const hasAnswerItem = item.querySelector(".AnswerItem");
 
-        feedItems.forEach((item, index) => {
+        // 只保留有AnswerItem且没有ArticleItem的项目
+        return hasAnswerItem && !hasArticleItem;
+      });
+
+      if (filteredFeedItems.length > 0) {
+        console.log(
+          `找到${feedItems.length}个Feed项，过滤后剩余${filteredFeedItems.length}个AnswerItem项`
+        );
+
+        filteredFeedItems.forEach((item, index) => {
+          // imgUrl <meta itemprop="image" content="https://picx.zhimg.com/50/v2-e2024c4c889bdb560c4055ce0aa9d9d8_720w.jpg?source=b6762063">
+          const imgElement = item.querySelector('meta[itemprop="image"]');
+          const imgUrl = (imgElement as HTMLMetaElement).content || '';
+
           // title <meta itemprop="name" content="长辈的什么行为让你感到窒息？">
           const titleElement = item.querySelector('meta[itemprop="name"]');
           const title = titleElement
@@ -194,7 +233,7 @@ export class sidebarRecommendListDataProvider
 
           const excerptElement = item.querySelector(".RichContent .RichText");
           const excerpt = excerptElement
-            ? `【${title}】\n\n${
+            ? `${
                 (excerptElement as HTMLMetaElement).textContent
                   ? (excerptElement as HTMLMetaElement).textContent
                   : "没找到问题摘要(っ °Д °;)っ"
@@ -211,6 +250,7 @@ export class sidebarRecommendListDataProvider
             id,
             url,
             title,
+            imgUrl,
             excerpt,
           });
           console.log(`成功解析推荐项 #${index + 1}: ${title}`);
@@ -258,6 +298,7 @@ export class sidebarRecommendListDataProvider
     console.log("清空推荐列表...");
     Store.Zhihu.recommend.list = [];
     Store.Zhihu.recommend.isLoading = false;
+    this.updateTitle(); // 清空时更新标题
   }
 
   // 获取树项

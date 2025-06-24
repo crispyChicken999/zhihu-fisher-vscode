@@ -21,6 +21,7 @@ export class sidebarSearchListDataProvider
 
   private loadingStatusItem: vscode.StatusBarItem;
   private canCreateBrowser: boolean = false; // 是否可以创建浏览器实例
+  private treeView?: vscode.TreeView<TreeItem>; // TreeView 引用，用于更新标题
 
   constructor() {
     this.loadingStatusItem = vscode.window.createStatusBarItem(
@@ -41,6 +42,9 @@ export class sidebarSearchListDataProvider
   // 重置搜索状态
   reset(): void {
     console.log("重置搜索列表状态");
+    Store.Zhihu.search.list = []; // 清空搜索结果
+    Store.Zhihu.search.isLoading = false; // 重置加载状态
+    this.updateTitle(); // 重置时更新标题
     this._onDidChangeTreeData.fire(); // 触发更新UI
   }
 
@@ -57,6 +61,7 @@ export class sidebarSearchListDataProvider
       console.log("无法创建浏览器实例，获取搜索结果失败");
       Store.Zhihu.search.isLoading = false; // 重置加载状态
       Store.Zhihu.search.list = []; // 清空搜索结果
+      this.updateTitle(); // 更新标题
       vscode.window.showErrorMessage(
         "无法创建浏览器实例，获取搜索结果失败，请检查浏览器配置情况。"
       );
@@ -74,6 +79,7 @@ export class sidebarSearchListDataProvider
     try {
       Store.Zhihu.search.isLoading = true; // 设置加载状态
       this.loadingStatusItem.show();
+      this.updateTitle(); // 开始加载时更新标题为加载中
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
 
       if (query) {
@@ -84,6 +90,7 @@ export class sidebarSearchListDataProvider
 
       Store.Zhihu.search.isLoading = false; // 重置加载状态
       this.loadingStatusItem.hide();
+      this.updateTitle(); // 搜索完成后更新标题显示条数
       this._onDidChangeTreeData.fire(); // 再次触发更新UI，显示搜索结果
 
       if (list.length > 0) {
@@ -100,6 +107,7 @@ export class sidebarSearchListDataProvider
     } catch (error) {
       Store.Zhihu.search.isLoading = false;
       this.loadingStatusItem.hide();
+      this.updateTitle(); // 出错时也要更新标题
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示错误状态
 
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -123,6 +131,7 @@ export class sidebarSearchListDataProvider
     console.log(`开始搜索知乎内容: "${query}"`);
 
     Store.Zhihu.search.isLoading = true; // 设置加载状态
+    this.updateTitle(); // 设置加载状态后更新标题
     Store.Zhihu.search.currentQuery = query; // 保存当前搜索词
 
     // 创建并获取浏览器页面
@@ -240,7 +249,7 @@ export class sidebarSearchListDataProvider
             // 提取回答内容摘要
             const contentElement = item.querySelector(".RichText");
             let excerpt = contentElement
-              ? `【${title}】\n\n${
+              ? `${
                   contentElement.textContent
                     ? contentElement.textContent
                     : "没找到问题摘要(っ °Д °;)っ"
@@ -453,5 +462,26 @@ export class sidebarSearchListDataProvider
         "点我点我点我o(*￣▽￣*)o"
       ),
     ];
+  }
+
+  // 设置 TreeView 引用
+  setTreeView(treeView: vscode.TreeView<TreeItem>): void {
+    this.treeView = treeView;
+  }
+
+  // 更新侧边栏标题
+  private updateTitle(): void {
+    if (this.treeView) {
+      const isLoading = Store.Zhihu.search.isLoading;
+      const list = Store.Zhihu.search.list;
+
+      if (isLoading) {
+        this.treeView.title = "搜索(加载中...)";
+      } else if (list.length > 0) {
+        this.treeView.title = `搜索(${list.length}条)`;
+      } else {
+        this.treeView.title = "搜索";
+      }
+    }
   }
 }

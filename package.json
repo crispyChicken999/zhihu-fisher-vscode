@@ -40,6 +40,16 @@
         "title": "打开文章"
       },
       {
+        "command": "zhihu-fisher.openInBrowser",
+        "title": "在浏览器中打开",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "zhihu-fisher.showFullImage",
+        "title": "查看大图",
+        "icon": "$(zoom-in)"
+      },
+      {
         "command": "zhihu-fisher.setCookie",
         "title": "设置知乎Cookie",
         "icon": "$(key)"
@@ -185,6 +195,17 @@
         {
           "command": "zhihu-fisher.setMediaModeNone",
           "group": "1_media"
+        }
+      ],      "view/item/context": [
+        {
+          "command": "zhihu-fisher.openInBrowser",
+          "when": "view =~ /^zhihu(Hot|Recommend|Search)List$/ && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.showFullImage",
+          "when": "view =~ /^zhihu(Hot|Recommend|Search)List$/ && viewItem == TreeItemWithImage",
+          "group": "inline"
         }
       ]
     },

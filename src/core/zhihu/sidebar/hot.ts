@@ -22,6 +22,7 @@ export class sidebarHotListDataProvider
 
   private loadingStatusItem: vscode.StatusBarItem;
   private canCreateBrowser: boolean = false; // 是否可以创建浏览器实例
+  private treeView?: vscode.TreeView<TreeItem>; // TreeView 引用，用于更新标题
 
   constructor() {
     this.loadingStatusItem = vscode.window.createStatusBarItem(
@@ -32,6 +33,27 @@ export class sidebarHotListDataProvider
 
     // 初始加载
     this.getSideBarHotList();
+  }
+
+  // 设置 TreeView 引用
+  setTreeView(treeView: vscode.TreeView<TreeItem>): void {
+    this.treeView = treeView;
+  }
+
+  // 更新侧边栏标题
+  private updateTitle(): void {
+    if (this.treeView) {
+      const isLoading = Store.Zhihu.hot.isLoading;
+      const list = Store.Zhihu.hot.list;
+
+      if (isLoading) {
+        this.treeView.title = "热榜(加载中...)";
+      } else if (list.length > 0) {
+        this.treeView.title = `热榜(${list.length}条)`;
+      } else {
+        this.treeView.title = "热榜";
+      }
+    }
   }
 
   // 刷新树视图
@@ -53,6 +75,7 @@ export class sidebarHotListDataProvider
       console.log("无法创建浏览器实例，热榜加载失败");
       Store.Zhihu.hot.isLoading = false; // 重置加载状态
       Store.Zhihu.hot.list = []; // 清空热榜列表
+      this.updateTitle(); // 更新标题
       vscode.window.showErrorMessage(
         "无法创建浏览器实例，热榜加载失败，请检查浏览器配置情况。"
       );
@@ -66,10 +89,10 @@ export class sidebarHotListDataProvider
       vscode.window.showInformationMessage("正在加载知乎热榜，请稍候...");
       return;
     }
-
     try {
       console.log("开始加载知乎热榜数据");
       this.loadingStatusItem.show();
+      this.updateTitle(); // 开始加载时更新标题为加载中
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
 
       await this.getHotList();
@@ -77,6 +100,7 @@ export class sidebarHotListDataProvider
       console.log(`加载完成，获取到${list.length}个热榜项目`);
 
       this.loadingStatusItem.hide();
+      this.updateTitle(); // 加载完成后更新标题显示条数
       this._onDidChangeTreeData.fire(); // 再次触发更新UI，显示加载结果
 
       if (list.length > 0) {
@@ -87,10 +111,13 @@ export class sidebarHotListDataProvider
     } catch (error) {
       Store.Zhihu.hot.isLoading = false;
       this.loadingStatusItem.hide();
+      this.updateTitle(); // 出错时也要更新标题
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示错误状态
 
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error("加载知乎热榜失败:", errorMsg);
+    } finally {
+      this.updateTitle(); // 更新侧边栏标题
     }
   }
 
@@ -98,6 +125,7 @@ export class sidebarHotListDataProvider
   async getHotList() {
     // 设置加载状态
     Store.Zhihu.hot.isLoading = true;
+    this.updateTitle(); // 设置加载状态后更新标题
 
     // 构建请求头
     const headers: Record<string, string> = {
@@ -178,14 +206,22 @@ export class sidebarHotListDataProvider
             const title = titleElement.text().trim();
             const url = linkElement.attr("href") || "";
             const id = `hot-${url.split("/").pop()}` || `hot-${index}`;
-            const excerpt = `【${title}】\n\n${
+            const excerpt = `${
               $(element).find(".HotItem-excerpt").text().trim()
                 ? $(element).find(".HotItem-excerpt").text().trim()
                 : "没找到问题摘要(っ °Д °;)っ"
             }`;
             const hotValue = $(element).find(".HotItem-metrics").text().trim();
-            const imgUrl =
-              $(element).find(".HotItem-img img").attr("src") || "";
+            let imgUrl = $(element).find(".HotItem-img img").attr("src") || "";
+
+            // 确保图片 URL 是完整的 HTTPS URL
+            if (imgUrl && !imgUrl.startsWith("http")) {
+              if (imgUrl.startsWith("//")) {
+                imgUrl = "https:" + imgUrl;
+              } else if (imgUrl.startsWith("/")) {
+                imgUrl = "https://www.zhihu.com" + imgUrl;
+              }
+            }
 
             if (title && url) {
               hotList.push({
@@ -195,10 +231,18 @@ export class sidebarHotListDataProvider
                   ? url
                   : `https://www.zhihu.com${url}`,
                 excerpt,
-                hotValue,
-                imgUrl,
+                hotValue: hotValue
+                  ? hotValue.includes("}")
+                    ? hotValue.split("}")[1]
+                    : hotValue
+                  : undefined, // 如果热度为空，则设为 undefined
+                imgUrl: imgUrl || undefined,
               });
-              console.log(`成功解析热榜项 #${index + 1}: ${title}`);
+              console.log(
+                `成功解析热榜项 #${index + 1}: ${title}${
+                  hotValue ? ` (${hotValue})` : ""
+                }${imgUrl ? " [有图]" : ""}`
+              );
             }
           } catch (itemError) {
             console.error(`解析第${index + 1}个热榜项目失败:`, itemError);
@@ -231,6 +275,7 @@ export class sidebarHotListDataProvider
     console.log("清空知乎热榜列表");
     Store.Zhihu.hot.list = []; // 清空热榜列表
     Store.Zhihu.hot.isLoading = false; // 重置加载状态
+    this.updateTitle(); // 清空时更新标题
   }
 
   // 获取树项
