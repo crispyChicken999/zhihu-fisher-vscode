@@ -8,7 +8,9 @@ export const loadingTemplate = `
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>\${TITLE}</title>
-  <style>    body {
+  <style>
+    body {
+      height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
       padding: 20px;
       line-height: 1.6;
@@ -20,27 +22,26 @@ export const loadingTemplate = `
       justify-content: center;
       margin: 0 auto;
       max-width: 800px;
+      overflow: hidden;
     }
     .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 95vh;
+      height: fit-content;
+      max-height: 90vh;
       justify-content: center;
-      min-height: 500px;
       overflow: auto;
+      padding-right: 20px;
       width: 100%;
       text-align: center;
     }
     .loading-spinner {
-      flex: 0 0 auto;
-      width: 60px;
-      height: 60px;
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
       border: 5px solid rgba(0, 0, 0, 0.1);
       border-top-color: var(--vscode-button-background);
       border-radius: 50%;
       animation: spin 1s ease-in-out infinite;
-      margin-bottom: 30px;
+      margin: 0 auto 30px;
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -48,6 +49,7 @@ export const loadingTemplate = `
     h1, h2, h3 {
       color: var(--vscode-editor-foreground);
       margin: 10px 0;
+      text-align: center;
     }
     h2 {
       font-size: 18px;
@@ -60,6 +62,7 @@ export const loadingTemplate = `
       max-width: 100%;
       word-wrap: break-word;
       margin-bottom: 15px;
+      text-align: center;
     }
     p {
       max-width: 100%;
@@ -84,7 +87,7 @@ export const loadingTemplate = `
       padding: 8px 16px;
       border-radius: 2px;
       cursor: pointer;
-      margin-top: 20px;
+      margin: 20px 0;
       font-size: 14px;
       font-weight: 500;
       transition: all 0.2s ease;
@@ -97,7 +100,7 @@ export const loadingTemplate = `
     }
     .cookie-warning {
       display: none;
-      margin-top: 20px;
+      margin: 20px auto;
       padding: 15px;
       background-color: var(--vscode-inputValidation-warningBackground);
       color: var(--vscode-inputValidation-warningForeground);
@@ -106,15 +109,62 @@ export const loadingTemplate = `
       text-align: center;
       max-width: 500px;
     }
+    .cookie-warning p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .image-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .image-container img {
+      max-width: 80%;
+      height: auto;
+      border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .image-container.mini img {
+      max-width: 200px;
+      height: auto;
+    }
+    .image-container.none {
+      display: none;
+    }
+    .title {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 10px 0;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+    .excerpt {
+      max-width: 100%;
+      max-height: 300px;
+      overflow: auto;
+      font-size: 14px;
+    }
+    .divider {
+      border: 0px solid var(--vscode-panel-border);
+      width: 60%;
+      max-width:600px;
+      margin: 10px auto;
+    }
   </style>
 </head>
 <body>
   <div class="loading-container">
     <div class="loading-spinner"></div>
-    <h2>正在加载文章内容...</h2>
-    <h3 style="text-align:center;max-width:600px;">\${TITLE}</h3>
-    <div style="border: 1px solid var(--vscode-panel-border); width:60%; max-width:600px; margin: 10px 30px;"></div>
-    <p style="text-align:center;max-width:600px;max-height:300px;overflow:auto;">\${EXCERPT}</p>
+    <h3>正在加载文章内容...</h3>
+    <!-- 缩略图容器 -->
+    <div class="image-container \${MEDIA_DISPLAY_MODE}">
+      <img id="previewImage" class="preview-image" src="\${IMG_URL}" alt="文章配图" onLoad="this.style.display='block';" onError="this.style.display='none';">
+    </div>
+    <div class="title">\${TITLE}</div>
+
+    <div class="divider"></div>
+
+    <p class="excerpt" >\${EXCERPT}</p>
     <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
 
     <div id="cookieWarning" class="cookie-warning">
@@ -151,8 +201,8 @@ export const loadingTemplate = `
         // 应用自定义文字颜色
         const loadingContainer = document.querySelector('.loading-container');
         const title = document.querySelector('h3');
-        const excerpt = document.querySelector('p');
         const loadingText = document.querySelector('h2');
+        const excerpt = document.querySelector('.excerpt');
 
         if (savedStyles.contentColor && savedStyles.contentColor !== defaultStyles.contentColor) {
           if (loadingContainer) loadingContainer.style.color = savedStyles.contentColor;
@@ -161,14 +211,11 @@ export const loadingTemplate = `
           if (loadingText) loadingText.style.color = savedStyles.contentColor;
         }
 
-        // 应用文本对齐方式
-        if (title) title.style.textAlign = savedStyles.textAlign;
-        if (excerpt) excerpt.style.textAlign = savedStyles.textAlign;
         if (loadingText) loadingText.style.textAlign = savedStyles.textAlign;
       }
     }
 
-    // 页面加载完成后应用自定义样式
+    // 页面加载完成后应用自定义样式和图片显示模式
     window.addEventListener('load', function() {
       loadCustomStyles();
     });

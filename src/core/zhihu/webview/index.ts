@@ -68,7 +68,7 @@ export class WebviewManager {
     Store.webviewMap.set(item.id, webviewItem);
 
     // 在WebView中显示正在加载状态
-    panel.webview.html = HtmlRenderer.getLoadingHtml(item.title, item.excerpt);
+    panel.webview.html = HtmlRenderer.getLoadingHtml(item.title, item.excerpt, item.imgUrl);
 
     // 设置消息处理
     this.setupMessageHandling(item.id);
@@ -725,12 +725,12 @@ export class WebviewManager {
 
         case "updateCookie":
           // 处理更新Cookie的请求
-          await vscode.commands.executeCommand("zhihu-fisher.setCookie");
-          // 刷新当前页面
+          await vscode.commands.executeCommand("zhihu-fisher.setCookie");          // 刷新当前页面
           if (webviewItem) {
             webviewItem.webviewPanel.webview.html = HtmlRenderer.getLoadingHtml(
               webviewItem.article.title,
-              webviewItem.article.excerpt
+              webviewItem.article.excerpt,
+              "" // 这里没有缩略图信息，传空字符串
             );
           }
           break;

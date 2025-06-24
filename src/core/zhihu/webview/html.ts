@@ -49,15 +49,22 @@ export class HtmlRenderer {
    * 生成加载中的HTML内容
    * @param title 文章标题
    * @param excerpt 文章摘要
+   * @param imgUrl 可选的缩略图URL
    * @returns 加载中的HTML字符串
    */
-  public static getLoadingHtml(title: string, excerpt: string): string {
+  public static getLoadingHtml(title: string, excerpt: string, imgUrl?: string): string {
     const excerptText =
-      excerpt.split("\n\n")[1] || "没找到问题摘要(っ °Д °;)っ";
+      excerpt || "没找到问题摘要(っ °Д °;)っ";
+
+    // 获取媒体显示模式配置
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
 
     return loadingTemplate
       .replace(/\${TITLE}/g, this.escapeHtml(title))
-      .replace("${EXCERPT}", this.escapeHtml(excerptText));
+      .replace("${EXCERPT}", this.escapeHtml(excerptText))
+      .replace("${IMG_URL}", imgUrl || "")
+      .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode);
   }
 
   /**
@@ -81,10 +88,8 @@ export class HtmlRenderer {
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
 
     // 当前回答
-    const currentAnswer = article.answerList[article.currentAnswerIndex];
-
-    if (!currentAnswer) {
-      return this.getLoadingHtml(article.title, article.excerpt || "");
+    const currentAnswer = article.answerList[article.currentAnswerIndex];    if (!currentAnswer) {
+      return this.getLoadingHtml(article.title, article.excerpt || "", "");
     }
 
     // 构建页面组件
