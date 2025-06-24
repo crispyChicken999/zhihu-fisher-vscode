@@ -239,10 +239,18 @@ export class TreeItem extends vscode.TreeItem {
   ) {
     super(listItem.title, collapsibleState);
 
-    // 设置图标：如果有缩略图则使用缩略图，否则使用默认图标
-    if (listItem.imgUrl && listItem.imgUrl.trim()) {
+    // 获取用户的媒体显示模式配置
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+
+    // 根据配置决定是否显示缩略图
+    const shouldShowImage =
+      listItem.imgUrl && listItem.imgUrl.trim();
+
+    // 设置图标：根据配置和图片可用性决定
+    if (shouldShowImage) {
       try {
-        this.iconPath = vscode.Uri.parse(listItem.imgUrl);
+        this.iconPath = vscode.Uri.parse(listItem.imgUrl!);
       } catch (error) {
         console.warn(`解析图片URL失败: ${listItem.imgUrl}`, error);
         this.iconPath = new vscode.ThemeIcon("comment-discussion");
@@ -251,8 +259,8 @@ export class TreeItem extends vscode.TreeItem {
       this.iconPath = new vscode.ThemeIcon("comment-discussion");
     }
 
-    // 设置工具提示：如果有缩略图，在 tooltip 中包含图片预览
-    if (listItem.imgUrl && listItem.imgUrl.trim()) {
+    // 设置工具提示：根据配置和图片可用性决定
+    if (shouldShowImage) {
       const markdownTooltip = new vscode.MarkdownString();
       markdownTooltip.appendMarkdown(`#### **${listItem.title}**\n\n`);
 
@@ -267,8 +275,10 @@ export class TreeItem extends vscode.TreeItem {
         markdownTooltip.appendMarkdown(`${excerptPreview}\n\n`);
       }
 
+      // 根据显示模式设置图片宽度
+      const imageWidth = mediaDisplayMode !== "normal" ? 150 : 300;
       markdownTooltip.appendMarkdown(
-        `<img src="${listItem.imgUrl}" alt="预览图" width="150" />\n`
+        `<img src="${listItem.imgUrl}" alt="预览图" width="${imageWidth}" />\n`
       );
 
       markdownTooltip.supportHtml = true;
@@ -289,9 +299,7 @@ export class TreeItem extends vscode.TreeItem {
         simpleTooltip.appendMarkdown(listItem.excerpt);
       }
       this.tooltip = simpleTooltip;
-    }
-
-    // 只有当热度值存在且不为空时才显示
+    } // 只有当热度值存在且不为空时才显示
     this.description =
       listItem.hotValue && listItem.hotValue.trim()
         ? listItem.hotValue.trim()
@@ -304,11 +312,8 @@ export class TreeItem extends vscode.TreeItem {
       arguments: [listItem],
     };
 
-    // 根据是否有图片设置不同的 contextValue
-    this.contextValue =
-      listItem.imgUrl && listItem.imgUrl.trim()
-        ? "TreeItemWithImage"
-        : "TreeItem";
+    // 根据配置和图片可用性设置 contextValue
+    this.contextValue = shouldShowImage ? "TreeItemWithImage" : "TreeItem";
   }
 }
 
@@ -350,5 +355,7 @@ export class StatusTreeItem extends TreeItem {
     } else {
       this.command = undefined; // 清除命令，状态项不可点击
     }
+
+    this.contextValue = "StatusTreeItem";
   }
 }

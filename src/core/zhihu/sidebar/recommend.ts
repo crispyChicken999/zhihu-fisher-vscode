@@ -61,6 +61,12 @@ export class sidebarRecommendListDataProvider
     this.getSideBarRecommendList();
   }
 
+  // 仅刷新视图显示（不重新加载数据）
+  refreshView(): void {
+    console.log("刷新推荐视图显示...");
+    this._onDidChangeTreeData.fire();
+  }
+
   // 加载推荐列表
   private async getSideBarRecommendList(): Promise<void> {
     // 看看能不能创建浏览器实例，不能则认为加载不出推荐列表

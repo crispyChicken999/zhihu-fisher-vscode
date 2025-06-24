@@ -164,7 +164,7 @@ export function activate(context: vscode.ExtensionContext) {
         // 设置Webview内容
         panel.webview.html = `
           <img src="${item.listItem.imgUrl}" style="width: 100%; height: auto; display: block; margin: 20px auto;" />
-        `
+        `;
       } else {
         vscode.window.showInformationMessage("该项目没有图片");
       }
@@ -505,15 +505,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
-    // 只在非mediaDisplayMode的配置变更时才刷新热榜和推荐及搜索列表
-    if (
-      e.affectsConfiguration("zhihu-fisher") &&
-      !e.affectsConfiguration("zhihu-fisher.mediaDisplayMode") &&
-      !e.affectsConfiguration("zhihu-fisher.hideImages")
-    ) {
-      sidebarHot.refresh();
-      sidebarRecommend.refresh();
-      sidebarSearch.reset();
+    if (e.affectsConfiguration("zhihu-fisher")) {
+      if (e.affectsConfiguration("zhihu-fisher.mediaDisplayMode")) {
+        // 媒体显示模式变更时，需要刷新所有侧边栏以更新图片显示
+        console.log("媒体显示模式已变更，刷新侧边栏显示");
+        // 使用新的 refreshView 方法来更新视图，而不重新加载数据
+        sidebarHot.refreshView();
+        sidebarRecommend.refreshView();
+        sidebarSearch.refreshView();
+      }
     }
   });
 

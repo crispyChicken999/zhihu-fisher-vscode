@@ -48,6 +48,12 @@ export class sidebarSearchListDataProvider
     this._onDidChangeTreeData.fire(); // 触发更新UI
   }
 
+  // 仅刷新视图显示（不重新加载数据）
+  refreshView(): void {
+    console.log("刷新搜索视图显示...");
+    this._onDidChangeTreeData.fire();
+  }
+
   // 检查浏览器是否可用
   private async isBrowserAvaliable() {
     this.canCreateBrowser = await PuppeteerManager.canCreateBrowser();
@@ -242,6 +248,12 @@ export class sidebarSearchListDataProvider
               return;
             }
 
+            // 提取图片
+            // <img src="https://picx.zhimg.com/80/v2-59b8a92774353f976507f877c2d57c49_200x0.jpg?source=4e949a73" alt="cover" width="190" height="105" class="css-1phd9a0"
+            // srcset="https://picx.zhimg.com/80/v2-59b8a92774353f976507f877c2d57c49_qhd.jpg?source=4e949a73 2x" loading="lazy">
+            const imgElement = item.querySelector("img");
+            const imgUrl = imgElement?.getAttribute("src") || "";
+
             const url = (urlMeta as HTMLMetaElement).content || "";
             const title = (titleMeta as HTMLMetaElement).content || "";
             const id = `search-${url.split("/").pop()}-${index}`;
@@ -265,6 +277,7 @@ export class sidebarSearchListDataProvider
             items.push({
               id,
               url,
+              imgUrl,
               title,
               excerpt,
             });

@@ -62,6 +62,12 @@ export class sidebarHotListDataProvider
     this.getSideBarHotList();
   }
 
+  // 仅刷新视图显示（不重新加载数据）
+  refreshView(): void {
+    console.log("刷新热榜视图显示...");
+    this._onDidChangeTreeData.fire();
+  }
+
   // 加载热榜内容
   private async getSideBarHotList(): Promise<void> {
     /**

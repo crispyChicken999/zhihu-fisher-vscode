@@ -46,7 +46,7 @@
       },
       {
         "command": "zhihu-fisher.showFullImage",
-        "title": "查看大图",
+        "title": "放大缩略图",
         "icon": "$(zoom-in)"
       },
       {
@@ -196,7 +196,8 @@
           "command": "zhihu-fisher.setMediaModeNone",
           "group": "1_media"
         }
-      ],      "view/item/context": [
+      ],
+      "view/item/context": [
         {
           "command": "zhihu-fisher.openInBrowser",
           "when": "view =~ /^zhihu(Hot|Recommend|Search)List$/ && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
