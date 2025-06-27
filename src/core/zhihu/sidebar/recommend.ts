@@ -48,7 +48,19 @@ export class sidebarRecommendListDataProvider
       if (isLoading) {
         this.treeView.title = "推荐(加载中...)";
       } else if (list.length > 0) {
-        this.treeView.title = `推荐(${list.length}条)`;
+        // 统计问题和文章的数量
+        const questionCount = list.filter(item => item.type === 'question' || !item.type).length;
+        const articleCount = list.filter(item => item.type === 'article').length;
+
+        if (questionCount > 0 && articleCount > 0) {
+          this.treeView.title = `推荐(${list.length}条: ${questionCount}条问题 | ${articleCount}篇文章)`;
+        } else if (questionCount > 0) {
+          this.treeView.title = `推荐(${questionCount}条问题)`;
+        } else if (articleCount > 0) {
+          this.treeView.title = `推荐(${articleCount}条文章)`;
+        } else {
+          this.treeView.title = `推荐(${list.length}条)`;
+        }
       } else {
         this.treeView.title = "推荐";
       }
@@ -202,24 +214,30 @@ export class sidebarRecommendListDataProvider
         document.querySelectorAll(".TopstoryItem-isRecommend .Feed")
       );
 
-      // 过滤掉包含ArticleItem的项目，只保留包含AnswerItem的项目
-      const filteredFeedItems = feedItems.filter((item) => {
+      // 不再过滤，而是分别处理问题和文章
+      const questionItems = feedItems.filter((item) => {
         const hasArticleItem = item.querySelector(".ArticleItem");
         const hasAnswerItem = item.querySelector(".AnswerItem");
-
-        // 只保留有AnswerItem且没有ArticleItem的项目
+        // 只保留有AnswerItem且没有ArticleItem的项目（问题）
         return hasAnswerItem && !hasArticleItem;
       });
 
-      if (filteredFeedItems.length > 0) {
-        console.log(
-          `找到${feedItems.length}个Feed项，过滤后剩余${filteredFeedItems.length}个AnswerItem项`
-        );
+      const articleItems = feedItems.filter((item) => {
+        const hasArticleItem = item.querySelector(".ArticleItem");
+        // 只保留有ArticleItem的项目（文章）
+        return hasArticleItem;
+      });
 
-        filteredFeedItems.forEach((item, index) => {
+      console.log(
+        `找到${feedItems.length}个Feed项，其中${questionItems.length}个问题项，${articleItems.length}个文章项`
+      );
+
+      // 解析问题项
+      questionItems.forEach((item, index) => {
+        try {
           // imgUrl <meta itemprop="image" content="https://picx.zhimg.com/50/v2-e2024c4c889bdb560c4055ce0aa9d9d8_720w.jpg?source=b6762063">
           const imgElement = item.querySelector('meta[itemprop="image"]');
-          const imgUrl = (imgElement as HTMLMetaElement).content || '';
+          const imgUrl = (imgElement as HTMLMetaElement)?.content || '';
 
           // title <meta itemprop="name" content="长辈的什么行为让你感到窒息？">
           const titleElement = item.querySelector('meta[itemprop="name"]');
@@ -234,8 +252,8 @@ export class sidebarRecommendListDataProvider
             : "未知链接";
 
           const id =
-            `recommend-${url.split("/").pop() as string}` ||
-            `recommend-${index}`; // 获取问题的ID
+            `recommend-question-${url.split("/").pop() as string}` ||
+            `recommend-question-${index}`;
 
           const excerptElement = item.querySelector(".RichContent .RichText");
           const excerpt = excerptElement
@@ -246,9 +264,9 @@ export class sidebarRecommendListDataProvider
               }`
             : "没找到问题摘要(っ °Д °;)っ";
 
-          // 原因是首页推荐，展示的是回答，那么热门的话题可能会出现多次，导致提取重复
+          // 检查是否已存在
           if (items.some((item) => item.id === id)) {
-            console.log(`推荐项 #${index + 1} 已存在，跳过...`);
+            console.log(`问题项 #${index + 1} 已存在，跳过...`);
             return;
           }
 
@@ -258,10 +276,65 @@ export class sidebarRecommendListDataProvider
             title,
             imgUrl,
             excerpt,
+            type: 'question',
           });
-          console.log(`成功解析推荐项 #${index + 1}: ${title}`);
-        });
-      }
+          console.log(`成功解析问题项 #${index + 1}: ${title}`);
+        } catch (error) {
+          console.error(`解析问题项 #${index + 1} 时出错:`, error);
+        }
+      });
+
+      // 解析文章项
+      articleItems.forEach((item, index) => {
+        try {
+          // 文章的结构不同，需要特殊处理
+          const articleElement = item.querySelector(".ContentItem.ArticleItem");
+          if (!articleElement) return;
+
+          // 文章标题在 h2.ContentItem-title a 中
+          const titleElement = articleElement.querySelector("h2.ContentItem-title a");
+          const title = titleElement
+            ? (titleElement as HTMLAnchorElement).textContent?.trim() || "未知标题"
+            : "未知标题";
+
+          // 文章链接在 href 属性中
+          const url = titleElement
+            ? (titleElement as HTMLAnchorElement).href
+            : "未知链接";
+
+          // 文章摘要在 .RichContent .RichText 中
+          const excerptElement = articleElement.querySelector(".RichContent .RichText");
+          const excerpt = excerptElement
+            ? (excerptElement as HTMLElement).textContent?.trim() || "没找到文章摘要"
+            : "没找到文章摘要";
+
+          // 文章可能没有图片，或者图片在 meta 标签中
+          const imgElement = articleElement.querySelector('meta[itemprop="image"]');
+          const imgUrl = (imgElement as HTMLMetaElement)?.content || '';
+
+          const id =
+            `recommend-article-${url.split("/").pop() as string}` ||
+            `recommend-article-${index}`;
+
+          // 检查是否已存在
+          if (items.some((item) => item.id === id)) {
+            console.log(`文章项 #${index + 1} 已存在，跳过...`);
+            return;
+          }
+
+          items.push({
+            id,
+            url,
+            title,
+            imgUrl,
+            excerpt,
+            type: 'article',
+          });
+          console.log(`成功解析文章项 #${index + 1}: ${title}`);
+        } catch (error) {
+          console.error(`解析文章项 #${index + 1} 时出错:`, error);
+        }
+      });
 
       return items;
     });

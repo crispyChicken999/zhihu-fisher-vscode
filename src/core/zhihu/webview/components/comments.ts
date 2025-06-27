@@ -87,6 +87,11 @@ export class CommentsContainerComponent implements Component {
           endIndex
         );
 
+        // 检查是否为专栏（通过URL判断）
+        const contentType = webviewItem.url.includes("zhuanlan.zhihu.com")
+          ? "article"
+          : "question";
+
         commentsContainer = `
           <div class="comments-container ${
             this.modalContainerClass
@@ -95,7 +100,8 @@ export class CommentsContainerComponent implements Component {
               displayComments,
               this.answerId,
               currentAnswerPaging,
-              this.options
+              this.options,
+              contentType
             ).render()}
           </div>
         `;
@@ -135,6 +141,7 @@ export class CommentsComponent implements Component {
   private answerId: string;
   private paging: any;
   private options: RenderOptions;
+  private contentType: "question" | "article";
 
   /**
    * 构造函数
@@ -142,12 +149,14 @@ export class CommentsComponent implements Component {
    * @param answerId 回答ID
    * @param paging 分页信息
    * @param options 渲染选项
+   * @param contentType 内容类型
    */
   constructor(
     comments: CommentItem[],
     answerId: string,
     paging: any,
-    options: RenderOptions
+    options: RenderOptions,
+    contentType: "question" | "article" = "question"
   ) {
     this.comments = comments || [];
     this.answerId = answerId;
@@ -158,6 +167,7 @@ export class CommentsComponent implements Component {
       current: 1,
     };
     this.options = options || {};
+    this.contentType = contentType;
   }
 
   /**
@@ -165,17 +175,18 @@ export class CommentsComponent implements Component {
    * @returns 评论HTML
    */
   public render(): string {
-    if (this.paging.is_end && (!this.comments || this.comments.length === 0)) {
-      return this.renderEmptyComments();
+    // 生成分页按钮
+    const paginationHtml = this.renderPagination();
+
+    // 如果是最后一页且没有评论，仍然显示分页器（可能需要返回上一页）
+    if (!this.comments || this.comments.length === 0) {
+      return this.renderEmptyComments(paginationHtml);
     }
 
     // 解析并处理评论内容
     const commentsHtml = this.comments
       .map((comment) => this.renderSingleComment(comment))
       .join("");
-
-    // 生成分页按钮
-    const paginationHtml = this.renderPagination();
 
     return `
       <div class="zhihu-comments-container" data-answer-id="${this.answerId}">
@@ -199,12 +210,13 @@ export class CommentsComponent implements Component {
 
   /**
    * 渲染空评论状态
+   * @param paginationHtml 分页器HTML，确保评论为空时也能显示分页器
    */
-  private renderEmptyComments(): string {
+  private renderEmptyComments(paginationHtml: string = ""): string {
     return `
       <div class="zhihu-comments-container" data-answer-id="${this.answerId}">
         <div class="zhihu-comments-header">
-          <h3>全部评论 (0)</h3>
+          <h3>全部评论 (${this.paging.totals})</h3>
           <div class="zhihu-comments-tips">
             <span>键盘</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
@@ -213,6 +225,7 @@ export class CommentsComponent implements Component {
             <span>快速展开/收起评论</span>
           </div>
         </div>
+        ${paginationHtml}
         <div class="zhihu-comments-list">
           <div style="text-align: center; padding: 20px; color: var(--vscode-descriptionForeground);">
             暂无评论
@@ -298,7 +311,7 @@ export class CommentsComponent implements Component {
             </div>
             ${
               authorHeadline
-                ? `<div class="zhihu-comment-author-headline">${authorHeadline}</div>`
+                ? `<div class="zhihu-comment-author-headline" title="${authorHeadline}">${authorHeadline}</div>`
                 : ""
             }
           </div>
@@ -322,7 +335,18 @@ export class CommentsComponent implements Component {
    * 渲染分页按钮
    */
   private renderPagination(): string {
-    // 当前页码和分页信息
+    // 专栏和问题使用不同的分页逻辑
+    if (this.contentType === "article") {
+      return this.renderArticlePagination();
+    } else {
+      return this.renderQuestionPagination();
+    }
+  }
+
+  /**
+   * 渲染问题评论分页按钮
+   */
+  private renderQuestionPagination(): string {
     const currentPage = this.paging.current || 1;
     const isFirstPage = currentPage === 1;
     // 简化逻辑：只要当前请求回来的评论数据小于limit，就认为是最后一页
@@ -343,6 +367,39 @@ export class CommentsComponent implements Component {
         <button
           ${isLastPage ? "disabled" : ""}
           onclick="loadMoreComments('${this.answerId}', ${currentPage + 1})"
+          class="next-button"
+          title="下一页"
+        >
+          下一页
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    `;
+  }
+
+  /**
+   * 渲染专栏评论分页按钮
+   */
+  private renderArticlePagination(): string {
+    const isFirstPage = this.paging.is_start;
+    const isLastPage = this.paging.is_end;
+    const currentPage = this.paging.current || 1;
+
+    return `
+      <div class="zhihu-comment-pagination">
+        <button
+          ${isFirstPage ? "disabled" : ""}
+          onclick="loadArticleComments('${this.answerId}', 'previous')"
+          class="prev-button"
+          title="上一页"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          上一页
+        </button>
+        <span class="page-info">第 ${currentPage} 页</span>
+        <button
+          ${isLastPage ? "disabled" : ""}
+          onclick="loadArticleComments('${this.answerId}', 'next')"
           class="next-button"
           title="下一页"
         >
@@ -435,7 +492,7 @@ export class ChildCommentsModalComponent implements Component {
               </div>
               ${
                 childAuthorHeadline
-                  ? `<div class="zhihu-comment-author-headline">${childAuthorHeadline}</div>`
+                  ? `<div class="zhihu-comment-author-headline" title="${childAuthorHeadline}">${childAuthorHeadline}</div>`
                   : ""
               }
             </div>
@@ -505,7 +562,7 @@ export class ChildCommentsModalComponent implements Component {
                 </div>
                 ${
                   authorHeadline
-                    ? `<div class="zhihu-comment-author-headline">${authorHeadline}</div>`
+                    ? `<div class="zhihu-comment-author-headline" title="${authorHeadline}">${authorHeadline}</div>`
                     : ""
                 }
               </div>
@@ -552,6 +609,22 @@ export class CommentsManager {
     limit: number = 20
   ): string {
     return `https://www.zhihu.com/api/v4/answers/${answerId}/root_comments?order=normal&limit=${limit}&offset=${offset}&status=open`;
+  }
+
+  /**
+   * 获取专栏文章评论的URL模板
+   * @param articleId 专栏文章ID
+   * @param offset 起始偏移量（分页用）
+   * @param limit 每页数量限制
+   */
+  private static articleCommentRequestURL(
+    articleId: string,
+    offset: number = 0,
+    limit: number = 20
+  ): string {
+    // 专栏评论API要求：当offset为0时不传递offset参数
+    const offsetParam = offset > 0 ? `&offset=${offset}` : "";
+    return `https://www.zhihu.com/api/v4/comment_v5/articles/${articleId}/root_comment?order_by=score&limit=${limit}${offsetParam}`;
   }
 
   /**
@@ -634,6 +707,102 @@ export class CommentsManager {
     } catch (error) {
       console.error("获取评论失败:", error);
       throw new Error(`获取评论失败: ${error}`);
+    }
+  }
+
+  /**
+   * 从知乎专栏评论接口，获取评论列表，并返回处理后的数据
+   * @param articleId 专栏ID
+   * @param offset 起始偏移量
+   * @param limit 每页数量限制
+   */
+  public static async getArticleCommentsFromApi(
+    articleId: string,
+    offset: number = 0,
+    limit: number = 20
+  ): Promise<{
+    comments: CommentItem[];
+    paging: {
+      is_end: boolean;
+      is_start: boolean;
+      next: string | null;
+      previous: string | null;
+      totals: number;
+      current: number;
+    };
+  }> {
+    try {
+      const url = this.articleCommentRequestURL(articleId, offset, limit);
+      const response = await axios.get(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Cookie: CookieManager.getCookie(),
+        },
+      });
+
+      // 判断是否为最后一页：优先使用API返回的paging信息
+      const is_end =
+        response.data.paging?.is_end !== false ||
+        response.data.data.length < limit ||
+        response.data.data.length === 0 ||
+        !response.data.data;
+
+      return {
+        comments: response.data.data.map((comment: any) => {
+          return {
+            id: comment.id,
+            type: "comment" as const,
+            content: comment.content || "",
+            created_time: comment.created_time || 0,
+            author: {
+              id: comment.author?.id || "",
+              name: comment.author?.name || "匿名用户",
+              avatar_url: comment.author?.avatar_url || "",
+              headline: comment.author?.headline || "",
+              url: comment.author?.url || "",
+            },
+            vote_count: comment.like_count || 0,
+            like_count: comment.like_count || 0,
+            child_comments: (comment.child_comments || []).map((child: any) => {
+              return {
+                id: child.id,
+                type: "comment" as const,
+                content: child.content || "",
+                created_time: child.created_time || 0,
+                author: {
+                  id: child.author?.id || "",
+                  name: child.author?.name || "匿名用户",
+                  avatar_url: child.author?.avatar_url || "",
+                  headline: child.author?.headline || "",
+                  url: child.author?.url || "",
+                },
+                vote_count: child.like_count || 0,
+                like_count: child.like_count || 0,
+                child_comments: [],
+                child_comment_count: 0,
+                total_child_comments: [],
+                commentPaging: {} as any,
+              };
+            }),
+            child_comment_count: comment.child_comment_count || 0,
+            total_child_comments: [],
+            commentPaging: {} as any,
+          };
+        }),
+        paging: {
+          is_end: is_end,
+          is_start:
+            response.data.paging?.is_start !== false || offset === 0 || !offset,
+          next: response.data.paging?.next || null,
+          previous: response.data.paging?.previous || null,
+          totals: response.data.paging?.totals || response.data.data.length,
+          current: Math.floor(offset / limit) + 1,
+        },
+      };
+    } catch (error) {
+      console.error("获取专栏评论失败:", error);
+      throw new Error(`获取专栏评论失败: ${error}`);
     }
   }
 
@@ -722,14 +891,22 @@ export class CommentsManager {
    * @param answerId 回答ID
    * @param paging 分页信息
    * @param options 渲染选项
+   * @param contentType 内容类型
    */
   public static createCommentsComponent(
     comments: CommentItem[],
     answerId: string,
     paging: any,
-    options: RenderOptions
+    options: RenderOptions,
+    contentType: "question" | "article" = "question"
   ): CommentsComponent {
-    return new CommentsComponent(comments, answerId, paging, options);
+    return new CommentsComponent(
+      comments,
+      answerId,
+      paging,
+      options,
+      contentType
+    );
   }
 
   /**
@@ -755,6 +932,170 @@ export class CommentsManager {
   }
 
   /**
+   * 加载专栏评论（简化版本，直接根据paging URL加载）
+   * @param webviewId - WebView的ID
+   * @param articleId - 专栏文章的ID
+   * @param direction - 分页方向：'previous' | 'next' | 'current'
+   * @param pagingUrl - 可选的完整分页URL
+   */
+  public static async loadArticleComments(
+    webviewId: string,
+    articleId: string,
+    direction: "previous" | "next" | "current" = "current",
+    pagingUrl?: string
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 获取当前回答
+      const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
+      const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
+
+      if (!currentAnswer) {
+        throw new Error("未找到当前回答");
+      }
+
+      let requestUrl = pagingUrl;
+
+      // 如果没有提供URL，根据direction和当前paging信息构建URL
+      if (!requestUrl) {
+        const currentPaging = currentAnswer.commentPaging;
+
+        if (direction === "previous" && currentPaging?.previous) {
+          requestUrl = currentPaging.previous;
+        } else if (direction === "next" && currentPaging?.next) {
+          requestUrl = currentPaging.next;
+        } else if (direction === "current") {
+          // 首次加载，使用默认URL
+          requestUrl = this.articleCommentRequestURL(articleId, 0);
+        }
+      }
+
+      if (!requestUrl) {
+        console.warn(`无法获取${direction}页的URL`);
+        return;
+      }
+
+      // 发送请求
+      const response = await axios.get(requestUrl, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Cookie: CookieManager.getCookie(),
+        },
+      });
+
+      // 处理响应数据
+      const comments = response.data.data.map((comment: any) => {
+        return {
+          id: comment.id,
+          type: "comment" as const,
+          content: comment.content || "",
+          created_time: comment.created_time || 0,
+          author: {
+            id: comment.author?.id || "",
+            name: comment.author?.name || "匿名用户",
+            avatar_url: comment.author?.avatar_url || "",
+            headline: comment.author?.headline || "",
+            url: comment.author?.url || "",
+          },
+          vote_count: comment.like_count || 0,
+          like_count: comment.like_count || 0,
+          child_comments: (comment.child_comments || []).map((child: any) => {
+            return {
+              id: child.id,
+              type: "comment" as const,
+              content: child.content || "",
+              created_time: child.created_time || 0,
+              author: {
+                id: child.author?.id || "",
+                name: child.author?.name || "匿名用户",
+                avatar_url: child.author?.avatar_url || "",
+                headline: child.author?.headline || "",
+                url: child.author?.url || "",
+              },
+              vote_count: child.like_count || 0,
+              like_count: child.like_count || 0,
+              child_comments: [],
+              child_comment_count: 0,
+              total_child_comments: [],
+              commentPaging: {} as any,
+            };
+          }),
+          child_comment_count: comment.child_comment_count || 0,
+          total_child_comments: [],
+          commentPaging: {} as any,
+        };
+      });
+
+      // 直接替换评论列表，不做缓存
+      currentAnswer.commentList = comments;
+      currentAnswer.commentStatus = "expanded";
+
+      // 更新分页信息
+      currentAnswer.commentPaging = {
+        is_end: response.data.paging?.is_end !== false || comments.length === 0,
+        is_start:
+          response.data.paging?.is_start !== false || direction === "current",
+        next: response.data.paging?.next || null,
+        previous: response.data.paging?.previous || null,
+        totals: response.data.paging?.totals || comments.length,
+        current:
+          response.data.paging?.current ||
+          (direction === "current"
+            ? 1
+            : (currentAnswer.commentPaging?.current || 1) +
+              (direction === "next" ? 1 : -1)),
+        limit: 20,
+        loadedTotals: comments.length,
+      };
+
+      // 获取当前媒体显示模式配置
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+      const renderOptions = { mediaDisplayMode };
+
+      // 创建评论组件并生成HTML
+      const commentsComponent = this.createCommentsComponent(
+        comments,
+        articleId,
+        currentAnswer.commentPaging,
+        renderOptions,
+        "article"
+      );
+
+      const commentsHtml = commentsComponent.render();
+
+      // 更新Webview中的评论区
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateComments",
+        html: commentsHtml,
+      });
+    } catch (error) {
+      console.error("加载专栏评论时出错:", error);
+
+      // 显示错误提示
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateComments",
+        html: `
+          <div class="zhihu-comments-container">
+            <h3>专栏评论加载失败</h3>
+            <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
+              ${error}
+            </div>
+            <button class="zhihu-load-comments-btn" onclick="loadComments('${articleId}')">
+              重新加载
+            </button>
+          </div>
+        `,
+      });
+    }
+  }
+
+  /**
    * 加载评论（包括获取数据，并通知页面更新，全流程）
    * @param webviewId - WebView的ID
    * @param answerId - 回答的ID
@@ -770,16 +1111,48 @@ export class CommentsManager {
       return;
     }
 
+    // 检查是否为专栏（通过URL判断）
+    const isArticle = webviewItem.url.includes("zhuanlan.zhihu.com");
+
+    if (isArticle) {
+      // 专栏使用专栏评论接口
+      // 需要从answerId中提取纯数字的文章ID
+      let articleId = answerId;
+
+      // 如果ID包含非数字字符，尝试提取数字部分
+      if (!/^\d+$/.test(answerId)) {
+        // 匹配字符串中的数字部分
+        const match = answerId.match(/\d+/);
+        if (match) {
+          articleId = match[0];
+        } else {
+          // 如果没有找到数字，尝试从URL中提取
+          const urlMatch = webviewItem.url.match(/\/p\/(\d+)/);
+          if (urlMatch) {
+            articleId = urlMatch[1];
+          }
+        }
+      }
+
+      console.log(
+        `专栏评论请求 - 原始ID: ${answerId}, 提取的文章ID: ${articleId}`
+      );
+
+      // 调用专栏评论加载方法
+      await this.loadArticleComments(webviewId, articleId, "current");
+      return;
+    }
+
+    // 以下是问题评论的处理逻辑
     try {
       // 根据页码计算offset
       const limit = 20;
       const offset = (page - 1) * limit;
 
-      // 获取评论数据
-      const { comments, paging } = await this.getCommentsFromApi(
-        answerId,
-        offset
-      );
+      // 获取问题评论数据
+      const commentsData = await this.getCommentsFromApi(answerId, offset);
+
+      const { comments, paging } = commentsData;
 
       // 获取当前回答
       const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
@@ -793,6 +1166,7 @@ export class CommentsManager {
         // 判断是否是第一页
         const is_start = page === 1;
 
+        // 问题评论：保持原有逻辑
         if (is_start) {
           // 如果是第一页，则初始化评论列表
           currentAnswer.commentList = [...comments];
@@ -858,12 +1232,13 @@ export class CommentsManager {
         );
         const renderOptions = { mediaDisplayMode };
 
-        // 创建评论组件并生成HTML
+        // 创建问题评论组件并生成HTML
         const commentsComponent = this.createCommentsComponent(
           displayComments,
           answerId,
           currentAnswer.commentPaging,
-          renderOptions
+          renderOptions,
+          "question"
         );
 
         const commentsHtml = commentsComponent.render();
@@ -1056,6 +1431,11 @@ export class CommentsManager {
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
     const renderOptions = { mediaDisplayMode };
 
+    // 检查是否为专栏（通过URL判断）
+    const contentType = webviewItem.url.includes("zhuanlan.zhihu.com")
+      ? "article"
+      : "question";
+
     // 根据新状态生成适当的HTML
     let commentsHtml = "";
     if (newStatus === "expanded") {
@@ -1075,7 +1455,8 @@ export class CommentsManager {
         displayComments,
         answerId,
         currentAnswerPaging,
-        renderOptions
+        renderOptions,
+        contentType
       ).render();
     } else {
       // 如果是收起状态，显示展开按钮
@@ -1109,7 +1490,10 @@ export class CommentsUtils {
       const now = new Date();
       const diff = now.getTime() - date.getTime();
 
-      if (diff < 60 * 60 * 1000) {
+      // 如果小于1分钟，显示刚刚
+      if (diff < 1 * 60 * 1000) {
+        return "刚刚";
+      } else if (diff < 60 * 60 * 1000) {
         return `${Math.floor(diff / (60 * 1000))}分钟前`;
       } else if (diff < 24 * 60 * 60 * 1000) {
         return `${Math.floor(diff / (60 * 60 * 1000))}小时前`;

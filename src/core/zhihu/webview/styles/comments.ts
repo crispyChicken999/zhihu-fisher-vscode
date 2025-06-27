@@ -3,7 +3,6 @@ export const commentsCss = `
 .zhihu-comments-container {
   margin: 10px 0;
   border-top: 1px solid var(--vscode-panel-border);
-  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 .zhihu-comments-header {
@@ -94,10 +93,6 @@ export const commentsCss = `
   background-color: var(--vscode-editor-background);
 }
 
-.zhihu-comment:last-of-type {
-  margin-bottom: 15px;
-}
-
 .zhihu-comment:hover {
   background-color: var(--vscode-list-hoverBackground);
 }
@@ -120,16 +115,17 @@ export const commentsCss = `
 
 .zhihu-comment-author {
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  gap: 2px;
-  height: 32px;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
 }
 
 .zhihu-comment-author-name {
   width: fit-content;
   font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .zhihu-comment-author-name a {
@@ -144,12 +140,17 @@ export const commentsCss = `
 .zhihu-comment-author-headline {
   color: var(--vscode-descriptionForeground);
   line-height: 1.2;
+  opacity: 0.6;
+  font-size: 0.9em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 /* 评论内容样式 */
 .zhihu-comment-content {
   margin-bottom: 8px;
-  line-height: 1.5;
   overflow-wrap: break-word;
   word-break: break-all;
 }
@@ -186,7 +187,7 @@ export const commentsCss = `
 }
 
 .zhihu-comment-content p {
-  margin: 8px 0;
+  margin: 0;
 }
 
 /* 评论底部：时间、点赞数等 */
@@ -199,7 +200,7 @@ export const commentsCss = `
 }
 
 .zhihu-comment-like {
-  color: #e53935;
+  color: #ff8582;
   display: inline-flex;
   align-items: center;
 }
@@ -207,22 +208,27 @@ export const commentsCss = `
 /* 子评论容器 */
 .zhihu-child-comments {
   margin-top: 10px;
-  margin-left: 20px;
+  margin-left: 10px;
   border-left: 2px solid var(--vscode-panel-border);
   padding-left: 15px;
 }
 
 /* 子评论样式 */
 .zhihu-child-comment {
-  padding: 10px 0;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.zhihu-child-comment:not(:first-of-type) {
+  padding: 10px 0;
 }
 
 .zhihu-child-comment:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 
-/* 子评论头像 */
+/* 子评论标题栏 */
 .zhihu-child-comment-header {
   display: flex;
   align-items: center;
@@ -246,9 +252,14 @@ export const commentsCss = `
   line-height: 1.4;
 }
 
+.zhihu-child-comment-content p {
+  margin: 0;
+}
+
 .zhihu-child-comment-footer {
   font-size: 12px;
   color: var(--vscode-descriptionForeground);
+  opacity: 0.8;
 }
 
 /* 分页按钮 */
@@ -291,8 +302,7 @@ export const commentsCss = `
   background: transparent;
   color: var(--vscode-textLink-foreground);
   border: none;
-  padding: 5px 0;
-  margin-top: 5px;
+  padding: 5px 0 0 0;
   cursor: pointer;
 }
 
@@ -308,9 +318,10 @@ export const commentsCss = `
   right: 0;
   bottom: 0;
   display: flex;
+  z-index: 1000;
+  cursor: pointer;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
 }
 
 .zhihu-comments-modal-overlay {
@@ -340,7 +351,7 @@ export const commentsCss = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 12px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
 }
@@ -367,23 +378,23 @@ export const commentsCss = `
 }
 
 .zhihu-comments-modal-parent-comment {
-  padding: 15px;
+  padding: 12px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
 }
 
 .zhihu-comments-modal-child-comments {
-  padding: 15px;
+  padding: 12px;
   overflow-y: auto;
   max-height: 65vh;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   background-color: var(--vscode-editor-background);
 }
 
 .zhihu-modal-pagination {
-  padding: 10px 15px;
+  padding: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;

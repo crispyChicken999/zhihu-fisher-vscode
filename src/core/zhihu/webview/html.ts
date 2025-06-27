@@ -94,11 +94,15 @@ export class HtmlRenderer {
 
     // 构建页面组件
     const renderOptions = { mediaDisplayMode };
+    
+    // 判断内容类型：通过URL判断专栏文章
+    const contentType = webview.url.includes('zhuanlan.zhihu.com') ? "article" : "question";
+    
     const authorComponent = new AuthorComponent(
       currentAnswer?.author,
       renderOptions
     );
-    const navigationComponent = new NavigationComponent(webview, article);
+    const navigationComponent = new NavigationComponent(webview, article, contentType);
     const metaComponent = new MetaComponent(currentAnswer);
     const contentComponent = new ArticleContentComponent(
       currentAnswer?.content,

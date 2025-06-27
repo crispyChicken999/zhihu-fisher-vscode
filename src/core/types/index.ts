@@ -60,6 +60,8 @@ export interface LinkItem {
   hotValue?: string;
   /** 链接的缩略图 */
   imgUrl?: string;
+  /** 内容类型：问题或文章 */
+  type?: "question" | "article";
 }
 
 /** 页面数据结构 */
@@ -237,6 +239,7 @@ export class TreeItem extends vscode.TreeItem {
     public readonly listItem: LinkItem,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
+    // 不再添加前缀标识，直接使用原标题
     super(listItem.title, collapsibleState);
 
     // 获取用户的媒体显示模式配置
@@ -244,8 +247,7 @@ export class TreeItem extends vscode.TreeItem {
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
 
     // 根据配置决定是否显示缩略图
-    const shouldShowImage =
-      listItem.imgUrl && listItem.imgUrl.trim();
+    const shouldShowImage = listItem.imgUrl && listItem.imgUrl.trim();
 
     // 设置图标：根据配置和图片可用性决定
     if (shouldShowImage) {
@@ -258,11 +260,20 @@ export class TreeItem extends vscode.TreeItem {
     } else {
       this.iconPath = new vscode.ThemeIcon("comment-discussion");
     }
+    // 添加内容类型标识
+    const typeLabel =
+      listItem.type === "article"
+        ? "*[文章]*"
+        : "*[问题]*";
 
     // 设置工具提示：根据配置和图片可用性决定
     if (shouldShowImage) {
       const markdownTooltip = new vscode.MarkdownString();
-      markdownTooltip.appendMarkdown(`#### **${listItem.title}**\n\n`);
+      markdownTooltip.supportHtml = true;
+
+      markdownTooltip.appendMarkdown(
+        `#### **${listItem.title}** ${typeLabel}\n\n`
+      );
 
       if (listItem.hotValue) {
         markdownTooltip.appendMarkdown(`🔥 ${listItem.hotValue} 🔥\n\n`);
@@ -287,7 +298,11 @@ export class TreeItem extends vscode.TreeItem {
     } else {
       // 没有图片时的简单tooltip
       const simpleTooltip = new vscode.MarkdownString();
-      simpleTooltip.appendMarkdown(`#### **${listItem.title}**\n\n`);
+      simpleTooltip.supportHtml = true;
+
+      simpleTooltip.appendMarkdown(
+        `#### **${listItem.title}** ${typeLabel}\n\n`
+      );
 
       if (listItem.hotValue) {
         simpleTooltip.appendMarkdown(`🔥 ${listItem.hotValue} 🔥\n\n`);
@@ -306,9 +321,13 @@ export class TreeItem extends vscode.TreeItem {
         : undefined;
 
     this.id = listItem.id;
+
+    // 根据内容类型设置不同的命令标题
+    const commandTitle = listItem.type === "article" ? "打开文章" : "打开问题";
+
     this.command = {
       command: "zhihu-fisher.openArticle",
-      title: "打开文章",
+      title: commandTitle,
       arguments: [listItem],
     };
 

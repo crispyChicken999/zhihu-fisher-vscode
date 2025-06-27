@@ -189,9 +189,16 @@ function setupKeyboardNavigation() {
 
     // 按c键复制链接
     if (event.key === 'c') {
-      const copyButton = document.querySelector('.copy-button');
+      const copyButton = isImmersiveMode ?
+        document.querySelector('.immersive-button.copy-button') :
+        document.querySelector('.copy-button');
       if (copyButton) {
-        copyButton.click();
+        copyLink(copyButton, copyButton.getAttribute('data-url'), isImmersiveMode);
+
+        vscode.postMessage({
+          command: 'showNotification',
+          message: '链接已复制到剪贴板'
+        });
       }
     }
 
@@ -333,6 +340,7 @@ function setupStylePanel() {
       colorInput.addEventListener('input', function() {
         const color = this.value;
         colorValue.textContent = color;
+        document.querySelector('header').style.color = color;
         document.querySelector('.article-content').style.color = color;
         document.querySelector('.comments-container').style.color = color;
         document.querySelector('.comments-modal-container').style.color = color;
@@ -350,6 +358,7 @@ function setupStylePanel() {
     textAlignSelect.forEach(function(radio) {
       radio.addEventListener('change', function() {
         const textAlign = this.value;
+        document.querySelector('header').style.textAlign = textAlign;
         document.querySelector('.article-content').style.textAlign = textAlign;
         document.querySelector('.comments-container').style.textAlign = textAlign;
         document.querySelector('.comments-modal-container').style.textAlign = textAlign;
@@ -373,7 +382,8 @@ function setupStylePanel() {
       document.body.style.lineHeight = defaultStyles.lineHeight;
       document.body.style.maxWidth = defaultStyles.maxWidth;
       document.body.style.fontFamily = defaultStyles.fontFamily;
-      document.querySelector('header').style.color = 'inherit';
+      document.querySelector('header').style.color = defaultStyles.contentColor;
+      document.querySelector('header').style.textAlign = defaultStyles.textAlign;
       document.querySelector('.article-content').style.color = defaultStyles.contentColor;
       document.querySelector('.comments-container').style.color = defaultStyles.contentColor;
       document.querySelector('.comments-modal-container').style.color = defaultStyles.contentColor;
@@ -439,7 +449,7 @@ function setupBackTopButton() {
   document.addEventListener('scroll', function() {
     // 当页面滚动超过100px时显示按钮，否则隐藏
     if (window.scrollY > 100) {
-      scrollToTopBtn.style.display = 'block';
+      scrollToTopBtn.style.display = 'flex';
     } else {
       scrollToTopBtn.style.display = 'none';
     }
@@ -592,11 +602,11 @@ function copyLink(button, url, isImmersiveMode = false) {
 function showImagePreview(src) {
   const preview = document.getElementById('image-preview');
   const previewImage = document.getElementById('preview-image');
-  
+
   if (preview && previewImage) {
     previewImage.src = src;
     preview.style.display = 'flex';
-    
+
     // 禁止滚动
     document.body.style.overflow = 'hidden';
   }
@@ -607,10 +617,10 @@ function showImagePreview(src) {
  */
 function hideImagePreview() {
   const preview = document.getElementById('image-preview');
-  
+
   if (preview) {
     preview.style.display = 'none';
-    
+
     // 恢复滚动
     document.body.style.overflow = '';
   }
@@ -623,7 +633,7 @@ function hideImagePreview() {
 function copyCode(button) {
   const pre = button.parentElement;
   const code = pre.getAttribute('data-code');
-  
+
   if (code) {
     // 使用Clipboard API复制代码
     const tempInput = document.createElement('input');
@@ -632,11 +642,11 @@ function copyCode(button) {
     tempInput.select();
     document.execCommand('copy');
     document.body.removeChild(tempInput);
-    
+
     // 暂时改变按钮文字
     const originalText = button.textContent;
     button.textContent = '已复制';
-    
+
     // 3秒后恢复
     setTimeout(() => {
       button.textContent = originalText;
@@ -734,17 +744,15 @@ function closeCommentsModal() {
 }
 
 /**
- * 判断元素是否在可视范围内
- * @param {HTMLElement} el 元素
- * @returns {boolean} 是否在可视范围内
+ * 加载专栏评论（通过分页方向）
  */
-function isElementInViewport(el) {
-  const rect = el.getBoundingClientRect();
-  return (
-    rect.top >= 0 &&
-    rect.left >= 0 &&
-    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  );
+function loadArticleComments(articleId, direction) {
+  // const commentsContainer = document.querySelector('.comments-container');
+  // commentsContainer.innerHTML = '<div class="zhihu-comments-loading"><div class="zhihu-comments-loading-spinner"></div>加载评论中...</div>';
+  vscode.postMessage({
+    command: "loadArticleComments",
+    articleId: articleId,
+    direction: direction
+  });
 }
 `;

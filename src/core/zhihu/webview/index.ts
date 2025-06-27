@@ -11,7 +11,7 @@ import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
   static async openWebview(item: LinkItem): Promise<void> {
-    console.log(`开始获取文章内容: ${item.url}`);
+    console.log(`开始获取内容: ${item.url}, 类型: ${item.type || "question"}`);
 
     // 检查是否已经打开了这篇文章
     const existingView = Store.webviewMap.get(item.id);
@@ -24,10 +24,15 @@ export class WebviewManager {
     // 获取短标题
     const shortTitle = this.getShortTitle(item.title);
 
+    // 根据内容类型设置不同的面板类型
+    const panelType =
+      item.type === "article" ? "zhihuArticle" : "zhihuQuestion";
+    const loadingTitle = item.type === "article" ? "加载文章中" : "加载问题中";
+
     // 创建并配置WebView面板
     const panel = vscode.window.createWebviewPanel(
-      "zhihuArticle",
-      `加载中: ${shortTitle}`,
+      panelType,
+      `${loadingTitle}: ${shortTitle}`,
       vscode.ViewColumn.Active, // 修改为在当前编辑组显示
       {
         enableScripts: true,
@@ -68,7 +73,11 @@ export class WebviewManager {
     Store.webviewMap.set(item.id, webviewItem);
 
     // 在WebView中显示正在加载状态
-    panel.webview.html = HtmlRenderer.getLoadingHtml(item.title, item.excerpt, item.imgUrl);
+    panel.webview.html = HtmlRenderer.getLoadingHtml(
+      item.title,
+      item.excerpt,
+      item.imgUrl
+    );
 
     // 设置消息处理
     this.setupMessageHandling(item.id);
@@ -78,6 +87,13 @@ export class WebviewManager {
 
     // 设置视图状态变化处理（监听标签页切换）
     this.setupViewStateChangeHandler(item.id);
+
+    // 根据内容类型调用不同的爬取方法
+    if (item.type === "article") {
+      this.crawlingArticleData(item.id);
+    } else {
+      this.crawlingURLData(item.id);
+    }
   }
 
   /** 更新内容显示 */
@@ -188,6 +204,214 @@ export class WebviewManager {
       statusBarItem.hide();
       statusBarItem.dispose();
       Store.statusBarMap.delete(webviewId);
+    }
+  }
+
+  /** 从文章URL中爬取数据 */
+  private static async crawlingArticleData(webviewId: string): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 已经加载过内容并且正在加载中，避免重复请求
+      if (webviewItem.isLoading) {
+        return;
+      }
+
+      webviewItem.isLoading = true;
+
+      // 显示状态栏加载提示
+      const statusBarItem = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Right,
+        100
+      );
+      const shortTitle = this.getShortTitle(webviewItem.article.title);
+      statusBarItem.text = `$(sync~spin) 加载文章: ${shortTitle}`;
+      statusBarItem.show();
+
+      // 保存状态栏项目的引用
+      Store.statusBarMap.set(webviewId, statusBarItem);
+
+      // 使用 Puppeteer 来获取文章内容
+      const page = await PuppeteerManager.createPage();
+      PuppeteerManager.setPageInstance(webviewId, page);
+
+      // 前往文章页面
+      await page.goto(webviewItem.url, {
+        waitUntil: "networkidle0",
+        timeout: 60000,
+      });
+
+      console.log("文章页面加载完成，开始读取页面...");
+      webviewItem.isLoading = false;
+      webviewItem.webviewPanel.title = shortTitle;
+
+      const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
+        page
+      );
+      if (isCookieExpired) {
+        console.log("Cookie过期，请重新登录！");
+        webviewItem.webviewPanel.webview.html =
+          HtmlRenderer.getCookieExpiredHtml();
+        return;
+      }
+
+      // 隐藏状态栏加载提示
+      this.hideStatusBarItem(webviewId);
+
+      // 解析文章内容
+      await this.parseArticleContent(webviewId, page);
+
+      // 对于文章，我们可以直接显示内容，不需要分批加载
+      webviewItem.article.loadComplete = true;
+      webviewItem.isLoaded = true;
+
+      // 更新 webview 内容
+      this.updateWebview(webviewId);
+    } catch (error) {
+      const webviewItem = Store.webviewMap.get(webviewId);
+      if (webviewItem) {
+        webviewItem.isLoading = false;
+      }
+
+      // 隐藏状态栏加载提示
+      this.hideStatusBarItem(webviewId);
+
+      console.error("加载文章内容时出错:", error);
+      throw new Error("加载文章内容时出错:" + error);
+    }
+  }
+
+  /** 解析文章内容 */
+  private static async parseArticleContent(
+    webviewId: string,
+    page: Puppeteer.Page
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      const articleData = await page.evaluate(() => {
+        // 获取文章主体内容
+        const contentElement = document.querySelector(
+          ".Post-RichTextContainer .RichText"
+        );
+        const content = contentElement
+          ? contentElement.innerHTML
+          : "无法获取文章内容";
+
+        // 获取作者信息
+        const authorElement = document.querySelector(".AuthorInfo-name a");
+        const authorName = authorElement
+          ? authorElement.textContent?.trim() || "未知作者"
+          : "未知作者";
+        const authorUrl = authorElement
+          ? (authorElement as HTMLAnchorElement).href
+          : "";
+
+        const authorAvatar = document.querySelector(".AuthorInfo-avatar");
+        const authorAvatarUrl = authorAvatar
+          ? (authorAvatar as HTMLImageElement).src
+          : "";
+
+        const authorSignature = document.querySelector(".AuthorInfo-badgeText");
+        const authorHeadline = authorSignature
+          ? authorSignature.textContent?.trim() || ""
+          : "";
+
+        // 获取发布时间
+        const timeElement = document.querySelector(".ContentItem-time");
+        const publishTime = timeElement
+          ? timeElement.textContent?.trim() || ""
+          : "";
+
+        // 获取点赞数
+        const likeElement = document.querySelector(
+          ".VoteButton .VoteButton-TriangleUp"
+        );
+        const likeText = likeElement
+          ? likeElement.parentElement?.textContent?.trim() || "0"
+          : "0";
+        const likeCount = parseInt(likeText.replace(/[^\d]/g, "") || "0", 10);
+
+        // 获取评论数
+        const commentElement = document.querySelector(
+          ".BottomActions-CommentBtn"
+        );
+        const commentText = commentElement
+          ? commentElement.textContent?.trim() || "0"
+          : "0";
+        const commentCount = parseInt(
+          commentText.replace(/[^\d]/g, "") || "0",
+          10
+        );
+
+        return {
+          content,
+          author: {
+            name: authorName,
+            url: authorUrl,
+            avatar: authorAvatarUrl,
+            signature: authorHeadline,
+          },
+          publishTime,
+          likeCount,
+          commentCount,
+        };
+      });
+
+      // 从webviewId中提取纯数字的文章ID用于API调用
+      let articleId = webviewId;
+      if (webviewId.includes("article-")) {
+        const parts = webviewId.split("-");
+        articleId = parts[parts.length - 1];
+      }
+
+      // 创建一个虚拟的 AnswerItem 来存储文章内容
+      const articleAnswer: AnswerItem = {
+        id: articleId, // 使用纯数字ID，方便评论API使用
+        url: webviewItem.url,
+        author: {
+          id: "article-author",
+          url: articleData.author.url,
+          name: articleData.author.name,
+          signature: articleData.author.signature,
+          avatar: articleData.author.avatar,
+          followersCount: 0,
+        },
+        likeCount: articleData.likeCount,
+        commentCount: articleData.commentCount,
+        commentList: [],
+        commentStatus: "collapsed",
+        commentPaging: {
+          is_end: true,
+          is_start: true,
+          next: null,
+          previous: null,
+          totals: articleData.commentCount,
+          loadedTotals: 0,
+          current: 1,
+          limit: 20,
+        },
+        publishTime: articleData.publishTime,
+        updateTime: articleData.publishTime,
+        content: articleData.content,
+      };
+
+      // 将文章内容作为单个"回答"存储
+      webviewItem.article.answerList = [articleAnswer];
+      webviewItem.article.loadedAnswerCount = 1;
+      webviewItem.article.totalAnswerCount = 1;
+      webviewItem.article.currentAnswerIndex = 0;
+
+      console.log("文章内容解析完成");
+    } catch (error) {
+      console.error("解析文章内容时出错:", error);
+      throw error;
     }
   }
 
@@ -725,7 +949,7 @@ export class WebviewManager {
 
         case "updateCookie":
           // 处理更新Cookie的请求
-          await vscode.commands.executeCommand("zhihu-fisher.setCookie");          // 刷新当前页面
+          await vscode.commands.executeCommand("zhihu-fisher.setCookie"); // 刷新当前页面
           if (webviewItem) {
             webviewItem.webviewPanel.webview.html = HtmlRenderer.getLoadingHtml(
               webviewItem.article.title,
@@ -791,6 +1015,19 @@ export class WebviewManager {
 
         case "toggleCommentStatus":
           CommentsManager.toggleCommentStatus(webviewId, message.answerId);
+          break;
+
+        case "loadArticleComments":
+          await CommentsManager.loadArticleComments(
+            webviewId,
+            message.articleId,
+            message.direction
+          );
+          break;
+
+        case "showNotification":
+          // 显示通知消息
+          vscode.window.showInformationMessage(message.message);
       }
     });
   }

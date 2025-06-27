@@ -118,8 +118,8 @@ export class ToolbarComponent implements Component {
       </div>
 
       <div class="fixed-toolbar">
-        <button class="button" id="scroll-to-top" onclick="backTop()" tooltip="回到顶部(V)" placement="left">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><!-- Icon from TDesign Icons by TDesign - https://github.com/Tencent/tdesign-icons/blob/main/LICENSE --><path fill="currentColor" d="M4 4h16v2H4zm8 3.586l6.914 6.914l-1.414 1.414l-4.5-4.5V21h-2v-9.586l-4.5 4.5L5.086 14.5z"/></svg>
+        <button class="button immersive-button" id="scroll-to-top" onclick="backTop()" tooltip="回到顶部(V)" placement="left">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v2H4zm8 3.586l6.914 6.914l-1.414 1.414l-4.5-4.5V21h-2v-9.586l-4.5 4.5L5.086 14.5z"/></svg>
         </button>
 
         <!-- 沉浸模式下的工具栏按钮 -->
