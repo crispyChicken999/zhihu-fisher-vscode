@@ -21,9 +21,6 @@ export const Store: ContentStore = {
       isLoading: false,
       currentQuery: "",
     },
-    cookieInfo: {
-      cookie: "",
-      lastUpdated: null,
-    },
+    cookie: "",
   },
 };
