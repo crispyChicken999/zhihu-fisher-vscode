@@ -163,6 +163,7 @@ export class sidebarRecommendListDataProvider
       const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
         page
       );
+
       if (isCookieExpired) {
         console.log("检测到登录墙或验证码");
         console.log("Cookie过期，请重新登录！");

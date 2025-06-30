@@ -42,7 +42,7 @@ export interface ContentStore {
     };
 
     /** 知乎的Cookie */
-    cookieInfo: CookieInfo;
+    cookie: string;
   };
 }
 
@@ -224,11 +224,6 @@ export interface CommentItem {
   total_child_comments: CommentItem[];
   /** 评论的点赞数 */
   like_count: number;
-}
-/** Cookie对象信息 */
-export interface CookieInfo {
-  cookie: string;
-  lastUpdated?: number | null; // 时间戳，记录上次更新时间
 }
 
 /**

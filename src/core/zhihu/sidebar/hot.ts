@@ -155,7 +155,7 @@ export class sidebarHotListDataProvider
       "Upgrade-Insecure-Requests": "1",
     };
 
-    const cookie = Store.Zhihu.cookieInfo.cookie;
+    const cookie = Store.Zhihu.cookie;
     if (cookie) {
       headers["Cookie"] = cookie;
       console.log("使用已保存的Cookie进行请求");
