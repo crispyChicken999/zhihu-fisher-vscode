@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.1.8-green.svg)
+![Version](https://img.shields.io/badge/Version-0.1.9-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS-purple.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。提供沉浸模式、评论区、图片视频切换等功能，避免摸鱼被发现。
@@ -92,6 +92,18 @@
 - 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可
 - 如果还是不清楚，可以参照下图：
   ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
+
+#### 3.2 🔒 Cookie 隐私保护声明
+
+**我们非常重视您的隐私和数据安全，特此声明：**
+
+- **本地存储**：您的 Cookie 仅存储在本地 VSCode 配置文件中，不会上传到任何服务器
+- **用途限制**：Cookie 仅用于访问知乎内容，获取推荐、热榜和搜索结果，不会用于其他任何用途
+- **数据保护**：我们不会收集、分析、分享或恶意使用您的 Cookie 信息
+- **完全控制**：您可以随时通过插件设置清除或更新 Cookie
+- **开源透明**：本插件完全开源，您可以查看所有源代码，确认 Cookie 的使用方式
+
+**简而言之：您的 Cookie 始终在您的控制之下，我们绝不会做任何可能损害您隐私的操作。**
 
 ### 4. 开始使用
 
