@@ -649,6 +649,20 @@ export function activate(context: vscode.ExtensionContext) {
             </div>
 
             <div class="section">
+              <h2>� Cookie 隐私保护</h2>
+              <p><strong>我们非常重视您的隐私和数据安全：</strong></p>
+              <ul class="feature-list">
+                <li>🏠 <strong>本地存储</strong> - Cookie仅存储在本地VS Code配置中</li>
+                <li>🚫 <strong>不会上传</strong> - 我们绝不收集、上传或分享您的Cookie</li>
+                <li>🎯 <strong>用途限制</strong> - Cookie仅用于访问知乎内容，无其他用途</li>
+                <li>🛡️ <strong>完全控制</strong> - 您可随时清除或更新Cookie设置</li>
+              </ul>
+              <p style="color: var(--vscode-descriptionForeground); font-style: italic;">
+                简而言之：您的Cookie始终在您的控制之下，我们绝不会做任何损害您隐私的操作。
+              </p>
+            </div>
+
+            <div class="section">
               <h2>🔗 相关链接</h2>
               <p>
                 • GitHub: <a href="https://github.com/crispyChicken999/zhihu-fisher-vscode" class="link">crispyChicken999/zhihu-fisher-vscode</a><br>

@@ -267,7 +267,7 @@
           {
             "id": "setup-cookie",
             "title": "第二步：设置知乎Cookie",
-            "description": "设置知乎Cookie可以访问更多内容，包括需要登录才能查看的文章和完整的评论。\n\n**如何获取Cookie：**\n1. 在浏览器中登录知乎\n2. 按F12打开开发者工具\n3. 在Network标签页找到知乎请求\n4. 复制Cookie值\n\n[设置知乎Cookie](command:zhihu-fisher.setCookie)",
+            "description": "设置知乎Cookie可以访问更多内容，包括需要登录才能查看的文章和完整的评论。\n\n**如何获取Cookie：**\n1. 在浏览器中登录知乎\n2. 按F12打开开发者工具\n3. 在Network标签页找到知乎请求\n4. 复制Cookie值\n\n[设置知乎Cookie](command:zhihu-fisher.setCookie)\n\n **🔒 隐私保护声明：**\n• 您的Cookie仅存储在本地VS Code配置中\n• 我们不会上传、收集或分享您的Cookie\n• Cookie仅用于访问知乎内容，不会用于其他用途\n• 您可以随时清除或更新Cookie设置\n\n",
             "media": {
               "image": "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp",
               "altText": "设置知乎Cookie"
