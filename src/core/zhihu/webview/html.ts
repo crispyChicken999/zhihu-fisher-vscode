@@ -13,6 +13,7 @@ import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts";
 import { loadingTemplate } from "./templates/loading";
 import { cookieTipsTemplate } from "./templates/cookieTips";
+import { articleKeyboardTips, questionKeyboardTips } from "./templates/keyboardTips";
 // 导入样式文件
 import { mainCss } from "./styles/main";
 import { panelCss } from "./styles/panel";
@@ -139,6 +140,10 @@ export class HtmlRenderer {
       )
       .replace("${ARTICLE_ID}", webview.id || "");
 
+    // 判断是否为文章类型，生成对应的键盘提示
+    const isArticle = webview.url.includes('zhuanlan.zhihu.com/p/') || webview.url.includes('/p/');
+    const keyboardTips = isArticle ? articleKeyboardTips : questionKeyboardTips;
+
     // 填充模板
     return articleTemplate
       .replaceAll("${TITLE}", this.escapeHtml(article.title))
@@ -159,6 +164,7 @@ export class HtmlRenderer {
       .replace("${TOOLBAR_COMPONENT}", toolbarComponent.render())
       .replace("${STYLE_PANEL_COMPONENT}", stylePanelComponent.render())
       .replace("${SOURCE_URL}", currentAnswer?.url || webview.url || "")
+      .replace("${KEYBOARD_TIPS}", keyboardTips)
       .replace(/\${MEDIA_MODE_CLASS}/g, mediaModeClass)
       .replace("${SCRIPTS}", scriptContent);
   }

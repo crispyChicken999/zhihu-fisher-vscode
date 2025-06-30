@@ -192,6 +192,12 @@ function setupKeyboardNavigation() {
       const copyButton = isImmersiveMode ?
         document.querySelector('.immersive-button.copy-button') :
         document.querySelector('.copy-button');
+
+      // 如果ctrl也被按下，则不响应复制
+      if (event.ctrlKey || event.metaKey) {
+        return; // 不执行复制操作
+      }
+
       if (copyButton) {
         copyLink(copyButton, copyButton.getAttribute('data-url'), isImmersiveMode);
 
