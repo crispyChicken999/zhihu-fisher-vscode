@@ -143,10 +143,10 @@ export class sidebarSearchListDataProvider
     // 创建并获取浏览器页面
     const page = await PuppeteerManager.createPage();
 
-    // 构建搜索URL（搜索回答内容）
+    // 构建搜索URL（搜索所有内容类型）
     const searchUrl = `https://www.zhihu.com/search?q=${encodeURIComponent(
       query
-    )}&type=content&vertical=answer`;
+    )}&type=content`;
 
     console.log(`导航到知乎搜索页面: ${searchUrl}`);
     await page.goto(searchUrl, {
@@ -230,12 +230,152 @@ export class sidebarSearchListDataProvider
 
         resultItems.forEach((item, index) => {
           try {
+            // 优先尝试解析专栏文章
+            const articleResult = parseArticleItem(item, index);
+            if (articleResult) {
+              // 如果该结果已存在，则跳过
+              if (
+                items.some(
+                  (existingItem) => existingItem.id === articleResult.id
+                )
+              ) {
+                console.log(
+                  `搜索结果 #${index + 1} (专栏文章) 已存在，跳过...`
+                );
+                return;
+              }
+              items.push(articleResult);
+              console.log(
+                `成功解析搜索结果 #${index + 1} (专栏文章): ${
+                  articleResult.title
+                }`
+              );
+              return;
+            }
+
+            // 如果不是专栏文章，尝试解析问题回答
+            const questionResult = parseQuestionItem(item, index);
+            if (questionResult) {
+              // 如果该结果已存在，则跳过
+              if (
+                items.some(
+                  (existingItem) => existingItem.id === questionResult.id
+                )
+              ) {
+                console.log(
+                  `搜索结果 #${index + 1} (问题回答) 已存在，跳过...`
+                );
+                return;
+              }
+              items.push(questionResult);
+              console.log(
+                `成功解析搜索结果 #${index + 1} (问题回答): ${
+                  questionResult.title
+                }`
+              );
+              return;
+            }
+
+            console.log(`搜索结果 #${index + 1} 无法识别类型，跳过...`);
+          } catch (error) {
+            console.error(`解析搜索结果 #${index + 1} 时出错:`, error);
+          }
+        });
+
+        // 解析专栏文章项的函数（精准解析，针对知乎专栏文章的DOM结构）
+        function parseArticleItem(
+          item: Element,
+          index: number
+        ): LinkItem | null {
+          try {
+            // 方法1：检查是否为专栏文章：查找 ContentItem ArticleItem 和 itemprop="article"
+            const articleItem = item.querySelector(
+              '.ContentItem.ArticleItem[itemprop="article"]'
+            );
+            if (articleItem) {
+              // 提取标题和链接 - 支持多种URL格式
+              let titleLink = articleItem.querySelector(
+                '.ContentItem-title a[href*="/p/"]'
+              );
+
+              if (!titleLink) {
+                // 尝试查找其他可能的链接元素
+                titleLink = articleItem.querySelector('a[href*="/p/"]');
+              }
+
+              if (titleLink) {
+                const url = titleLink.getAttribute("href") || "";
+                const title = titleLink.textContent?.trim() || "";
+
+                if (url && title && url.includes("/p/")) {
+                  // 确保URL是完整的
+                  const fullUrl = url.startsWith("http")
+                    ? url
+                    : url.startsWith("//")
+                    ? `https:${url}`
+                    : `https://zhuanlan.zhihu.com${url}`;
+
+                  // 提取文章ID
+                  const articleId =
+                    fullUrl.split("/p/")[1]?.split("?")[0] || "";
+                  const id = `search-article-${articleId}-${index}`;
+
+                  // 提取封面图片
+                  const imgElement =
+                    articleItem.querySelector(".RichContent-cover img") ||
+                    articleItem.querySelector("img");
+                  const imgUrl = imgElement?.getAttribute("src") || "";
+
+                  // 提取文章摘要内容
+                  const contentElement =
+                    articleItem.querySelector(".RichText.ztext") ||
+                    articleItem.querySelector(".RichText") ||
+                    articleItem.querySelector(".ContentItem-excerpt");
+                  let excerpt = "";
+                  if (contentElement) {
+                    excerpt = contentElement.textContent?.trim() || "";
+                    // 清理摘要内容，移除多余的空白字符
+                    excerpt = excerpt.replace(/\s+/g, " ").substring(0, 200);
+                    if (excerpt.length > 197) {
+                      excerpt = excerpt.substring(0, 197) + "...";
+                    }
+                  }
+
+                  if (!excerpt) {
+                    excerpt = "没找到专栏摘要(っ °Д °;)っ";
+                  }
+
+                  return {
+                    id,
+                    url: fullUrl,
+                    imgUrl,
+                    title,
+                    excerpt,
+                    type: "article" as const,
+                  };
+                }
+              }
+            }
+
+            return null;
+          } catch (error) {
+            console.error(`解析专栏文章项时出错:`, error);
+            return null;
+          }
+        }
+
+        // 解析问题回答项的函数
+        function parseQuestionItem(
+          item: Element,
+          index: number
+        ): LinkItem | null {
+          try {
             // 提取问题信息
             const questionMeta = item.querySelector(
               'div[itemprop="zhihu:question"]'
             );
             if (!questionMeta) {
-              return;
+              return null;
             }
 
             // 提取问题URL和标题
@@ -245,18 +385,16 @@ export class sidebarSearchListDataProvider
             );
 
             if (!urlMeta || !titleMeta) {
-              return;
+              return null;
             }
 
             // 提取图片
-            // <img src="https://picx.zhimg.com/80/v2-59b8a92774353f976507f877c2d57c49_200x0.jpg?source=4e949a73" alt="cover" width="190" height="105" class="css-1phd9a0"
-            // srcset="https://picx.zhimg.com/80/v2-59b8a92774353f976507f877c2d57c49_qhd.jpg?source=4e949a73 2x" loading="lazy">
             const imgElement = item.querySelector("img");
             const imgUrl = imgElement?.getAttribute("src") || "";
 
             const url = (urlMeta as HTMLMetaElement).content || "";
             const title = (titleMeta as HTMLMetaElement).content || "";
-            const id = `search-${url.split("/").pop()}-${index}`;
+            const id = `search-question-${url.split("/").pop()}-${index}`;
 
             // 提取回答内容摘要
             const contentElement = item.querySelector(".RichText");
@@ -268,28 +406,33 @@ export class sidebarSearchListDataProvider
                 }`
               : "没找到问题摘要(っ °Д °;)っ";
 
-            // 如果该结果已存在，则跳过
-            if (items.some((existingItem) => existingItem.id === id)) {
-              console.log(`搜索结果 #${index + 1} 已存在，跳过...`);
-              return;
-            }
-
-            items.push({
+            return {
               id,
               url,
               imgUrl,
               title,
               excerpt,
-            });
-
-            console.log(`成功解析搜索结果 #${index + 1}: ${title}`);
+              type: "question" as const,
+            };
           } catch (error) {
-            console.error(`解析搜索结果 #${index + 1} 时出错:`, error);
+            console.error(`解析问题回答项时出错:`, error);
+            return null;
           }
-        });
+        }
       } else {
         console.log("未找到搜索结果");
       }
+
+      // 统计搜索结果类型
+      const articleCount = items.filter(
+        (item) => item.type === "article"
+      ).length;
+      const questionCount = items.filter(
+        (item) => item.type === "question"
+      ).length;
+      console.log(
+        `搜索结果统计: 专栏文章 ${articleCount} 篇, 问题回答 ${questionCount} 个`
+      );
 
       return items;
     }, query);
@@ -491,7 +634,27 @@ export class sidebarSearchListDataProvider
       if (isLoading) {
         this.treeView.title = "搜索(加载中...)";
       } else if (list.length > 0) {
-        this.treeView.title = `搜索(${list.length}条)`;
+        // 统计不同类型的条数
+        const articleCount = list.filter(
+          (item) => item.type === "article"
+        ).length;
+        const questionCount = list.filter(
+          (item) => item.type === "question"
+        ).length;
+
+        if (articleCount > 0 && questionCount > 0) {
+          // 两种类型都有
+          this.treeView.title = `搜索(${list.length}条: ${questionCount}条问题 | ${articleCount}篇文章)`;
+        } else if (articleCount > 0) {
+          // 只有文章
+          this.treeView.title = `搜索(${list.length}条: ${articleCount}篇文章)`;
+        } else if (questionCount > 0) {
+          // 只有问题
+          this.treeView.title = `搜索(${list.length}条: ${questionCount}条问题)`;
+        } else {
+          // 兜底显示
+          this.treeView.title = `搜索(${list.length}条)`;
+        }
       } else {
         this.treeView.title = "搜索";
       }
