@@ -32,15 +32,12 @@ export const articleCss = `
 }
 
 .article-content.mini-media img:not(.formula) {
-  width: calc(50%);
-  height: auto;
+  /* 缩放比例现在通过JavaScript动态设置 */
 }
 
 .article-content.mini-media video {
-  width: calc(50%);
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
+  /* 缩放比例现在通过JavaScript动态设置 */
+  margin: 10px 0;
 }
 
 .article-content img.formula {

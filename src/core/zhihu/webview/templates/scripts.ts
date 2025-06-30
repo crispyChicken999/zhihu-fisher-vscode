@@ -8,6 +8,9 @@ const vscode = acquireVsCodeApi();
 // 媒体显示模式
 let currentMediaMode = "\${MEDIA_DISPLAY_MODE}";
 
+// Mini模式下的缩放比例
+let currentMiniMediaScale = \${MINI_MEDIA_SCALE};
+
 // 当前回答索引
 let currentAnswerIndex = \${CURRENT_ANSWER_INDEX};
 
@@ -26,9 +29,15 @@ document.addEventListener("DOMContentLoaded", function() {
   setupStylePanel();
   setupBackTopButton();
   setupImmersiveMode();
+  setupImageFancyBox();
 
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
+
+  // 初始化mini模式缩放比例
+  if (currentMediaMode === 'mini') {
+    updateMiniMediaScale(currentMiniMediaScale);
+  }
 
   // 设置媒体显示单选按钮
   const radioButtons = document.querySelectorAll('input[name="media-display"]');
@@ -69,6 +78,97 @@ window.addEventListener('message', event => {
     mb.innerHTML = message.html;
   }
 });
+
+/**
+ * 设置图片FancyBox功能
+ */
+function setupImageFancyBox() {
+  // 等待jQuery和Fancybox加载完成
+  if (typeof jQuery !== 'undefined' && typeof Fancybox !== 'undefined') {
+    // 初始化FancyBox
+    initializeFancyBox();
+
+    // 监听内容变化，动态更新图片的fancybox属性
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList') {
+          // 延迟一下确保DOM更新完成
+          setTimeout(initializeFancyBox, 100);
+        }
+      });
+    });
+
+    // 监听文章内容区域的变化
+    const articleContent = document.querySelector('.article-content');
+    if (articleContent) {
+      observer.observe(articleContent, { childList: true, subtree: true });
+    }
+  } else {
+    // 如果库还没加载完成，延迟再试
+    setTimeout(setupImageFancyBox, 100);
+  }
+}
+
+/**
+ * 初始化FancyBox
+ */
+function initializeFancyBox() {
+  try {
+    // 为文章内容中的图片添加fancybox属性
+    const images = document.querySelectorAll('.article-content img:not(.formula):not(.fancybox-processed)');
+    images.forEach(function(img) {
+      // 跳过公式图片
+      if (img.classList.contains('formula')) {
+        return;
+      }
+
+      // 添加data-fancybox属性
+      img.setAttribute('data-fancybox', 'article-gallery');
+      img.setAttribute('data-caption', img.alt || img.title || '图片');
+      img.classList.add('fancybox-processed');
+
+      // 添加鼠标样式提示
+      img.style.cursor = 'pointer';
+      img.title = '点击查看大图';
+    });
+
+    // 为评论中的图片添加fancybox属性
+    const commentImages = document.querySelectorAll('.comments-container img:not(.fancybox-processed)');
+    commentImages.forEach(function(img) {
+      img.setAttribute('data-fancybox', 'comment-gallery');
+      img.setAttribute('data-caption', '评论图片');
+      img.classList.add('fancybox-processed');
+      img.style.cursor = 'pointer';
+      img.title = '点击查看大图';
+    });
+
+    // 初始化Fancybox
+    Fancybox.bind('[data-fancybox]', {
+      // 配置选项
+      Toolbar: {
+        display: {
+          left: ['infobar'],
+          middle: [],
+          right: ['slideshow', 'thumbs', 'close']
+        }
+      },
+      Thumbs: {
+        showOnStart: false
+      },
+      Images: {
+        zoom: true
+      },
+      // 自定义样式
+      parentEl: document.body,
+      dragToClose: true,
+      hideScrollbar: false,
+      placeFocusBack: false,
+      trapFocus: false
+    });
+  } catch (error) {
+    console.log('FancyBox初始化失败:', error);
+  }
+}
 
 /**
  * 设置沉浸模式
@@ -157,37 +257,43 @@ function setupKeyboardNavigation() {
   window.scrollTo(0, 0); // 滚动到顶部
 
   document.addEventListener('keyup', function(event) {
-    // 左箭头 - 上一个回答
+    const isFancyboxOpen = document.querySelector('.fancybox__container') !== null;
+    // 如果fancybox打开了，那么不响应
+    if (isFancyboxOpen) {
+      return;
+    }
+
+    // 左←箭头 - 上一个回答
     if (event.key === 'ArrowLeft') {
       loadPreviousAnswer();
     }
 
-    // 右箭头 - 下一个回答
+    // 右→箭头 - 下一个回答
     if (event.key === 'ArrowRight') {
       loadNextAnswer();
     }
 
-    // 按/键切换媒体显示模式
+    // 按 / 键切换媒体显示模式
     if (event.key === '/') {
       toggleMediaDisplay();
     }
 
-    // 按.键切换样式面板
+    // 按 . 键切换样式面板
     if (event.key === '.') {
       toggleStylePanel();
     }
 
-    // 按逗号键切换评论区显示（展开/收起）
+    // 按逗号 , 键切换评论区显示（展开/收起）
     if (event.key === ',') {
       hanldeCommentsToggle();
     }
 
-    // 按x键切换沉浸模式
+    // 按 X 键切换沉浸模式
     if (event.key === 'x') {
       toggleImmersiveMode();
     }
 
-    // 按c键复制链接
+    // 按 C 键复制链接
     if (event.key === 'c') {
       const copyButton = isImmersiveMode ?
         document.querySelector('.immersive-button.copy-button') :
@@ -208,7 +314,7 @@ function setupKeyboardNavigation() {
       }
     }
 
-    // 按b键浏览器打开链接
+    // 按 B 键浏览器打开链接
     if (event.key === 'b') {
       const openButton = document.querySelector('.open-button');
       if (openButton) {
@@ -216,7 +322,7 @@ function setupKeyboardNavigation() {
       }
     }
 
-    // 按v键回到顶部
+    // 按 V 键回到顶部
     if (event.key === 'v') {
       backTop();
     }
@@ -377,7 +483,6 @@ function setupStylePanel() {
     });
   }
 
-
   // 重置按钮
   const resetButton = document.getElementById('style-reset-button');
 
@@ -494,6 +599,12 @@ function changeMediaMode(mode) {
   currentMediaMode = mode;
   updateMediaDisplayClass(currentMediaMode);
 
+  // 显示或隐藏mini缩放比例设置
+  const miniScaleOption = document.getElementById('mini-scale-option');
+  if (miniScaleOption) {
+    miniScaleOption.style.display = mode === 'mini' ? 'block' : 'none';
+  }
+
   // 更新单选框
   const radio = document.querySelector(\`input[name="media-display"][value="\${currentMediaMode}"]\`);
   if (radio) {
@@ -502,6 +613,64 @@ function changeMediaMode(mode) {
 
   // 保存设置
   vscode.postMessage({ command: "setMediaMode", mode: currentMediaMode });
+}
+
+/**
+ * 改变Mini模式下图片缩放比例
+ * @param {string} scale 缩放比例 (1-100)
+ */
+function changeMiniMediaScale(scale) {
+  const scaleValue = parseInt(scale);
+
+  // 更新显示值
+  const scaleValueElement = document.getElementById('mini-media-scale-value');
+  if (scaleValueElement) {
+    scaleValueElement.textContent = scaleValue + '%';
+  }
+
+  // 更新CSS样式
+  updateMiniMediaScale(scaleValue);
+
+  // 保存到localStorage，用于加载页面使用
+  localStorage.setItem('zhihu-fisher-mini-scale', scaleValue.toString());
+
+  // 保存设置
+  vscode.postMessage({ command: "setMiniMediaScale", scale: scaleValue });
+}
+
+/**
+ * 更新Mini模式下图片的实际缩放样式
+ * @param {number} scale 缩放比例 (1-100)
+ */
+function updateMiniMediaScale(scale) {
+  // 动态创建或更新样式
+  let styleElement = document.getElementById('mini-media-scale-style');
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = 'mini-media-scale-style';
+    document.head.appendChild(styleElement);
+  }
+
+  styleElement.textContent = \`
+    .article-content.mini-media img:not(.formula) {
+      width: calc(\${scale}%) !important;
+      height: auto !important;
+    }
+    .article-content.mini-media video {
+      width: calc(\${scale}%) !important;
+      min-width: 20% !important;
+      height: auto !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+    }
+  \`;
+
+  // 重新初始化FancyBox，确保缩放后的图片仍然可以点击放大
+  setTimeout(function() {
+    if (typeof initializeFancyBox === 'function') {
+      initializeFancyBox();
+    }
+  }, 100);
 }
 
 /**
@@ -525,6 +694,13 @@ function updateMediaDisplayClass(mode) {
       content.classList.add('mini-media');
       meta.classList.add('mini-media');
     }
+    
+    // 重新初始化FancyBox，因为显示模式可能会影响图片的可见性
+    setTimeout(function() {
+      if (typeof initializeFancyBox === 'function') {
+        initializeFancyBox();
+      }
+    }, 100);
   }
 }
 

@@ -16,5 +16,6 @@ export interface Component {
 export interface RenderOptions {
   mediaDisplayMode: string;
   immersiveMode?: boolean; // 沉浸模式开关
+  miniMediaScale?: number; // mini模式下图片缩放比例 (1-100)
   [key: string]: any;
 }

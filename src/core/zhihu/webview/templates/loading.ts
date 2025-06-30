@@ -125,7 +125,7 @@ export const loadingTemplate = `
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     .image-container.mini img {
-      max-width: 200px;
+      width: \${MINI_MEDIA_SCALE}%;
       height: auto;
     }
     .image-container.none {
@@ -215,14 +215,34 @@ export const loadingTemplate = `
       }
     }
 
+    // 应用Mini模式的动态缩放比例
+    function applyMiniMediaScale() {
+      const imageContainer = document.querySelector('.image-container');
+      if (imageContainer && imageContainer.classList.contains('mini')) {
+        // 从vscode配置或localStorage获取缩放比例
+        const savedMiniScale = localStorage.getItem('zhihu-fisher-mini-scale');
+        if (savedMiniScale) {
+          const scale = parseInt(savedMiniScale);
+          if (scale >= 1 && scale <= 100) {
+            const img = imageContainer.querySelector('img');
+            if (img) {
+              img.style.width = scale + '%';
+            }
+          }
+        }
+      }
+    }
+
     // 页面加载完成后应用自定义样式和图片显示模式
     window.addEventListener('load', function() {
       loadCustomStyles();
+      applyMiniMediaScale();
     });
 
     // 立即尝试加载样式（以防window.load事件已经触发）
     if (document.readyState === 'complete') {
       loadCustomStyles();
+      applyMiniMediaScale();
     }
 
     // 通知扩展加载内容

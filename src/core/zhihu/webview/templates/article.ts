@@ -8,6 +8,10 @@ export const articleTemplate = `
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>\${TITLE}</title>
+
+    <!-- FancyBox CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+
     <style>
       \${MAIN_CSS}
       \${COMPONENTS_CSS}
@@ -61,6 +65,9 @@ export const articleTemplate = `
     <script>
       \${SCRIPTS}
     </script>
+
+    <!-- FancyBox JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js" defer></script>
   </body>
 </html>
 `;

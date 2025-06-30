@@ -66,7 +66,7 @@
       },
       {
         "command": "zhihu-fisher.setMediaModeMini",
-        "title": "图片视频大小为原来的50%",
+        "title": "迷你模式（可指定缩放比例）",
         "icon": "$(screen-normal)"
       },
       {
@@ -222,11 +222,18 @@
           ],
           "enumDescriptions": [
             "隐藏模式(不显示图片视频)",
-            "迷你模式(图片视频显示为原来的50%大小)",
+            "迷你模式(图片视频缩小显示)",
             "正常模式(正常显示图片视频)"
           ],
           "default": "normal",
           "description": "文章中媒体资源（图片、视频等）的显示方式。"
+        },
+        "zhihu-fisher.miniMediaScale": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50,
+          "description": "迷你模式下图片和视频的缩放比例（1-100%）。"
         },
         "zhihu-fisher.cookie": {
           "type": "string",

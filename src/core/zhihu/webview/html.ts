@@ -60,12 +60,14 @@ export class HtmlRenderer {
     // 获取媒体显示模式配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+    const miniMediaScale = config.get<number>("miniMediaScale", 50);
 
     return loadingTemplate
       .replace(/\${TITLE}/g, this.escapeHtml(title))
       .replace("${EXCERPT}", this.escapeHtml(excerptText))
       .replace("${IMG_URL}", imgUrl || "")
-      .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode);
+      .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
+      .replace("${MINI_MEDIA_SCALE}", miniMediaScale.toString());
   }
 
   /**
@@ -87,6 +89,7 @@ export class HtmlRenderer {
     const article = webview.article;
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+    const miniMediaScale = config.get<number>("miniMediaScale", 50);
 
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];    if (!currentAnswer) {
@@ -94,11 +97,11 @@ export class HtmlRenderer {
     }
 
     // 构建页面组件
-    const renderOptions = { mediaDisplayMode };
-    
+    const renderOptions = { mediaDisplayMode, miniMediaScale };
+
     // 判断内容类型：通过URL判断专栏文章
     const contentType = webview.url.includes('zhuanlan.zhihu.com') ? "article" : "question";
-    
+
     const authorComponent = new AuthorComponent(
       currentAnswer?.author,
       renderOptions
@@ -133,6 +136,7 @@ export class HtmlRenderer {
     // 生成JavaScript代码
     const scriptContent = scriptsTemplate
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
+      .replace("${MINI_MEDIA_SCALE}", miniMediaScale.toString())
       .replace("${CURRENT_ANSWER_INDEX}", article.currentAnswerIndex.toString())
       .replace(
         "${LOADED_ANSWER_COUNT}",

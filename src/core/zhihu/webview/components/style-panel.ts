@@ -5,9 +5,11 @@ import { Component, RenderOptions } from "./base";
  */
 export class StylePanelComponent implements Component {
   private mediaDisplayMode: string = "normal";
+  private miniMediaScale: number = 50;
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
+    this.miniMediaScale = renderOptions.miniMediaScale || 50;
   }
 
   /**
@@ -102,11 +104,19 @@ export class StylePanelComponent implements Component {
               }>正常显示图片和视频</option>
               <option value="mini" ${
                 this.mediaDisplayMode === "mini" ? "selected" : ""
-              }>图片、视频以原尺寸的50%展示</option>
+              }>图片、视频缩小显示</option>
               <option value="none" ${
                 this.mediaDisplayMode === "none" ? "selected" : ""
               }>图片、视频全部隐藏</option>
             </select>
+          </div>
+
+          <div class="style-option" id="mini-scale-option" style="margin: 10px 0; ${this.mediaDisplayMode === 'mini' ? '' : 'display: none;'}">
+            <label for="mini-media-scale-slider" style="display: block; margin-bottom: 5px;">Mini模式图片缩放比例</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="range" id="mini-media-scale-slider" min="1" max="100" value="${this.miniMediaScale}" oninput="changeMiniMediaScale(this.value)" style="flex: 1;">
+              <span id="mini-media-scale-value" style="width: 40px;">${this.miniMediaScale}%</span>
+            </div>
           </div>
 
           <div class="style-option" style="margin: 20px 0 10px 0;">
@@ -130,6 +140,7 @@ export class StylePanelComponent implements Component {
               </label>
             </div>
           </div>
+
         </div>
 
         <div class="style-buttons" >

@@ -933,6 +933,22 @@ export class WebviewManager {
     this.updateWebview(webviewId);
   }
 
+  /** 设置Mini模式下图片缩放比例 */
+  private static async setMiniMediaScale(
+    scale: number
+  ): Promise<void> {
+    if (!scale || scale < 1 || scale > 100) {
+      return;
+    }
+
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    await config.update(
+      "miniMediaScale",
+      scale,
+      vscode.ConfigurationTarget.Global
+    );
+  }
+
   /** 设置WebView消息处理 */
   private static setupMessageHandling(webviewId: string): void {
     const webviewItem = Store.webviewMap.get(webviewId);
@@ -980,6 +996,10 @@ export class WebviewManager {
 
         case "setMediaMode":
           await this.setMediaMode(webviewId, message.mode);
+          break;
+
+        case "setMiniMediaScale":
+          await this.setMiniMediaScale(message.scale);
           break;
 
         case "loadPreviousAnswer":

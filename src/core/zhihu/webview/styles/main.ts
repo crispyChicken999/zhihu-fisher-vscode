@@ -14,6 +14,34 @@ body {
   background-color: var(--vscode-editor-background);
 }
 
+/* FancyBox 自定义样式 */
+.fancybox__container {
+  --fancybox-bg: var(--vscode-editor-background);
+  --fancybox-color: var(--vscode-foreground);
+}
+
+.fancybox__backdrop {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+.fancybox__toolbar {
+  background: var(--vscode-titleBar-activeBackground) !important;
+  border-bottom: 1px solid var(--vscode-panel-border) !important;
+}
+
+.fancybox__button {
+  color: var(--vscode-foreground) !important;
+}
+
+.fancybox__button:hover {
+  background: var(--vscode-button-hoverBackground) !important;
+}
+
+.fancybox__infobar {
+  color: var(--vscode-foreground) !important;
+  background: var(--vscode-statusBar-background) !important;
+}
+
 h1, h2, h3, h4, h5, h6 {
   color: var(--vscode-editor-foreground);
   margin-top: 24px;
