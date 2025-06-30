@@ -290,7 +290,9 @@ export class sidebarRecommendListDataProvider
         try {
           // 文章的结构不同，需要特殊处理
           const articleElement = item.querySelector(".ContentItem.ArticleItem");
-          if (!articleElement) return;
+          if (!articleElement) {
+            return;
+          }
 
           // 文章标题在 h2.ContentItem-title a 中
           const titleElement = articleElement.querySelector("h2.ContentItem-title a");
