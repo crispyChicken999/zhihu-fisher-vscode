@@ -242,7 +242,7 @@ export class TreeItem extends vscode.TreeItem {
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
 
     // 根据配置决定是否显示缩略图
-    const shouldShowImage = listItem.imgUrl && listItem.imgUrl.trim();
+    const shouldShowImage = listItem.imgUrl && listItem.imgUrl.trim() && mediaDisplayMode !== "none";
 
     // 设置图标：根据配置和图片可用性决定
     if (shouldShowImage) {
@@ -253,7 +253,12 @@ export class TreeItem extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon("comment-discussion");
       }
     } else {
-      this.iconPath = new vscode.ThemeIcon("comment-discussion");
+      // 根据内容类型设置不同的默认图标
+      if (listItem.type === "article") {
+        this.iconPath = new vscode.ThemeIcon("file-text");
+      } else {
+        this.iconPath = new vscode.ThemeIcon("comment-discussion");
+      }
     }
     // 添加内容类型标识
     const typeLabel =
@@ -281,8 +286,20 @@ export class TreeItem extends vscode.TreeItem {
         markdownTooltip.appendMarkdown(`${excerptPreview}\n\n`);
       }
 
-      // 根据显示模式设置图片宽度
-      const imageWidth = mediaDisplayMode !== "normal" ? 150 : 300;
+      // 根据显示模式和缩放比例计算图片宽度
+      let imageWidth: number;
+      if (mediaDisplayMode === "normal") {
+        imageWidth = 300; // 正常模式最大宽度300px
+      } else if (mediaDisplayMode === "mini") {
+        // 迷你模式：获取用户设置的缩放比例，最大宽度200px
+        const miniMediaScale = config.get<number>("miniMediaScale", 50);
+        const calculatedWidth = Math.round(200 * (miniMediaScale / 100));
+        imageWidth = Math.min(calculatedWidth, 200); // 确保不超过200px
+      } else {
+        // none模式下不会走到这里，因为shouldShowImage已经为false
+        imageWidth = 150;
+      }
+      
       markdownTooltip.appendMarkdown(
         `<img src="${listItem.imgUrl}" alt="预览图" width="${imageWidth}" />\n`
       );

@@ -926,6 +926,150 @@ function closeCommentsModal() {
 }
 
 /**
+ * 显示赞赏码弹窗
+ */
+function showDonateModal() {
+  // 创建弹窗容器
+  const modal = document.createElement('div');
+  modal.className = 'donate-modal';
+  modal.innerHTML = \`
+    <div class="donate-modal-overlay" onclick="closeDonateModal()"></div>
+    <div class="donate-modal-content">
+      <div class="donate-modal-header">
+        <h3>请开发者喝杯咖啡</h3>
+        <button class="donate-modal-close" onclick="closeDonateModal()">&times;</button>
+      </div>
+      <div class="donate-modal-body">
+        <p>如果这个插件对您有帮助，欢迎支持开发者继续改进和维护！</p>
+        <div class="donate-qr-container">
+          <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg" alt="微信赞赏码" class="donate-qr-code">
+          <p class="donate-tip">微信扫码打开</p>
+        </div>
+      </div>
+    </div>
+  \`;
+  
+  document.body.appendChild(modal);
+  
+  // 添加样式
+  if (!document.querySelector('#donate-modal-style')) {
+    const style = document.createElement('style');
+    style.id = 'donate-modal-style';
+    style.textContent = \`
+      .donate-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .donate-modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        cursor: pointer;
+      }
+      
+      .donate-modal-content {
+        position: relative;
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-panel-border);
+        border-radius: 8px;
+        max-width: 400px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      .donate-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--vscode-panel-border);
+      }
+      
+      .donate-modal-header h3 {
+        margin: 0;
+        color: var(--vscode-foreground);
+        font-size: 18px;
+      }
+      
+      .donate-modal-close {
+        background: none;
+        border: none;
+        color: var(--vscode-foreground);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+      }
+      
+      .donate-modal-close:hover {
+        background: var(--vscode-toolbar-hoverBackground);
+      }
+      
+      .donate-modal-body {
+        padding: 20px;
+        text-align: center;
+      }
+      
+      .donate-modal-body p {
+        color: var(--vscode-foreground);
+        margin: 0 0 20px 0;
+        line-height: 1.5;
+      }
+      
+      .donate-qr-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .donate-qr-code {
+        width: 200px;
+        height: 200px;
+        border-radius: 8px;
+        border: 1px solid var(--vscode-panel-border);
+      }
+      
+      .donate-tip {
+        color: var(--vscode-descriptionForeground);
+        font-size: 14px;
+        margin: 0;
+      }
+    \`;
+    document.head.appendChild(style);
+  }
+}
+
+/**
+ * 关闭赞赏码弹窗
+ */
+function closeDonateModal() {
+  const modal = document.querySelector('.donate-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+/**
  * 加载专栏评论（通过分页方向）
  */
 function loadArticleComments(articleId, direction) {

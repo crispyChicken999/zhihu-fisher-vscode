@@ -93,6 +93,16 @@
         "command": "zhihu-fisher.starOnGitHub",
         "title": "GitHub上给项目点星",
         "icon": "$(star-full)"
+      },
+      {
+        "command": "zhihu-fisher.showAbout",
+        "title": "关于",
+        "icon": "$(info)"
+      },
+      {
+        "command": "zhihu-fisher.showGuide",
+        "title": "使用说明",
+        "icon": "$(book)"
       }
     ],
     "viewsContainers": {
@@ -190,6 +200,14 @@
         {
           "command": "zhihu-fisher.starOnGitHub",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+        },
+        {
+          "command": "zhihu-fisher.showAbout",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+        },
+        {
+          "command": "zhihu-fisher.showGuide",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         }
       ],
       "zhihu-fisher.mediaDisplayMenu": [
@@ -230,8 +248,7 @@
             "title": "欢迎使用知乎摸鱼！",
             "description": "**知乎摸鱼**是一个强大的VSCode扩展，让您可以直接在编辑器中浏览知乎内容。\n\n🌟 点击侧边栏的**📖**开始探索！",
             "media": {
-              "image": "https://img2024.cnblogs.com/blog/3085939/202506/3085939-20250630164232099-1185603315.png",
-              "altText": "知乎摸鱼插件图标"
+              "markdown": "walkthrough/welcome.md"
             }
           },
           {
@@ -276,7 +293,7 @@
           {
             "id": "reading-features",
             "title": "第四步：文章阅读样式设置",
-            "description": "在文章阅读界面，您可以享受丰富的功能：\n\n⌨️ **快捷键操作：**\n **←** **→** 切换回答\n **/** 切换图片显示模式\n **。** 打开外观设置\n **,** 展开/收起评论\n **X** 沉浸模式\n **C** 复制链接\n **B** 浏览器打开\n **V** 回到顶部\n\n🎨 **个性化设置：**\n 调整字体大小和行高\n 设置图片显示方式\n 自定义阅读宽度\n 更改字体和颜色",
+            "description": "在文章阅读界面，您可以享受丰富的功能：\n\n⌨️ **快捷键操作：**\n 1. **←** **→** 切换回答\n 2. **/** 切换图片显示模式\n 3. **。** 打开外观设置\n 4. **,** 展开/收起评论\n 5. **X** 沉浸模式\n 6. **C** 复制链接\n 7. **B** 浏览器打开\n 8. **V** 回到顶部\n\n🎨 **个性化设置：**\n 调整字体大小和行高\n 设置图片显示方式\n 自定义阅读宽度\n 更改字体和颜色",
             "media": {
               "image": "https://img2024.cnblogs.com/blog/3085939/202506/3085939-20250630162556571-297225034.png",
               "altText": "知乎文章第文章阅读样式设置"
@@ -299,10 +316,9 @@
           {
             "id": "support-creator",
             "title": "喜欢这个插件？支持开发者！",
-            "description": "如果您觉得**知乎摸鱼**插件对您有帮助，欢迎支持开发者继续改进和维护！\n\n💖 **支持方式：**\n 1. ⭐ 在GitHub上给项目点星\n 2. 💬 分享给您的朋友\n 3. 🐛 反馈问题和建议\n 4. ☕ 请开发者喝杯咖啡\n\n[⭐ GitHub 点颗星](command:zhihu-fisher.starOnGitHub)\n[问题反馈与建议](command:zhihu-fisher.openFeedback)\n\n感谢您的支持，这将激励我持续改进插件功能！",
+            "description": "如果您觉得**知乎摸鱼**插件对您有帮助，欢迎支持开发者继续改进和维护！\n\n[⭐ GitHub 点颗星](command:zhihu-fisher.starOnGitHub)\n[问题反馈与建议](command:zhihu-fisher.openFeedback)",
             "media": {
-              "image": "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg",
-              "altText": "支持开发者"
+              "markdown": "walkthrough/support-creator.md"
             },
             "completionEvents": [
               "onCommand:zhihu-fisher.starOnGitHub",

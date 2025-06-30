@@ -295,10 +295,12 @@ export class PuppeteerManager {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
     );
 
-    // 如果有cookie，设置到页面
+    // 如果有cookie，设置到页面，并去除BEC参数
     const cookie = CookieManager.getCookie();
     if (cookie) {
-      await PuppeteerManager.addCookiesToPage(cookie);
+      // 去除cookie中的BEC参数，避免重定向到热榜页面
+      const cleanedCookie = CookieManager.removeBECFromCookie(cookie);
+      await PuppeteerManager.addCookiesToPage(cleanedCookie);
     } else {
       console.log("没有找到Cookie，需要设置Cookie");
       throw new Error("没有找到Cookie，需要设置Cookie");

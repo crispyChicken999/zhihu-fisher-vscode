@@ -155,9 +155,15 @@ export class ToolbarComponent implements Component {
           </svg>
         </button>
 
-        <button class="button feedback-button" onclick="openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')" tooltip="问题反馈 | 提建议(许愿)&#010(点击前往GitHub反馈)&#010感谢使用(づ￣ 3￣)づ" placement="top">
+        <button class="button feedback-button" onclick="openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')" tooltip="问题反馈 | 提建议(许愿)&#010(点击前往GitHub反馈)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/>
+          </svg>
+        </button>
+
+        <button class="button donate-button" onclick="showDonateModal()" tooltip="感谢您的使用(づ￣ 3￣)づ&#010如果帮助到您，欢迎请开发者喝杯咖啡~&#010(点击赞赏)" placement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M2 21q-.425 0-.712-.288T1 20t.288-.712T2 19h20q.425 0 .713.288T23 20t-.287.712T22 21zm1.15-3l.875-10q.075-.85.713-1.425T6.2 6h11.6q.875 0 1.513.575T20.025 8l.875 10zM6.2 8l-.65 8h12.9l-.65-8zM12 5q-.425 0-.712-.288T11 4V2q0-.425.288-.712T12 1t.713.288T13 2v2q0 .425-.287.712T12 5m4.95.05q-.275-.275-.275-.687t.275-.713l1.4-1.4q.275-.275.7-.275t.7.275t.275.7t-.275.7l-1.4 1.4q-.3.3-.7.3t-.7-.3M7.05 5.05q-.3-.3-.3-.7t.3-.7l1.4-1.4q.275-.275.7-.275t.7.275t.275.7t-.275.7l-1.4 1.4q-.275.275-.687.275T7.05 5.05"/>
           </svg>
         </button>
       </div>
@@ -220,9 +226,15 @@ export class ToolbarComponent implements Component {
           </svg>
         </button>
 
-        <button class="button immersive-button feedback-button" onclick="openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')" tooltip="问题反馈 | 提建议(许愿)&#010(点击前往GitHub反馈)&#010感谢使用(づ￣ 3￣)づ" placement="left">
+        <button class="button immersive-button feedback-button" onclick="openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')" tooltip="问题反馈 | 提建议(许愿)&#010(点击前往GitHub反馈)" placement="left">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/>
+          </svg>
+        </button>
+
+        <button class="button immersive-button donate-button" onclick="showDonateModal()" tooltip="感谢您的使用(づ￣ 3￣)づ&#010如果帮助到您，欢迎请开发者喝杯咖啡~&#010(点击赞赏)" placement="left">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M2 21q-.425 0-.712-.288T1 20t.288-.712T2 19h20q.425 0 .713.288T23 20t-.287.712T22 21zm1.15-3l.875-10q.075-.85.713-1.425T6.2 6h11.6q.875 0 1.513.575T20.025 8l.875 10zM6.2 8l-.65 8h12.9l-.65-8zM12 5q-.425 0-.712-.288T11 4V2q0-.425.288-.712T12 1t.713.288T13 2v2q0 .425-.287.712T12 5m4.95.05q-.275-.275-.275-.687t.275-.713l1.4-1.4q.275-.275.7-.275t.7.275t.275.7t-.275.7l-1.4 1.4q-.3.3-.7.3t-.7-.3M7.05 5.05q-.3-.3-.3-.7t.3-.7l1.4-1.4q.275-.275.7-.275t.7.275t.275.7t-.275.7l-1.4 1.4q-.275.275-.687.275T7.05 5.05"/>
           </svg>
         </button>
 

@@ -103,6 +103,29 @@ export class CookieManager {
   }
 
   /**
+   * 去除cookie中的BEC参数
+   * @param cookie 原始cookie字符串
+   * @returns 去除BEC参数后的cookie字符串
+   */
+  static removeBECFromCookie(cookie: string): string {
+    if (!cookie) {
+      return cookie;
+    }
+
+    // 分割cookie字符串
+    const cookies = cookie.split("; ");
+    
+    // 过滤掉BEC参数
+    const filteredCookies = cookies.filter(c => {
+      const [key] = c.split("=");
+      return key.trim() !== "BEC";
+    });
+
+    // 重新组合cookie字符串
+    return filteredCookies.join("; ");
+  }
+
+  /**
    * 获取cookie中的指定字段
    * @param key cookie字段名
    * @returns cookie字段值，如果不存在则返回null
