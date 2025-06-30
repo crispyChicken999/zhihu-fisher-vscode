@@ -503,6 +503,18 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // GitHub点星命令
+  const starOnGitHubCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.starOnGitHub",
+    async () => {
+      const repoUrl = "https://github.com/crispyChicken999/zhihu-fisher-vscode";
+      vscode.env.openExternal(vscode.Uri.parse(repoUrl));
+      vscode.window.showInformationMessage(
+        "感谢您的支持！已打开GitHub仓库页面，点击 ⭐️ 即可~"
+      );
+    }
+  );
+
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("zhihu-fisher")) {
@@ -537,6 +549,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(configureBrowserCommand);
   context.subscriptions.push(setCustomChromePathCommand);
   context.subscriptions.push(openFeedbackCommand);
+  context.subscriptions.push(starOnGitHubCommand);
 }
 
 // 清理资源或执行其他必要的操作

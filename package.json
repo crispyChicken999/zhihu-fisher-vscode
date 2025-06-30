@@ -88,6 +88,11 @@
         "command": "zhihu-fisher.openFeedback",
         "title": "问题反馈与建议",
         "icon": "$(feedback)"
+      },
+      {
+        "command": "zhihu-fisher.starOnGitHub",
+        "title": "GitHub上给项目点星",
+        "icon": "$(star-full)"
       }
     ],
     "viewsContainers": {
@@ -181,6 +186,10 @@
         {
           "command": "zhihu-fisher.openFeedback",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+        },
+        {
+          "command": "zhihu-fisher.starOnGitHub",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
         }
       ],
       "zhihu-fisher.mediaDisplayMenu": [
@@ -210,6 +219,99 @@
         }
       ]
     },
+    "walkthroughs": [
+      {
+        "id": "zhihu-fisher-getting-started",
+        "title": "知乎摸鱼新手指南",
+        "description": "了解如何使用知乎摸鱼插件的各项功能",
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "欢迎使用知乎摸鱼！",
+            "description": "**知乎摸鱼**是一个强大的VSCode扩展，让您可以直接在编辑器中浏览知乎内容。\n\n🌟 点击侧边栏的**📖**开始探索！",
+            "media": {
+              "image": "https://img2024.cnblogs.com/blog/3085939/202506/3085939-20250630164232099-1185603315.png",
+              "altText": "知乎摸鱼插件图标"
+            }
+          },
+          {
+            "id": "setup-browser",
+            "title": "第一步：配置浏览器",
+            "description": "为了获得最佳体验，我们需要先配置浏览器引擎。插件会自动下载Chrome浏览器，但您也可以使用自己的浏览器。\n\n**自动配置（推荐）：**\n[配置浏览器](command:zhihu-fisher.configureBrowser)\n\n**手动配置：**\n[设置自定义浏览器路径](command:zhihu-fisher.setCustomChromePath)\n\n",
+            "media": {
+              "image": "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png",
+              "altText": "配置浏览器"
+            },
+            "completionEvents": [
+              "onCommand:zhihu-fisher.configureBrowser",
+              "onCommand:zhihu-fisher.setCustomChromePath"
+            ]
+          },
+          {
+            "id": "setup-cookie",
+            "title": "第二步：设置知乎Cookie",
+            "description": "设置知乎Cookie可以访问更多内容，包括需要登录才能查看的文章和完整的评论。\n\n**如何获取Cookie：**\n1. 在浏览器中登录知乎\n2. 按F12打开开发者工具\n3. 在Network标签页找到知乎请求\n4. 复制Cookie值\n\n[设置知乎Cookie](command:zhihu-fisher.setCookie)",
+            "media": {
+              "image": "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp",
+              "altText": "设置知乎Cookie"
+            },
+            "completionEvents": [
+              "onCommand:zhihu-fisher.setCookie"
+            ]
+          },
+          {
+            "id": "explore-content",
+            "title": "第三步：开始探索内容",
+            "description": "现在您可以开始浏览知乎内容了！点击侧边栏的**书本图标**，您会看到三个视图：\n\n📊 **热榜** - 查看知乎热门内容\n⭐ **推荐** - 浏览个性化推荐\n🔍 **搜索** - 搜索感兴趣的话题\n\n点击任意内容即可在内置阅读器中查看完整文章。\n\n[刷新热榜](command:zhihu-fisher.refreshHotList) | [刷新推荐](command:zhihu-fisher.refreshRecommendList) | [搜索内容](command:zhihu-fisher.searchContent)",
+            "media": {
+              "image": "https://img2024.cnblogs.com/blog/3085939/202506/3085939-20250630162418486-1876686362.png",
+              "altText": "浏览知乎内容"
+            },
+            "completionEvents": [
+              "onCommand:zhihu-fisher.refreshHotList",
+              "onCommand:zhihu-fisher.refreshRecommendList",
+              "onCommand:zhihu-fisher.searchContent"
+            ]
+          },
+          {
+            "id": "reading-features",
+            "title": "第四步：文章阅读样式设置",
+            "description": "在文章阅读界面，您可以享受丰富的功能：\n\n⌨️ **快捷键操作：**\n **←** **→** 切换回答\n **/** 切换图片显示模式\n **。** 打开外观设置\n **,** 展开/收起评论\n **X** 沉浸模式\n **C** 复制链接\n **B** 浏览器打开\n **V** 回到顶部\n\n🎨 **个性化设置：**\n 调整字体大小和行高\n 设置图片显示方式\n 自定义阅读宽度\n 更改字体和颜色",
+            "media": {
+              "image": "https://img2024.cnblogs.com/blog/3085939/202506/3085939-20250630162556571-297225034.png",
+              "altText": "知乎文章第文章阅读样式设置"
+            }
+          },
+          {
+            "id": "media-settings",
+            "title": "第五步：自定义媒体显示",
+            "description": "知乎摸鱼提供三种图片视频显示模式，适应不同的使用场景：\n\n👁️ **正常模式** - 完整显示所有媒体内容\n[设置正常模式](command:zhihu-fisher.setMediaModeNormal)\n\n📱 **迷你模式** - 缩小显示，可自定义缩放比例（1-100%）\n[设置迷你模式](command:zhihu-fisher.setMediaModeMini)\n\n🙈 **隐藏模式** - 隐藏所有图片视频，专注文字\n[设置隐藏模式](command:zhihu-fisher.setMediaModeNone)\n\n💡 **提示：** 在文章中按 `/` 键可以快速切换显示模式！",
+            "media": {
+              "image": "https://img2024.cnblogs.com/blog/3085939/202506/3085939-20250630164550125-1913949956.png",
+              "altText": "知乎文章媒体显示设置"
+            },
+            "completionEvents": [
+              "onCommand:zhihu-fisher.setMediaModeNormal",
+              "onCommand:zhihu-fisher.setMediaModeMini",
+              "onCommand:zhihu-fisher.setMediaModeNone"
+            ]
+          },
+          {
+            "id": "support-creator",
+            "title": "喜欢这个插件？支持开发者！",
+            "description": "如果您觉得**知乎摸鱼**插件对您有帮助，欢迎支持开发者继续改进和维护！\n\n💖 **支持方式：**\n 1. ⭐ 在GitHub上给项目点星\n 2. 💬 分享给您的朋友\n 3. 🐛 反馈问题和建议\n 4. ☕ 请开发者喝杯咖啡\n\n[⭐ GitHub 点颗星](command:zhihu-fisher.starOnGitHub)\n[问题反馈与建议](command:zhihu-fisher.openFeedback)\n\n感谢您的支持，这将激励我持续改进插件功能！",
+            "media": {
+              "image": "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg",
+              "altText": "支持开发者"
+            },
+            "completionEvents": [
+              "onCommand:zhihu-fisher.starOnGitHub",
+              "onCommand:zhihu-fisher.openFeedback"
+            ]
+          }
+        ]
+      }
+    ],
     "configuration": {
       "title": "知乎摸鱼",
       "properties": {
