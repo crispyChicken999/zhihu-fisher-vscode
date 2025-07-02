@@ -129,7 +129,7 @@ export class WebviewManager {
         100
       );
       const shortTitle = this.getShortTitle(webviewItem.article.title);
-      statusBarItem.text = `$(sync~spin) 加载文章: ${shortTitle}`;
+      statusBarItem.text = `$(sync~spin) 加载问题: ${shortTitle}`;
       statusBarItem.show();
 
       // 保存状态栏项目的引用

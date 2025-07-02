@@ -55,7 +55,7 @@ export class HtmlRenderer {
    */
   public static getLoadingHtml(title: string, excerpt: string, imgUrl?: string): string {
     const excerptText =
-      excerpt || "没找到问题摘要(っ °Д °;)っ";
+      excerpt || "没找到摘要🤔";
 
     // 获取媒体显示模式配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
