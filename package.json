@@ -51,12 +51,12 @@
       },
       {
         "command": "zhihu-fisher.setCookie",
-        "title": "设置知乎Cookie",
+        "title": "设置Cookie",
         "icon": "$(key)"
       },
       {
         "command": "zhihu-fisher.clearCookie",
-        "title": "清除知乎Cookie",
+        "title": "清除Cookie",
         "icon": "$(trash)"
       },
       {
@@ -66,12 +66,12 @@
       },
       {
         "command": "zhihu-fisher.setMediaModeMini",
-        "title": "迷你模式（可指定缩放比例）",
+        "title": "小图模式（设置中可指定缩放比例）",
         "icon": "$(screen-normal)"
       },
       {
         "command": "zhihu-fisher.setMediaModeNone",
-        "title": "不显示图片视频",
+        "title": "全部隐藏",
         "icon": "$(eye-closed)"
       },
       {
@@ -91,8 +91,13 @@
       },
       {
         "command": "zhihu-fisher.starOnGitHub",
-        "title": "GitHub上给项目点星",
+        "title": "觉得不错？GitHub上点颗星吧~",
         "icon": "$(star-full)"
+      },
+      {
+        "command": "zhihu-fisher.buyMeCoffee",
+        "title": "请开发者喝杯咖啡",
+        "icon": "$(heart)"
       },
       {
         "command": "zhihu-fisher.showAbout",
@@ -103,6 +108,16 @@
         "command": "zhihu-fisher.showGuide",
         "title": "使用说明",
         "icon": "$(book)"
+      },
+      {
+        "command": "zhihu-fisher.restartExtension",
+        "title": "重新启动扩展",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.showTroubleshootingGuide",
+        "title": "故障排除指引",
+        "icon": "$(tools)"
       }
     ],
     "viewsContainers": {
@@ -161,67 +176,86 @@
         {
           "command": "zhihu-fisher.refreshHotList",
           "when": "view == zhihuHotList",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "zhihu-fisher.refreshRecommendList",
           "when": "view == zhihuRecommendList",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "zhihu-fisher.searchContent",
           "when": "view == zhihuSearchList",
-          "group": "navigation"
-        },
-        {
-          "command": "zhihu-fisher.setCookie",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
-        },
-        {
-          "command": "zhihu-fisher.clearCookie",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+          "group": "navigation@1"
         },
         {
           "submenu": "zhihu-fisher.mediaDisplayMenu",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "bmode@1"
         },
         {
           "command": "zhihu-fisher.configureBrowser",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "config@1"
         },
         {
-          "command": "zhihu-fisher.setCustomChromePath",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+          "command": "zhihu-fisher.setCookie",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "config@2"
+        },
+        {
+          "command": "zhihu-fisher.clearCookie",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "config@3"
+        },
+        {
+          "command": "zhihu-fisher.restartExtension",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "troubleshoot@1"
+        },
+        {
+          "command": "zhihu-fisher.showTroubleshootingGuide",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "troubleshoot@2"
         },
         {
           "command": "zhihu-fisher.openFeedback",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "ysupport@1"
+        },
+        {
+          "command": "zhihu-fisher.buyMeCoffee",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "ysupport@2"
         },
         {
           "command": "zhihu-fisher.starOnGitHub",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
-        },
-        {
-          "command": "zhihu-fisher.showAbout",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "ysupport@3"
         },
         {
           "command": "zhihu-fisher.showGuide",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList"
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "zhelp@1"
+        },
+        {
+          "command": "zhihu-fisher.showAbout",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "group": "zhelp@2"
         }
       ],
       "zhihu-fisher.mediaDisplayMenu": [
         {
           "command": "zhihu-fisher.setMediaModeNormal",
-          "group": "1_media"
+          "group": "1_media@1"
         },
         {
           "command": "zhihu-fisher.setMediaModeMini",
-          "group": "1_media"
+          "group": "1_media@2"
         },
         {
           "command": "zhihu-fisher.setMediaModeNone",
-          "group": "1_media"
+          "group": "1_media@3"
         }
       ],
       "view/item/context": [

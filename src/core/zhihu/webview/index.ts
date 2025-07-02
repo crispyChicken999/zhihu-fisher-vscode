@@ -975,6 +975,26 @@ export class WebviewManager {
           }
           break;
 
+        case "restartExtension":
+          // 处理重启扩展的请求
+          await vscode.commands.executeCommand("zhihu-fisher.restartExtension");
+          break;
+
+        case "configureBrowser":
+          // 处理配置浏览器的请求
+          await vscode.commands.executeCommand("zhihu-fisher.configureBrowser");
+          break;
+
+        case "showTroubleshootingGuide":
+          // 处理故障排除指引的请求
+          await vscode.commands.executeCommand("zhihu-fisher.showTroubleshootingGuide");
+          break;
+
+        case "restartVSCode":
+          // 处理重启VSCode的请求
+          await vscode.commands.executeCommand("workbench.action.reloadWindow");
+          break;
+
         case "openInBrowser":
           const webviewItemForBrowser = Store.webviewMap.get(webviewId);
           if (!webviewItemForBrowser) {
@@ -1116,5 +1136,17 @@ export class WebviewManager {
   /** 设置面板关闭回调 */
   public static setOnDidDisposeCallback(callback: (id: string) => void): void {
     WebviewManager.onDidDisposeCallback = callback;
+  }
+
+  /** 关闭全部webview */
+  public static async closeAllWebviews(): Promise<void> {
+    for (const webviewId of Store.webviewMap.keys()) {
+      const webviewItem = Store.webviewMap.get(webviewId);
+      if (webviewItem) {
+        webviewItem.webviewPanel.dispose(); // 关闭WebView面板
+        await PuppeteerManager.closePage(webviewId); // 关闭对应的浏览器页面
+      }
+    }
+    Store.webviewMap.clear(); // 清空所有WebView项
   }
 }

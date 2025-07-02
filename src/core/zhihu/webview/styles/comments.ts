@@ -93,6 +93,10 @@ export const commentsCss = `
   background-color: var(--vscode-editor-background);
 }
 
+.zhihu-comment:last-child {
+  margin-bottom: 10px;
+}
+
 .zhihu-comment:hover {
   background-color: var(--vscode-list-hoverBackground);
 }
@@ -196,7 +200,7 @@ export const commentsCss = `
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: var(--vscode-descriptionForeground);
+  opacity: 0.8;
 }
 
 .zhihu-comment-like {
@@ -258,7 +262,6 @@ export const commentsCss = `
 
 .zhihu-child-comment-footer {
   font-size: 12px;
-  color: var(--vscode-descriptionForeground);
   opacity: 0.8;
 }
 

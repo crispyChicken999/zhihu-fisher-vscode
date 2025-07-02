@@ -289,7 +289,7 @@ export class TreeItem extends vscode.TreeItem {
       // 根据显示模式和缩放比例计算图片宽度
       let imageWidth: number;
       if (mediaDisplayMode === "normal") {
-        imageWidth = 300; // 正常模式最大宽度300px
+        imageWidth = 220; // 正常模式最大宽度220px
       } else if (mediaDisplayMode === "mini") {
         // 迷你模式：获取用户设置的缩放比例，最大宽度200px
         const miniMediaScale = config.get<number>("miniMediaScale", 50);
@@ -299,7 +299,7 @@ export class TreeItem extends vscode.TreeItem {
         // none模式下不会走到这里，因为shouldShowImage已经为false
         imageWidth = 150;
       }
-      
+
       markdownTooltip.appendMarkdown(
         `<img src="${listItem.imgUrl}" alt="预览图" width="${imageWidth}" />\n`
       );

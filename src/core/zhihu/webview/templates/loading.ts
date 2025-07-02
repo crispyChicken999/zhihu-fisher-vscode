@@ -87,16 +87,24 @@ export const loadingTemplate = `
       padding: 8px 16px;
       border-radius: 2px;
       cursor: pointer;
-      margin: 20px 0;
+      margin: 5px;
       font-size: 14px;
       font-weight: 500;
       transition: all 0.2s ease;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: inline-block;
     }
     .button:hover {
       background-color: var(--vscode-button-hoverBackground);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .button.secondary {
+      background-color: var(--vscode-button-secondaryBackground);
+      color: var(--vscode-button-secondaryForeground);
+    }
+    .button.secondary:hover {
+      background-color: var(--vscode-button-secondaryHoverBackground);
     }
     .cookie-warning {
       display: none;
@@ -119,7 +127,7 @@ export const loadingTemplate = `
       align-items: center;
     }
     .image-container img {
-      max-width: 80%;
+      max-width: 300px;
       height: auto;
       border-radius: 5px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -150,6 +158,173 @@ export const loadingTemplate = `
       max-width:600px;
       margin: 10px auto;
     }
+
+    /* 弹窗样式 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-content {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: var(--vscode-editor-background);
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 6px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 800px;
+      width: 90vw;
+      overflow: hidden;
+      z-index: 1001;
+    }
+
+    .modal-header {
+      padding: 10px 20px 10px;
+      border-bottom: 1px solid var(--vscode-panel-border);
+      background-color: var(--vscode-editor-background);
+      z-index: 1002;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--vscode-foreground);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--vscode-descriptionForeground);
+      border-radius: 3px;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background-color: var(--vscode-toolbar-hoverBackground);
+      color: var(--vscode-foreground);
+    }
+
+    .modal-body {
+      padding: 6px 16px;
+      overflow-y: auto;
+      max-height: calc(90vh - 160px);
+      line-height: 1.6;
+    }
+
+    .modal-body h4 {
+      margin: 16px 0 8px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--vscode-foreground);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-body p {
+      margin: 8px 0;
+      color: var(--vscode-descriptionForeground);
+      font-size: 14px;
+    }
+
+    .modal-body .solution-item {
+      margin: 12px 0;
+      padding: 12px;
+      background-color: var(--vscode-textBlockQuote-background);
+      border-left: 3px solid var(--vscode-textBlockQuote-border);
+      border-radius: 4px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .modal-body .solution-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      filter: brightness(1.25);
+      border-radius: 8px;
+    }
+
+    .modal-body .solution-title {
+      font-weight: 600;
+      color: var(--vscode-foreground);
+      margin-bottom: 4px;
+    }
+
+    .modal-body .solution-desc {
+      color: var(--vscode-descriptionForeground);
+      font-size: 13px;
+      margin: 2px 0;
+    }
+
+    .modal-footer {
+      padding: 10px;
+      border-top: 1px solid var(--vscode-panel-border);
+      background-color: var(--vscode-editor-background);
+      text-align: center;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .modal-footer .button {
+      min-width: 70px;
+      padding: 6px 10px;
+      font-size: 13px;
+      margin: 0;
+      flex: 0 1 auto;
+    }
+
+    .modal-footer .button.primary {
+      background-color: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+    }
+
+    .modal-footer .button.primary:hover {
+      background-color: var(--vscode-button-hoverBackground);
+    }
+
+    .recommendation-steps {
+      background-color: var(--vscode-textCodeBlock-background);
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 4px;
+      padding: 16px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+
+    .recommendation-steps h4 {
+      margin-top: 0;
+      color: var(--vscode-foreground);
+    }
+
+    .recommendation-steps ol {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .recommendation-steps li {
+      margin: 6px 0;
+      text-align: left;
+      color: var(--vscode-descriptionForeground);
+    }
   </style>
 </head>
 <body>
@@ -167,10 +342,65 @@ export const loadingTemplate = `
     <p class="excerpt" >\${EXCERPT}</p>
     <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
 
-    <div id="cookieWarning" class="cookie-warning">
-      <p><strong>提示：</strong>内容加载时间过长，可能是知乎Cookie已失效。</p>
-      <p>请尝试更新您的Cookie信息后重新打开页面。</p>
-      <button class="button" onclick="updateCookie()">更新Cookie</button>
+    <!-- 故障排除弹窗 -->
+    <div id="troubleshootingModal" class="modal-overlay" onclick="closeTroubleshootingModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">🤔 看起来好像卡住了，可能是以下问题</h3>
+          <button class="modal-close" onclick="closeTroubleshootingModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="solution-item">
+            <div class="solution-title">1. Cookie失效</div>
+            <div class="solution-desc">原因：知乎Cookie过期或失效，被重定向到登录页，无法抓取数据</div>
+            <div class="solution-desc">解决：点击【更新Cookie】重新设置知乎登录信息</div>
+          </div>
+
+          <div class="solution-item">
+            <div class="solution-title">2. 网络连接问题</div>
+            <div class="solution-desc">原因：网络不稳定或速度过慢，导致加载失败</div>
+            <div class="solution-desc">解决：检查网络连接，稍后重试，或切换网络环境</div>
+          </div>
+
+          <div class="solution-item">
+            <div class="solution-title">3. 扩展状态异常</div>
+            <div class="solution-desc">原因：设置了新Cookie仍不行，可能状态没更新</div>
+            <div class="solution-desc">解决：点击【重启扩展】重新加载扩展功能。如果还不行，可以重启VSCode试试</div>
+          </div>
+
+          <div class="solution-item">
+            <div class="solution-title">4. 浏览器引擎问题</div>
+            <div class="solution-desc">原因：爬虫浏览器未正确安装或配置</div>
+            <div class="solution-desc">解决：点击【配置浏览器】重新安装或设置浏览器</div>
+          </div>
+
+          <div class="solution-item">
+            <div class="solution-title">5. 知乎服务器问题</div>
+            <div class="solution-desc">原因：知乎服务器响应慢或临时不可用</div>
+            <div class="solution-desc">解决：稍后重试，或直接在浏览器中打开链接。也可以关闭这个弹窗继续等待...</div>
+          </div>
+
+          <div class="recommendation-steps">
+            <h4>💡 推荐操作顺序：</h4>
+            <ol>
+              <li>首先尝试【更新Cookie】</li>
+              <li>如果还是不行，检查【配置浏览器】</li>
+              <li>如果问题依然存在，点击【重启扩展】</li>
+              <li>还不行？点击【重启VSCode】</li>
+              <li>最后可以尝试【在浏览器中打开】</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="button primary" onclick="updateCookie()">🔑 更新Cookie</button>
+          <button class="button primary" onclick="configureBrowser()">🎯 配置浏览器</button>
+          <button class="button primary" onclick="restartExtension()">🔄 重启扩展</button>
+          <button class="button primary" onclick="restartVSCode()">🔄 重启VSCode</button>
+          <button class="button primary" onclick="openInBrowser()">🌐 浏览器打开</button>
+        </div>
+      </div>
     </div>
   </div>
   <script>
@@ -248,10 +478,10 @@ export const loadingTemplate = `
     // 通知扩展加载内容
     vscode.postMessage({ command: 'requestContent' });
 
-    // 10秒后显示Cookie提示
+    // 15秒后显示故障排除弹窗
     setTimeout(() => {
-      document.getElementById('cookieWarning').style.display = 'block';
-    }, 10000);
+      showTroubleshootingModal();
+    }, 15000);
 
     function openInBrowser() {
       vscode.postMessage({ command: 'openInBrowser' });
@@ -260,6 +490,56 @@ export const loadingTemplate = `
     function updateCookie() {
       vscode.postMessage({ command: 'updateCookie' });
     }
+
+    function restartExtension() {
+      vscode.postMessage({ command: 'restartExtension' });
+    }
+
+    function configureBrowser() {
+      vscode.postMessage({ command: 'configureBrowser' });
+    }
+
+    function restartVSCode() {
+      vscode.postMessage({ command: 'restartVSCode' });
+    }
+
+    // 显示故障排除弹窗
+    function showTroubleshootingModal() {
+      const modal = document.getElementById('troubleshootingModal');
+      if (modal) {
+        modal.style.display = 'block';
+        // 防止背景滚动
+        document.body.style.overflow = 'hidden';
+        // 聚焦到弹窗，方便键盘操作
+        modal.focus();
+      }
+    }
+
+    // 关闭故障排除弹窗
+    function closeTroubleshootingModal(event) {
+      // 如果传入了事件对象，检查是否点击的是遮罩层
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+
+      const modal = document.getElementById('troubleshootingModal');
+      if (modal) {
+        modal.style.display = 'none';
+        // 恢复背景滚动
+        document.body.style.overflow = 'auto';
+      }
+    }
+
+    // 键盘事件处理
+    document.addEventListener('keydown', function(event) {
+      const modal = document.getElementById('troubleshootingModal');
+      if (modal && modal.style.display === 'block') {
+        // ESC键关闭弹窗
+        if (event.key === 'Escape') {
+          closeTroubleshootingModal();
+        }
+      }
+    });
   </script>
 </body>
 </html>

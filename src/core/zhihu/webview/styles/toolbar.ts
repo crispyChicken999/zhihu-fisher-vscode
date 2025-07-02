@@ -53,7 +53,7 @@ export const toolbarCss = `
   align-items: center;
   gap: 10px;
   height: 95vh;
-  max-height: 450px;
+  max-height: 500px;
   flex-wrap: wrap-reverse;
 }
 
@@ -157,10 +157,6 @@ body.immersive-mode .comments-container {
   margin: 0 auto;
 }
 
-/* 工具栏位置调整，沉浸模式下，固定工具栏位置向左移动一点，避免遮挡正文 */
-body.immersive-mode .fixed-toolbar {
-  right: 15px;
-}
 
 /* 工具栏按钮悬停效果 */
 /* tooltip样式 */

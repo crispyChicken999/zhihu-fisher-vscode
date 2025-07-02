@@ -936,7 +936,7 @@ function showDonateModal() {
     <div class="donate-modal-overlay" onclick="closeDonateModal()"></div>
     <div class="donate-modal-content">
       <div class="donate-modal-header">
-        <h3>请开发者喝杯咖啡</h3>
+        <h3>☕ 请开发者喝杯咖啡~ ☕</h3>
         <button class="donate-modal-close" onclick="closeDonateModal()">&times;</button>
       </div>
       <div class="donate-modal-body">
@@ -944,13 +944,14 @@ function showDonateModal() {
         <div class="donate-qr-container">
           <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg" alt="微信赞赏码" class="donate-qr-code">
           <p class="donate-tip">微信扫码打开</p>
+          <p>💖 感谢支持！💖</p>
         </div>
       </div>
     </div>
   \`;
-  
+
   document.body.appendChild(modal);
-  
+
   // 添加样式
   if (!document.querySelector('#donate-modal-style')) {
     const style = document.createElement('style');
@@ -967,7 +968,7 @@ function showDonateModal() {
         align-items: center;
         justify-content: center;
       }
-      
+
       .donate-modal-overlay {
         position: absolute;
         top: 0;
@@ -977,7 +978,7 @@ function showDonateModal() {
         background: rgba(0, 0, 0, 0.5);
         cursor: pointer;
       }
-      
+
       .donate-modal-content {
         position: relative;
         background: var(--vscode-editor-background);
@@ -989,21 +990,21 @@ function showDonateModal() {
         overflow: auto;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       }
-      
+
       .donate-modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 16px 20px;
+        padding: 12px 16px;
         border-bottom: 1px solid var(--vscode-panel-border);
       }
-      
+
       .donate-modal-header h3 {
         margin: 0;
         color: var(--vscode-foreground);
         font-size: 18px;
       }
-      
+
       .donate-modal-close {
         background: none;
         border: none;
@@ -1019,36 +1020,36 @@ function showDonateModal() {
         border-radius: 4px;
         transition: background-color 0.2s;
       }
-      
+
       .donate-modal-close:hover {
         background: var(--vscode-toolbar-hoverBackground);
       }
-      
+
       .donate-modal-body {
-        padding: 20px;
+        padding-top: 20px;
         text-align: center;
       }
-      
+
       .donate-modal-body p {
         color: var(--vscode-foreground);
-        margin: 0 0 20px 0;
+        margin: 0 0 10px 0;
         line-height: 1.5;
       }
-      
+
       .donate-qr-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 12px;
       }
-      
+
       .donate-qr-code {
         width: 200px;
         height: 200px;
         border-radius: 8px;
         border: 1px solid var(--vscode-panel-border);
       }
-      
+
       .donate-tip {
         color: var(--vscode-descriptionForeground);
         font-size: 14px;

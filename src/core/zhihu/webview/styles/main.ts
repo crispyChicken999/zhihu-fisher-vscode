@@ -14,6 +14,10 @@ body {
   background-color: var(--vscode-editor-background);
 }
 
+body.immersive-mode {
+  padding: 0 50px 0 20px;
+}
+
 /* FancyBox 自定义样式 */
 .fancybox__container {
   --fancybox-bg: var(--vscode-editor-background);
@@ -134,12 +138,5 @@ table tr {
 
 table tr:nth-child(2n) {
   background-color: var(--vscode-textCodeBlock-background);
-}
-
-/* 自适应调整 */
-@media (max-width: 600px) {
-  body {
-    padding: 0 10px;
-  }
 }
 `;
