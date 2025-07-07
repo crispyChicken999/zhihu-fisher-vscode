@@ -31,6 +31,16 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "zhihu-fisher.dislikeRecommendItem",
+        "title": "不喜欢该内容(减少推荐)",
+        "icon": "$(thumbsdown)"
+      },
+      {
+        "command": "zhihu-fisher.dislikeAuthor",
+        "title": "不再推荐该作者(屏蔽作者)",
+        "icon": "$(account)"
+      },
+      {
         "command": "zhihu-fisher.searchContent",
         "title": "搜索知乎内容",
         "icon": "$(search)"
@@ -267,6 +277,16 @@
         {
           "command": "zhihu-fisher.showFullImage",
           "when": "view =~ /^zhihu(Hot|Recommend|Search)List$/ && viewItem == TreeItemWithImage",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.dislikeRecommendItem",
+          "when": "view == zhihuRecommendList && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.dislikeAuthor",
+          "when": "view == zhihuRecommendList && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
           "group": "inline"
         }
       ]

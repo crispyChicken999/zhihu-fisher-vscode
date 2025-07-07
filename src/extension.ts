@@ -55,6 +55,18 @@ export function activate(context: vscode.ExtensionContext) {
     () => sidebarRecommend.refresh()
   );
 
+  // 注册不喜欢推荐内容命令
+  const dislikeRecommendItemCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.dislikeRecommendItem",
+    (item: any) => {
+      if (item && item.listItem) {
+        sidebarRecommend.dislikeContent(item.listItem);
+      } else {
+        vscode.window.showErrorMessage("无法获取内容信息");
+      }
+    }
+  );
+
   // 注册重置搜索结果
   const resetSearchListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.resetSearchList",
@@ -136,9 +148,19 @@ export function activate(context: vscode.ExtensionContext) {
   const openInBrowserCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openInBrowser",
     (item: any) => {
-      if (item && item.listItem && item.listItem.url) {
-        vscode.env.openExternal(vscode.Uri.parse(item.listItem.url));
-        // vscode.window.showInformationMessage(`已在浏览器中打开: ${item.hotListItem.title}`);
+      if (item && item.listItem) {
+        // 对于推荐列表，优先使用answerUrl（特定回答），否则使用url（问题页面）
+        const urlToOpen = item.listItem.answerUrl || item.listItem.url;
+        if (urlToOpen) {
+          vscode.env.openExternal(vscode.Uri.parse(urlToOpen));
+          // 提示用户打开的是什么类型的链接
+          const linkType = item.listItem.answerUrl && item.listItem.answerUrl !== item.listItem.url 
+            ? "特定回答" 
+            : item.listItem.type === "article" ? "文章" : "问题";
+          // vscode.window.showInformationMessage(`已在浏览器中打开${linkType}: ${item.listItem.title}`);
+        } else {
+          vscode.window.showErrorMessage("无法获取链接地址");
+        }
       } else {
         vscode.window.showErrorMessage("无法获取链接地址");
       }
@@ -667,6 +689,18 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // 注册不再推荐作者命令
+  const dislikeAuthorCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.dislikeAuthor",
+    (item: any) => {
+      if (item && item.listItem) {
+        sidebarRecommend.dislikeAuthor(item.listItem);
+      } else {
+        vscode.window.showErrorMessage("无法获取内容信息");
+      }
+    }
+  );
+
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("zhihu-fisher")) {
@@ -687,6 +721,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(searchListView);
   context.subscriptions.push(refreshHotListCommand);
   context.subscriptions.push(refreshRecommendListCommand);
+  context.subscriptions.push(dislikeRecommendItemCommand);
+  context.subscriptions.push(dislikeAuthorCommand);
   context.subscriptions.push(resetSearchListCommand);
   context.subscriptions.push(searchContentCommand);
   context.subscriptions.push(openArticleCommand);

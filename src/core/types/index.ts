@@ -62,6 +62,10 @@ export interface LinkItem {
   imgUrl?: string;
   /** 内容类型：问题或文章 */
   type?: "question" | "article";
+  /** 内容token，用于不喜欢API */
+  contentToken?: string;
+  /** 回答的完整URL，用于浏览器打开特定回答 */
+  answerUrl?: string;
 }
 
 /** 页面数据结构 */
