@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
 import { Store } from "./core/stores";
 import { LinkItem } from "./core/types";
@@ -8,8 +10,6 @@ import { aboutTemplate } from "./core/zhihu/webview/templates/about";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
-import * as fs from "fs";
-import * as path from "path";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("🐟知乎摸鱼🐟 已激活！");
@@ -25,6 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
   // 将 TreeView 引用传递给数据提供者，用于更新标题
   sidebarRecommend.setTreeView(recommendListView);
+
   // 侧边栏 热榜 列表
   const sidebarHot = new sidebarHotListDataProvider();
   const hotListView = vscode.window.createTreeView("zhihuHotList", {
@@ -154,9 +155,9 @@ export function activate(context: vscode.ExtensionContext) {
         if (urlToOpen) {
           vscode.env.openExternal(vscode.Uri.parse(urlToOpen));
           // 提示用户打开的是什么类型的链接
-          const linkType = item.listItem.answerUrl && item.listItem.answerUrl !== item.listItem.url 
-            ? "特定回答" 
-            : item.listItem.type === "article" ? "文章" : "问题";
+          // const linkType = item.listItem.answerUrl && item.listItem.answerUrl !== item.listItem.url
+          //   ? "特定回答"
+          //   : item.listItem.type === "article" ? "文章" : "问题";
           // vscode.window.showInformationMessage(`已在浏览器中打开${linkType}: ${item.listItem.title}`);
         } else {
           vscode.window.showErrorMessage("无法获取链接地址");
@@ -258,13 +259,13 @@ export function activate(context: vscode.ExtensionContext) {
           let statusText = "";
           switch (newMode) {
             case "normal":
-              statusText = "已切换到正常媒体模式";
+              statusText = "图片、视频将正常展示";
               break;
             case "mini":
-              statusText = "已切换到迷你媒体模式";
+              statusText = "已切换到小图模式";
               break;
             case "none":
-              statusText = "已切换到隐藏媒体模式";
+              statusText = "图片、视频将全部隐藏";
               break;
           }
           vscode.window.showInformationMessage(
