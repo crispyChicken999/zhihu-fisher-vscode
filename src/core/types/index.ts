@@ -285,7 +285,7 @@ export class TreeItem extends vscode.TreeItem {
     } else {
       // 根据内容类型设置不同的默认图标
       if (listItem.type === "article") {
-        this.iconPath = new vscode.ThemeIcon("file-text");
+        this.iconPath = new vscode.ThemeIcon("remote-explorer-documentation");
       } else {
         this.iconPath = new vscode.ThemeIcon("comment-discussion");
       }

@@ -837,6 +837,25 @@ function copyCode(button) {
 }
 
 /**
+ * 显示不适内容图片
+ * @param {HTMLElement} maskOverlay 遮挡层元素
+ */
+function showUncomfortableImage(maskOverlay) {
+  const container = maskOverlay.closest('.uncomfortable-image-container');
+  if (!container) return;
+  
+  const maskDiv = container.querySelector('.image-mask');
+  const realImage = container.querySelector('.real-image');
+  
+  if (maskDiv && realImage) {
+    // 隐藏遮挡层
+    maskDiv.style.display = 'none';
+    // 显示真实图片
+    realImage.style.display = 'inline-block';
+  }
+}
+
+/**
  * 下载媒体文件
  * @param {string} url 媒体文件URL
  * @param {string} type 媒体类型

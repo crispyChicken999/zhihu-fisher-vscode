@@ -99,7 +99,7 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
         // 根据内容类型设置默认图标
         switch (collectionItem.type) {
           case "article":
-            this.iconPath = new vscode.ThemeIcon("file-text");
+            this.iconPath = new vscode.ThemeIcon("remote-explorer-documentation");
             break;
           case "question":
             this.iconPath = new vscode.ThemeIcon("question");
@@ -113,7 +113,7 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
       // 根据内容类型设置图标
       switch (collectionItem.type) {
         case "article":
-          this.iconPath = new vscode.ThemeIcon("file-text");
+          this.iconPath = new vscode.ThemeIcon("remote-explorer-documentation");
           break;
         case "question":
           this.iconPath = new vscode.ThemeIcon("question");
@@ -195,9 +195,9 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
       let tooltipContent = "";
 
       if (collectionItem.question && collectionItem.type === "answer") {
-        tooltipContent += `**标题**: ${collectionItem.question.title}`;
+        tooltipContent += `**问题**: ${collectionItem.question.title}`;
       } else if (collectionItem.type === "article") {
-        tooltipContent += `**文章**: ${collectionItem.title}`;
+        tooltipContent += `**标题**: ${collectionItem.title}`;
       } else if (collectionItem.type === "question") {
         tooltipContent += `**问题**: ${collectionItem.title}`;
       }
@@ -578,6 +578,14 @@ export class sidebarCollectionsDataProvider
    */
   refresh(): void {
     this.loadCollections();
+  }
+
+  /**
+   * 仅刷新视图显示（不重新加载数据）
+   */
+  refreshView(): void {
+    console.log("刷新收藏夹视图显示...");
+    this._onDidChangeTreeData.fire();
   }
 
   /**

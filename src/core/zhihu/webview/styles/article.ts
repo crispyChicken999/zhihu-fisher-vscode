@@ -133,4 +133,57 @@ export const articleCss = `
 h1, h2, h3, h4, h5, h6 {
   color: inherit;
 }
+
+/* 不适内容图片样式 */
+.uncomfortable-image-container {
+  margin: 15px 0;
+  text-align: center;
+}
+
+.image-mask {
+  position: relative;
+  display: inline-block;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mask-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
+}
+
+.mask-overlay:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
+  transform: scale(1.02);
+}
+
+.mask-overlay svg {
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.real-image {
+  border-radius: 8px;
+  transition: opacity 0.3s ease;
+  max-width: 100%;
+  height: auto;
+}
+
+.real-image:hover {
+  transform: scale(1.02);
+  transition: transform 0.3s ease;
+}
 `;

@@ -955,6 +955,7 @@ export function activate(context: vscode.ExtensionContext) {
         sidebarHot.refreshView();
         sidebarRecommend.refreshView();
         sidebarSearch.refreshView();
+        sidebarCollections.refreshView();
       }
     }
   });
