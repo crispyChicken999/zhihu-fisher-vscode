@@ -26,6 +26,16 @@ export const Store: ContentStore = {
       myCollections: [],
       followingCollections: [],
       userInfo: null,
+      myCollectionsPagination: {
+        currentPage: 1,
+        hasMore: true,
+        isLoading: false,
+      },
+      followingCollectionsPagination: {
+        currentPage: 1,
+        hasMore: true,
+        isLoading: false,
+      },
     },
     cookie: "",
   },

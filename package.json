@@ -162,6 +162,26 @@
         "command": "zhihu-fisher.showTroubleshootingGuide",
         "title": "故障排除指引",
         "icon": "$(tools)"
+      },
+      {
+        "command": "zhihu-fisher.refreshMyCollections",
+        "title": "刷新我创建的收藏夹",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.refreshFollowingCollections",
+        "title": "刷新我关注的收藏夹",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.loadMoreMyCollections",
+        "title": "加载更多我创建的收藏夹",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "zhihu-fisher.loadMoreFollowingCollections",
+        "title": "加载更多我关注的收藏夹",
+        "icon": "$(arrow-down)"
       }
     ],
     "viewsContainers": {
@@ -356,6 +376,16 @@
         {
           "command": "zhihu-fisher.showCollectionItemImage",
           "when": "view == zhihuCollectionsList && viewItem == collectionItemWithImage",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.refreshMyCollections",
+          "when": "view == zhihuCollectionsList && viewItem == myCollectionsRoot",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.refreshFollowingCollections",
+          "when": "view == zhihuCollectionsList && viewItem == followingCollectionsRoot",
           "group": "inline"
         }
       ]

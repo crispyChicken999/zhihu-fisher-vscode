@@ -51,6 +51,18 @@ export interface ContentStore {
       followingCollections: CollectionFolder[];
       /** 当前用户信息 */
       userInfo: ZhihuUser | null;
+      /** 我创建的收藏夹分页信息 */
+      myCollectionsPagination: {
+        currentPage: number;
+        hasMore: boolean;
+        isLoading: boolean;
+      };
+      /** 我关注的收藏夹分页信息 */
+      followingCollectionsPagination: {
+        currentPage: number;
+        hasMore: boolean;
+        isLoading: boolean;
+      };
     };
 
     /** 知乎的Cookie */
@@ -125,6 +137,8 @@ export interface ArticleInfo {
   currentAnswerIndex: number;
   /** 是否正在加载新的回答 */
   isLoading: boolean;
+  /** 预设的特定回答URL（用于收藏的回答） */
+  presetAnswerUrl?: string;
 }
 
 /** 回答数据结构 */

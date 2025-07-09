@@ -2,12 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { Store } from "./core/stores";
-import { LinkItem, CollectionItem } from "./core/types";
 import { ZhihuService } from "./core/zhihu/index";
 import { WebviewManager } from "./core/zhihu/webview";
 import { PuppeteerManager } from "./core/zhihu/puppeteer";
 import { aboutTemplate } from "./core/zhihu/webview/templates/about";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
+import { LinkItem, CollectionItem, CollectionFolder } from "./core/types";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
 import { sidebarCollectionsDataProvider } from "./core/zhihu/sidebar/collections";
@@ -47,10 +47,13 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 侧边栏 收藏 列表
   const sidebarCollections = new sidebarCollectionsDataProvider();
-  const collectionsListView = vscode.window.createTreeView("zhihuCollectionsList", {
-    treeDataProvider: sidebarCollections,
-    showCollapseAll: false,
-  });
+  const collectionsListView = vscode.window.createTreeView(
+    "zhihuCollectionsList",
+    {
+      treeDataProvider: sidebarCollections,
+      showCollapseAll: false,
+    }
+  );
   // 将 TreeView 引用传递给数据提供者，用于更新标题
   sidebarCollections.setTreeView(collectionsListView);
 
@@ -90,10 +93,44 @@ export function activate(context: vscode.ExtensionContext) {
     () => sidebarCollections.refresh()
   );
 
+  // 注册刷新我创建的收藏夹命令
+  const refreshMyCollectionsCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.refreshMyCollections",
+    async () => {
+      await sidebarCollections.refreshMyCollections();
+    }
+  );
+
+  // 注册刷新我关注的收藏夹命令
+  const refreshFollowingCollectionsCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.refreshFollowingCollections",
+    async () => {
+      await sidebarCollections.refreshFollowingCollections();
+    }
+  );
+
   // 注册加载更多收藏项命令
   const loadMoreCollectionItemsCommand = vscode.commands.registerCommand(
     "zhihu-fisher.loadMoreCollectionItems",
-    (collection: any) => sidebarCollections.loadMoreCollectionItems(collection)
+    async (collection: CollectionFolder) => {
+      await sidebarCollections.loadMoreCollectionItems(collection);
+    }
+  );
+
+  // 注册加载更多我创建的收藏夹命令
+  const loadMoreMyCollectionsCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.loadMoreMyCollections",
+    async () => {
+      await sidebarCollections.loadMoreMyCollections();
+    }
+  );
+
+  // 注册加载更多我关注的收藏夹命令
+  const loadMoreFollowingCollectionsCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.loadMoreFollowingCollections",
+    async () => {
+      await sidebarCollections.loadMoreFollowingCollections();
+    }
   );
 
   // 注册打开收藏项命令
@@ -106,40 +143,56 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       // 根据收藏项类型处理
-      if (collectionItem.type === 'article') {
+      if (collectionItem.type === "article") {
         // 文章直接打开
         const linkItem: LinkItem = {
           id: collectionItem.id,
           url: collectionItem.url,
           title: collectionItem.title,
           excerpt: collectionItem.excerpt,
-          type: 'article',
-          imgUrl: collectionItem.thumbnail
+          type: "article",
+          imgUrl: collectionItem.thumbnail,
         };
-        await vscode.commands.executeCommand("zhihu-fisher.openArticle", linkItem);
-      } else if (collectionItem.type === 'question') {
+        await vscode.commands.executeCommand(
+          "zhihu-fisher.openArticle",
+          linkItem
+        );
+      } else if (collectionItem.type === "question") {
         // 问题直接打开
         const linkItem: LinkItem = {
           id: collectionItem.id,
           url: collectionItem.url,
           title: collectionItem.title,
           excerpt: collectionItem.excerpt,
-          type: 'question',
-          imgUrl: collectionItem.thumbnail
-        };
-        await vscode.commands.executeCommand("zhihu-fisher.openArticle", linkItem);
-      } else if (collectionItem.type === 'answer') {
-        // 回答需要转换为问题格式
-        const linkItem: LinkItem = {
-          id: collectionItem.question?.id || collectionItem.id,
-          url: collectionItem.question?.url || collectionItem.url,
-          title: collectionItem.question?.title || collectionItem.title,
-          excerpt: collectionItem.excerpt,
-          type: 'question',
+          type: "question",
           imgUrl: collectionItem.thumbnail,
-          answerUrl: collectionItem.url  // 保存回答的URL
         };
-        await vscode.commands.executeCommand("zhihu-fisher.openArticle", linkItem);
+        await vscode.commands.executeCommand(
+          "zhihu-fisher.openArticle",
+          linkItem
+        );
+      } else if (collectionItem.type === "answer") {
+        // 回答需要特殊处理：构建一个包含该回答的问题页面
+        if (!collectionItem.question) {
+          vscode.window.showErrorMessage("回答缺少问题信息");
+          return;
+        }
+
+        const linkItem: LinkItem = {
+          id: collectionItem.question.id,
+          url: collectionItem.question.url,
+          title: collectionItem.question.title,
+          excerpt: collectionItem.excerpt,
+          type: "question",
+          imgUrl: collectionItem.thumbnail,
+          answerUrl: collectionItem.url, // 保存特定回答的URL
+        };
+
+        // 打开问题页面，会自动加载回答，特定回答会被优先显示
+        await vscode.commands.executeCommand(
+          "zhihu-fisher.openArticle",
+          linkItem
+        );
       }
     }
   );
@@ -152,16 +205,18 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage("无法获取收藏夹信息");
         return;
       }
-      
+
       const collection = item.collectionFolder;
       // 重置收藏夹状态
       collection.items = [];
       collection.isLoaded = false;
       collection.currentOffset = 0;
-      
+
       // 重新加载
       await sidebarCollections.loadCollectionItems(collection.id);
-      vscode.window.showInformationMessage(`收藏夹 "${collection.title}" 已刷新`);
+      vscode.window.showInformationMessage(
+        `收藏夹 "${collection.title}" 已刷新`
+      );
     }
   );
 
@@ -173,7 +228,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage("无法获取收藏夹信息");
         return;
       }
-      
+
       const collection = item.collectionFolder;
       await vscode.env.openExternal(vscode.Uri.parse(collection.url));
     }
@@ -187,7 +242,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage("无法获取收藏项信息");
         return;
       }
-      
+
       const collectionItem = item.collectionItem;
       await vscode.env.openExternal(vscode.Uri.parse(collectionItem.url));
     }
@@ -201,11 +256,11 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage("无法获取图片信息");
         return;
       }
-      
+
       const collectionItem = item.collectionItem;
       await vscode.commands.executeCommand("zhihu-fisher.showFullImage", {
         imgUrl: collectionItem.thumbnail,
-        title: collectionItem.title
+        title: collectionItem.title,
       });
     }
   );
@@ -308,12 +363,28 @@ export function activate(context: vscode.ExtensionContext) {
   const showFullImageCommand = vscode.commands.registerCommand(
     "zhihu-fisher.showFullImage",
     (item: any) => {
-      if (item && item.listItem && item.listItem.url) {
-        // createImageWebview(item);
+      let imageUrl: string | undefined;
+      let title: string = "图片预览";
+
+      // 兼容不同的参数格式
+      if (item && item.imgUrl && item.title) {
+        // 新格式：直接传递 imgUrl 和 title
+        imageUrl = item.imgUrl;
+        title = item.title;
+      } else if (item && item.listItem && item.listItem.imgUrl) {
+        // 原有格式：通过 listItem 传递
+        imageUrl = item.listItem.imgUrl;
+        title = `缩略图预览 - ${item.listItem.title.substring(0, 10)}`;
+      } else {
+        vscode.window.showInformationMessage("该项目没有图片");
+        return;
+      }
+
+      if (imageUrl) {
         const panel = vscode.window.createWebviewPanel(
           "previewImage",
-          `缩略图预览 - ${item.listItem.title.substring(0, 10)}`,
-          vscode.ViewColumn.Active, // 修改为在当前编辑组显示
+          title,
+          vscode.ViewColumn.Active, // 在当前编辑组显示
           {
             enableScripts: true,
             retainContextWhenHidden: true,
@@ -323,10 +394,38 @@ export function activate(context: vscode.ExtensionContext) {
 
         // 设置Webview内容
         panel.webview.html = `
-          <img src="${item.listItem.imgUrl}" style="width: 100%; height: auto; display: block; margin: 20px auto;" />
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>图片预览</title>
+            <style>
+              body {
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background-color: var(--vscode-editor-background);
+              }
+              img {
+                max-width: 100%;
+                max-height: 90vh;
+                height: auto;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${imageUrl}" alt="预览图片" onerror="document.body.innerHTML='<p style=color:var(--vscode-errorForeground)>图片加载失败</p>'" />
+          </body>
+          </html>
         `;
       } else {
-        vscode.window.showInformationMessage("该项目没有图片");
+        vscode.window.showInformationMessage("无法获取图片URL");
       }
     }
   );
@@ -679,7 +778,8 @@ export function activate(context: vscode.ExtensionContext) {
   const buyMeCoffeeCommand = vscode.commands.registerCommand(
     "zhihu-fisher.buyMeCoffee",
     async () => {
-      const alipayUrl = "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg";
+      const alipayUrl =
+        "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg";
 
       const title = "☕ 请开发者喝杯咖啡吧 ☕";
       const message =
@@ -703,7 +803,9 @@ export function activate(context: vscode.ExtensionContext) {
       switch (selection) {
         case alipayAction:
           vscode.env.openExternal(vscode.Uri.parse(alipayUrl));
-          vscode.window.showInformationMessage("谢谢您的支持！已打开微信赞赏码~");
+          vscode.window.showInformationMessage(
+            "谢谢您的支持！已打开微信赞赏码~"
+          );
           break;
         case starAction:
           await vscode.commands.executeCommand("zhihu-fisher.starOnGitHub");
@@ -735,7 +837,10 @@ export function activate(context: vscode.ExtensionContext) {
     "zhihu-fisher.showGuide",
     async () => {
       // 打开walkthrough
-      vscode.commands.executeCommand('workbench.action.openWalkthrough', 'CrispyChicken.zhihu-fisher#zhihu-fisher-getting-started');
+      vscode.commands.executeCommand(
+        "workbench.action.openWalkthrough",
+        "CrispyChicken.zhihu-fisher#zhihu-fisher-getting-started"
+      );
     }
   );
 
@@ -746,7 +851,7 @@ export function activate(context: vscode.ExtensionContext) {
       const selection = await vscode.window.showInformationMessage(
         "重启扩展将重新加载所有功能，这可能有助于解决加载卡住等问题。\n\n是否确认重启扩展？",
         { modal: true },
-        "确认重启",
+        "确认重启"
       );
 
       if (selection === "确认重启") {
@@ -754,7 +859,9 @@ export function activate(context: vscode.ExtensionContext) {
           // 关闭已经打开的webview
           WebviewManager.closeAllWebviews();
 
-          await vscode.commands.executeCommand("workbench.action.restartExtensionHost");
+          await vscode.commands.executeCommand(
+            "workbench.action.restartExtensionHost"
+          );
         } catch (error) {
           vscode.window.showErrorMessage(`重启扩展失败: ${error}`);
         }
@@ -863,7 +970,11 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(dislikeAuthorCommand);
   context.subscriptions.push(resetSearchListCommand);
   context.subscriptions.push(refreshCollectionsCommand);
+  context.subscriptions.push(refreshMyCollectionsCommand);
+  context.subscriptions.push(refreshFollowingCollectionsCommand);
   context.subscriptions.push(loadMoreCollectionItemsCommand);
+  context.subscriptions.push(loadMoreMyCollectionsCommand);
+  context.subscriptions.push(loadMoreFollowingCollectionsCommand);
   context.subscriptions.push(openCollectionItemCommand);
   context.subscriptions.push(refreshCollectionCommand);
   context.subscriptions.push(openCollectionInBrowserCommand);

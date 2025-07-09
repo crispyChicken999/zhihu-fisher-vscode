@@ -58,6 +58,8 @@ export class WebviewManager {
         totalAnswerCount: 0,
         loadComplete: false,
         isLoading: false,
+        // 如果是从收藏的回答打开，保存特定回答的URL
+        presetAnswerUrl: item.answerUrl,
       },
       batchConfig: {
         beforeLoadCount: 0,
@@ -724,6 +726,23 @@ export class WebviewManager {
       });
 
       webviewItem.article.answerList = answerList;
+      
+      // 如果有预设的特定回答URL，将其优先显示
+      if (webviewItem.article.presetAnswerUrl) {
+        const presetAnswerId = this.extractAnswerIdFromUrl(webviewItem.article.presetAnswerUrl);
+        if (presetAnswerId) {
+          // 查找预设回答
+          const presetAnswerIndex = answerList.findIndex(answer => answer.id === presetAnswerId);
+          if (presetAnswerIndex > 0) {
+            // 将预设回答移到第一位
+            const presetAnswer = answerList.splice(presetAnswerIndex, 1)[0];
+            answerList.unshift(presetAnswer);
+            webviewItem.article.answerList = answerList;
+            console.log(`已将收藏的回答 ${presetAnswerId} 置顶显示`);
+          }
+        }
+      }
+      
       webviewItem.article.isLoading = false;
 
       // 更新批次加载数量参数，便于中断循环
@@ -1148,5 +1167,19 @@ export class WebviewManager {
       }
     }
     Store.webviewMap.clear(); // 清空所有WebView项
+  }
+
+  /**
+   * 从回答URL中提取回答ID
+   */
+  private static extractAnswerIdFromUrl(url: string): string | null {
+    try {
+      // 匹配格式：https://www.zhihu.com/question/123456/answer/789012
+      const match = url.match(/\/answer\/(\d+)/);
+      return match ? match[1] : null;
+    } catch (error) {
+      console.error("提取回答ID失败:", error);
+      return null;
+    }
   }
 }
