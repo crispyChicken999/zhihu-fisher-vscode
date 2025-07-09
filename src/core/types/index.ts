@@ -41,6 +41,18 @@ export interface ContentStore {
       list: LinkItem[];
     };
 
+    /** 知乎收藏数据 */
+    collections: {
+      /** 是否正在加载收藏 */
+      isLoading: boolean;
+      /** 我创建的收藏夹列表 */
+      myCollections: CollectionFolder[];
+      /** 我关注的收藏夹列表 */
+      followingCollections: CollectionFolder[];
+      /** 当前用户信息 */
+      userInfo: ZhihuUser | null;
+    };
+
     /** 知乎的Cookie */
     cookie: string;
   };
@@ -393,4 +405,86 @@ export class StatusTreeItem extends TreeItem {
 
     this.contextValue = "StatusTreeItem";
   }
+}
+
+/** 知乎用户信息 */
+export interface ZhihuUser {
+  /** 用户ID */
+  id: string;
+  /** 用户令牌 */
+  url_token: string;
+  /** 用户姓名 */
+  name: string;
+  /** 头像URL */
+  avatar_url: string;
+  /** 用户类型 */
+  type: string;
+  /** 用户URL */
+  url: string;
+  /** 性别 */
+  gender: number;
+  /** 是否实名认证 */
+  is_realname: boolean;
+}
+
+/** 收藏夹 */
+export interface CollectionFolder {
+  /** 收藏夹ID */
+  id: string;
+  /** 收藏夹标题 */
+  title: string;
+  /** 收藏夹URL */
+  url: string;
+  /** 收藏夹描述 */
+  description?: string;
+  /** 创建者信息 */
+  creator?: {
+    name: string;
+    avatar_url: string;
+    url_token: string;
+  };
+  /** 收藏夹内容列表 */
+  items: CollectionItem[];
+  /** 是否已加载完成 */
+  isLoaded: boolean;
+  /** 当前加载的偏移量 */
+  currentOffset: number;
+  /** 是否还有更多内容 */
+  hasMore: boolean;
+  /** 是否正在加载 */
+  isLoading: boolean;
+  /** 收藏夹类型：我创建的 或 我关注的 */
+  type: 'created' | 'following';
+  /** 收藏夹总数 */
+  totalCount?: number;
+}
+
+/** 收藏项 */
+export interface CollectionItem {
+  /** 收藏项ID */
+  id: string;
+  /** 收藏的内容类型 */
+  type: 'answer' | 'article' | 'question';
+  /** 收藏内容的URL */
+  url: string;
+  /** 收藏内容的标题 */
+  title: string;
+  /** 收藏内容的摘要 */
+  excerpt: string;
+  /** 作者信息 */
+  author?: {
+    name: string;
+    avatar_url: string;
+    url_token: string;
+  };
+  /** 问题信息（对于回答类型） */
+  question?: {
+    title: string;
+    url: string;
+    id: string;
+  };
+  /** 收藏时间 */
+  created: string;
+  /** 缩略图 */
+  thumbnail?: string;
 }

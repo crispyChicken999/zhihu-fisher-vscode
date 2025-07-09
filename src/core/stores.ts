@@ -21,6 +21,12 @@ export const Store: ContentStore = {
       isLoading: false,
       currentQuery: "",
     },
+    collections: {
+      isLoading: false,
+      myCollections: [],
+      followingCollections: [],
+      userInfo: null,
+    },
     cookie: "",
   },
 };

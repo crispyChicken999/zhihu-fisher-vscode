@@ -46,6 +46,40 @@
         "icon": "$(search)"
       },
       {
+        "command": "zhihu-fisher.refreshCollections",
+        "title": "刷新收藏夹",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.loadMoreCollectionItems",
+        "title": "加载更多收藏项",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "zhihu-fisher.openCollectionItem",
+        "title": "打开收藏项"
+      },
+      {
+        "command": "zhihu-fisher.refreshCollection",
+        "title": "刷新收藏夹",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.openCollectionInBrowser",
+        "title": "在浏览器中打开收藏夹",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "zhihu-fisher.openCollectionItemInBrowser",
+        "title": "在浏览器中打开",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "zhihu-fisher.showCollectionItemImage",
+        "title": "查看图片",
+        "icon": "$(zoom-in)"
+      },
+      {
         "command": "zhihu-fisher.openArticle",
         "title": "打开文章"
       },
@@ -158,6 +192,12 @@
           "name": "搜索",
           "icon": "$(search)",
           "contextualTitle": "知乎搜索"
+        },
+        {
+          "id": "zhihuCollectionsList",
+          "name": "收藏",
+          "icon": "$(bookmark)",
+          "contextualTitle": "知乎收藏"
         }
       ]
     },
@@ -173,6 +213,10 @@
       {
         "view": "zhihuSearchList",
         "contents": "点击搜索按钮查找知乎内容..."
+      },
+      {
+        "view": "zhihuCollectionsList",
+        "contents": "加载知乎收藏中..."
       }
     ],
     "submenus": [
@@ -199,58 +243,63 @@
           "group": "navigation@1"
         },
         {
+          "command": "zhihu-fisher.refreshCollections",
+          "when": "view == zhihuCollectionsList",
+          "group": "navigation@1"
+        },
+        {
           "submenu": "zhihu-fisher.mediaDisplayMenu",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "bmode@1"
         },
         {
           "command": "zhihu-fisher.configureBrowser",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "config@1"
         },
         {
           "command": "zhihu-fisher.setCookie",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "config@2"
         },
         {
           "command": "zhihu-fisher.clearCookie",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "config@3"
         },
         {
           "command": "zhihu-fisher.restartExtension",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "troubleshoot@1"
         },
         {
           "command": "zhihu-fisher.showTroubleshootingGuide",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "troubleshoot@2"
         },
         {
           "command": "zhihu-fisher.openFeedback",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "ysupport@1"
         },
         {
           "command": "zhihu-fisher.buyMeCoffee",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "ysupport@2"
         },
         {
           "command": "zhihu-fisher.starOnGitHub",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "ysupport@3"
         },
         {
           "command": "zhihu-fisher.showGuide",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "zhelp@1"
         },
         {
           "command": "zhihu-fisher.showAbout",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "zhelp@2"
         }
       ],
@@ -287,6 +336,26 @@
         {
           "command": "zhihu-fisher.dislikeAuthor",
           "when": "view == zhihuRecommendList && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.refreshCollection",
+          "when": "view == zhihuCollectionsList && viewItem == collectionFolder",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.openCollectionInBrowser",
+          "when": "view == zhihuCollectionsList && viewItem == collectionFolder",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.openCollectionItemInBrowser",
+          "when": "view == zhihuCollectionsList && (viewItem == collectionItem || viewItem == collectionItemWithImage)",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.showCollectionItemImage",
+          "when": "view == zhihuCollectionsList && viewItem == collectionItemWithImage",
           "group": "inline"
         }
       ]
@@ -405,13 +474,7 @@
           "minimum": 1,
           "maximum": 100,
           "default": 50,
-          "description": "迷你模式下图片和视频的缩放比例（1-100%）。"
-        },
-        "zhihu-fisher.cookie": {
-          "type": "string",
-          "default": "",
-          "description": "知乎Cookie，用于访问需要登录的内容。",
-          "scope": "machine"
+          "description": "迷你模式下图片视频的缩放比例（1-100%）。"
         },
         "zhihu-fisher.customChromePath": {
           "type": "string",

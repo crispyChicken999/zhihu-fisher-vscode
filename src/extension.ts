@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { Store } from "./core/stores";
-import { LinkItem } from "./core/types";
+import { LinkItem, CollectionItem } from "./core/types";
 import { ZhihuService } from "./core/zhihu/index";
 import { WebviewManager } from "./core/zhihu/webview";
 import { PuppeteerManager } from "./core/zhihu/puppeteer";
@@ -10,6 +10,7 @@ import { aboutTemplate } from "./core/zhihu/webview/templates/about";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
+import { sidebarCollectionsDataProvider } from "./core/zhihu/sidebar/collections";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("🐟知乎摸鱼🐟 已激活！");
@@ -44,6 +45,15 @@ export function activate(context: vscode.ExtensionContext) {
   // 将 TreeView 引用传递给数据提供者，用于更新标题
   sidebarSearch.setTreeView(searchListView);
 
+  // 侧边栏 收藏 列表
+  const sidebarCollections = new sidebarCollectionsDataProvider();
+  const collectionsListView = vscode.window.createTreeView("zhihuCollectionsList", {
+    treeDataProvider: sidebarCollections,
+    showCollapseAll: false,
+  });
+  // 将 TreeView 引用传递给数据提供者，用于更新标题
+  sidebarCollections.setTreeView(collectionsListView);
+
   // 注册刷新热榜命令
   const refreshHotListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshHotList",
@@ -72,6 +82,132 @@ export function activate(context: vscode.ExtensionContext) {
   const resetSearchListCommand = vscode.commands.registerCommand(
     "zhihu-fisher.resetSearchList",
     () => sidebarSearch.reset()
+  );
+
+  // 注册刷新收藏夹命令
+  const refreshCollectionsCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.refreshCollections",
+    () => sidebarCollections.refresh()
+  );
+
+  // 注册加载更多收藏项命令
+  const loadMoreCollectionItemsCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.loadMoreCollectionItems",
+    (collection: any) => sidebarCollections.loadMoreCollectionItems(collection)
+  );
+
+  // 注册打开收藏项命令
+  const openCollectionItemCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.openCollectionItem",
+    async (collectionItem: CollectionItem) => {
+      if (!collectionItem) {
+        vscode.window.showErrorMessage("无法获取收藏项信息");
+        return;
+      }
+
+      // 根据收藏项类型处理
+      if (collectionItem.type === 'article') {
+        // 文章直接打开
+        const linkItem: LinkItem = {
+          id: collectionItem.id,
+          url: collectionItem.url,
+          title: collectionItem.title,
+          excerpt: collectionItem.excerpt,
+          type: 'article',
+          imgUrl: collectionItem.thumbnail
+        };
+        await vscode.commands.executeCommand("zhihu-fisher.openArticle", linkItem);
+      } else if (collectionItem.type === 'question') {
+        // 问题直接打开
+        const linkItem: LinkItem = {
+          id: collectionItem.id,
+          url: collectionItem.url,
+          title: collectionItem.title,
+          excerpt: collectionItem.excerpt,
+          type: 'question',
+          imgUrl: collectionItem.thumbnail
+        };
+        await vscode.commands.executeCommand("zhihu-fisher.openArticle", linkItem);
+      } else if (collectionItem.type === 'answer') {
+        // 回答需要转换为问题格式
+        const linkItem: LinkItem = {
+          id: collectionItem.question?.id || collectionItem.id,
+          url: collectionItem.question?.url || collectionItem.url,
+          title: collectionItem.question?.title || collectionItem.title,
+          excerpt: collectionItem.excerpt,
+          type: 'question',
+          imgUrl: collectionItem.thumbnail,
+          answerUrl: collectionItem.url  // 保存回答的URL
+        };
+        await vscode.commands.executeCommand("zhihu-fisher.openArticle", linkItem);
+      }
+    }
+  );
+
+  // 注册刷新收藏夹命令
+  const refreshCollectionCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.refreshCollection",
+    async (item: any) => {
+      if (!item || !item.collectionFolder) {
+        vscode.window.showErrorMessage("无法获取收藏夹信息");
+        return;
+      }
+      
+      const collection = item.collectionFolder;
+      // 重置收藏夹状态
+      collection.items = [];
+      collection.isLoaded = false;
+      collection.currentOffset = 0;
+      
+      // 重新加载
+      await sidebarCollections.loadCollectionItems(collection.id);
+      vscode.window.showInformationMessage(`收藏夹 "${collection.title}" 已刷新`);
+    }
+  );
+
+  // 注册在浏览器中打开收藏夹命令
+  const openCollectionInBrowserCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.openCollectionInBrowser",
+    async (item: any) => {
+      if (!item || !item.collectionFolder) {
+        vscode.window.showErrorMessage("无法获取收藏夹信息");
+        return;
+      }
+      
+      const collection = item.collectionFolder;
+      await vscode.env.openExternal(vscode.Uri.parse(collection.url));
+    }
+  );
+
+  // 注册在浏览器中打开收藏项命令
+  const openCollectionItemInBrowserCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.openCollectionItemInBrowser",
+    async (item: any) => {
+      if (!item || !item.collectionItem) {
+        vscode.window.showErrorMessage("无法获取收藏项信息");
+        return;
+      }
+      
+      const collectionItem = item.collectionItem;
+      await vscode.env.openExternal(vscode.Uri.parse(collectionItem.url));
+    }
+  );
+
+  // 注册显示收藏项图片命令
+  const showCollectionItemImageCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.showCollectionItemImage",
+    async (item: any) => {
+      if (!item || !item.collectionItem || !item.collectionItem.thumbnail) {
+        vscode.window.showErrorMessage("无法获取图片信息");
+        return;
+      }
+      
+      const collectionItem = item.collectionItem;
+      await vscode.commands.executeCommand("zhihu-fisher.showFullImage", {
+        imgUrl: collectionItem.thumbnail,
+        title: collectionItem.title
+      });
+    }
   );
 
   // 注册搜索命令
@@ -720,11 +856,19 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(hotListView);
   context.subscriptions.push(recommendListView);
   context.subscriptions.push(searchListView);
+  context.subscriptions.push(collectionsListView);
   context.subscriptions.push(refreshHotListCommand);
   context.subscriptions.push(refreshRecommendListCommand);
   context.subscriptions.push(dislikeRecommendItemCommand);
   context.subscriptions.push(dislikeAuthorCommand);
   context.subscriptions.push(resetSearchListCommand);
+  context.subscriptions.push(refreshCollectionsCommand);
+  context.subscriptions.push(loadMoreCollectionItemsCommand);
+  context.subscriptions.push(openCollectionItemCommand);
+  context.subscriptions.push(refreshCollectionCommand);
+  context.subscriptions.push(openCollectionInBrowserCommand);
+  context.subscriptions.push(openCollectionItemInBrowserCommand);
+  context.subscriptions.push(showCollectionItemImageCommand);
   context.subscriptions.push(searchContentCommand);
   context.subscriptions.push(openArticleCommand);
   context.subscriptions.push(openInBrowserCommand);
