@@ -280,7 +280,8 @@ export class TreeItem extends vscode.TreeItem {
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
 
     // 根据配置决定是否显示缩略图
-    const shouldShowImage = listItem.imgUrl && listItem.imgUrl.trim() && mediaDisplayMode !== "none";
+    const shouldShowImage =
+      listItem.imgUrl && listItem.imgUrl.trim() && mediaDisplayMode !== "none";
 
     // 设置图标：根据配置和图片可用性决定
     if (shouldShowImage) {
@@ -299,10 +300,7 @@ export class TreeItem extends vscode.TreeItem {
       }
     }
     // 添加内容类型标识
-    const typeLabel =
-      listItem.type === "article"
-        ? "*[文章]*"
-        : "*[问题]*";
+    const typeLabel = listItem.type === "article" ? "*[文章]*" : "*[问题]*";
 
     // 设置工具提示：根据配置和图片可用性决定
     if (shouldShowImage) {
@@ -364,7 +362,11 @@ export class TreeItem extends vscode.TreeItem {
         simpleTooltip.appendMarkdown(listItem.excerpt);
       }
       this.tooltip = simpleTooltip;
-    } // 只有当热度值存在且不为空时才显示
+    }
+
+    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`)
+
+    // 只有当热度值存在且不为空时才显示
     this.description =
       listItem.hotValue && listItem.hotValue.trim()
         ? listItem.hotValue.trim()
@@ -476,7 +478,7 @@ export interface CollectionFolder {
   /** 是否正在加载 */
   isLoading: boolean;
   /** 收藏夹类型：我创建的 或 我关注的 */
-  type: 'created' | 'following';
+  type: "created" | "following";
   /** 收藏夹总数 */
   totalCount?: number;
 }
@@ -486,7 +488,7 @@ export interface CollectionItem {
   /** 收藏项ID */
   id: string;
   /** 收藏的内容类型 */
-  type: 'answer' | 'article' | 'question';
+  type: "answer" | "article" | "question";
   /** 收藏内容的URL */
   url: string;
   /** 收藏内容的标题 */

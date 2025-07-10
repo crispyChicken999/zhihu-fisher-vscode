@@ -224,6 +224,8 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
       this.tooltip = new vscode.MarkdownString(tooltipContent);
     }
 
+    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`)
+
     this.contextValue = shouldShowImage
       ? "collectionItemWithImage"
       : "collectionItem";
