@@ -227,6 +227,10 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
     this.contextValue = shouldShowImage
       ? "collectionItemWithImage"
       : "collectionItem";
+
+    // 为收藏项添加取消收藏的 contextValue，以支持右键菜单
+    this.contextValue = `${this.contextValue};removable`;
+
     this.command = {
       command: "zhihu-fisher.openCollectionItem",
       title: "打开内容",
@@ -299,7 +303,7 @@ export class sidebarCollectionsDataProvider
       if (isLoading) {
         this.treeView.title = "收藏(加载中...)";
       } else if (totalCount > 0) {
-        this.treeView.title = `收藏(${totalCount})`;
+        this.treeView.title = `收藏(${totalCount}个收藏夹)`;
       } else {
         this.treeView.title = "收藏";
       }

@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { Store } from "./core/stores";
 import { ZhihuService } from "./core/zhihu/index";
+import { ZhihuApiService } from "./core/zhihu/api";
 import { WebviewManager } from "./core/zhihu/webview";
 import { PuppeteerManager } from "./core/zhihu/puppeteer";
 import { aboutTemplate } from "./core/zhihu/webview/templates/about";
@@ -155,7 +156,8 @@ export function activate(context: vscode.ExtensionContext) {
         };
         await vscode.commands.executeCommand(
           "zhihu-fisher.openArticle",
-          linkItem
+          linkItem,
+          "collection"
         );
       } else if (collectionItem.type === "question") {
         // 问题直接打开
@@ -169,7 +171,8 @@ export function activate(context: vscode.ExtensionContext) {
         };
         await vscode.commands.executeCommand(
           "zhihu-fisher.openArticle",
-          linkItem
+          linkItem,
+          "collection"
         );
       } else if (collectionItem.type === "answer") {
         // 回答需要特殊处理：构建一个包含该回答的问题页面
@@ -191,7 +194,8 @@ export function activate(context: vscode.ExtensionContext) {
         // 打开问题页面，会自动加载回答，特定回答会被优先显示
         await vscode.commands.executeCommand(
           "zhihu-fisher.openArticle",
-          linkItem
+          linkItem,
+          "collection"
         );
       }
     }
@@ -248,20 +252,118 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // 注册显示收藏项图片命令
-  const showCollectionItemImageCommand = vscode.commands.registerCommand(
-    "zhihu-fisher.showCollectionItemImage",
+  // 注册取消收藏命令
+  const removeFromCollectionCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.removeFromCollection",
     async (item: any) => {
-      if (!item || !item.collectionItem || !item.collectionItem.thumbnail) {
-        vscode.window.showErrorMessage("无法获取图片信息");
+      if (!item || !item.collectionItem) {
+        vscode.window.showErrorMessage("无法获取收藏项信息");
         return;
       }
 
-      const collectionItem = item.collectionItem;
-      await vscode.commands.executeCommand("zhihu-fisher.showFullImage", {
-        imgUrl: collectionItem.thumbnail,
-        title: collectionItem.title,
-      });
+      const collectionItem = item.collectionItem as CollectionItem;
+
+      // 确认对话框
+      const confirm = await vscode.window.showWarningMessage(
+        `确定要取消收藏 "${collectionItem.title}" 吗？`,
+        { modal: true },
+        "取消"
+      );
+
+      if (confirm !== "取消") {
+        return;
+      }
+
+      try {
+        // 从侧边栏收藏夹中找到包含该收藏项的收藏夹
+        let targetCollectionId: string | null = null;
+
+        // 遍历我创建的收藏夹
+        for (const collection of Store.Zhihu.collections.myCollections) {
+          const foundItem = collection.items.find(
+            (item) =>
+              item.id === collectionItem.id && item.type === collectionItem.type
+          );
+          if (foundItem) {
+            targetCollectionId = collection.id;
+            break;
+          }
+        }
+
+        // 如果在我创建的收藏夹中没找到，查找我关注的收藏夹
+        if (!targetCollectionId) {
+          for (const collection of Store.Zhihu.collections
+            .followingCollections) {
+            const foundItem = collection.items.find(
+              (item) =>
+                item.id === collectionItem.id &&
+                item.type === collectionItem.type
+            );
+            if (foundItem) {
+              targetCollectionId = collection.id;
+              break;
+            }
+          }
+        }
+
+        if (!targetCollectionId) {
+          vscode.window.showErrorMessage("无法找到包含该收藏项的收藏夹");
+          return;
+        }
+
+        // 调用取消收藏API
+        const contentType =
+          collectionItem.type === "article" ? "article" : "answer";
+        const success = await ZhihuApiService.removeFromCollection(
+          targetCollectionId,
+          collectionItem.id,
+          contentType
+        );
+
+        if (success) {
+          vscode.window.showInformationMessage(
+            `成功取消收藏: ${collectionItem.title}`
+          );
+
+          // 从本地数据中移除该收藏项
+          const targetCollection = [
+            ...Store.Zhihu.collections.myCollections,
+            ...Store.Zhihu.collections.followingCollections,
+          ].find((c) => c.id === targetCollectionId);
+
+          if (targetCollection) {
+            const itemIndex = targetCollection.items.findIndex(
+              (item) =>
+                item.id === collectionItem.id &&
+                item.type === collectionItem.type
+            );
+            if (itemIndex > -1) {
+              targetCollection.items.splice(itemIndex, 1);
+              // 更新总数
+              if (targetCollection.totalCount !== undefined) {
+                targetCollection.totalCount = Math.max(
+                  0,
+                  targetCollection.totalCount - 1
+                );
+              }
+            }
+          }
+
+          // 刷新收藏夹视图
+          sidebarCollections.refreshView();
+        } else {
+          vscode.window.showErrorMessage(
+            `取消收藏失败: ${collectionItem.title}`
+          );
+        }
+      } catch (error) {
+        console.error("取消收藏时出错:", error);
+        vscode.window.showErrorMessage(
+          `取消收藏失败: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
     }
   );
 
@@ -307,7 +409,7 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册打开文章命令
   const openArticleCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openArticle",
-    (item: LinkItem) => {
+    (item: LinkItem, sourceType?: "collection" | "recommend" | "hot" | "search") => {
       // 检查热榜列表是否正在加载中
       if (Store.Zhihu.hot.isLoading) {
         vscode.window.showInformationMessage(
@@ -332,7 +434,20 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      WebviewManager.openWebview(item);
+      // 根据item的id推断来源类型
+      let inferredSourceType: "collection" | "recommend" | "hot" | "search" = "recommend";
+      if (item.id.startsWith("collection-")) {
+        inferredSourceType = "collection";
+      } else if (item.id.startsWith("recommend-")) {
+        inferredSourceType = "recommend";
+      } else if (item.id.startsWith("hot-")) {
+        inferredSourceType = "hot";
+      } else if (item.id.startsWith("search-")) {
+        inferredSourceType = "search";
+      }
+
+      const finalSourceType = sourceType || inferredSourceType;
+      WebviewManager.openWebview(item, finalSourceType);
     }
   );
 
@@ -461,6 +576,16 @@ export function activate(context: vscode.ExtensionContext) {
       sidebarHot.refresh();
       sidebarRecommend.refresh();
       sidebarSearch.reset();
+    }
+  );
+
+  // 注册清理收藏夹缓存命令
+  const clearCollectionCacheCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.clearCollectionCache",
+    async () => {
+      const { CollectionCacheManager } = await import("./utils/index.js");
+      CollectionCacheManager.clearCache();
+      vscode.window.showInformationMessage("已清理收藏夹缓存，下次收藏时将重新获取最新数据");
     }
   );
 
@@ -945,6 +1070,18 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // 收藏推荐项命令
+  const favoriteRecommendItemCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.favoriteRecommendItem",
+    async (item: any) => {
+      if (item && item.listItem) {
+        await sidebarRecommend.favoriteContent(item.listItem);
+      } else {
+        vscode.window.showErrorMessage("无法获取内容信息");
+      }
+    }
+  );
+
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("zhihu-fisher")) {
@@ -968,6 +1105,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(refreshHotListCommand);
   context.subscriptions.push(refreshRecommendListCommand);
   context.subscriptions.push(dislikeRecommendItemCommand);
+  context.subscriptions.push(favoriteRecommendItemCommand);
   context.subscriptions.push(dislikeAuthorCommand);
   context.subscriptions.push(resetSearchListCommand);
   context.subscriptions.push(refreshCollectionsCommand);
@@ -980,13 +1118,14 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(refreshCollectionCommand);
   context.subscriptions.push(openCollectionInBrowserCommand);
   context.subscriptions.push(openCollectionItemInBrowserCommand);
-  context.subscriptions.push(showCollectionItemImageCommand);
+  context.subscriptions.push(removeFromCollectionCommand);
   context.subscriptions.push(searchContentCommand);
   context.subscriptions.push(openArticleCommand);
   context.subscriptions.push(openInBrowserCommand);
   context.subscriptions.push(showFullImageCommand);
   context.subscriptions.push(setCookieCommand);
   context.subscriptions.push(clearCookieCommand);
+  context.subscriptions.push(clearCollectionCacheCommand);
   context.subscriptions.push(toggleMediaCommand);
   context.subscriptions.push(setMediaModeNormalCommand);
   context.subscriptions.push(setMediaModeMiniCommand);

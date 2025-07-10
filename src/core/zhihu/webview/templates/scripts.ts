@@ -326,6 +326,14 @@ function setupKeyboardNavigation() {
     if (event.key === 'v') {
       backTop();
     }
+
+    // 按 F 键收藏内容
+    if (event.key === 'f') {
+      const favoriteButton = document.querySelector('.favorite-button');
+      if (favoriteButton) {
+        favoriteButton.click();
+      }
+    }
   });
 }
 
@@ -1087,6 +1095,18 @@ function closeDonateModal() {
   if (modal) {
     modal.remove();
   }
+}
+
+/**
+ * 收藏内容到收藏夹
+ */
+function favoriteContent(contentToken, contentType) {
+  // 发送收藏请求到VS Code扩展
+  vscode.postMessage({
+    command: "favoriteContent",
+    contentToken: contentToken,
+    contentType: contentType
+  });
 }
 
 /**

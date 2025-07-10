@@ -53,7 +53,7 @@ export const toolbarCss = `
   align-items: center;
   gap: 10px;
   height: 95vh;
-  max-height: 500px;
+  max-height: 520px;
   flex-wrap: wrap-reverse;
 }
 

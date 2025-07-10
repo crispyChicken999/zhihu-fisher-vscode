@@ -276,12 +276,16 @@ export const commentsCss = `
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-secondaryForeground);
   border: none;
-  padding: 5px 15px;
+  padding: 6px;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+.zhihu-comment-pagination button svg {
+  height: 100%;
 }
 
 .zhihu-comment-pagination button:disabled {
@@ -340,7 +344,8 @@ export const commentsCss = `
   z-index: 1001;
   background-color: var(--vscode-editor-background);
   border-radius: 8px;
-  width: 90%;
+  width: 100%;
+  margin: 0 50px 0 10px;
   max-width: 600px;
   max-height: 95vh;
   overflow: hidden;

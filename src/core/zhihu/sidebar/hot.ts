@@ -212,6 +212,7 @@ export class sidebarHotListDataProvider
             const title = titleElement.text().trim();
             const url = linkElement.attr("href") || "";
             const id = `hot-${url.split("/").pop()}` || `hot-${index}`;
+
             const excerpt = `${
               $(element).find(".HotItem-excerpt").text().trim()
                 ? $(element).find(".HotItem-excerpt").text().trim()

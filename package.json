@@ -36,6 +36,11 @@
         "icon": "$(thumbsdown)"
       },
       {
+        "command": "zhihu-fisher.favoriteRecommendItem",
+        "title": "收藏到收藏夹",
+        "icon": "$(star)"
+      },
+      {
         "command": "zhihu-fisher.dislikeAuthor",
         "title": "不再推荐该作者(屏蔽作者)",
         "icon": "$(account)"
@@ -102,6 +107,11 @@
         "command": "zhihu-fisher.clearCookie",
         "title": "清除Cookie",
         "icon": "$(trash)"
+      },
+      {
+        "command": "zhihu-fisher.clearCollectionCache",
+        "title": "清理收藏夹缓存",
+        "icon": "$(clear-all)"
       },
       {
         "command": "zhihu-fisher.setMediaModeNormal",
@@ -182,6 +192,21 @@
         "command": "zhihu-fisher.loadMoreFollowingCollections",
         "title": "加载更多我关注的收藏夹",
         "icon": "$(arrow-down)"
+      },
+      {
+        "command": "zhihu-fisher.openMyCollectionsInBrowser",
+        "title": "在浏览器中打开我创建的收藏夹",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "zhihu-fisher.openFollowingCollectionsInBrowser",
+        "title": "在浏览器中打开我关注的收藏夹",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "zhihu-fisher.removeFromCollection",
+        "title": "取消收藏",
+        "icon": "$(notebook-delete-cell)"
       }
     ],
     "viewsContainers": {
@@ -288,6 +313,11 @@
           "group": "config@3"
         },
         {
+          "command": "zhihu-fisher.clearCollectionCache",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "group": "config@4"
+        },
+        {
           "command": "zhihu-fisher.restartExtension",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "troubleshoot@1"
@@ -354,6 +384,11 @@
           "group": "inline"
         },
         {
+          "command": "zhihu-fisher.favoriteRecommendItem",
+          "when": "view == zhihuRecommendList && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
+          "group": "inline"
+        },
+        {
           "command": "zhihu-fisher.dislikeAuthor",
           "when": "view == zhihuRecommendList && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
           "group": "inline"
@@ -384,8 +419,23 @@
           "group": "inline"
         },
         {
+          "command": "zhihu-fisher.openMyCollectionsInBrowser",
+          "when": "view == zhihuCollectionsList && viewItem == myCollectionsRoot",
+          "group": "inline"
+        },
+        {
           "command": "zhihu-fisher.refreshFollowingCollections",
           "when": "view == zhihuCollectionsList && viewItem == followingCollectionsRoot",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.openFollowingCollectionsInBrowser",
+          "when": "view == zhihuCollectionsList && viewItem == followingCollectionsRoot",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.removeFromCollection",
+          "when": "view == zhihuCollectionsList && viewItem =~ /.*removable.*/",
           "group": "inline"
         }
       ]

@@ -139,6 +139,14 @@ export interface ArticleInfo {
   isLoading: boolean;
   /** 预设的特定回答URL（用于收藏的回答） */
   presetAnswerUrl?: string;
+  /** 目标回答ID（用于特定回答的处理） */
+  targetAnswerId?: string;
+  /** 预加载的特定回答内容 */
+  preloadedAnswer?: any;
+  /** 是否是特定回答模式 */
+  isSpecificAnswer?: boolean;
+  /** 特定回答的原始URL */
+  specificAnswerUrl?: string;
 }
 
 /** 回答数据结构 */
@@ -501,4 +509,58 @@ export interface CollectionItem {
   created: string;
   /** 缩略图 */
   thumbnail?: string;
+}
+
+/** 收藏夹信息 */
+export interface CollectionInfo {
+  /** 收藏夹ID */
+  id: string;
+  /** 收藏夹类型 */
+  type: string;
+  /** 收藏夹标题 */
+  title: string;
+  /** 是否公开 */
+  is_public: boolean;
+  /** 收藏夹URL */
+  url: string;
+  /** 收藏夹描述 */
+  description: string;
+  /** 关注者数量 */
+  follower_count: number;
+  /** 回答数量 */
+  answer_count: number;
+  /** 条目数量 */
+  item_count: number;
+  /** 点赞数量 */
+  like_count: number;
+  /** 查看数量 */
+  view_count: number;
+  /** 评论数量 */
+  comment_count: number;
+  /** 是否正在关注 */
+  is_following: boolean;
+  /** 是否点赞 */
+  is_liking: boolean;
+  /** 创建时间 */
+  created_time: number;
+  /** 更新时间 */
+  updated_time: number;
+  /** 创建者信息 */
+  creator: {
+    id: string;
+    type: string;
+    is_following: boolean;
+    avatar_url: string;
+    headline: string;
+    user_type: string;
+    gender: number;
+    url: string;
+    name: string;
+    is_followed: boolean;
+    badge: any[];
+  };
+  /** 是否已收藏 */
+  is_favorited: boolean;
+  /** 是否为默认收藏夹 */
+  is_default: boolean;
 }

@@ -10,6 +10,8 @@ export class ToolbarComponent implements Component {
   private immersiveMode: boolean = false;
   private answer: AnswerItem; // 当前回答
   private isArticle: boolean = false; // 是否为文章类型
+  private contentToken: string = ""; // 内容ID，用于收藏功能
+  private contentType: "article" | "answer" = "answer"; // 内容类型
 
   /**
    * 构造函数
@@ -23,6 +25,22 @@ export class ToolbarComponent implements Component {
     this.answer = answer;
     // 判断是否为文章类型（通过URL判断）
     this.isArticle = url.includes('zhuanlan.zhihu.com/p/') || url.includes('/p/');
+    
+    // 提取内容ID和类型用于收藏功能
+    if (this.isArticle) {
+      // 文章类型，提取文章ID
+      const articleIdMatch = url.match(/\/p\/(\d+)/);
+      if (articleIdMatch) {
+        this.contentToken = articleIdMatch[1];
+        this.contentType = "article";
+      }
+    } else {
+      // 回答类型，使用回答ID
+      if (answer.id) {
+        this.contentToken = answer.id.toString();
+        this.contentType = "answer";
+      }
+    }
   }
 
   // 格式化数字，如果大于1000则显示为 1k、2k 等
@@ -149,6 +167,12 @@ export class ToolbarComponent implements Component {
           </svg>
         </button>
 
+        <button class="button favorite-button" onclick="favoriteContent('${this.contentToken}', '${this.contentType}')" tooltip="收藏到收藏夹(F)" placement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M17.562 21.56a1 1 0 0 1-.465-.116L12 18.764l-5.097 2.68a1 1 0 0 1-1.45-1.053l.973-5.676l-4.124-4.02a1 1 0 0 1 .554-1.705l5.699-.828l2.549-5.164a1.04 1.04 0 0 1 1.793 0l2.548 5.164l5.699.828a1 1 0 0 1 .554 1.705l-4.124 4.02l.974 5.676a1 1 0 0 1-.985 1.169Z"/>
+          </svg>
+        </button>
+
         <button class="button" onclick="toggleStylePanel()" tooltip="外观设置(。)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="m8.3.7l7.875 7.875q.575.575.575 1.425t-.575 1.425l-4.75 4.75q-.575.575-1.425.575t-1.425-.575l-4.75-4.75Q3.25 10.85 3.25 10t.575-1.425L8.575 3.8l-1.7-1.7q-.3-.3-.288-.7T6.9.7q.3-.275.7-.287T8.3.7M10 5.225L5.225 10h9.55zM19 17q-.825 0-1.412-.587T17 15q0-.525.313-1.125T18 12.75q.225-.3.475-.625T19 11.5q.275.3.525.625t.475.625q.375.525.688 1.125T21 15q0 .825-.587 1.413T19 17M4 24q-.825 0-1.412-.587T2 22t.588-1.412T4 20h16q.825 0 1.413.588T22 22t-.587 1.413T20 24z"/>
@@ -211,6 +235,12 @@ export class ToolbarComponent implements Component {
         <button class="button immersive-button open-button" onclick="openPage('${this.url}')" tooltip="在浏览器中打开(B)" placement="left">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M14 3v2h3.59l-9.83 9.83l1.41 1.41L19 6.41V10h2V3m-2 16H5V5h7V3H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2z"/>
+          </svg>
+        </button>
+
+        <button class="button immersive-button favorite-button" onclick="favoriteContent('${this.contentToken}', '${this.contentType}')" tooltip="收藏到收藏夹(F)" placement="left">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M17.562 21.56a1 1 0 0 1-.465-.116L12 18.764l-5.097 2.68a1 1 0 0 1-1.45-1.053l.973-5.676l-4.124-4.02a1 1 0 0 1 .554-1.705l5.699-.828l2.549-5.164a1.04 1.04 0 0 1 1.793 0l2.548 5.164l5.699.828a1 1 0 0 1 .554 1.705l-4.124 4.02l.974 5.676a1 1 0 0 1-.985 1.169Z"/>
           </svg>
         </button>
 

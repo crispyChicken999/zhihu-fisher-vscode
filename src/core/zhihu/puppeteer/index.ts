@@ -375,7 +375,7 @@ export class PuppeteerManager {
       console.log(`激活页面: ${key}`);
       await page.bringToFront();
     } else {
-      console.log(`页面不存在，无法激活: ${key}，可能是新创建的页面`);
+      // console.log(`页面不存在，无法激活: ${key}，可能是新创建的页面`);
     }
   }
 

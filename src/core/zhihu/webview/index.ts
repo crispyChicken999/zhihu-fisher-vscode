@@ -7,14 +7,60 @@ import { CookieManager } from "../cookie";
 import { PuppeteerManager } from "../puppeteer";
 import { CommentsManager } from "./components/comments";
 import { LinkItem, WebViewItem, AnswerItem } from "../../types";
+import { WebViewUtils, CollectionPickerUtils } from "../../../utils";
 
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
-  static async openWebview(item: LinkItem): Promise<void> {
-    console.log(`开始获取内容: ${item.url}, 类型: ${item.type || "question"}`);
+  static async openWebview(
+    item: LinkItem,
+    sourceType: "collection" | "recommend" | "hot" | "search" = "recommend"
+  ): Promise<void> {
+    console.log(
+      `开始获取内容: ${item.url}, 类型: ${
+        item.type || "question"
+      }, 来源: ${sourceType}`
+    );
 
-    // 检查是否已经打开了这篇文章
-    const existingView = Store.webviewMap.get(item.id);
+    // 提取基础ID和内容类型
+    let baseId = item.id;
+    let contentType: "article" | "answer" =
+      item.type === "article" ? "article" : "answer";
+    let answerId: string | undefined;
+    let targetUrl = item.url;
+    let isSpecificAnswer = false; // 是否是特定回答
+
+    // 检查是否是特定回答（有answerUrl的情况）
+    if (item.answerUrl) {
+      const extractedAnswerId = WebViewUtils.extractAnswerIdFromUrl(
+        item.answerUrl
+      );
+      if (extractedAnswerId) {
+        answerId = extractedAnswerId;
+        isSpecificAnswer = true;
+
+        // 跳转到问题页面，用于后续加载全部回答
+        const questionId = WebViewUtils.extractQuestionIdFromUrl(
+          item.answerUrl
+        );
+        if (questionId) {
+          targetUrl = WebViewUtils.buildQuestionAllAnswersUrl(questionId);
+          console.log(`特定回答模式，将跳转到问题页面: ${targetUrl}`);
+        }
+      }
+    }
+
+    // 生成唯一的webview ID
+    const webviewId = WebViewUtils.generateUniqueWebViewId(
+      baseId,
+      sourceType,
+      contentType,
+      answerId
+    );
+
+    console.log(`生成唯一webview ID: ${webviewId}`);
+
+    // 检查是否已经打开了这个特定的内容
+    const existingView = Store.webviewMap.get(webviewId);
     if (existingView) {
       // 如果已打开，激活对应的面板
       existingView.webviewPanel.reveal();
@@ -24,10 +70,17 @@ export class WebviewManager {
     // 获取短标题
     const shortTitle = this.getShortTitle(item.title);
 
-    // 根据内容类型设置不同的面板类型
+    // 根据内容类型设置不同的面板类型和标题
     const panelType =
       item.type === "article" ? "zhihuArticle" : "zhihuQuestion";
-    const loadingTitle = item.type === "article" ? "加载文章中" : "加载问题中";
+    let loadingTitle;
+    if (isSpecificAnswer) {
+      loadingTitle = "加载回答中";
+    } else if (item.type === "article") {
+      loadingTitle = "加载文章中";
+    } else {
+      loadingTitle = "加载问题中";
+    }
 
     // 创建并配置WebView面板
     const panel = vscode.window.createWebviewPanel(
@@ -46,8 +99,8 @@ export class WebviewManager {
     const limitPerBatch = config.get<number>("answersPerBatch", 10);
 
     const webviewItem: WebViewItem = {
-      id: item.id,
-      url: item.url,
+      id: webviewId, // 使用生成的唯一ID
+      url: targetUrl, // 使用处理后的目标URL
       webviewPanel: panel,
       article: {
         title: item.title,
@@ -58,8 +111,12 @@ export class WebviewManager {
         totalAnswerCount: 0,
         loadComplete: false,
         isLoading: false,
-        // 如果是从收藏的回答打开，保存特定回答的URL
-        presetAnswerUrl: item.answerUrl,
+        // 保存目标回答ID，用于在加载过程中进行特殊处理
+        targetAnswerId: answerId,
+        // 标记是否是特定回答模式
+        isSpecificAnswer: isSpecificAnswer,
+        // 保存原始特定回答URL
+        specificAnswerUrl: item.answerUrl,
       },
       batchConfig: {
         beforeLoadCount: 0,
@@ -72,7 +129,7 @@ export class WebviewManager {
     };
 
     // 将WebView项存储到Store中
-    Store.webviewMap.set(item.id, webviewItem);
+    Store.webviewMap.set(webviewId, webviewItem);
 
     // 在WebView中显示正在加载状态
     panel.webview.html = HtmlRenderer.getLoadingHtml(
@@ -82,19 +139,19 @@ export class WebviewManager {
     );
 
     // 设置消息处理
-    this.setupMessageHandling(item.id);
+    this.setupMessageHandling(webviewId);
 
     // 设置面板关闭处理
-    this.setupPanelCloseHandler(item.id);
+    this.setupPanelCloseHandler(webviewId);
 
     // 设置视图状态变化处理（监听标签页切换）
-    this.setupViewStateChangeHandler(item.id);
+    this.setupViewStateChangeHandler(webviewId);
 
     // 根据内容类型调用不同的爬取方法
     if (item.type === "article") {
-      this.crawlingArticleData(item.id);
+      this.crawlingArticleData(webviewId);
     } else {
-      this.crawlingURLData(item.id);
+      this.crawlingURLData(webviewId);
     }
   }
 
@@ -131,11 +188,74 @@ export class WebviewManager {
         100
       );
       const shortTitle = this.getShortTitle(webviewItem.article.title);
-      statusBarItem.text = `$(sync~spin) 加载问题: ${shortTitle}`;
+
+      // 根据是否是特定回答显示不同的加载文本
+      if (webviewItem.article.isSpecificAnswer) {
+        statusBarItem.text = `$(sync~spin) 加载回答: ${shortTitle}`;
+      } else {
+        statusBarItem.text = `$(sync~spin) 加载问题: ${shortTitle}`;
+      }
       statusBarItem.show();
 
       // 保存状态栏项目的引用
       Store.statusBarMap.set(webviewId, statusBarItem);
+
+      // 如果是特定回答模式，先获取特定回答内容
+      if (
+        webviewItem.article.isSpecificAnswer &&
+        webviewItem.article.specificAnswerUrl
+      ) {
+        console.log(
+          `特定回答模式，先获取回答内容: ${webviewItem.article.specificAnswerUrl}`
+        );
+        try {
+          const preloadedAnswer = await WebViewUtils.fetchSpecificAnswerContent(
+            webviewItem.article.specificAnswerUrl
+          );
+          if (preloadedAnswer) {
+            // 将预加载的回答转换为标准AnswerItem格式并放在第一位
+            const preloadedAnswerItem: AnswerItem = {
+              id: preloadedAnswer.id,
+              url: preloadedAnswer.url,
+              author: {
+                id: preloadedAnswer.authorUrl?.split("/").pop() || "",
+                name: preloadedAnswer.authorName,
+                url: preloadedAnswer.authorUrl,
+                signature: "",
+                avatar: preloadedAnswer.authorAvatar,
+                followersCount: 0,
+              },
+              likeCount: preloadedAnswer.voteCount || 0,
+              commentCount: preloadedAnswer.commentCount || 0,
+              publishTime: preloadedAnswer.publishTime,
+              updateTime: preloadedAnswer.publishTime,
+              content: marked.parse(preloadedAnswer.content) as string,
+              commentList: [],
+              commentStatus: "collapsed",
+              commentPaging: {
+                current: 0,
+                limit: 20,
+                is_end: false,
+                is_start: true,
+                next: null,
+                previous: null,
+                totals: 0,
+                loadedTotals: 0,
+              },
+            };
+
+            // 将预加载的回答放在第一位
+            webviewItem.article.answerList.push(preloadedAnswerItem);
+            webviewItem.article.loadedAnswerCount = 1;
+
+            // 更新WebView显示特定回答
+            this.updateWebview(webviewId);
+            console.log(`成功预加载特定回答: ${preloadedAnswer.id}`);
+          }
+        } catch (error) {
+          console.error("预加载特定回答失败:", error);
+        }
+      }
 
       // 关键步骤！
       // 这里使用 Puppeteer来获取文章内容
@@ -708,41 +828,71 @@ export class WebviewManager {
         return list;
       });
 
+      // 处理回答去重逻辑
+      const processedAnswers: AnswerItem[] = [];
+      const existingAnswerIds = new Set(
+        webviewItem.article.answerList.map((a) => a.id)
+      );
+
+      // 获取目标回答ID（用于特定回答模式）
+      const targetAnswerId = webviewItem.article.targetAnswerId;
+
       answerList.forEach((item) => {
-        // 解析markdown格式的内容，因为evaluate时在浏览器环境中，并不存在我们import的这个库，所以需要出来再parse
+        // 解析markdown格式的内容
         item.content = marked.parse(item.content) as string;
 
-        // 找到当前已加载的回答
+        // 特殊处理：如果这是目标回答且已存在预加载版本，更新预加载版本的内容
+        if (
+          targetAnswerId &&
+          item.id === targetAnswerId &&
+          existingAnswerIds.has(item.id)
+        ) {
+          const preloadedAnswerIndex = webviewItem.article.answerList.findIndex(
+            (a) => a.id === targetAnswerId
+          );
+          if (preloadedAnswerIndex !== -1) {
+            // 更新预加载的回答内容（保留原有的评论状态）
+            const existingAnswer =
+              webviewItem.article.answerList[preloadedAnswerIndex];
+            webviewItem.article.answerList[preloadedAnswerIndex] = {
+              ...item,
+              commentStatus: existingAnswer.commentStatus,
+              commentList: existingAnswer.commentList,
+              commentPaging: existingAnswer.commentPaging,
+            };
+            console.log(`更新目标回答内容: ${item.id}`);
+          }
+          return; // 跳过，因为已经更新了预加载版本
+        }
+
+        // 检查是否是重复回答
+        if (existingAnswerIds.has(item.id)) {
+          // 不用一直提示很烦
+          // console.log(`过滤重复回答: ${item.id}`);
+          return; // 跳过重复的回答
+        }
+
+        // 找到当前已加载的回答（这里主要是恢复评论状态）
         const existingAnswer = webviewItem.article.answerList.find(
           (v) => v.id === item.id
         );
 
-        // 如果当前回答已经存在，则恢复评论列表和分页参数，后续有参数需要保留可以在这里添加
+        // 如果当前回答已经存在，则恢复评论列表和分页参数
         if (existingAnswer) {
-          item.commentStatus = existingAnswer.commentStatus; // 恢复评论状态
-          item.commentList = existingAnswer.commentList; // 恢复评论列表
-          item.commentPaging = existingAnswer.commentPaging; // 恢复评论分页参数
+          item.commentStatus = existingAnswer.commentStatus;
+          item.commentList = existingAnswer.commentList;
+          item.commentPaging = existingAnswer.commentPaging;
         }
+
+        processedAnswers.push(item);
       });
 
-      webviewItem.article.answerList = answerList;
-      
-      // 如果有预设的特定回答URL，将其优先显示
-      if (webviewItem.article.presetAnswerUrl) {
-        const presetAnswerId = this.extractAnswerIdFromUrl(webviewItem.article.presetAnswerUrl);
-        if (presetAnswerId) {
-          // 查找预设回答
-          const presetAnswerIndex = answerList.findIndex(answer => answer.id === presetAnswerId);
-          if (presetAnswerIndex > 0) {
-            // 将预设回答移到第一位
-            const presetAnswer = answerList.splice(presetAnswerIndex, 1)[0];
-            answerList.unshift(presetAnswer);
-            webviewItem.article.answerList = answerList;
-            console.log(`已将收藏的回答 ${presetAnswerId} 置顶显示`);
-          }
-        }
-      }
-      
+      // 追加新解析的回答到现有列表
+      webviewItem.article.answerList = [
+        ...webviewItem.article.answerList,
+        ...processedAnswers,
+      ];
+
       webviewItem.article.isLoading = false;
 
       // 更新批次加载数量参数，便于中断循环
@@ -881,7 +1031,16 @@ export class WebviewManager {
       } else {
         console.log("页面已关闭，取消继续加载更多回答");
       }
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是超时错误，直接返回，不啰嗦打印出来咯，看到心烦哈哈哈，timeout？哦！
+      if (
+        error.message.includes(
+          "ProtocolError: Input.dispatchMouseEvent timed out."
+        )
+      ) {
+        return;
+      }
+
       // 捕获可能的错误，例如页面已关闭导致的错误
       console.error("加载更多回答时出错:", error);
 
@@ -953,9 +1112,7 @@ export class WebviewManager {
   }
 
   /** 设置Mini模式下图片缩放比例 */
-  private static async setMiniMediaScale(
-    scale: number
-  ): Promise<void> {
+  private static async setMiniMediaScale(scale: number): Promise<void> {
     if (!scale || scale < 1 || scale > 100) {
       return;
     }
@@ -1006,7 +1163,9 @@ export class WebviewManager {
 
         case "showTroubleshootingGuide":
           // 处理故障排除指引的请求
-          await vscode.commands.executeCommand("zhihu-fisher.showTroubleshootingGuide");
+          await vscode.commands.executeCommand(
+            "zhihu-fisher.showTroubleshootingGuide"
+          );
           break;
 
         case "restartVSCode":
@@ -1087,6 +1246,15 @@ export class WebviewManager {
         case "showNotification":
           // 显示通知消息
           vscode.window.showInformationMessage(message.message);
+          break;
+
+        case "favoriteContent":
+          // 处理收藏内容请求
+          await this.handleFavoriteContent(
+            message.contentToken,
+            message.contentType
+          );
+          break;
       }
     });
   }
@@ -1170,16 +1338,58 @@ export class WebviewManager {
   }
 
   /**
-   * 从回答URL中提取回答ID
+   * 处理收藏内容请求
    */
-  private static extractAnswerIdFromUrl(url: string): string | null {
+  private static async handleFavoriteContent(
+    contentToken: string,
+    contentType: "article" | "answer"
+  ): Promise<void> {
+    // 导入ZhihuApiService，需要动态导入以避免循环依赖
+    const { ZhihuApiService } = await import("../api/index.js");
+
     try {
-      // 匹配格式：https://www.zhihu.com/question/123456/answer/789012
-      const match = url.match(/\/answer\/(\d+)/);
-      return match ? match[1] : null;
+      if (!contentToken) {
+        vscode.window.showErrorMessage("无法获取内容标识，不能收藏");
+        return;
+      }
+
+      // 使用工具类中的收藏夹选择器
+      const selectedCollectionId =
+        await CollectionPickerUtils.showCollectionPicker(
+          contentToken,
+          contentType
+        );
+
+      if (!selectedCollectionId) {
+        // 用户取消了选择
+        return;
+      }
+
+      vscode.window.showInformationMessage("正在收藏...");
+
+      // 调用收藏API
+      const success = await ZhihuApiService.addToCollection(
+        selectedCollectionId,
+        contentToken,
+        contentType
+      );
+
+      if (success) {
+        vscode.window.showInformationMessage(
+          `成功收藏${contentType === "article" ? "文章" : "回答"}！`
+        );
+      } else {
+        vscode.window.showErrorMessage(
+          `收藏${
+            contentType === "article" ? "文章" : "回答"
+          }失败，可能是该收藏夹已有相同内容，换个收藏夹试试~`
+        );
+      }
     } catch (error) {
-      console.error("提取回答ID失败:", error);
-      return null;
+      console.error("收藏内容时出错:", error);
+      vscode.window.showErrorMessage(
+        `收藏失败: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 }

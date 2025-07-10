@@ -5,6 +5,7 @@ import { CookieManager } from "../cookie";
 import { PuppeteerManager } from "../puppeteer";
 import { StatusTreeItem, TreeItem, LinkItem } from "../../types";
 import { ZhihuApiService } from "../api";
+import { CollectionPickerUtils } from "../../../utils";
 
 /**
  * 侧边栏的知乎推荐-树数据提供者
@@ -50,8 +51,12 @@ export class sidebarRecommendListDataProvider
         this.treeView.title = "推荐(加载中...)";
       } else if (list.length > 0) {
         // 统计问题和文章的数量
-        const questionCount = list.filter(item => item.type === 'question' || !item.type).length;
-        const articleCount = list.filter(item => item.type === 'article').length;
+        const questionCount = list.filter(
+          (item) => item.type === "question" || !item.type
+        ).length;
+        const articleCount = list.filter(
+          (item) => item.type === "article"
+        ).length;
 
         if (questionCount > 0 && articleCount > 0) {
           this.treeView.title = `推荐(${list.length}条: ${questionCount}条问题 | ${articleCount}篇文章)`;
@@ -239,7 +244,7 @@ export class sidebarRecommendListDataProvider
         try {
           // imgUrl <meta itemprop="image" content="https://picx.zhimg.com/50/v2-e2024c4c889bdb560c4055ce0aa9d9d8_720w.jpg?source=b6762063">
           const imgElement = item.querySelector('meta[itemprop="image"]');
-          const imgUrl = (imgElement as HTMLMetaElement)?.content || '';
+          const imgUrl = (imgElement as HTMLMetaElement)?.content || "";
 
           // title <meta itemprop="name" content="长辈的什么行为让你感到窒息？">
           const titleElement = item.querySelector('meta[itemprop="name"]');
@@ -253,23 +258,30 @@ export class sidebarRecommendListDataProvider
             ? (urlElement as HTMLMetaElement).content
             : "未知链接";
 
-          // 提取 contentToken，从 URL 中获取问题ID
+          // 提取问题ID
           const questionId = url.split("/").pop() || "";
-          const contentToken = questionId;
 
           // 提取回答的完整URL，用于"在浏览器中打开"功能
           let answerUrl = url; // 默认为问题URL
-          const answerElement = item.querySelector(".AnswerItem .ContentItem-title a");
+          let contentToken = questionId; // 默认使用问题ID
+
+          const answerElement = item.querySelector(
+            ".AnswerItem .ContentItem-title a"
+          );
           if (answerElement) {
             const fullAnswerUrl = (answerElement as HTMLAnchorElement).href;
-            if (fullAnswerUrl && fullAnswerUrl.includes('/answer/')) {
+            if (fullAnswerUrl && fullAnswerUrl.includes("/answer/")) {
               answerUrl = fullAnswerUrl; // 使用完整的回答URL
+              // 从回答URL中提取回答ID用于收藏API
+              const answerIdMatch = fullAnswerUrl.match(/\/answer\/(\d+)/);
+              if (answerIdMatch) {
+                contentToken = answerIdMatch[1]; // 使用回答ID作为contentToken
+              }
             }
           }
 
           const id =
-            `recommend-question-${questionId}` ||
-            `recommend-question-${index}`;
+            `recommend-question-${questionId}` || `recommend-question-${index}`;
 
           const excerptElement = item.querySelector(".RichContent .RichText");
           const excerpt = excerptElement
@@ -292,11 +304,13 @@ export class sidebarRecommendListDataProvider
             title,
             imgUrl,
             excerpt,
-            type: 'question',
+            type: "question",
             contentToken,
             answerUrl, // 回答URL，用于"在浏览器中打开"
           });
-          console.log(`成功解析问题项 #${index + 1}: ${title}, answerUrl: ${answerUrl}`);
+          console.log(
+            `成功解析问题项 #${index + 1}: ${title}, answerUrl: ${answerUrl}`
+          );
         } catch (error) {
           console.error(`解析问题项 #${index + 1} 时出错:`, error);
         }
@@ -312,9 +326,12 @@ export class sidebarRecommendListDataProvider
           }
 
           // 文章标题在 h2.ContentItem-title a 中
-          const titleElement = articleElement.querySelector("h2.ContentItem-title a");
+          const titleElement = articleElement.querySelector(
+            "h2.ContentItem-title a"
+          );
           const title = titleElement
-            ? (titleElement as HTMLAnchorElement).textContent?.trim() || "未知标题"
+            ? (titleElement as HTMLAnchorElement).textContent?.trim() ||
+              "未知标题"
             : "未知标题";
 
           // 文章链接在 href 属性中
@@ -323,14 +340,19 @@ export class sidebarRecommendListDataProvider
             : "未知链接";
 
           // 文章摘要在 .RichContent .RichText 中
-          const excerptElement = articleElement.querySelector(".RichContent .RichText");
+          const excerptElement = articleElement.querySelector(
+            ".RichContent .RichText"
+          );
           const excerpt = excerptElement
-            ? (excerptElement as HTMLElement).textContent?.trim() || "没找到文章摘要"
+            ? (excerptElement as HTMLElement).textContent?.trim() ||
+              "没找到文章摘要"
             : "没找到文章摘要";
 
           // 文章可能没有图片，或者图片在 meta 标签中
-          const imgElement = articleElement.querySelector('meta[itemprop="image"]');
-          const imgUrl = (imgElement as HTMLMetaElement)?.content || '';
+          const imgElement = articleElement.querySelector(
+            'meta[itemprop="image"]'
+          );
+          const imgUrl = (imgElement as HTMLMetaElement)?.content || "";
 
           // 提取 contentToken，从 URL 中获取文章ID
           const articleId = url.split("/").pop() || "";
@@ -340,8 +362,7 @@ export class sidebarRecommendListDataProvider
           const answerUrl = url;
 
           const id =
-            `recommend-article-${articleId}` ||
-            `recommend-article-${index}`;
+            `recommend-article-${articleId}` || `recommend-article-${index}`;
 
           // 检查是否已存在
           if (items.some((item) => item.id === id)) {
@@ -355,7 +376,7 @@ export class sidebarRecommendListDataProvider
             title,
             imgUrl,
             excerpt,
-            type: 'article',
+            type: "article",
             contentToken,
             answerUrl,
           });
@@ -411,24 +432,33 @@ export class sidebarRecommendListDataProvider
 
       // 确定内容类型：文章为2，问题为1
       const contentType = item.type === "article" ? 2 : 1;
-      
+
       vscode.window.showInformationMessage("正在标记为不喜欢...");
 
-      const success = await ZhihuApiService.sendDislikeRequest(item.contentToken, contentType);
-      
+      const success = await ZhihuApiService.sendDislikeRequest(
+        item.contentToken,
+        contentType
+      );
+
       if (success) {
         // 从推荐列表中移除该项目
         const currentList = Store.Zhihu.recommend.list;
-        const filteredList = currentList.filter(listItem => listItem.id !== item.id);
+        const filteredList = currentList.filter(
+          (listItem) => listItem.id !== item.id
+        );
         Store.Zhihu.recommend.list = filteredList;
-        
+
         // 刷新视图
         this.updateTitle();
         this._onDidChangeTreeData.fire();
-        
-        vscode.window.showInformationMessage(`已标记为不喜欢：${item.title.substring(0, 20)}...`);
+
+        vscode.window.showInformationMessage(
+          `已标记为不喜欢：${item.title.substring(0, 20)}...`
+        );
       } else {
-        vscode.window.showWarningMessage("标记不喜欢失败，可能是网络问题或Cookie已过期");
+        vscode.window.showWarningMessage(
+          "标记不喜欢失败，可能是网络问题或Cookie已过期"
+        );
       }
     } catch (error) {
       console.error("不喜欢功能出错:", error);
@@ -440,34 +470,100 @@ export class sidebarRecommendListDataProvider
   async dislikeAuthor(item: LinkItem): Promise<void> {
     try {
       if (!item.contentToken) {
-        vscode.window.showErrorMessage("无法获取内容标识，不能标记为不再推荐该作者");
+        vscode.window.showErrorMessage(
+          "无法获取内容标识，不能标记为不再推荐该作者"
+        );
         return;
       }
 
       // 确定内容类型：文章为2，问题为1
       const contentType = item.type === "article" ? 2 : 1;
-      
+
       vscode.window.showInformationMessage("正在标记为不再推荐该作者...");
 
-      const success = await ZhihuApiService.sendDislikeAuthorRequest(item.contentToken, contentType);
-      
+      const success = await ZhihuApiService.sendDislikeAuthorRequest(
+        item.contentToken,
+        contentType
+      );
+
       if (success) {
         // 从推荐列表中移除该项目
         const currentList = Store.Zhihu.recommend.list;
-        const filteredList = currentList.filter(listItem => listItem.id !== item.id);
+        const filteredList = currentList.filter(
+          (listItem) => listItem.id !== item.id
+        );
         Store.Zhihu.recommend.list = filteredList;
-        
+
         // 刷新视图
         this.updateTitle();
         this._onDidChangeTreeData.fire();
-        
-        vscode.window.showInformationMessage(`已标记为不再推荐该作者：${item.title.substring(0, 20)}...`);
+
+        vscode.window.showInformationMessage(
+          `已标记为不再推荐该作者：${item.title.substring(0, 20)}...`
+        );
       } else {
-        vscode.window.showWarningMessage("标记不再推荐该作者失败，可能是网络问题或Cookie已过期");
+        vscode.window.showWarningMessage(
+          "标记不再推荐该作者失败，可能是网络问题或Cookie已过期"
+        );
       }
     } catch (error) {
       console.error("不再推荐作者功能出错:", error);
       vscode.window.showErrorMessage("标记不再推荐该作者时出现错误");
+    }
+  }
+
+  // 收藏内容到收藏夹
+  async favoriteContent(item: LinkItem): Promise<void> {
+    try {
+      if (!item.contentToken) {
+        vscode.window.showErrorMessage("无法获取内容标识，不能收藏");
+        return;
+      }
+
+      // 确定内容类型
+      // 对于推荐列表中的"问题"类型，实际上是展示的某个具体回答，所以应该收藏为answer
+      const contentType = item.type === "article" ? "article" : "answer";
+
+      // 使用工具类中的分页收藏夹选择器
+      const selectedCollectionId = await CollectionPickerUtils.showCollectionPicker(
+        item.contentToken,
+        contentType
+      );
+
+      if (!selectedCollectionId) {
+        // 用户取消了选择
+        return;
+      }
+
+      vscode.window.showInformationMessage("正在收藏...");
+
+      // 调用收藏API
+      const success = await ZhihuApiService.addToCollection(
+        selectedCollectionId,
+        item.contentToken,
+        contentType
+      );
+
+      if (success) {
+        vscode.window.showInformationMessage(
+          `成功收藏${contentType === "article" ? "文章" : "回答"}！`,
+          "查看收藏夹"
+        ).then((selection) => {
+          if (selection === "查看收藏夹") {
+            // 跳转到收藏夹视图
+            vscode.commands.executeCommand("zhihu-fisher.refreshCollections");
+          }
+        });
+      } else {
+        vscode.window.showErrorMessage(
+          `收藏${contentType === "article" ? "文章" : "回答"}失败，可能是该收藏夹已有相同内容，可以换个收藏夹试试。`
+        );
+      }
+    } catch (error) {
+      console.error("收藏内容时出错:", error);
+      vscode.window.showErrorMessage(
+        `收藏失败: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -586,10 +682,10 @@ export class sidebarRecommendListDataProvider
       const treeItems = list.map(
         (item) => new TreeItem(item, vscode.TreeItemCollapsibleState.None)
       );
-      
+
       // 在推荐列表底部添加刷新按钮
       const refreshButton = new StatusTreeItem(
-        "🔄 刷新推荐列表",
+        "看完啦？点我刷新推荐列表~ (￣▽￣)ノ",
         new vscode.ThemeIcon("refresh"),
         {
           command: "zhihu-fisher.refreshRecommendList",
@@ -597,7 +693,7 @@ export class sidebarRecommendListDataProvider
         },
         "点击刷新推荐列表，获取最新内容"
       );
-      
+
       return [...treeItems, refreshButton];
     }
 
