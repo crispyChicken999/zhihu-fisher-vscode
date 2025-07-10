@@ -3,12 +3,13 @@ import { Store } from '../stores';
 import { ZhihuApiService } from '../zhihu/api';
 import { CollectionItem, CollectionFolder, LinkItem } from '../types';
 import { CollectionCacheManager } from '../../utils/collection-cache';
+import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
 
 /**
  * 注册收藏夹相关命令
  * @param sidebarCollections 收藏夹侧边栏数据提供者
  */
-export function registerCollectionCommands(sidebarCollections: any): vscode.Disposable[] {
+export function registerCollectionCommands(sidebarCollections: sidebarCollectionsDataProvider): vscode.Disposable[] {
   const commands: vscode.Disposable[] = [];
 
   // 注册刷新收藏夹命令
@@ -322,11 +323,42 @@ export function registerCollectionCommands(sidebarCollections: any): vscode.Disp
       Store.Zhihu.collections.isLoading = false;
 
       // 刷新侧边栏
-      sidebarCollections.refresh();
-      vscode.window.showInformationMessage("已重置收藏列表");
+      sidebarCollections.reset();
     }
   );
   commands.push(resetCollectionsListCommand);
+
+  // 注册在浏览器中打开"我创建的收藏夹"页面命令
+  const openMyCollectionsInBrowserCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.openMyCollectionsInBrowser",
+    async () => {
+      if (!Store.Zhihu.collections.userInfo) {
+        vscode.window.showWarningMessage("未找到用户信息，请先加载收藏夹");
+        return;
+      }
+      
+      const userToken = Store.Zhihu.collections.userInfo.url_token;
+      const url = `https://www.zhihu.com/people/${userToken}/collections`;
+      await vscode.env.openExternal(vscode.Uri.parse(url));
+    }
+  );
+  commands.push(openMyCollectionsInBrowserCommand);
+
+  // 注册在浏览器中打开"我关注的收藏夹"页面命令
+  const openFollowingCollectionsInBrowserCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.openFollowingCollectionsInBrowser",
+    async () => {
+      if (!Store.Zhihu.collections.userInfo) {
+        vscode.window.showWarningMessage("未找到用户信息，请先加载收藏夹");
+        return;
+      }
+      
+      const userToken = Store.Zhihu.collections.userInfo.url_token;
+      const url = `https://www.zhihu.com/people/${userToken}/following_collections`;
+      await vscode.env.openExternal(vscode.Uri.parse(url));
+    }
+  );
+  commands.push(openFollowingCollectionsInBrowserCommand);
 
   return commands;
 }

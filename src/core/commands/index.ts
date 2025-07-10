@@ -1,14 +1,19 @@
 import * as vscode from 'vscode';
+import { ZhihuService } from '../zhihu';
 import { registerHotCommands } from './hot';
+import { registerAboutCommands } from './about';
 import { registerMediaCommands } from './media';
-import { registerGeneralCommands } from './general';
 import { registerSearchCommands } from './search';
+import { registerCookieCommands } from './cookie';
 import { registerBrowserCommands } from './browser';
 import { registerWebviewCommands } from './webview';
-import { registerCookieCommands } from './cookie';
-import { registerCollectionCommands } from './collection';
+import { registerGeneralCommands } from './general';
 import { registerRecommendCommands } from './recommend';
-import { registerAboutCommands } from './about';
+import { registerCollectionCommands } from './collection';
+import { sidebarHotListDataProvider } from '../zhihu/sidebar/hot';
+import { sidebarSearchListDataProvider } from '../zhihu/sidebar/search';
+import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
+import { sidebarRecommendListDataProvider } from '../zhihu/sidebar/recommend';
 
 /**
  * 注册所有命令
@@ -18,11 +23,11 @@ import { registerAboutCommands } from './about';
 export function registerAllCommands(
   context: vscode.ExtensionContext,
   dependencies: {
-    zhihuService: any;
-    sidebarHot: any;
-    sidebarRecommend: any;
-    sidebarSearch: any;
-    sidebarCollections: any;
+    zhihuService: ZhihuService;
+    sidebarHot: sidebarHotListDataProvider;
+    sidebarRecommend: sidebarRecommendListDataProvider;
+    sidebarSearch: sidebarSearchListDataProvider;
+    sidebarCollections: sidebarCollectionsDataProvider;
   }
 ) {
   // 注册各类命令

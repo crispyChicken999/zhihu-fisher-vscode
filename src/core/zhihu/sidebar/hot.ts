@@ -62,6 +62,15 @@ export class sidebarHotListDataProvider
     this.getSideBarHotList();
   }
 
+  // 重置热榜列表
+  reset(): void {
+    console.log("重置知乎热榜列表...");
+    Store.Zhihu.hot.list = []; // 清空热榜列表
+    Store.Zhihu.hot.isLoading = false; // 重置加载状态
+    this.updateTitle(); // 更新标题
+    this._onDidChangeTreeData.fire(); // 触发更新UI
+  }
+
   // 仅刷新视图显示（不重新加载数据）
   refreshView(): void {
     console.log("刷新热榜视图显示...");

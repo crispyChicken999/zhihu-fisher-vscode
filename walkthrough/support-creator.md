@@ -9,8 +9,7 @@
 3. 🐛 反馈问题和建议
 4. ☕ 请开发者喝杯咖啡
 
-[⭐ GitHub 点颗星](command:zhihu-fisher.starOnGitHub)
-[问题反馈与建议](command:zhihu-fisher.openFeedback)
+[⭐ GitHub 点颗星](command:zhihu-fisher.starOnGitHub) | [问题反馈与建议](command:zhihu-fisher.openFeedback)
 
 ---
 

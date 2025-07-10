@@ -198,6 +198,25 @@ export function registerAboutCommands(): vscode.Disposable[] {
     }
   );
   commands.push(showTroubleshootingGuideCommand);
-  
+
+  // 注册显示媒体设置说明命令
+  const showMediaDisplaySettingsCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.showMediaDisplaySettings",
+    async () => {
+      // 读取媒体显示设置Markdown文件
+      const uri = vscode.Uri.file(vscode.extensions.getExtension('CrispyChicken.zhihu-fisher')?.extensionPath + '/walkthrough/media/display-settings.md');
+      
+      try {
+        // 尝试使用Markdown预览打开文件
+        await vscode.commands.executeCommand('markdown.showPreview', uri);
+      } catch (error) {
+        // 如果Markdown预览失败，则使用常规编辑器打开
+        vscode.window.showErrorMessage(`无法打开媒体显示设置说明: ${error}`);
+        await vscode.commands.executeCommand('vscode.open', uri);
+      }
+    }
+  );
+  commands.push(showMediaDisplaySettingsCommand);
+
   return commands;
 }

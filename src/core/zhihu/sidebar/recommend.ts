@@ -79,6 +79,15 @@ export class sidebarRecommendListDataProvider
     this.getSideBarRecommendList();
   }
 
+  // 重置推荐列表
+  reset(): void {
+    console.log("重置知乎推荐列表...");
+    Store.Zhihu.recommend.list = []; // 清空推荐列表
+    Store.Zhihu.recommend.isLoading = false; // 重置加载状态
+    this.updateTitle(); // 更新标题
+    this._onDidChangeTreeData.fire(); // 触发更新UI
+  }
+
   // 仅刷新视图显示（不重新加载数据）
   refreshView(): void {
     console.log("刷新推荐视图显示...");
@@ -134,6 +143,9 @@ export class sidebarRecommendListDataProvider
 
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error("加载知乎推荐失败:", errorMsg);
+      vscode.window.showErrorMessage(
+        `加载知乎推荐失败: ${errorMsg}`
+      );
     }
   }
 

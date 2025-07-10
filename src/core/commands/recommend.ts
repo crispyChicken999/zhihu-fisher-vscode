@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
+import { sidebarRecommendListDataProvider } from '../zhihu/sidebar/recommend';
 
 /**
  * 注册推荐列表相关命令
  * @param sidebarRecommend 推荐列表侧边栏数据提供者
  */
-export function registerRecommendCommands(sidebarRecommend: any): vscode.Disposable[] {
+export function registerRecommendCommands(sidebarRecommend: sidebarRecommendListDataProvider): vscode.Disposable[] {
   const commands: vscode.Disposable[] = [];
 
   // 注册刷新推荐命令

@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
 import { Store } from '../stores';
 import { PuppeteerManager } from '../zhihu/puppeteer';
+import { sidebarSearchListDataProvider } from '../zhihu/sidebar/search';
 
 /**
  * 注册搜索相关命令
  * @param sidebarSearch 搜索侧边栏数据提供者
  */
-export function registerSearchCommands(sidebarSearch: any): vscode.Disposable[] {
+export function registerSearchCommands(sidebarSearch: sidebarSearchListDataProvider): vscode.Disposable[] {
   const commands: vscode.Disposable[] = [];
 
   // 注册重置搜索结果命令

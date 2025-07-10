@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
 import { PuppeteerManager } from '../zhihu/puppeteer';
+import { ZhihuService } from '../zhihu/index';
+import { sidebarHotListDataProvider } from '../zhihu/sidebar/hot';
+import { sidebarRecommendListDataProvider } from '../zhihu/sidebar/recommend';
+import { sidebarSearchListDataProvider } from '../zhihu/sidebar/search';
+import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
 
 /**
  * 注册Cookie相关命令
@@ -7,13 +12,14 @@ import { PuppeteerManager } from '../zhihu/puppeteer';
  * @param sidebarHot 热榜侧边栏数据提供者
  * @param sidebarRecommend 推荐侧边栏数据提供者
  * @param sidebarSearch 搜索侧边栏数据提供者
+ * @param sidebarCollections 收藏夹侧边栏数据提供者
  */
 export function registerCookieCommands(
-  zhihuService: any,
-  sidebarHot: any,
-  sidebarRecommend: any,
-  sidebarSearch: any,
-  sidebarCollections: any
+  zhihuService: ZhihuService,
+  sidebarHot: sidebarHotListDataProvider,
+  sidebarRecommend: sidebarRecommendListDataProvider,
+  sidebarSearch: sidebarSearchListDataProvider,
+  sidebarCollections: sidebarCollectionsDataProvider
 ): vscode.Disposable[] {
   const commands: vscode.Disposable[] = [];
 
@@ -47,8 +53,8 @@ export function registerCookieCommands(
     "zhihu-fisher.clearCookie",
     () => {
       zhihuService.clearCookie();
-      sidebarHot.refresh();
-      sidebarRecommend.refresh();
+      sidebarHot.reset();
+      sidebarRecommend.reset();
       sidebarSearch.reset();
       sidebarCollections.reset();
     }

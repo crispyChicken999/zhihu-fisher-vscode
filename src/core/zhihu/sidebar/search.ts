@@ -36,7 +36,7 @@ export class sidebarSearchListDataProvider
    */
   refresh(): void {
     console.log("触发知乎搜索结果刷新...");
-    this.searchContent("");
+    this._onDidChangeTreeData.fire(); // 触发更新UI
   }
 
   // 重置搜索状态
