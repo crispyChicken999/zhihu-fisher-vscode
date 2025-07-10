@@ -99,7 +99,9 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
         // 根据内容类型设置默认图标
         switch (collectionItem.type) {
           case "article":
-            this.iconPath = new vscode.ThemeIcon("remote-explorer-documentation");
+            this.iconPath = new vscode.ThemeIcon(
+              "remote-explorer-documentation"
+            );
             break;
           case "question":
             this.iconPath = new vscode.ThemeIcon("question");
@@ -224,7 +226,7 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
       this.tooltip = new vscode.MarkdownString(tooltipContent);
     }
 
-    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`)
+    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`);
 
     this.contextValue = shouldShowImage
       ? "collectionItemWithImage"
@@ -584,6 +586,23 @@ export class sidebarCollectionsDataProvider
    */
   refresh(): void {
     this.loadCollections();
+  }
+
+  reset(): void {
+    // 重置收藏夹数据
+    Store.Zhihu.collections.myCollections = [];
+    Store.Zhihu.collections.followingCollections = [];
+    Store.Zhihu.collections.myCollectionsPagination = {
+      currentPage: 1,
+      hasMore: true,
+      isLoading: false,
+    };
+    Store.Zhihu.collections.followingCollectionsPagination = {
+      currentPage: 1,
+      hasMore: true,
+      isLoading: false,
+    };
+    Store.Zhihu.collections.isLoading = false;
   }
 
   /**

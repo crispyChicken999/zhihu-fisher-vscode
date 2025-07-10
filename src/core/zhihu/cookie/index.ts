@@ -72,6 +72,8 @@ export class CookieManager {
     vscode.commands.executeCommand("zhihu-fisher.refreshRecommendList");
     // 重新刷新一下搜索列表
     vscode.commands.executeCommand("zhihu-fisher.resetSearchList");
+    // 重新刷新一下收藏列表
+    vscode.commands.executeCommand("zhihu-fisher.resetCollectionsList");
   }
 
   // 获取当前 cookie
