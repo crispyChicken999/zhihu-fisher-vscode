@@ -174,11 +174,6 @@
         "icon": "$(tools)"
       },
       {
-        "command": "zhihu-fisher.showMediaDisplaySettings",
-        "title": "自定义媒体显示说明",
-        "icon": "$(symbol-enum)"
-      },
-      {
         "command": "zhihu-fisher.refreshMyCollections",
         "title": "刷新我创建的收藏夹",
         "icon": "$(refresh)"
@@ -395,10 +390,6 @@
         {
           "command": "zhihu-fisher.setMediaModeNone",
           "group": "1_media@3"
-        },
-        {
-          "command": "zhihu-fisher.showMediaDisplaySettings",
-          "group": "2_help@1"
         }
       ],
       "view/item/context": [
@@ -559,7 +550,7 @@
           {
             "id": "media-settings",
             "title": "第五步：自定义媒体显示",
-            "description": "知乎摸鱼提供三种图片视频显示模式，适应不同的使用场景：\n\n👁️ **正常模式** - 完整显示所有媒体内容\n[设置正常模式](command:zhihu-fisher.setMediaModeNormal)\n\n📱 **迷你模式** - 缩小显示，可自定义缩放比例（1-100%）\n[设置迷你模式](command:zhihu-fisher.setMediaModeMini)\n\n🙈 **隐藏模式** - 隐藏所有图片视频，专注文字\n[设置隐藏模式](command:zhihu-fisher.setMediaModeNone)\n\n💡 **提示：** 在文章中按 `/` 键可以快速切换显示模式！\n\n[查看详细说明](command:zhihu-fisher.showMediaDisplaySettings)",
+            "description": "知乎摸鱼提供三种图片视频显示模式，适应不同的使用场景：\n\n👁️ **正常模式** - 完整显示所有媒体内容\n[设置正常模式](command:zhihu-fisher.setMediaModeNormal)\n\n📱 **迷你模式** - 缩小显示，可自定义缩放比例（1-100%）\n[设置迷你模式](command:zhihu-fisher.setMediaModeMini)\n\n🙈 **隐藏模式** - 隐藏所有图片视频，专注文字\n[设置隐藏模式](command:zhihu-fisher.setMediaModeNone)\n\n💡 **提示：** 在文章中按 `/` 键可以快速切换显示模式！\n",
             "media": {
               "markdown": "walkthrough/display-settings.md"
             },
@@ -567,7 +558,6 @@
               "onCommand:zhihu-fisher.setMediaModeNormal",
               "onCommand:zhihu-fisher.setMediaModeMini",
               "onCommand:zhihu-fisher.setMediaModeNone",
-              "onCommand:zhihu-fisher.showMediaDisplaySettings"
             ]
           },
           {
