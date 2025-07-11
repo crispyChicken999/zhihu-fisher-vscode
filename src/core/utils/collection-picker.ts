@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { CollectionCacheManager } from "./collection-cache.js";
+import { ZhihuApiService } from "../zhihu/api/index";
+import { CollectionCacheManager } from "./collection-cache";
 
 /**
  * 收藏夹选择器工具类
@@ -15,7 +16,6 @@ export class CollectionPickerUtils {
     contentToken: string,
     contentType: "article" | "answer"
   ): Promise<string | null> {
-    const { ZhihuApiService } = await import("../core/zhihu/api/index.js");
 
     let currentPage = 0;
     const limit = 5; // 保持每页5个收藏夹

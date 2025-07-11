@@ -1,15 +1,17 @@
-import * as vscode from 'vscode';
-import { Store } from '../stores';
-import { ZhihuApiService } from '../zhihu/api';
-import { CollectionItem, CollectionFolder, LinkItem } from '../types';
-import { CollectionCacheManager } from '../../utils/collection-cache';
-import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
+import * as vscode from "vscode";
+import { Store } from "../stores";
+import { ZhihuApiService } from "../zhihu/api";
+import { CollectionItem, CollectionFolder, LinkItem } from "../types";
+import { CollectionCacheManager } from "../utils/collection-cache";
+import { sidebarCollectionsDataProvider } from "../zhihu/sidebar/collections";
 
 /**
  * 注册收藏夹相关命令
  * @param sidebarCollections 收藏夹侧边栏数据提供者
  */
-export function registerCollectionCommands(sidebarCollections: sidebarCollectionsDataProvider): vscode.Disposable[] {
+export function registerCollectionCommands(
+  sidebarCollections: sidebarCollectionsDataProvider
+): vscode.Disposable[] {
   const commands: vscode.Disposable[] = [];
 
   // 注册刷新收藏夹命令
@@ -306,9 +308,10 @@ export function registerCollectionCommands(sidebarCollections: sidebarCollection
   const clearCollectionCacheCommand = vscode.commands.registerCommand(
     "zhihu-fisher.clearCollectionCache",
     async () => {
-      // const { CollectionCacheManager } = await import("../../utils/index.js");
       CollectionCacheManager.clearCache();
-      vscode.window.showInformationMessage("已清理收藏夹缓存，下次收藏时将重新获取最新数据");
+      vscode.window.showInformationMessage(
+        "已清理收藏夹缓存，下次收藏时将重新获取最新数据"
+      );
     }
   );
   commands.push(clearCollectionCacheCommand);
@@ -336,7 +339,7 @@ export function registerCollectionCommands(sidebarCollections: sidebarCollection
         vscode.window.showWarningMessage("未找到用户信息，请先加载收藏夹");
         return;
       }
-      
+
       const userToken = Store.Zhihu.collections.userInfo.url_token;
       const url = `https://www.zhihu.com/people/${userToken}/collections`;
       await vscode.env.openExternal(vscode.Uri.parse(url));
@@ -345,19 +348,20 @@ export function registerCollectionCommands(sidebarCollections: sidebarCollection
   commands.push(openMyCollectionsInBrowserCommand);
 
   // 注册在浏览器中打开"我关注的收藏夹"页面命令
-  const openFollowingCollectionsInBrowserCommand = vscode.commands.registerCommand(
-    "zhihu-fisher.openFollowingCollectionsInBrowser",
-    async () => {
-      if (!Store.Zhihu.collections.userInfo) {
-        vscode.window.showWarningMessage("未找到用户信息，请先加载收藏夹");
-        return;
+  const openFollowingCollectionsInBrowserCommand =
+    vscode.commands.registerCommand(
+      "zhihu-fisher.openFollowingCollectionsInBrowser",
+      async () => {
+        if (!Store.Zhihu.collections.userInfo) {
+          vscode.window.showWarningMessage("未找到用户信息，请先加载收藏夹");
+          return;
+        }
+
+        const userToken = Store.Zhihu.collections.userInfo.url_token;
+        const url = `https://www.zhihu.com/people/${userToken}/following_collections`;
+        await vscode.env.openExternal(vscode.Uri.parse(url));
       }
-      
-      const userToken = Store.Zhihu.collections.userInfo.url_token;
-      const url = `https://www.zhihu.com/people/${userToken}/following_collections`;
-      await vscode.env.openExternal(vscode.Uri.parse(url));
-    }
-  );
+    );
   commands.push(openFollowingCollectionsInBrowserCommand);
 
   return commands;

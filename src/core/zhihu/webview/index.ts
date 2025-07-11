@@ -4,10 +4,11 @@ import { Store } from "../../stores";
 import { HtmlRenderer } from "./html";
 import * as Puppeteer from "puppeteer";
 import { CookieManager } from "../cookie";
+import { ZhihuApiService } from "../api/index";
 import { PuppeteerManager } from "../puppeteer";
 import { CommentsManager } from "./components/comments";
 import { LinkItem, WebViewItem, AnswerItem } from "../../types";
-import { WebViewUtils, CollectionPickerUtils } from "../../../utils";
+import { WebViewUtils, CollectionPickerUtils } from "../../utils";
 
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
@@ -1344,9 +1345,6 @@ export class WebviewManager {
     contentToken: string,
     contentType: "article" | "answer"
   ): Promise<void> {
-    // 导入ZhihuApiService，需要动态导入以避免循环依赖
-    const { ZhihuApiService } = await import("../api/index.js");
-
     try {
       if (!contentToken) {
         vscode.window.showErrorMessage("无法获取内容标识，不能收藏");

@@ -5,7 +5,7 @@ import { CookieManager } from "../cookie";
 import { PuppeteerManager } from "../puppeteer";
 import { StatusTreeItem, TreeItem, LinkItem } from "../../types";
 import { ZhihuApiService } from "../api";
-import { CollectionPickerUtils } from "../../../utils";
+import { CollectionPickerUtils } from "../../utils";
 
 /**
  * 侧边栏的知乎推荐-树数据提供者

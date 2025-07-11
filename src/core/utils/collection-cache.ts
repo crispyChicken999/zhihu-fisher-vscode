@@ -1,5 +1,3 @@
-import * as vscode from "vscode";
-
 /**
  * 收藏夹缓存管理器
  */

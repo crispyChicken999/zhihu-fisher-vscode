@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { PuppeteerManager } from "../core/zhihu/puppeteer/index.js";
+import { PuppeteerManager } from "../zhihu/puppeteer/index.js";
 
 /**
  * WebView 工具类
