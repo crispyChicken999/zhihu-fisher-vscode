@@ -57,5 +57,18 @@ export function registerSearchCommands(sidebarSearch: sidebarSearchListDataProvi
   );
   commands.push(searchContentCommand);
 
+  // 收藏搜索项命令
+  const favoriteSearchItemCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.favoriteSearchItem",
+    async (item: any) => {
+      if (item && item.listItem) {
+        await sidebarSearch.favoriteContent(item.listItem);
+      } else {
+        vscode.window.showErrorMessage("无法获取内容信息");
+      }
+    }
+  );
+  commands.push(favoriteSearchItemCommand);
+
   return commands;
 }

@@ -90,6 +90,7 @@ export class HtmlRenderer {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
     const miniMediaScale = config.get<number>("miniMediaScale", 50);
+    const enableDisguise = config.get<boolean>('enableDisguise', true);
 
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];    if (!currentAnswer) {
@@ -97,7 +98,7 @@ export class HtmlRenderer {
     }
 
     // 构建页面组件
-    const renderOptions = { mediaDisplayMode, miniMediaScale };
+    const renderOptions = { mediaDisplayMode, miniMediaScale, enableDisguise };
 
     // 判断内容类型：通过URL判断专栏文章
     const contentType = webview.url.includes('zhuanlan.zhihu.com') ? "article" : "question";

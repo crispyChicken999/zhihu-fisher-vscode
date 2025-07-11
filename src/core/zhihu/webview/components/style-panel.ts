@@ -6,10 +6,15 @@ import { Component, RenderOptions } from "./base";
 export class StylePanelComponent implements Component {
   private mediaDisplayMode: string = "normal";
   private miniMediaScale: number = 50;
+  private enableDisguise: boolean = true;
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
     this.miniMediaScale = renderOptions.miniMediaScale || 50;
+    this.enableDisguise =
+      renderOptions.enableDisguise !== undefined
+        ? renderOptions.enableDisguise
+        : true;
   }
 
   /**
@@ -111,11 +116,49 @@ export class StylePanelComponent implements Component {
             </select>
           </div>
 
-          <div class="style-option" id="mini-scale-option" style="margin: 10px 0; ${this.mediaDisplayMode === 'mini' ? '' : 'display: none;'}">
+          <div class="style-option" id="mini-scale-option" style="margin: 10px 0; ${
+            this.mediaDisplayMode === "mini" ? "" : "display: none;"
+          }">
             <label for="mini-media-scale-slider" style="display: block; margin-bottom: 5px;">Mini模式图片缩放比例</label>
             <div style="display: flex; align-items: center; gap: 10px;">
-              <input type="range" id="mini-media-scale-slider" min="1" max="100" value="${this.miniMediaScale}" oninput="changeMiniMediaScale(this.value)" style="flex: 1;">
-              <span id="mini-media-scale-value" style="width: 40px;">${this.miniMediaScale}%</span>
+              <input type="range" id="mini-media-scale-slider" min="1" max="100" value="${
+                this.miniMediaScale
+              }" oninput="changeMiniMediaScale(this.value)" style="flex: 1;">
+              <span id="mini-media-scale-value" style="width: 40px;">${
+                this.miniMediaScale
+              }%</span>
+            </div>
+          </div>
+
+          <div class="style-option" style="margin: 20px 0 10px 0;">
+            <label style="display: block; margin-bottom: 10px;">
+              智能伪装功能
+              <span style="color: #666; font-size: 12px; margin-left: 8px;">
+                (防老板/同事发现摸鱼)
+              </span>
+            </label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input
+                  type="checkbox"
+                  id="disguise-toggle"
+                  ${this.enableDisguise ? "checked" : ""}
+                  onchange="toggleDisguiseMode(this.checked)"
+                  style="transform: scale(1.2);"
+                >
+                <span style="font-weight: 500;">启用智能伪装</span>
+              </label>
+            </div>
+            <div style="font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; padding: 8px 12px; background: var(--vscode-textBlockQuote-background); border: 1px solid var(--vscode-textBlockQuote-border); border-radius: 4px;">
+              <div style="margin-bottom: 4px;">
+                <strong style="color: var(--vscode-editor-foreground);">功能说明：</strong>当页面失去焦点时，自动将标题和图标伪装成代码文件
+              </div>
+              <div style="margin-bottom: 4px;">
+                <strong style="color: var(--vscode-editor-foreground);">使用场景：</strong>工作时间浏览内容，避免被老板/同事发现摸鱼 (～￣▽￣)～
+              </div>
+              <div>
+                更多设置请在 <strong style="color: var(--vscode-textLink-foreground);">设置 → 扩展 → 知乎摸鱼</strong> 中调整，或在侧边栏菜单中快速切换
+              </div>
             </div>
           </div>
 
@@ -140,7 +183,6 @@ export class StylePanelComponent implements Component {
               </label>
             </div>
           </div>
-
         </div>
 
         <div class="style-buttons" >

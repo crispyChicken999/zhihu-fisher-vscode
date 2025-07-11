@@ -896,6 +896,16 @@ function toggleStylePanel() {
   }
 }
 
+/**
+ * 切换智能伪装功能
+ */
+function toggleDisguiseMode(enabled) {
+  vscode.postMessage({
+    command: "toggleDisguise",
+    enabled: enabled
+  });
+}
+
 // 加载评论
 function loadComments(answerId, page = 1) {
   const commentsContainer = document.querySelector('.comments-container');

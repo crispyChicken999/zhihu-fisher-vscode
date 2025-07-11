@@ -41,6 +41,11 @@
         "icon": "$(star)"
       },
       {
+        "command": "zhihu-fisher.favoriteSearchItem",
+        "title": "收藏到收藏夹",
+        "icon": "$(star)"
+      },
+      {
         "command": "zhihu-fisher.dislikeAuthor",
         "title": "不再推荐该作者(屏蔽作者)",
         "icon": "$(account)"
@@ -225,7 +230,7 @@
       },
       {
         "command": "zhihu-fisher.toggleDisguise",
-        "title": "切换伪装功能",
+        "title": "切换智能伪装",
         "icon": "$(eye)"
       },
       {
@@ -318,9 +323,14 @@
           "group": "navigation@1"
         },
         {
-          "submenu": "zhihu-fisher.mediaDisplayMenu",
+          "command": "zhihu-fisher.toggleDisguise",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "bmode@1"
+        },
+        {
+          "submenu": "zhihu-fisher.mediaDisplayMenu",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "group": "bmode@2"
         },
         {
           "command": "zhihu-fisher.configureBrowser",
@@ -411,6 +421,11 @@
         {
           "command": "zhihu-fisher.favoriteRecommendItem",
           "when": "view == zhihuRecommendList && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.favoriteSearchItem",
+          "when": "view == zhihuSearchList && (viewItem == TreeItem || viewItem == TreeItemWithImage)",
           "group": "inline"
         },
         {
@@ -557,7 +572,7 @@
             "completionEvents": [
               "onCommand:zhihu-fisher.setMediaModeNormal",
               "onCommand:zhihu-fisher.setMediaModeMini",
-              "onCommand:zhihu-fisher.setMediaModeNone",
+              "onCommand:zhihu-fisher.setMediaModeNone"
             ]
           },
           {

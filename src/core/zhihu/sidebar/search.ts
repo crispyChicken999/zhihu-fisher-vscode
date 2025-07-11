@@ -4,6 +4,8 @@ import { Store } from "../../stores";
 import { CookieManager } from "../cookie";
 import { PuppeteerManager } from "../puppeteer";
 import { StatusTreeItem, TreeItem, LinkItem } from "../../types";
+import { ZhihuApiService } from "../api";
+import { CollectionPickerUtils } from "../../utils";
 
 /**
  * 侧边栏的知乎搜索-树数据提供者
@@ -345,6 +347,9 @@ export class sidebarSearchListDataProvider
                     excerpt = "没找到专栏摘要(っ °Д °;)っ";
                   }
 
+                  // 使用已提取的articleId作为contentToken
+                  const contentToken = articleId;
+
                   return {
                     id,
                     url: fullUrl,
@@ -352,6 +357,7 @@ export class sidebarSearchListDataProvider
                     title,
                     excerpt,
                     type: "article" as const,
+                    contentToken,
                   };
                 }
               }
@@ -394,7 +400,22 @@ export class sidebarSearchListDataProvider
 
             const url = (urlMeta as HTMLMetaElement).content || "";
             const title = (titleMeta as HTMLMetaElement).content || "";
-            const id = `search-question-${url.split("/").pop()}-${index}`;
+            
+            // 提取问题ID和可能的回答ID作为contentToken
+            const questionId = url.split("/").pop() || "";
+            let contentToken = questionId; // 默认使用问题ID
+
+            // 检查是否有具体的回答链接
+            const answerLink = item.querySelector('a[href*="/answer/"]');
+            if (answerLink) {
+              const answerUrl = answerLink.getAttribute("href") || "";
+              const answerIdMatch = answerUrl.match(/\/answer\/(\d+)/);
+              if (answerIdMatch) {
+                contentToken = answerIdMatch[1]; // 使用回答ID作为contentToken
+              }
+            }
+
+            const id = `search-question-${questionId}-${index}`;
 
             // 提取回答内容摘要
             const contentElement = item.querySelector(".RichText");
@@ -413,6 +434,7 @@ export class sidebarSearchListDataProvider
               title,
               excerpt,
               type: "question" as const,
+              contentToken,
             };
           } catch (error) {
             console.error(`解析问题回答项时出错:`, error);
@@ -658,6 +680,61 @@ export class sidebarSearchListDataProvider
       } else {
         this.treeView.title = "搜索";
       }
+    }
+  }
+
+  // 收藏内容到收藏夹
+  async favoriteContent(item: LinkItem): Promise<void> {
+    try {
+      if (!item.contentToken) {
+        vscode.window.showErrorMessage("无法获取内容标识，不能收藏");
+        return;
+      }
+
+      // 确定内容类型
+      // 对于搜索列表中的"问题"类型，实际上是展示的某个具体回答，所以应该收藏为answer
+      const contentType = item.type === "article" ? "article" : "answer";
+
+      // 使用工具类中的分页收藏夹选择器
+      const selectedCollectionId = await CollectionPickerUtils.showCollectionPicker(
+        item.contentToken,
+        contentType
+      );
+
+      if (!selectedCollectionId) {
+        // 用户取消了选择
+        return;
+      }
+
+      vscode.window.showInformationMessage("正在收藏...");
+
+      // 调用收藏API
+      const success = await ZhihuApiService.addToCollection(
+        selectedCollectionId,
+        item.contentToken,
+        contentType
+      );
+
+      if (success) {
+        vscode.window.showInformationMessage(
+          `成功收藏${contentType === "article" ? "文章" : "回答"}！`,
+          "查看收藏夹"
+        ).then((selection) => {
+          if (selection === "查看收藏夹") {
+            // 跳转到收藏夹视图
+            vscode.commands.executeCommand("zhihu-fisher.refreshCollections");
+          }
+        });
+      } else {
+        vscode.window.showErrorMessage(
+          `收藏${contentType === "article" ? "文章" : "回答"}失败，可能是该收藏夹已有相同内容，可以换个收藏夹试试。`
+        );
+      }
+    } catch (error) {
+      console.error("收藏内容时出错:", error);
+      vscode.window.showErrorMessage(
+        `收藏失败: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 }

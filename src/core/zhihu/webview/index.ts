@@ -1282,6 +1282,11 @@ export class WebviewManager {
             message.contentType
           );
           break;
+
+        case "toggleDisguise":
+          // 处理智能伪装开关切换
+          await this.handleToggleDisguise(message.enabled);
+          break;
       }
     });
   }
@@ -1420,6 +1425,26 @@ export class WebviewManager {
       console.error("收藏内容时出错:", error);
       vscode.window.showErrorMessage(
         `收藏失败: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * 处理智能伪装开关切换
+   * @param enabled 是否启用智能伪装
+   */
+  private static async handleToggleDisguise(enabled: boolean): Promise<void> {
+    try {
+      const config = vscode.workspace.getConfiguration('zhihu-fisher');
+      await config.update('enableDisguise', enabled, vscode.ConfigurationTarget.Global);
+      
+      vscode.window.showInformationMessage(
+        `智能伪装功能已${enabled ? '启用' : '禁用'}`
+      );
+    } catch (error) {
+      console.error("切换智能伪装功能时出错:", error);
+      vscode.window.showErrorMessage(
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
