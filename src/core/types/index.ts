@@ -491,6 +491,8 @@ export interface CollectionFolder {
   totalCount?: number;
   /** 是否为私密收藏夹 */
   isPrivate?: boolean;
+  /** 最后更新时间 */
+  lastUpdated?: string;
 }
 
 /** 收藏项 */

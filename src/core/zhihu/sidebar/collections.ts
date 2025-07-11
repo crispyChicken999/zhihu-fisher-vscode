@@ -41,7 +41,54 @@ export class CollectionTreeItem extends vscode.TreeItem {
 
     // 使用固定ID以支持状态记忆
     this.id = `collection-${collectionFolder.id}`;
-    this.tooltip = collectionFolder.description || collectionFolder.title;
+
+    // 构建详细的tooltip信息
+    if (itemType === "folder") {
+      const tooltip = new vscode.MarkdownString();
+      tooltip.supportHtml = true;
+
+      // 收藏夹标题
+      tooltip.appendMarkdown(`#### **${collectionFolder.title}**\n\n`);
+      tooltip.appendMarkdown(`---\n\n`);
+
+      // 私密状态
+      if (collectionFolder.isPrivate) {
+        tooltip.appendMarkdown(`🔒 **私密收藏夹**\n\n`);
+      } else {
+        tooltip.appendMarkdown(`🌐 **公开收藏夹**\n\n`);
+      }
+
+      // 收藏夹描述
+      if (collectionFolder.description && collectionFolder.description.trim()) {
+        tooltip.appendMarkdown(`**描述**：${collectionFolder.description}\n\n`);
+      } else {
+        tooltip.appendMarkdown(`**描述**：无描述\n\n`);
+      }
+
+      // 统计信息
+      const loadedCount = collectionFolder.items.length;
+      const totalCount = collectionFolder.totalCount ?? "未知";
+      tooltip.appendMarkdown(`**收藏数量**：${totalCount} 个\n\n`);
+      tooltip.appendMarkdown(`**已加载**：${loadedCount} 个\n\n`);
+
+      // 更新时间信息
+      if (collectionFolder.lastUpdated) {
+        tooltip.appendMarkdown(`**最后更新**：${collectionFolder.lastUpdated}\n\n`);
+      }
+
+      // 收藏夹URL信息
+      tooltip.appendMarkdown(`**链接**：[打开收藏夹](${collectionFolder.url})\n\n`);
+
+      // 分割线
+      tooltip.appendMarkdown(`---\n\n`);
+
+      // Alt键提示
+      tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`);
+
+      this.tooltip = tooltip;
+    } else {
+      this.tooltip = collectionFolder.description || collectionFolder.title;
+    }
 
     if (itemType === "folder") {
       this.iconPath = new vscode.ThemeIcon("folder");
@@ -196,6 +243,9 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
         );
       }
 
+      // Alt键提示
+      markdownTooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`);
+
       markdownTooltip.supportHtml = true;
       markdownTooltip.isTrusted = true;
       this.tooltip = markdownTooltip;
@@ -230,10 +280,13 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
         tooltipContent += `**收藏时间**: ${date.toLocaleString()}`;
       }
 
+      // Alt键提示
+      tooltipContent += `\n ___ \n\n *按住 Alt 键将鼠标悬停*`;
+
       this.tooltip = new vscode.MarkdownString(tooltipContent);
     }
 
-    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`);
+    // 移除重复的appendMarkdown调用，因为已经在上面各自的分支中添加了
 
     this.contextValue = shouldShowImage
       ? "collectionItemWithImage"
@@ -401,8 +454,14 @@ export class sidebarCollectionsDataProvider
     const myCollectionsCount = Store.Zhihu.collections.myCollections.length;
     console.log(`生成侧边栏标题时，我创建的收藏夹数量: ${myCollectionsCount}`);
 
+    // 构建"我创建的收藏夹"标题，包含用户信息
+    let myCollectionsTitle = `我创建的收藏夹 (${myCollectionsCount})`;
+    if (Store.Zhihu.collections.userInfo) {
+      myCollectionsTitle = `我创建的收藏夹 (${myCollectionsCount}) - ${Store.Zhihu.collections.userInfo.name}`;
+    }
+
     const myCollectionsItem = new vscode.TreeItem(
-      `我创建的收藏夹 (${myCollectionsCount})`,
+      myCollectionsTitle,
       this.expandedStates.get("myCollectionsRoot") !== false
         ? vscode.TreeItemCollapsibleState.Expanded
         : vscode.TreeItemCollapsibleState.Collapsed
@@ -791,8 +850,13 @@ export class sidebarCollectionsDataProvider
             const href = titleElement.attr("href");
             const title = titleElement.text().trim();
 
-            // 尝试获取收藏夹的总数信息
+            // 获取收藏夹描述
+            const descriptionElement = $(element).find(".SelfCollectionItem-description");
+            const description = descriptionElement.text().trim();
+
+            // 尝试获取收藏夹的总数信息和更新时间
             let totalCount: number | undefined = undefined;
+            let updateTime: string | undefined = undefined;
 
             // 查找包含数量信息的元素，通常在SelfCollectionItem-actions中
             const actionsElement = $(element).find(
@@ -800,11 +864,20 @@ export class sidebarCollectionsDataProvider
             );
             if (actionsElement.length > 0) {
               const actionsText = actionsElement.text().trim();
+              console.log(`收藏夹"${title}"的actions文本: ${actionsText}`);
+              
               // 尝试匹配 "N 条内容" 或 "N条内容" 格式，例如："2025-07-08 更新 · 2 条内容 · 0 人关注"
               const countMatch = actionsText.match(/(\d+)\s*条内容/);
               if (countMatch) {
                 totalCount = parseInt(countMatch[1], 10);
                 console.log(`解析到收藏夹总数: ${totalCount}`);
+              }
+              
+              // 尝试匹配更新时间，格式如 "2025-07-11 更新"
+              const updateTimeMatch = actionsText.match(/(\d{4}-\d{2}-\d{2})\s*更新/);
+              if (updateTimeMatch) {
+                updateTime = updateTimeMatch[1];
+                console.log(`解析到更新时间: ${updateTime}`);
               }
             }
 
@@ -821,6 +894,7 @@ export class sidebarCollectionsDataProvider
                   url: href.startsWith("http")
                     ? href
                     : `https://www.zhihu.com${href}`,
+                  description: description || undefined, // 添加描述信息
                   items: [],
                   isLoaded: false,
                   currentOffset: 0,
@@ -829,8 +903,10 @@ export class sidebarCollectionsDataProvider
                   isLoading: false,
                   type: "created",
                   isPrivate: isPrivate,
+                  lastUpdated: updateTime, // 添加更新时间
                 });
 
+                console.log(`解析收藏夹: ${title}, 描述: ${description || "无"}, 私密: ${isPrivate}, 更新时间: ${updateTime || "未知"}`);
                 if (isPrivate) {
                   console.log(`检测到私密收藏夹: ${title}`);
                 }

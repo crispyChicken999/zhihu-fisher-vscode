@@ -462,6 +462,8 @@ export function registerCollectionCommands(
                   isLoading: false,
                   type: "created",
                   totalCount: result.collection.item_count,
+                  isPrivate: !isPublic, // 根据用户选择的可见性设置私密状态
+                  lastUpdated: new Date().toISOString().split('T')[0], // 设置当前日期为更新时间
                 };
 
                 // 添加到我创建的收藏夹列表的开头

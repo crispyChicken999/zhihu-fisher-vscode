@@ -443,6 +443,11 @@
           "group": "inline"
         },
         {
+          "command": "zhihu-fisher.openCollectionInBrowser",
+          "when": "view == zhihuCollectionsList && viewItem == myCollectionFolder",
+          "group": "inline"
+        },
+        {
           "command": "zhihu-fisher.openCollectionItemInBrowser",
           "when": "view == zhihuCollectionsList && (viewItem == collectionItem || viewItem == collectionItemWithImage)",
           "group": "inline"
