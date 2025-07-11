@@ -268,4 +268,64 @@ export class ZhihuApiService {
       return false;
     }
   }
+
+  /**
+   * 创建收藏夹
+   */
+  static async createCollection(
+    title: string,
+    description: string,
+    isPublic: boolean
+  ): Promise<{ success: boolean; collection?: any; error?: string }> {
+    try {
+      const url = "https://www.zhihu.com/api/v4/collections";
+
+      const result = await this.makeRequest(
+        url,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            description,
+            is_public: isPublic,
+          }),
+          contentType: "application/json",
+        },
+        "创建收藏夹"
+      );
+
+      if (result.collection.id) {
+        return { success: true, collection: result.collection };
+      } else {
+        return { success: false, error: result.message || "创建收藏夹失败" };
+      }
+    } catch (error: any) {
+      console.error("创建收藏夹时出错:", error);
+      return { success: false, error: error.message || "创建收藏夹失败" };
+    }
+  }
+
+  /**
+   * 删除收藏夹
+   */
+  static async deleteCollection(collectionId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log("删除收藏夹 - 收到的ID:", collectionId);
+      const url = `https://www.zhihu.com/api/v4/collections/${collectionId}`;
+      console.log("删除收藏夹 - 请求URL:", url);
+
+      const result = await this.makeRequest(
+        url,
+        {
+          method: "DELETE",
+        },
+        "删除收藏夹"
+      );
+
+      return { success: result.success === true };
+    } catch (error: any) {
+      console.error("删除收藏夹时出错:", error);
+      return { success: false, error: error.message || "删除收藏夹失败" };
+    }
+  }
 }

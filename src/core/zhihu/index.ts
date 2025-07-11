@@ -35,5 +35,6 @@ export class ZhihuService {
     Store.browserInstance?.close(); // 关闭浏览器实例
     Store.browserInstance = null; // 清空浏览器实例
     Store.pagesInstance.clear(); // 清理页面实例
+    Store.context = null; // 清空上下文
   }
 }

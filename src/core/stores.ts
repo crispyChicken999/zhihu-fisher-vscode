@@ -37,6 +37,10 @@ export const Store: ContentStore = {
         hasMore: true,
         isLoading: false,
       },
+      refreshStates: {
+        isRefreshingMyCollections: false,
+        isRefreshingFollowingCollections: false,
+      },
     },
     cookie: "",
   },

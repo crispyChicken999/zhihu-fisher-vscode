@@ -64,6 +64,13 @@ export interface ContentStore {
         hasMore: boolean;
         isLoading: boolean;
       };
+      /** 刷新状态 */
+      refreshStates: {
+        /** 是否正在刷新我创建的收藏夹 */
+        isRefreshingMyCollections: boolean;
+        /** 是否正在刷新我关注的收藏夹 */
+        isRefreshingFollowingCollections: boolean;
+      };
     };
 
     /** 知乎的Cookie */
@@ -482,6 +489,8 @@ export interface CollectionFolder {
   type: "created" | "following";
   /** 收藏夹总数 */
   totalCount?: number;
+  /** 是否为私密收藏夹 */
+  isPrivate?: boolean;
 }
 
 /** 收藏项 */

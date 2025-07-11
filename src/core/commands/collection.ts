@@ -25,6 +25,7 @@ export function registerCollectionCommands(
   const refreshMyCollectionsCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshMyCollections",
     async () => {
+      vscode.window.showInformationMessage("正在刷新我创建的收藏夹...");
       await sidebarCollections.refreshMyCollections();
     }
   );
@@ -34,6 +35,7 @@ export function registerCollectionCommands(
   const refreshFollowingCollectionsCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshFollowingCollections",
     async () => {
+      vscode.window.showInformationMessage("正在刷新我关注的收藏夹...");
       await sidebarCollections.refreshFollowingCollections();
     }
   );
@@ -363,6 +365,230 @@ export function registerCollectionCommands(
       }
     );
   commands.push(openFollowingCollectionsInBrowserCommand);
+
+  // 注册创建收藏夹命令
+  const createCollectionCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.createCollection",
+    async () => {
+      // 获取收藏夹名称
+      const title = await vscode.window.showInputBox({
+        prompt: "请输入收藏夹名称",
+        placeHolder: "收藏夹名称",
+        validateInput: (value: string) => {
+          if (!value || value.trim().length === 0) {
+            return "收藏夹名称不能为空";
+          }
+          if (value.trim().length > 50) {
+            return "收藏夹名称不能超过50个字符";
+          }
+          return undefined;
+        },
+      });
+
+      if (!title) {
+        return; // 用户取消了输入
+      }
+
+      // 获取收藏夹描述
+      const description = await vscode.window.showInputBox({
+        prompt: "请输入收藏夹描述（可选）",
+        placeHolder: "收藏夹描述",
+        validateInput: (value: string) => {
+          if (value && value.length > 200) {
+            return "收藏夹描述不能超过200个字符";
+          }
+          return undefined;
+        },
+      });
+
+      // 获取公开状态
+      const visibilityOptions = ["公开（有其他人关注此收藏夹时不可设置为私密）", "私密（只有你自己可以查看这个收藏夹）"];
+      const selectedVisibility = await vscode.window.showQuickPick(
+        visibilityOptions,
+        {
+          placeHolder: "选择收藏夹可见性",
+        }
+      );
+
+      if (!selectedVisibility) {
+        return; // 用户取消了选择
+      }
+
+      const isPublic = selectedVisibility === "公开（有其他人关注此收藏夹时不可设置为私密）";
+
+      // 显示加载进度
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "正在创建收藏夹...",
+          cancellable: false,
+        },
+        async () => {
+          try {
+            const result = await ZhihuApiService.createCollection(
+              title.trim(),
+              description?.trim() || "",
+              isPublic
+            );
+
+            if (result.success) {
+              vscode.window.showInformationMessage(
+                `收藏夹"${title}"创建成功！`
+              );
+
+              // 清空收藏夹选择器缓存，确保下次选择时获取最新列表
+              CollectionCacheManager.clearCache();
+
+              // 根据API响应直接添加新的收藏夹到本地数据，而不是重新获取
+              if (result.collection) {
+                const newCollection: CollectionFolder = {
+                  id: result.collection.id.toString(),
+                  title: result.collection.title,
+                  url: result.collection.url.replace(
+                    "api.zhihu.com",
+                    "www.zhihu.com"
+                  ),
+                  description: result.collection.description,
+                  creator: {
+                    name: result.collection.creator.name,
+                    avatar_url: result.collection.creator.avatar_url,
+                    url_token:
+                      result.collection.creator.url.split("/").pop() || "",
+                  },
+                  items: [],
+                  isLoaded: false,
+                  currentOffset: 0,
+                  hasMore: true,
+                  isLoading: false,
+                  type: "created",
+                  totalCount: result.collection.item_count,
+                };
+
+                // 添加到我创建的收藏夹列表的开头
+                Store.Zhihu.collections.myCollections.unshift(newCollection);
+                console.log(
+                  `创建收藏夹后，我创建的收藏夹数量: ${Store.Zhihu.collections.myCollections.length}`
+                );
+
+                // 刷新视图 - 使用 setTimeout 确保状态更新完成
+                setTimeout(() => {
+                  sidebarCollections.refreshView();
+                }, 100);
+              }
+            } else {
+              vscode.window.showErrorMessage(
+                `创建收藏夹失败：${result.error || "未知错误"}`
+              );
+            }
+          } catch (error: any) {
+            vscode.window.showErrorMessage(
+              `创建收藏夹失败：${error.message || "未知错误"}`
+            );
+          }
+        }
+      );
+    }
+  );
+  commands.push(createCollectionCommand);
+
+  // 注册删除收藏夹命令
+  const deleteCollectionCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.deleteCollection",
+    async (treeItem: any) => {
+      console.log("删除收藏夹命令参数:", treeItem);
+
+      // 从树节点中获取CollectionFolder对象
+      let collection: CollectionFolder;
+
+      if (treeItem && treeItem.collectionFolder) {
+        // 如果传递的是包含collectionFolder的对象
+        collection = treeItem.collectionFolder;
+        console.log("从treeItem.collectionFolder获取收藏夹:", collection);
+      } else if (treeItem && treeItem.id && treeItem.title) {
+        // 如果直接传递的是CollectionFolder对象
+        collection = treeItem as CollectionFolder;
+        console.log("直接使用treeItem作为收藏夹:", collection);
+      } else {
+        console.error("无法识别的参数类型:", treeItem);
+        vscode.window.showErrorMessage("无效的收藏夹");
+        return;
+      }
+
+      if (!collection || !collection.id) {
+        console.error("收藏夹对象无效:", collection);
+        vscode.window.showErrorMessage("无法获取收藏夹信息");
+        return;
+      }
+
+      console.log("将要删除的收藏夹ID:", collection.id);
+
+      // 确认删除
+      const confirmResult = await vscode.window.showWarningMessage(
+        `你确认要删除收藏夹"${collection.title}"吗？\n\n 删除收藏夹后，里面收藏的内容也会一并删除，此操作不可撤销！`,
+        { modal: true },
+        "确认删除"
+      );
+
+      if (confirmResult !== "确认删除") {
+        return; // 用户取消了删除
+      }
+
+      // 显示删除进度
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `正在删除收藏夹"${collection.title}"...`,
+          cancellable: false,
+        },
+        async () => {
+          try {
+            const result = await ZhihuApiService.deleteCollection(
+              collection.id
+            );
+
+            if (result.success) {
+              vscode.window.showInformationMessage(
+                `收藏夹"${collection.title}"删除成功！`
+              );
+
+              // 清空收藏夹选择器缓存，确保下次选择时获取最新列表
+              CollectionCacheManager.clearCache();
+
+              // 直接从本地数据中删除收藏夹，而不是重新获取
+              const collectionIndex =
+                Store.Zhihu.collections.myCollections.findIndex(
+                  (c) => c.id === collection.id
+                );
+
+              if (collectionIndex > -1) {
+                Store.Zhihu.collections.myCollections.splice(
+                  collectionIndex,
+                  1
+                );
+                console.log(
+                  `删除收藏夹后，我创建的收藏夹数量: ${Store.Zhihu.collections.myCollections.length}`
+                );
+              }
+
+              // 刷新视图 - 使用 setTimeout 确保状态更新完成
+              setTimeout(() => {
+                sidebarCollections.refreshView();
+              }, 100);
+            } else {
+              vscode.window.showErrorMessage(
+                `删除收藏夹失败：${result.error || "未知错误"}`
+              );
+            }
+          } catch (error: any) {
+            vscode.window.showErrorMessage(
+              `删除收藏夹失败：${error.message || "未知错误"}`
+            );
+          }
+        }
+      );
+    }
+  );
+  commands.push(deleteCollectionCommand);
 
   return commands;
 }

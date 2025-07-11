@@ -123,15 +123,21 @@ export class CollectionPickerUtils {
 
         // 构建收藏夹选择列表
         const collectionItems: CollectionQuickPickItem[] = allCollections.map(
-          (collection: any) => ({
-            label: collection.title,
-            description: collection.is_default
-              ? "(默认收藏夹)"
-              : `${collection.item_count || collection.answer_count || 0} 个收藏`,
-            detail: collection.description || "无描述",
-            collectionId: collection.id.toString(),
-            isDefault: collection.is_default,
-          })
+          (collection: any) => {
+            // 检查是否为私密收藏夹
+            const isPrivate = !collection.is_public  || collection.private || false;
+            const privateIndicator = isPrivate ? " 🔒" : "";
+
+            return {
+              label: `${collection.title}${privateIndicator}`,
+              description: collection.is_default
+                ? "(默认收藏夹)"
+                : `${collection.item_count || collection.answer_count || 0} 个收藏${isPrivate ? " · 私密" : ""}`,
+              detail: collection.description || "无描述",
+              collectionId: collection.id.toString(),
+              isDefault: collection.is_default,
+            };
+          }
         );
 
         // 添加导航按钮
@@ -163,7 +169,7 @@ export class CollectionPickerUtils {
           collectionItems.unshift({
             label: "$(info) 收藏夹列表",
             description: `已加载 ${allCollections.length}/${totalCount} 个收藏夹 ${useCache ? "(缓存)" : ""}`,
-            detail: "选择下方的收藏夹进行收藏",
+            detail: "选择下方的收藏夹进行收藏，带🔒的是私密收藏夹，否则是公开收藏夹",
             collectionId: "",
             isDefault: false,
             isNavigation: true,

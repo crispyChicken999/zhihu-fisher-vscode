@@ -214,6 +214,16 @@
         "icon": "$(notebook-delete-cell)"
       },
       {
+        "command": "zhihu-fisher.createCollection",
+        "title": "创建收藏夹",
+        "icon": "$(add)"
+      },
+      {
+        "command": "zhihu-fisher.deleteCollection",
+        "title": "删除收藏夹",
+        "icon": "$(trash)"
+      },
+      {
         "command": "zhihu-fisher.testDisguise",
         "title": "测试伪装功能",
         "icon": "$(symbol-misc)"
@@ -423,6 +433,11 @@
           "group": "inline"
         },
         {
+          "command": "zhihu-fisher.refreshCollection",
+          "when": "view == zhihuCollectionsList && viewItem == myCollectionFolder",
+          "group": "inline"
+        },
+        {
           "command": "zhihu-fisher.openCollectionInBrowser",
           "when": "view == zhihuCollectionsList && viewItem == collectionFolder",
           "group": "inline"
@@ -443,8 +458,18 @@
           "group": "inline"
         },
         {
+          "command": "zhihu-fisher.createCollection",
+          "when": "view == zhihuCollectionsList && viewItem == myCollectionsRoot",
+          "group": "inline"
+        },
+        {
           "command": "zhihu-fisher.openMyCollectionsInBrowser",
           "when": "view == zhihuCollectionsList && viewItem == myCollectionsRoot",
+          "group": "inline"
+        },
+        {
+          "command": "zhihu-fisher.deleteCollection",
+          "when": "view == zhihuCollectionsList && viewItem == myCollectionFolder",
           "group": "inline"
         },
         {

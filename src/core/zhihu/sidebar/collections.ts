@@ -23,15 +23,18 @@ export class CollectionTreeItem extends vscode.TreeItem {
       | "folder"
       | "item"
       | "loadMore"
-      | "noMore" = "folder"
+      | "noMore" = "folder",
+    public readonly isMyCollection: boolean = false
   ) {
-    // 构建标题，包含总数和已加载数量
+    // 构建标题，包含总数和已加载数量，以及私密标识
     let title = collectionFolder.title;
     if (itemType === "folder") {
       const loadedCount = collectionFolder.items.length;
       // 如果有总数信息就显示，没有则显示未知
       const totalCount = collectionFolder.totalCount ?? "?";
-      title = `${collectionFolder.title} (${loadedCount}/${totalCount})`;
+      // 添加私密标识
+      const privateIndicator = collectionFolder.isPrivate ? " 🔒" : "";
+      title = `${collectionFolder.title}${privateIndicator} (${loadedCount}/${totalCount})`;
     }
 
     super(title, collapsibleState);
@@ -42,7 +45,10 @@ export class CollectionTreeItem extends vscode.TreeItem {
 
     if (itemType === "folder") {
       this.iconPath = new vscode.ThemeIcon("folder");
-      this.contextValue = "collectionFolder";
+      // 根据是否是我创建的收藏夹设置不同的contextValue
+      this.contextValue = isMyCollection
+        ? "myCollectionFolder"
+        : "collectionFolder";
 
       // 添加收藏夹的右键菜单
       this.resourceUri = vscode.Uri.parse(`collection:${collectionFolder.id}`);
@@ -68,7 +74,8 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
   constructor(
     public readonly collectionItem: CollectionItem,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode
-      .TreeItemCollapsibleState.None
+      .TreeItemCollapsibleState.None,
+    public readonly canRemove: boolean = false
   ) {
     super(collectionItem.title, collapsibleState);
 
@@ -232,8 +239,10 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
       ? "collectionItemWithImage"
       : "collectionItem";
 
-    // 为收藏项添加取消收藏的 contextValue，以支持右键菜单
-    this.contextValue = `${this.contextValue};removable`;
+    // 为收藏项添加取消收藏的 contextValue，仅当可以删除时才添加
+    if (canRemove) {
+      this.contextValue = `${this.contextValue};removable`;
+    }
 
     this.command = {
       command: "zhihu-fisher.openCollectionItem",
@@ -355,7 +364,10 @@ export class sidebarCollectionsDataProvider
       return Promise.resolve(this.getFollowingCollectionItems());
     }
 
-    if (element.contextValue === "collectionFolder") {
+    if (
+      element.contextValue === "collectionFolder" ||
+      element.contextValue === "myCollectionFolder"
+    ) {
       // 收藏夹内容
       const collectionItem = element as CollectionTreeItem;
       // 如果还没有加载过，自动加载第一页
@@ -386,29 +398,46 @@ export class sidebarCollectionsDataProvider
     }
 
     // 我创建的收藏
+    const myCollectionsCount = Store.Zhihu.collections.myCollections.length;
+    console.log(`生成侧边栏标题时，我创建的收藏夹数量: ${myCollectionsCount}`);
+
     const myCollectionsItem = new vscode.TreeItem(
-      `我创建的收藏夹 (${Store.Zhihu.collections.myCollections.length})`,
+      `我创建的收藏夹 (${myCollectionsCount})`,
       this.expandedStates.get("myCollectionsRoot") !== false
         ? vscode.TreeItemCollapsibleState.Expanded
         : vscode.TreeItemCollapsibleState.Collapsed
     );
     myCollectionsItem.id = "myCollectionsRoot";
     myCollectionsItem.contextValue = "myCollectionsRoot";
-    myCollectionsItem.iconPath = new vscode.ThemeIcon("folder");
+    // 根据刷新状态设置图标
+    myCollectionsItem.iconPath = Store.Zhihu.collections.refreshStates
+      .isRefreshingMyCollections
+      ? new vscode.ThemeIcon("sync~spin")
+      : new vscode.ThemeIcon("folder");
     myCollectionsItem.tooltip = "我创建的收藏夹";
     myCollectionsItem.resourceUri = vscode.Uri.parse("myCollections:refresh");
     items.push(myCollectionsItem);
 
     // 我关注的收藏
+    const followingCollectionsCount =
+      Store.Zhihu.collections.followingCollections.length;
+    console.log(
+      `生成侧边栏标题时，我关注的收藏夹数量: ${followingCollectionsCount}`
+    );
+
     const followingCollectionsItem = new vscode.TreeItem(
-      `我关注的收藏夹 (${Store.Zhihu.collections.followingCollections.length})`,
+      `我关注的收藏夹 (${followingCollectionsCount})`,
       this.expandedStates.get("followingCollectionsRoot") !== false
         ? vscode.TreeItemCollapsibleState.Expanded
         : vscode.TreeItemCollapsibleState.Collapsed
     );
     followingCollectionsItem.id = "followingCollectionsRoot";
     followingCollectionsItem.contextValue = "followingCollectionsRoot";
-    followingCollectionsItem.iconPath = new vscode.ThemeIcon("folder");
+    // 根据刷新状态设置图标
+    followingCollectionsItem.iconPath = Store.Zhihu.collections.refreshStates
+      .isRefreshingFollowingCollections
+      ? new vscode.ThemeIcon("sync~spin")
+      : new vscode.ThemeIcon("folder");
     followingCollectionsItem.tooltip = "我关注的收藏夹";
     followingCollectionsItem.resourceUri = vscode.Uri.parse(
       "followingCollections:refresh"
@@ -433,7 +462,12 @@ export class sidebarCollectionsDataProvider
           ? vscode.TreeItemCollapsibleState.Expanded
           : vscode.TreeItemCollapsibleState.Collapsed;
 
-      return new CollectionTreeItem(collection, collapsibleState);
+      return new CollectionTreeItem(
+        collection,
+        collapsibleState,
+        "folder",
+        true
+      );
     });
 
     // 如果有更多收藏夹可加载，显示加载更多按钮
@@ -534,7 +568,15 @@ export class sidebarCollectionsDataProvider
 
     // 添加收藏项
     folder.items.forEach((item) => {
-      items.push(new CollectionItemTreeItem(item));
+      // 只有我创建的收藏夹中的收藏项才可以删除
+      const canRemove = folder.type === "created";
+      items.push(
+        new CollectionItemTreeItem(
+          item,
+          vscode.TreeItemCollapsibleState.None,
+          canRemove
+        )
+      );
     });
 
     // 判断是否显示加载更多按钮
@@ -610,6 +652,7 @@ export class sidebarCollectionsDataProvider
    */
   refreshView(): void {
     console.log("刷新收藏夹视图显示...");
+    this.updateTitle();
     this._onDidChangeTreeData.fire();
   }
 
@@ -733,6 +776,9 @@ export class sidebarCollectionsDataProvider
 
         elements.each((_, element) => {
           try {
+            // 检查是否为私密收藏夹 - 查找Zi--Lock类名
+            const isPrivate = $(element).find(".Zi--Lock").length > 0;
+
             // 尝试多种方式获取标题和链接
             let titleElement = $(element).find(".SelfCollectionItem-title");
             if (titleElement.length === 0) {
@@ -782,7 +828,12 @@ export class sidebarCollectionsDataProvider
                   totalCount: totalCount,
                   isLoading: false,
                   type: "created",
+                  isPrivate: isPrivate,
                 });
+
+                if (isPrivate) {
+                  console.log(`检测到私密收藏夹: ${title}`);
+                }
               }
             }
           } catch (parseError) {
@@ -1185,9 +1236,13 @@ export class sidebarCollectionsDataProvider
         return;
       }
 
+      // 设置刷新状态
+      Store.Zhihu.collections.refreshStates.isRefreshingMyCollections = true;
+      this._onDidChangeTreeData.fire(); // 触发视图更新以显示加载图标
+
       const userToken = Store.Zhihu.collections.userInfo.url_token;
       await this.loadMyCollections(userToken);
-      this._onDidChangeTreeData.fire();
+
       vscode.window.showInformationMessage(
         `成功刷新 ${Store.Zhihu.collections.myCollections.length} 个创建的收藏夹`
       );
@@ -1198,6 +1253,10 @@ export class sidebarCollectionsDataProvider
           error instanceof Error ? error.message : String(error)
         }`
       );
+    } finally {
+      // 清除刷新状态
+      Store.Zhihu.collections.refreshStates.isRefreshingMyCollections = false;
+      this._onDidChangeTreeData.fire(); // 触发视图更新以恢复正常图标
     }
   }
 
@@ -1211,9 +1270,14 @@ export class sidebarCollectionsDataProvider
         return;
       }
 
+      // 设置刷新状态
+      Store.Zhihu.collections.refreshStates.isRefreshingFollowingCollections =
+        true;
+      this._onDidChangeTreeData.fire(); // 触发视图更新以显示加载图标
+
       const userToken = Store.Zhihu.collections.userInfo.url_token;
       await this.loadFollowingCollections(userToken);
-      this._onDidChangeTreeData.fire();
+
       vscode.window.showInformationMessage(
         `成功刷新 ${Store.Zhihu.collections.followingCollections.length} 个关注的收藏夹`
       );
@@ -1224,6 +1288,11 @@ export class sidebarCollectionsDataProvider
           error instanceof Error ? error.message : String(error)
         }`
       );
+    } finally {
+      // 清除刷新状态
+      Store.Zhihu.collections.refreshStates.isRefreshingFollowingCollections =
+        false;
+      this._onDidChangeTreeData.fire(); // 触发视图更新以恢复正常图标
     }
   }
 
