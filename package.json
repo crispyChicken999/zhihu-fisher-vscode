@@ -224,11 +224,6 @@
         "icon": "$(trash)"
       },
       {
-        "command": "zhihu-fisher.testDisguise",
-        "title": "测试伪装功能",
-        "icon": "$(symbol-misc)"
-      },
-      {
         "command": "zhihu-fisher.toggleDisguise",
         "title": "切换智能伪装",
         "icon": "$(eye)"
@@ -585,6 +580,17 @@
             "completionEvents": [
               "onCommand:zhihu-fisher.refreshCollections",
               "onCommand:zhihu-fisher.clearCollectionCache"
+            ]
+          },
+          {
+            "id": "smart-disguise",
+            "title": "第七步：智能伪装模式",
+            "description": "🎭 **智能伪装模式**是知乎摸鱼插件的贴心功能，让您安心摸鱼不被发现！\n\n**功能特点：**\n• 切换页面时自动伪装成代码文件\n• 支持多种编程语言伪装效果\n• 切回时自动恢复知乎内容\n• 完全自动化，无需手动操作\n\n**使用场景：**\n• 工作环境中避免被发现摸鱼\n• 视频会议时的隐私保护\n• 屏幕共享时保持专业形象\n\n[切换智能伪装](command:zhihu-fisher.toggleDisguise)",
+            "media": {
+              "markdown": "walkthrough/smart-disguise.md"
+            },
+            "completionEvents": [
+              "onCommand:zhihu-fisher.toggleDisguise"
             ]
           },
           {
