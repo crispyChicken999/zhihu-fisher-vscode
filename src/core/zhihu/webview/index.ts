@@ -16,12 +16,6 @@ export class WebviewManager {
     item: LinkItem,
     sourceType: "collection" | "recommend" | "hot" | "search" = "recommend"
   ): Promise<void> {
-    console.log(
-      `开始获取内容: ${item.url}, 类型: ${
-        item.type || "question"
-      }, 来源: ${sourceType}`
-    );
-
     // 提取基础ID和内容类型
     let baseId = item.id;
     let contentType: "article" | "answer" =
@@ -58,8 +52,6 @@ export class WebviewManager {
       answerId
     );
 
-    console.log(`生成唯一webview ID: ${webviewId}`);
-
     // 检查是否已经打开了这个特定的内容
     const existingView = Store.webviewMap.get(webviewId);
     if (existingView) {
@@ -94,6 +86,21 @@ export class WebviewManager {
         localResourceRoots: [],
       }
     );
+
+    panel.iconPath = vscode.Uri.joinPath(
+      Store.context!.extensionUri,
+      "resources",
+      "icon.svg"
+    );
+
+    // 当面板失去焦点的时候，title变成代码文件，以便更好地进行伪装摸鱼
+    panel.onDidChangeViewState((e) => {
+      if (e.webviewPanel.active) {
+        panel.title = `${shortTitle}`;
+      } else {
+        panel.title = "代码文件"; // 伪装成代码文件
+      }
+    });
 
     // 获取配置中的每批回答数量
     const config = vscode.workspace.getConfiguration("zhihu-fisher");

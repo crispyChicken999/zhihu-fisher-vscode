@@ -3,9 +3,10 @@ import * as vscode from "vscode";
 
 /** 全局状态管理 */
 export interface ContentStore {
+  /** vscode 扩展上下文 */
+  context: vscode.ExtensionContext | null;
   /** 打开的所有页面构成的列表 */
   webviewMap: Map<string, WebViewItem>;
-
   /** Puppeteer浏览器实例 */
   browserInstance: Puppeteer.Browser | null;
   /** Puppeteer页面实例列表 */

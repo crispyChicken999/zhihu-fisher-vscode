@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import * as Puppeteer from "puppeteer";
 
 export const Store: ContentStore = {
+  context: null, // vscode 扩展上下文
   webviewMap: new Map<string, WebViewItem>(),
   browserInstance: null,
   pagesInstance: new Map<string, Puppeteer.Page>(),

@@ -1,13 +1,15 @@
 import * as vscode from "vscode";
+import { Store } from "./core/stores";
 import { ZhihuService } from "./core/zhihu/index";
 import { registerAllCommands } from "./core/commands";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
 import { sidebarCollectionsDataProvider } from "./core/zhihu/sidebar/collections";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
-
 export function activate(context: vscode.ExtensionContext) {
   console.log("🐟知乎摸鱼🐟 已激活！");
+
+  Store.context = context; // 保存上下文到全局 Store
 
   // 创建 知乎服务实例
   const zhihuService = new ZhihuService();
@@ -46,6 +48,21 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
   sidebarCollections.setTreeView(collectionsListView);
+
+  // 当配置变更时触发刷新
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("zhihu-fisher")) {
+      if (e.affectsConfiguration("zhihu-fisher.mediaDisplayMode")) {
+        // 媒体显示模式变更时，需要刷新所有侧边栏以更新图片显示
+        console.log("媒体显示模式已变更，刷新侧边栏显示");
+        // 使用新的 refreshView 方法来更新视图，而不重新加载数据
+        sidebarHot.refreshView();
+        sidebarRecommend.refreshView();
+        sidebarSearch.refreshView();
+        sidebarCollections.refreshView();
+      }
+    }
+  });
 
   registerAllCommands(context, {
     zhihuService,

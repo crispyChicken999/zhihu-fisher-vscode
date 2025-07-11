@@ -1,4 +1,3 @@
-import * as crypto from "crypto";
 import { PuppeteerManager } from "../zhihu/puppeteer/index.js";
 
 /**
@@ -19,9 +18,6 @@ export class WebViewUtils {
     contentType: "article" | "answer",
     answerId?: string
   ): string {
-    const timestamp = Date.now();
-    const randomId = crypto.randomBytes(4).toString("hex");
-
     // 提取纯净的ID，避免重复前缀
     let cleanBaseId = baseId;
     const sourcePrefix = `${sourceType}-`;
@@ -29,7 +25,7 @@ export class WebViewUtils {
       cleanBaseId = baseId.substring(sourcePrefix.length);
     }
 
-    let webviewId = `${contentType}-${cleanBaseId}-${sourceType}-${timestamp}-${randomId}`;
+    let webviewId = `${contentType}-${cleanBaseId}-${sourceType}`;
 
     // 如果是特定回答，添加回答ID
     if (answerId) {
