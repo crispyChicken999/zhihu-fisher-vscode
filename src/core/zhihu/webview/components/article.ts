@@ -224,11 +224,10 @@ export class ArticleContentComponent implements Component {
       mathEl.addClass("latex-formula");
     });
 
-    // 处理引用链接
-    $("a.LinkCard").each((i, el) => {
-      const linkCard = $(el);
-      const text = linkCard.attr("data-text") || "";
-      let href = linkCard.attr("href") || "";
+    // 处理所有链接（包括普通a标签和LinkCard）
+    $("a").each((i, el) => {
+      const link = $(el);
+      let href = link.attr("href") || "";
 
       // 处理知乎重定向链接
       if (href.includes("link.zhihu.com/?target=")) {
@@ -236,17 +235,23 @@ export class ArticleContentComponent implements Component {
           const targetParam = new URL(href).searchParams.get("target");
           if (targetParam) {
             href = decodeURIComponent(targetParam);
+            link.attr("href", href);
+            // 添加标记表示已处理
+            link.addClass("zhihu-redirect-processed");
           }
         } catch (e) {
           // 如果解析失败，保留原始链接
         }
       }
 
-      // 清空原有内容并设置为简化链接
-      linkCard.empty();
-      linkCard.text(text || href);
-      linkCard.attr("href", href);
-      linkCard.addClass("zhihu-processed-link");
+      // 对LinkCard进行特殊处理
+      if (link.hasClass("LinkCard")) {
+        const text = link.attr("data-text") || "";
+        // 清空原有内容并设置为简化链接
+        link.empty();
+        link.text(text || href);
+        link.addClass("zhihu-processed-link");
+      }
     });
 
     return $.html();

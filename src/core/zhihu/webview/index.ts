@@ -9,6 +9,7 @@ import { PuppeteerManager } from "../puppeteer";
 import { CommentsManager } from "./components/comments";
 import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 import { WebViewUtils, CollectionPickerUtils } from "../../utils";
+import { DisguiseManager } from "../../utils/disguise-manager";
 
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
@@ -78,7 +79,7 @@ export class WebviewManager {
     // 创建并配置WebView面板
     const panel = vscode.window.createWebviewPanel(
       panelType,
-      `${loadingTitle}: ${shortTitle}`,
+      shortTitle,
       vscode.ViewColumn.Active, // 修改为在当前编辑组显示
       {
         enableScripts: true,
@@ -93,12 +94,25 @@ export class WebviewManager {
       "icon.svg"
     );
 
-    // 当面板失去焦点的时候，title变成代码文件，以便更好地进行伪装摸鱼
+    // 当面板失去焦点的时候，使用智能伪装系统
     panel.onDidChangeViewState((e) => {
       if (e.webviewPanel.active) {
-        panel.title = `${shortTitle}`;
+        // 获取当前的webviewID对应是否正在加载中
+        // 激活时恢复原始标题和图标
+        panel.title = shortTitle;
+        panel.iconPath = vscode.Uri.joinPath(
+          Store.context!.extensionUri,
+          "resources",
+          "icon.svg"
+        );
       } else {
-        panel.title = "代码文件"; // 伪装成代码文件
+        // 失去焦点时使用智能伪装（支持配置开关）
+        const disguise = DisguiseManager.getDisguiseOrDefault(
+          webviewId,
+          shortTitle
+        );
+        panel.title = disguise.title;
+        panel.iconPath = disguise.iconPath;
       }
     });
 
@@ -279,7 +293,10 @@ export class WebviewManager {
       // 到这一步，页面加载完成，开始处理内容
       console.log("页面加载完成，开始读取页面...");
       webviewItem.isLoading = false;
-      webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
+
+      if (webviewItem.webviewPanel.active) {
+        webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
+      }
 
       const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
         page
@@ -1041,10 +1058,12 @@ export class WebviewManager {
       }
     } catch (error: any) {
       // 如果是超时错误，直接返回，不啰嗦打印出来咯，看到心烦哈哈哈，timeout？哦！
+      console.log("error.message: ", error.message);
       if (
         error.message.includes(
           "ProtocolError: Input.dispatchMouseEvent timed out."
-        )
+        ) ||
+        error.message.includes("protocolTimeout")
       ) {
         return;
       }
@@ -1292,6 +1311,10 @@ export class WebviewManager {
               webviewItem.batchConfig.isLoadingBatch = false;
               webviewItem.article.loadComplete = true; // 强制标记为加载完成，以避免继续加载
             }
+
+            // 清理伪装缓存
+            DisguiseManager.clearDisguiseCache(webviewId);
+
             Store.webviewMap.delete(webviewId);
             await PuppeteerManager.closePage(webviewId);
           } catch (error) {
@@ -1343,6 +1366,9 @@ export class WebviewManager {
       }
     }
     Store.webviewMap.clear(); // 清空所有WebView项
+
+    // 清理所有伪装缓存
+    DisguiseManager.clearAllDisguiseCache();
   }
 
   /**

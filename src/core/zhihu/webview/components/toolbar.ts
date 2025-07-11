@@ -152,11 +152,11 @@ export class ToolbarComponent implements Component {
     const authorName = this.answer.author.name || "神秘人"; // 作者名称
     const authorUrl = this.answer.author.url || "https://www.zhihu.com"; // 作者主页URL
     const authorSignature =
-      this.answer.author.signature || "神秘人，没有留下签名哦╰(￣ω￣ｏ)"; // 作者签名
+      this.answer.author.signature || "神秘人，没有留下签名哦🤔"; // 作者签名
 
     return `
       <div class="toolbar ${immersiveClass}">
-        <button class="button immersive-toggle" onclick="toggleImmersiveMode()" tooltip="沉浸模式(X)" placement="top-start">
+        <button class="button immersive-toggle" onclick="toggleImmersiveMode()" tooltip="沉浸模式(X)" placement="top-left">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M4 3a1 1 0 0 0-1 1v4h2V5h3V3zm16 0h-4v2h3v3h2V4a1 1 0 0 0-1-1M5 16v3h3v2H4a1 1 0 0 1-1-1v-4zm14 0v3h-3v2h4a1 1 0 0 0 1-1v-4zm-9-7a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/>
           </svg>

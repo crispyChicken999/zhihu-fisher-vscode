@@ -91,6 +91,7 @@ export const commentsCss = `
   transition: background-color 0.2s;
   border: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
+  transition: all 0.3s;
 }
 
 .zhihu-comment:last-child {
@@ -98,7 +99,7 @@ export const commentsCss = `
 }
 
 .zhihu-comment:hover {
-  background-color: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-focusBorder);
 }
 
 /* 评论头部：头像和作者信息 */

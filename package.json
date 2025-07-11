@@ -212,6 +212,21 @@
         "command": "zhihu-fisher.removeFromCollection",
         "title": "取消收藏",
         "icon": "$(notebook-delete-cell)"
+      },
+      {
+        "command": "zhihu-fisher.testDisguise",
+        "title": "测试伪装功能",
+        "icon": "$(symbol-misc)"
+      },
+      {
+        "command": "zhihu-fisher.toggleDisguise",
+        "title": "切换伪装功能",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "zhihu-fisher.showDisguiseCache",
+        "title": "查看伪装缓存状态",
+        "icon": "$(info)"
       }
     ],
     "viewsContainers": {
@@ -582,6 +597,11 @@
           "default": "",
           "description": "自定义谷歌Chrome 浏览器路径。如果设置了，插件将使用此路径的浏览器，而不是 Puppeteer 安装的 Chrome 浏览器。",
           "scope": "machine"
+        },
+        "zhihu-fisher.enableDisguise": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用智能伪装功能。当 WebView 失去焦点时，自动将标题和图标伪装成代码文件，更好地摸鱼，避免被老板/同事发现(～￣▽￣)～。"
         }
       }
     }
