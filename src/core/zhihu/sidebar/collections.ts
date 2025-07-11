@@ -73,11 +73,15 @@ export class CollectionTreeItem extends vscode.TreeItem {
 
       // 更新时间信息
       if (collectionFolder.lastUpdated) {
-        tooltip.appendMarkdown(`**最后更新**：${collectionFolder.lastUpdated}\n\n`);
+        tooltip.appendMarkdown(
+          `**最后更新**：${collectionFolder.lastUpdated}\n\n`
+        );
       }
 
       // 收藏夹URL信息
-      tooltip.appendMarkdown(`**链接**：[打开收藏夹](${collectionFolder.url})\n\n`);
+      tooltip.appendMarkdown(
+        `**链接**：[打开收藏夹](${collectionFolder.url})\n\n`
+      );
 
       // 分割线
       tooltip.appendMarkdown(`---\n\n`);
@@ -851,7 +855,9 @@ export class sidebarCollectionsDataProvider
             const title = titleElement.text().trim();
 
             // 获取收藏夹描述
-            const descriptionElement = $(element).find(".SelfCollectionItem-description");
+            const descriptionElement = $(element).find(
+              ".SelfCollectionItem-description"
+            );
             const description = descriptionElement.text().trim();
 
             // 尝试获取收藏夹的总数信息和更新时间
@@ -865,16 +871,18 @@ export class sidebarCollectionsDataProvider
             if (actionsElement.length > 0) {
               const actionsText = actionsElement.text().trim();
               console.log(`收藏夹"${title}"的actions文本: ${actionsText}`);
-              
+
               // 尝试匹配 "N 条内容" 或 "N条内容" 格式，例如："2025-07-08 更新 · 2 条内容 · 0 人关注"
               const countMatch = actionsText.match(/(\d+)\s*条内容/);
               if (countMatch) {
                 totalCount = parseInt(countMatch[1], 10);
                 console.log(`解析到收藏夹总数: ${totalCount}`);
               }
-              
+
               // 尝试匹配更新时间，格式如 "2025-07-11 更新"
-              const updateTimeMatch = actionsText.match(/(\d{4}-\d{2}-\d{2})\s*更新/);
+              const updateTimeMatch = actionsText.match(
+                /(\d{4}-\d{2}-\d{2})\s*更新/
+              );
               if (updateTimeMatch) {
                 updateTime = updateTimeMatch[1];
                 console.log(`解析到更新时间: ${updateTime}`);
@@ -906,7 +914,11 @@ export class sidebarCollectionsDataProvider
                   lastUpdated: updateTime, // 添加更新时间
                 });
 
-                console.log(`解析收藏夹: ${title}, 描述: ${description || "无"}, 私密: ${isPrivate}, 更新时间: ${updateTime || "未知"}`);
+                console.log(
+                  `解析收藏夹: ${title}, 描述: ${
+                    description || "无"
+                  }, 私密: ${isPrivate}, 更新时间: ${updateTime || "未知"}`
+                );
                 if (isPrivate) {
                   console.log(`检测到私密收藏夹: ${title}`);
                 }
@@ -1187,7 +1199,9 @@ export class sidebarCollectionsDataProvider
 
       for (const item of data) {
         const content = item.content;
-        if (!content) continue;
+        if (!content) {
+          continue;
+        }
 
         const contentType = this.getContentType(content);
 

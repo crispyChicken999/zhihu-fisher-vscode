@@ -372,7 +372,7 @@ export class TreeItem extends vscode.TreeItem {
       this.tooltip = simpleTooltip;
     }
 
-    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`)
+    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`);
 
     // 只有当热度值存在且不为空时才显示
     this.description =
