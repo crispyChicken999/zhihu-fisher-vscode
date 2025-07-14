@@ -643,6 +643,12 @@
           "type": "boolean",
           "default": true,
           "description": "启用智能伪装功能。当 WebView 失去焦点时，自动将标题和图标伪装成代码文件，更好地摸鱼，避免被老板/同事发现(～￣▽￣)～。"
+        },
+        "zhihu-fisher.cookie": {
+          "type": "string",
+          "default": "",
+          "description": "知乎Cookie设置。用于访问需要登录的内容和完整评论。设置后可以获得更好的浏览体验。",
+          "scope": "application"
         }
       }
     }
