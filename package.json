@@ -2,7 +2,7 @@
   "name": "zhihu-fisher",
   "displayName": "Zhihu Fisher",
   "description": "VSCode 刷知乎摸鱼插件 | A VSCode extension for browsing Zhihu recommend/hot lists, searching content, and viewing articles.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.82.0"
