@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.2.2-green.svg)
+![Version](https://img.shields.io/badge/Version-0.2.3-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS-purple.svg)
 
 使用 VSCode，浏览知乎的推荐及热榜内容，快乐摸鱼。提供沉浸模式、评论区、图片视频切换等功能，避免摸鱼被发现。
