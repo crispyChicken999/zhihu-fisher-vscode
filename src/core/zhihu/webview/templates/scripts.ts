@@ -70,12 +70,26 @@ window.addEventListener('message', event => {
     commentsContainer.innerHTML = message.html;
     // 滚动到评论区
     commentsContainer.scrollIntoView({ behavior: 'smooth' });
+
+    // 重新初始化FancyBox，让新加载的评论图片支持点击放大
+    setTimeout(() => {
+      if (typeof initializeFancyBox === 'function') {
+        initializeFancyBox();
+      }
+    }, 100);
   }
 
   // 处理更新子评论弹窗的消息
   else if (message.command === 'updateChildCommentsModal') {
     const mb = document.querySelector('.comments-modal-container');
     mb.innerHTML = message.html;
+
+    // 重新初始化FancyBox，让子评论弹窗中的图片也支持点击放大
+    setTimeout(() => {
+      if (typeof initializeFancyBox === 'function') {
+        initializeFancyBox();
+      }
+    }, 100);
   }
 });
 
@@ -132,17 +146,26 @@ function initializeFancyBox() {
       img.title = '点击查看大图';
     });
 
-    // 为评论中的图片添加fancybox属性
-    const commentImages = document.querySelectorAll('.comments-container img:not(.fancybox-processed)');
+    // 为评论中的图片添加fancybox属性（包括新加载的评论）
+    const commentImages = document.querySelectorAll('.comments-container img:not(.fancybox-processed), .comments-modal-container img:not(.fancybox-processed)');
     commentImages.forEach(function(img) {
-      img.setAttribute('data-fancybox', 'comment-gallery');
-      img.setAttribute('data-caption', '评论图片');
-      img.classList.add('fancybox-processed');
-      img.style.cursor = 'pointer';
-      img.title = '点击查看大图';
+      // 跳过头像图片
+      if (img.classList.contains('zhihu-comment-avatar') || img.classList.contains('zhihu-child-comment-avatar')) {
+        return;
+      }
+
+      // 只处理评论内容中的图片
+      if (img.classList.contains('comment-image')) {
+        img.setAttribute('data-fancybox', 'comment-gallery');
+        img.setAttribute('data-caption', '评论图片');
+        img.classList.add('fancybox-processed');
+        img.style.cursor = 'pointer';
+        img.title = '点击查看大图';
+      }
     });
 
-    // 初始化Fancybox
+    // 重新绑定Fancybox到所有具有data-fancybox属性的元素
+    Fancybox.destroy(); // 先销毁现有实例
     Fancybox.bind('[data-fancybox]', {
       // 配置选项
       Toolbar: {

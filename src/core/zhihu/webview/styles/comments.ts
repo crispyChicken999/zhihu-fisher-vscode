@@ -174,11 +174,11 @@ export const commentsCss = `
   display: none !important;
 }
 
-.comments-container.mini-media img,
-.comments-modal-container.mini-media img {
+.comments-container.mini-media img.zhihu-comment-avatar,
+.comments-modal-container.mini-media img.zhihu-comment-avatar {
   display: block !important;
   width: 20px !important;
-  height: auto !important;
+  height: 20px !important;
 }
 
 /* 评论内容中的图片和链接居中显示 */
@@ -258,6 +258,7 @@ export const commentsCss = `
 }
 
 .zhihu-child-comment-content p {
+  word-break: break-all;
   margin: 0;
 }
 
@@ -438,5 +439,33 @@ export const commentsCss = `
   width: 16px;
   height: 16px;
   fill: var(--vscode-button-secondaryForeground);
+}
+
+/* 评论图片样式 */
+.comment-image-container {
+  margin: 8px 0;
+}
+
+.comment-image {
+  border-radius: 4px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.comment-image:hover {
+  opacity: 0.8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 适配暗色主题 */
+.vscode-dark .comment-image {
+  border-color: var(--vscode-panel-border);
+  opacity: 0.9;
+}
+
+.vscode-dark .comment-image:hover {
+  opacity: 1;
 }
 `;

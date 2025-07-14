@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as vscode from "vscode";
+import * as cheerio from "cheerio";
 import { Store } from "../../../stores";
 import { CommentItem } from "../../../types";
 import { WebViewItem } from "../../../types";
@@ -245,7 +246,12 @@ export class CommentsComponent implements Component {
     const authorName = author.name || "匿名用户";
     const authorHeadline = author.headline || "";
     const authorUrl = author.url?.replace("api/v4/", "") || "";
-    const formattedContent = comment.content || "";
+    // 处理评论内容中的图片
+    const mediaDisplayMode = this.options.mediaDisplayMode || "normal";
+    const formattedContent = CommentsUtils.processCommentContent(
+      comment.content || "",
+      mediaDisplayMode
+    );
     const voteCount = comment.vote_count || 0;
     const createdTime = CommentsUtils.formatTime(comment.created_time);
 
@@ -261,7 +267,11 @@ export class CommentsComponent implements Component {
               const childAuthorName = childAuthor.name || "匿名用户";
               const childAuthorUrl =
                 childAuthor.url?.replace("api/v4/", "") || "";
-              const childFormattedContent = child.content || "";
+              // 处理子评论内容中的图片
+              const childFormattedContent = CommentsUtils.processCommentContent(
+                child.content || "",
+                mediaDisplayMode
+              );
               const childVoteCount = child.vote_count || 0;
 
               return `
@@ -463,7 +473,13 @@ export class ChildCommentsModalComponent implements Component {
     const authorUrl = author.url?.replace("api/v4/", "") || "";
     const authorName = author.name || "匿名用户";
     const authorHeadline = author.headline || "";
-    const formattedContent = this.parentComment.content || "";
+    // 获取媒体显示模式（这里需要从全局配置获取）
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+    const formattedContent = CommentsUtils.processCommentContent(
+      this.parentComment.content || "",
+      mediaDisplayMode
+    );
     const voteCount = this.parentComment.vote_count || 0;
     const createdTime = CommentsUtils.formatTime(
       this.parentComment.created_time
@@ -478,7 +494,11 @@ export class ChildCommentsModalComponent implements Component {
         const childAuthorUrl =
           childAuthor.url?.replace("api/v4/comment_v5/", "") || "";
         const childAuthorHeadline = childAuthor.headline || "";
-        const childFormattedContent = child.content || "";
+        // 处理子评论内容中的图片
+        const childFormattedContent = CommentsUtils.processCommentContent(
+          child.content || "",
+          mediaDisplayMode
+        );
         const childVoteCount = child.like_count || 0;
         const childCreatedTime = CommentsUtils.formatTime(child.created_time);
 
@@ -1479,6 +1499,117 @@ export class CommentsManager {
  * 评论工具类
  */
 export class CommentsUtils {
+  /**
+   * 处理评论内容，转换图片链接为实际图片元素
+   * @param content 原始评论内容
+   * @param mediaDisplayMode 媒体显示模式
+   * @returns 处理后的评论内容
+   */
+  public static processCommentContent(
+    content: string,
+    mediaDisplayMode: string = "normal"
+  ): string {
+    if (!content) {
+      return content;
+    }
+
+    // 使用Cheerio处理HTML内容
+    const $ = cheerio.load(content);
+
+    // 处理评论中的图片链接
+    $("a.comment_img").each(function () {
+      const link = $(this);
+      const href = link.attr("href");
+      const dataWidth = link.attr("data-width");
+      const dataHeight = link.attr("data-height");
+
+      // 检查是否是知乎图片链接
+      if (href && href.includes("pic") && href.includes(".zhimg.com")) {
+        // 无媒体模式时移除图片链接
+        if (mediaDisplayMode === "none") {
+          link.remove();
+          return;
+        }
+
+        // 计算图片显示尺寸
+        const originalWidth = parseInt(dataWidth || "100");
+        const originalHeight = parseInt(dataHeight || "100");
+
+        let displayWidth = 100;
+        let displayHeight = 100;
+
+        // 保持宽高比，但限制最大尺寸
+        const aspectRatio = originalWidth / originalHeight;
+        if (aspectRatio > 1) {
+          // 横向图片
+          displayHeight = Math.round(displayWidth / aspectRatio);
+        } else {
+          // 纵向图片
+          displayWidth = Math.round(displayHeight * aspectRatio);
+        }
+
+        // 小图模式缩放，但保证最小尺寸
+        if (mediaDisplayMode === "mini") {
+          displayWidth = Math.max(Math.round(displayWidth * 0.5), 20);
+          displayHeight = Math.max(Math.round(displayHeight * 0.5), 20);
+        }
+
+        // 确保图片URL是完整的HTTPS地址
+        let imageUrl = href;
+        if (imageUrl.startsWith("//")) {
+          imageUrl = "https:" + imageUrl;
+        } else if (!imageUrl.startsWith("http")) {
+          imageUrl = "https://" + imageUrl;
+        }
+
+        // 创建新的图片元素，直接在img上使用FancyBox
+        const imageContainer = $(`
+          <div class="comment-image-container" style="margin: 8px 0;">
+            <img 
+              src="${imageUrl}" 
+              alt="评论图片" 
+              class="comment-image" 
+              style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: cover;"
+              data-original-width="${originalWidth}"
+              data-original-height="${originalHeight}"
+              data-fancybox="comment-gallery"
+              data-caption="评论图片"
+              data-src="${imageUrl}"
+              referrerpolicy="no-referrer"
+              loading="lazy"
+              title="点击查看大图"
+            />
+          </div>
+        `);
+
+        // 替换原有的链接
+        link.replaceWith(imageContainer);
+      }
+    });
+
+    // 处理知乎重定向链接
+    $("a").each(function () {
+      const link = $(this);
+      let href = link.attr("href");
+
+      if (href && href.includes("link.zhihu.com/?target=")) {
+        try {
+          const targetParam = new URL(href).searchParams.get("target");
+          if (targetParam) {
+            href = decodeURIComponent(targetParam);
+            link.attr("href", href);
+            // 添加标记表示已处理
+            link.addClass("zhihu-redirect-processed");
+          }
+        } catch (e) {
+          // 如果解析失败，保留原始链接
+        }
+      }
+    });
+
+    return $.html();
+  }
+
   /**
    * 处理时间，将时间戳转换为可读格式
    * @param timeStr 时间戳
