@@ -566,7 +566,7 @@ export class ChildCommentsModalComponent implements Component {
 
     return `
       <div class="zhihu-comments-modal">
-        <div class="zhihu-comments-modal-overlay" onclick="closeCommentsModal()" title="点我关闭弹窗"></div>
+        <div class="zhihu-comments-modal-overlay" onclick="closeCommentsModal()"></div>
         <div class="zhihu-comments-modal-content">
           <div class="zhihu-comments-modal-header">
             <h3>全部回复 (${this.paging.totals})</h3>

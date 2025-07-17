@@ -341,6 +341,7 @@ export const commentsCss = `
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
 }
 
 .zhihu-comments-modal-content {

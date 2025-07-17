@@ -1106,6 +1106,7 @@ function showDonateModal() {
         bottom: 0;
         background: rgba(0, 0, 0, 0.5);
         cursor: pointer;
+        backdrop-filter: blur(5px);
       }
 
       .donate-modal-content {
