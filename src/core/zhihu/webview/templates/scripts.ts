@@ -638,6 +638,14 @@ function setupStylePanel() {
       document.querySelector('.comments-container').style.textAlign = defaultStyles.textAlign;
       document.querySelector('.comments-modal-container').style.textAlign = defaultStyles.textAlign;
 
+      // 重置灰色模式
+      document.querySelector('html').classList.remove('grayscale-mode');
+      localStorage.setItem('zhihu-fisher-grayscale-mode', 'false');
+      const grayscaleToggle = document.getElementById('grayscale-toggle');
+      if (grayscaleToggle) {
+        grayscaleToggle.checked = false;
+      }
+
       // 重置控件值
       if (fontSizeSlider && fontSizeValue) {
         fontSizeSlider.value = defaultStyles.fontSize.replace('px', '');
