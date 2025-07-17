@@ -99,7 +99,8 @@ export const commentsCss = `
 }
 
 .zhihu-comment:hover {
-  border-color: var(--vscode-focusBorder);
+  border-color: var(--vscode-commandCenter-activeBorder);
+  box-shadow: inset 0px 0px 10px 0px var(--vscode-commandCenter-activeBorder);
 }
 
 /* 评论头部：头像和作者信息 */

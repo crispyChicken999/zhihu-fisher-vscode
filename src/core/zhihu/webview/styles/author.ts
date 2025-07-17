@@ -26,6 +26,7 @@ export const authorCss = `
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .author-avatar img:hover {

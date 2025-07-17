@@ -23,12 +23,16 @@ const articleId = "\${ARTICLE_ID}";
 // 沉浸模式状态
 let isImmersiveMode = false;
 
+// 固定工具栏展开状态
+let isFixedToolbarExpanded = false;
+
 // 文档加载完成后执行
 document.addEventListener("DOMContentLoaded", function() {
   setupKeyboardNavigation();
   setupStylePanel();
   setupBackTopButton();
   setupImmersiveMode();
+  setupFixedToolbar();
   setupImageFancyBox();
 
   // 初始化媒体显示模式
@@ -214,6 +218,8 @@ function toggleImmersiveMode() {
 
   if (isImmersiveMode) {
     document.body.classList.add('immersive-mode');
+    // 进入沉浸模式时，确保工具栏状态正确设置
+    setFixedToolbarExpanded(isFixedToolbarExpanded);
   } else {
     document.body.classList.remove('immersive-mode');
   }
@@ -223,6 +229,64 @@ function toggleImmersiveMode() {
 
   // 回到顶部
   window.scrollTo(0, 0);
+}
+
+/**
+ * 设置固定工具栏
+ */
+function setupFixedToolbar() {
+  // 从localStorage获取工具栏展开状态，默认首次使用时展开
+  const savedState = localStorage.getItem('zhihu-fisher-toolbar-expanded');
+  isFixedToolbarExpanded = savedState === null ? true : savedState === 'true';
+
+  // 应用初始状态
+  setFixedToolbarExpanded(isFixedToolbarExpanded);
+}
+
+/**
+ * 切换固定工具栏展开/收起状态
+ */
+function toggleFixedToolbar() {
+  isFixedToolbarExpanded = !isFixedToolbarExpanded;
+  setFixedToolbarExpanded(isFixedToolbarExpanded);
+
+  // 保存状态到localStorage
+  localStorage.setItem('zhihu-fisher-toolbar-expanded', isFixedToolbarExpanded);
+}
+
+/**
+ * 设置固定工具栏展开状态
+ * @param {boolean} expanded 是否展开
+ */
+function setFixedToolbarExpanded(expanded) {
+  const toolbarExpandable = document.getElementById('toolbar-expandable');
+  const toggleButton = document.getElementById('toolbar-toggle');
+
+  if (!toolbarExpandable || !toggleButton) {
+    // 如果元素还没有加载，延迟执行
+    setTimeout(() => setFixedToolbarExpanded(expanded), 100);
+    return;
+  }
+
+  const toggleIcon = toggleButton.querySelector('svg path');
+
+  if (expanded) {
+    toolbarExpandable.classList.add('expanded');
+    toggleButton.classList.add('expanded');
+    toggleButton.setAttribute('tooltip', '收起工具栏(T)');
+    // 展开状态：箭头向下（收起图标）
+    if (toggleIcon) {
+      toggleIcon.setAttribute('d', 'M12 16l6-6-1.41-1.41L12 13.17l-4.59-4.58L6 10z');
+    }
+  } else {
+    toolbarExpandable.classList.remove('expanded');
+    toggleButton.classList.remove('expanded');
+    toggleButton.setAttribute('tooltip', '展开工具栏(T)');
+    // 收起状态：箭头向上（展开图标）
+    if (toggleIcon) {
+      toggleIcon.setAttribute('d', 'M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z');
+    }
+  }
 }
 
 /**
@@ -356,6 +420,11 @@ function setupKeyboardNavigation() {
       if (favoriteButton) {
         favoriteButton.click();
       }
+    }
+
+    // 按 T 键切换工具栏展开/收起状态（仅在沉浸模式下有效）
+    if (event.key === 't' && isImmersiveMode) {
+      toggleFixedToolbar();
     }
   });
 }
@@ -1004,7 +1073,7 @@ function showDonateModal() {
         <div class="donate-qr-container">
           <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg" alt="微信赞赏码" class="donate-qr-code">
           <p class="donate-tip">微信扫码打开</p>
-          <p>💖 感谢支持！💖</p>
+          <p>💖 感谢使用~ 谢谢支持！💖</p>
         </div>
       </div>
     </div>
@@ -1046,9 +1115,10 @@ function showDonateModal() {
         border-radius: 8px;
         max-width: 400px;
         width: 90%;
-        max-height: 80vh;
-        overflow: auto;
+        max-height: 90vh;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
       }
 
       .donate-modal-header {
@@ -1088,6 +1158,7 @@ function showDonateModal() {
       .donate-modal-body {
         padding-top: 20px;
         text-align: center;
+        overflow: auto;
       }
 
       .donate-modal-body p {

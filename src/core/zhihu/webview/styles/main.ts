@@ -107,9 +107,9 @@ img {
 
 blockquote {
   padding: 0 1em;
-  color: var(--vscode-foreground);
   border-left: 0.25em solid var(--vscode-panel-border);
   margin: 0 0 16px 0;
+  opacity: 0.8;
 }
 
 hr {

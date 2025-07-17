@@ -51,10 +51,11 @@ export const toolbarCss = `
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
   height: 95vh;
-  max-height: 520px;
-  flex-wrap: wrap-reverse;
+  gap: 10px;
+  max-height: 560px;
+  flex-wrap: nowrap;
+  align-items: flex-end;
 }
 
 .fixed-toolbar button {
@@ -121,6 +122,62 @@ body.immersive-mode .navigation {
 
 body.immersive-mode .immersive-button {
   display: flex; /* 沉浸模式下显示 */
+}
+
+/* 基础按钮 - 始终显示 */
+.toolbar-essential {
+  display: flex !important;
+}
+
+/* 切换按钮 */
+.toolbar-toggle {
+  display: flex !important;
+  background-color: var(--vscode-button-background);
+  border: 1px solid var(--vscode-button-border, transparent);
+}
+
+.toolbar-toggle:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+.toolbar-toggle.expanded {
+  background-color: var(--vscode-button-secondaryBackground);
+}
+
+/* 可展开的工具栏容器 */
+.toolbar-expandable {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toolbar-expandable.expanded {
+  max-height: 470px;
+  opacity: 1;
+  pointer-events: auto;
+  display: flex;
+}
+
+/* 可展开按钮项 */
+.toolbar-expandable-item {
+  display: flex !important;
+}
+
+/* 非沉浸模式下隐藏固定工具栏的展开按钮和扩展项 */
+body:not(.immersive-mode) .toolbar-toggle,
+body:not(.immersive-mode) .toolbar-expandable-item {
+  display: none !important;
+}
+
+body.immersive-mode .toolbar-toggle {
+  display: flex !important;
+}
+
+body.immersive-mode .toolbar-expandable-item {
+  display: flex !important;
 }
 
 /* 作者信息悬浮提示 */
