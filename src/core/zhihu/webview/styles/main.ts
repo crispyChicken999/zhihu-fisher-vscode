@@ -18,6 +18,11 @@ body.immersive-mode {
   padding: 0 50px 0 20px;
 }
 
+/* 灰色模式样式 */
+html.grayscale-mode {
+  filter: grayscale(100%);
+}
+
 /* FancyBox 自定义样式 */
 .fancybox__container {
   --fancybox-bg: var(--vscode-editor-background);

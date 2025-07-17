@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
   setupImmersiveMode();
   setupFixedToolbar();
   setupImageFancyBox();
+  setupGrayscaleMode();
 
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
@@ -195,6 +196,41 @@ function initializeFancyBox() {
   } catch (error) {
     console.log('FancyBox初始化失败:', error);
   }
+}
+
+/**
+ * 设置灰色模式
+ */
+function setupGrayscaleMode() {
+  // 从localStorage获取灰色模式状态
+  const isGrayscaleMode = localStorage.getItem('zhihu-fisher-grayscale-mode') === 'true';
+
+  // 如果灰色模式已开启，应用灰色模式样式
+  if (isGrayscaleMode) {
+    document.querySelector('html').classList.add('grayscale-mode');
+  }
+
+  // 初始化复选框状态（需要等DOM加载完成）
+  setTimeout(() => {
+    const grayscaleToggle = document.getElementById('grayscale-toggle');
+    if (grayscaleToggle) {
+      grayscaleToggle.checked = isGrayscaleMode;
+    }
+  }, 100);
+}
+
+/**
+ * 切换灰色模式
+ */
+function toggleGrayscaleMode(enabled) {
+  if (enabled) {
+    document.querySelector('html').classList.add('grayscale-mode');
+  } else {
+    document.querySelector('html').classList.remove('grayscale-mode');
+  }
+
+  // 保存状态到localStorage
+  localStorage.setItem('zhihu-fisher-grayscale-mode', enabled);
 }
 
 /**

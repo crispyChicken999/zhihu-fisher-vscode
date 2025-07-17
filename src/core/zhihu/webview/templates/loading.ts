@@ -24,6 +24,12 @@ export const loadingTemplate = `
       max-width: 800px;
       overflow: hidden;
     }
+
+    /* 灰色模式样式 */
+    html.grayscale-mode {
+      filter: grayscale(100%);
+    }
+
     .loading-container {
       height: fit-content;
       max-height: 90vh;
@@ -445,6 +451,17 @@ export const loadingTemplate = `
       }
     }
 
+    // 加载并应用灰色模式
+    function loadGrayscaleMode() {
+      // 从localStorage获取灰色模式状态
+      const isGrayscaleMode = localStorage.getItem('zhihu-fisher-grayscale-mode') === 'true';
+
+      // 如果灰色模式已开启，应用灰色模式样式
+      if (isGrayscaleMode) {
+        document.querySelector('html').classList.add('grayscale-mode');
+      }
+    }
+
     // 应用Mini模式的动态缩放比例
     function applyMiniMediaScale() {
       const imageContainer = document.querySelector('.image-container');
@@ -466,12 +483,14 @@ export const loadingTemplate = `
     // 页面加载完成后应用自定义样式和图片显示模式
     window.addEventListener('load', function() {
       loadCustomStyles();
+      loadGrayscaleMode();
       applyMiniMediaScale();
     });
 
     // 立即尝试加载样式（以防window.load事件已经触发）
     if (document.readyState === 'complete') {
       loadCustomStyles();
+      loadGrayscaleMode();
       applyMiniMediaScale();
     }
 

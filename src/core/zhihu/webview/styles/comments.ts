@@ -91,7 +91,7 @@ export const commentsCss = `
   transition: background-color 0.2s;
   border: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
-  transition: all 0.3s;
+  transition: box-shadow 0.3s, border-color 0.3s;
 }
 
 .zhihu-comment:last-child {
