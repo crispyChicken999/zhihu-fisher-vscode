@@ -16,9 +16,9 @@ interface ChromePathExample {
 export class PuppeteerManager {
   /**
    * 获取当前操作系统类型
-   * @returns 操作系统类型："windows" | "macos" | "unknown"
+   * @returns 操作系统类型："Windows" | "MacOS" | "Linux" | "unsupported"
    */
-  static getOSType(): "Windows" | "MacOS" | "unsupported" {
+  static getOSType(): "Windows" | "MacOS" | "Linux" | "unsupported" {
     const platform = os.platform();
 
     switch (platform) {
@@ -26,6 +26,8 @@ export class PuppeteerManager {
         return "Windows";
       case "darwin":
         return "MacOS";
+      case "linux":
+        return "Linux";
       default:
         return "unsupported";
     }
@@ -53,6 +55,12 @@ export class PuppeteerManager {
             "/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome",
           custom:
             "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        };
+      case "Linux":
+        return {
+          default:
+            "/home/[用户名]/.cache/puppeteer/chrome/linux-135.0.7049.84/chrome-linux64/chrome【我猜的，我也不知道是不是这个路径，有问题请反馈😂】",
+          custom: "/usr/bin/google-chrome",
         };
       default:
         return {

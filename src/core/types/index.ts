@@ -237,6 +237,41 @@ export interface CommentItem {
     /** 作者的头像 */
     avatar_url: string;
   };
+  /** 作者标签 */
+  author_tag?: Array<{
+    type: string;
+    text: string;
+    color: string;
+    night_color: string;
+    has_border: boolean;
+    border_color?: string;
+    border_night_color?: string;
+  }>;
+  /** 评论标签 */
+  comment_tag?: Array<{
+    type: string;
+    text: string;
+    color: string;
+    night_color: string;
+    has_border: boolean;
+  }>;
+  /** 回复的作者信息 */
+  reply_to_author?: {
+    id: string;
+    url_token: string;
+    name: string;
+    avatar_url: string;
+    avatar_url_template: string;
+    is_org: boolean;
+    type: string;
+    url: string;
+    user_type: string;
+    headline: string;
+    gender: number;
+    is_advertiser: boolean;
+    badge?: any[];
+    vip_info?: any;
+  };
   /** 评论的点赞数 */
   vote_count: number;
   /** 评论的分页参数（用于子评论） */

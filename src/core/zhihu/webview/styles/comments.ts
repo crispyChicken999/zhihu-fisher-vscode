@@ -132,6 +132,8 @@ export const commentsCss = `
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
 .zhihu-comment-author-name a {
@@ -146,12 +148,13 @@ export const commentsCss = `
 .zhihu-comment-author-headline {
   color: var(--vscode-descriptionForeground);
   line-height: 1.2;
-  opacity: 0.6;
-  font-size: 0.9em;
+  opacity: 0.5;
+  font-size: 0.8em;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   flex: 1;
+  align-self: flex-end;
 }
 
 /* 评论内容样式 */
@@ -165,7 +168,6 @@ export const commentsCss = `
 .zhihu-comment-content img,
 .zhihu-comment-content video {
   max-width: 100%;
-  margin: 10px 0;
   border-radius: 4px;
 }
 
@@ -314,6 +316,7 @@ export const commentsCss = `
   border: none;
   padding: 5px 0 0 0;
   cursor: pointer;
+  font-size: 1em;
 }
 
 .zhihu-show-all-replies-btn:hover {
@@ -345,13 +348,14 @@ export const commentsCss = `
 }
 
 .zhihu-comments-modal-content {
+  curosr: default;
   z-index: 1001;
   background-color: var(--vscode-editor-background);
   border-radius: 8px;
   width: 100%;
-  margin: 0 50px 0 10px;
+  margin: 5px 50px 5px 10px;
   max-width: 600px;
-  max-height: 95vh;
+  max-height: 97vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -393,6 +397,11 @@ export const commentsCss = `
   padding: 12px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
+}
+
+.zhihu-comments-modal-parent-comment .zhihu-comment-content {
+  max-height: 20vh;
+  overflow-y: auto;
 }
 
 .zhihu-comments-modal-child-comments {
@@ -469,5 +478,178 @@ export const commentsCss = `
 
 .vscode-dark .comment-image:hover {
   opacity: 1;
+}
+
+/* 动图容器样式 */
+.comment-gif-container {
+  position: relative;
+  display: inline-block;
+  margin: 8px 0;
+}
+
+.comment-gif {
+  border-radius: 4px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.comment-gif:hover {
+  opacity: 0.8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.gif-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 适配暗色主题 */
+.vscode-dark .comment-gif {
+  border-color: var(--vscode-panel-border);
+  opacity: 0.9;
+}
+
+.vscode-dark .comment-gif:hover {
+  opacity: 1;
+}
+
+/* 表情包样式 */
+.comment-sticker-container {
+  display: inline-block;
+  margin: 0 2px;
+  vertical-align: middle;
+  position: relative;
+}
+
+.comment-sticker {
+  border-radius: 4px;
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  vertical-align: middle;
+}
+
+.comment-sticker:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+/* 适配暗色主题 */
+.vscode-dark .comment-sticker:hover {
+  opacity: 1;
+}
+
+/* 评论标签样式 */
+.comment-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* 回复关系样式 */
+.reply-to-author {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.reply-to-author a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.reply-to-author a:hover {
+  color: var(--vscode-textLink-activeForeground);
+  text-decoration: underline;
+}
+
+/* 在子评论中的回复关系样式调整 */
+.zhihu-child-comment .reply-to-author {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.zhihu-child-comment .comment-tag {
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  margin-left: 4px;
+}
+
+/* 回复链样式 */
+.zhihu-reply-chain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reply-arrow {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  margin: 0 2px;
+}
+
+.zhihu-reply-to-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* 回复链中的作者名称样式 */
+.zhihu-reply-chain a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.zhihu-reply-chain a:hover {
+  text-decoration: underline;
+}
+
+/* 作者标签样式 */
+.author-tag {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* 无媒体模式下的图片文本样式 */
+.comment-image-text {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: var(--vscode-editor-inactiveSelectionBackground);
+  color: var(--vscode-descriptionForeground);
+  border-radius: 3px;
+  font-size: 11px;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+/* 适配暗色主题 */
+.vscode-dark .comment-image-text {
+  background-color: var(--vscode-editor-selectionBackground);
 }
 `;

@@ -246,6 +246,7 @@ export class CommentsComponent implements Component {
     const authorName = author.name || "匿名用户";
     const authorHeadline = author.headline || "";
     const authorUrl = author.url?.replace("api/v4/", "") || "";
+
     // 处理评论内容中的图片
     const mediaDisplayMode = this.options.mediaDisplayMode || "normal";
     const formattedContent = CommentsUtils.processCommentContent(
@@ -254,6 +255,76 @@ export class CommentsComponent implements Component {
     );
     const voteCount = comment.vote_count || 0;
     const createdTime = CommentsUtils.formatTime(comment.created_time);
+
+    // 渲染评论标签（移到footer）
+    let commentTagsHtml = "";
+    if (comment.comment_tag && comment.comment_tag.length > 0) {
+      commentTagsHtml = comment.comment_tag.map((tag) => tag.text).join(" · ");
+    }
+
+    // 处理回复关系 - 在作者栏显示
+    let authorDisplayHtml = "";
+    const hasReplyTo = comment.reply_to_author && comment.reply_to_author.name;
+
+    // 处理作者标签
+    let authorTagsHtml = "";
+    if (comment.author_tag && comment.author_tag.length > 0) {
+      authorTagsHtml = comment.author_tag
+        .map((tag) => {
+          const borderStyle = tag.has_border
+            ? `border: 1px solid ${tag.border_color || tag.color};`
+            : "";
+          return `
+            <span class="author-tag" style="
+              color: ${tag.color};
+              background-color: ${tag.color}15;
+              ${borderStyle}
+              padding: 1px 4px;
+              border-radius: 2px;
+              font-size: 10px;
+              margin-left: 4px;
+              display: inline-block;
+            ">${tag.text}</span>
+          `;
+        })
+        .join("");
+    }
+
+    if (hasReplyTo) {
+      // 有回复关系：显示 作者 -> 回复作者，不显示签名
+      const replyToAuthor = comment.reply_to_author!;
+      const replyToAuthorUrl =
+        replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
+      const replyToAvatarUrl = replyToAuthor.avatar_url || "";
+      const replyToAuthorName = replyToAuthor.name || "匿名用户";
+
+      authorDisplayHtml = `
+        <div class="zhihu-comment-author">
+          <div class="zhihu-comment-author-name zhihu-reply-chain">
+            <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
+            ${authorTagsHtml}
+            <span class="reply-arrow" title="向...回复">→</span>
+            <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
+            <a href="${replyToAuthorUrl}" title="点击查看作者【${replyToAuthorName}】知乎首页">${replyToAuthorName}</a>
+          </div>
+        </div>
+      `;
+    } else {
+      // 无回复关系：正常显示作者和签名
+      authorDisplayHtml = `
+        <div class="zhihu-comment-author">
+          <div class="zhihu-comment-author-name">
+            <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
+            ${authorTagsHtml}
+          </div>
+          ${
+            authorHeadline
+              ? `<div class="zhihu-comment-author-headline" title="${authorHeadline}">${authorHeadline}</div>`
+              : ""
+          }
+        </div>
+      `;
+    }
 
     // 子评论HTML
     let childCommentsHtml = "";
@@ -267,6 +338,7 @@ export class CommentsComponent implements Component {
               const childAuthorName = childAuthor.name || "匿名用户";
               const childAuthorUrl =
                 childAuthor.url?.replace("api/v4/", "") || "";
+              const childAuthorHeadline = childAuthor.headline || "";
               // 处理子评论内容中的图片
               const childFormattedContent = CommentsUtils.processCommentContent(
                 child.content || "",
@@ -274,22 +346,92 @@ export class CommentsComponent implements Component {
               );
               const childVoteCount = child.vote_count || 0;
 
+              // 渲染子评论标签（移到footer）
+              let childCommentTagsHtml = "";
+              if (child.comment_tag && child.comment_tag.length > 0) {
+                childCommentTagsHtml = child.comment_tag
+                  .map((tag) => tag.text)
+                  .join(" · ");
+              }
+
+              // 处理子评论的回复关系 - 在作者栏显示
+              let childAuthorDisplayHtml = "";
+              const childHasReplyTo =
+                child.reply_to_author && child.reply_to_author.name;
+
+              // 处理子评论的作者标签
+              let childAuthorTagsHtml = "";
+              if (child.author_tag && child.author_tag.length > 0) {
+                childAuthorTagsHtml = child.author_tag
+                  .map((tag) => {
+                    const borderStyle = tag.has_border
+                      ? `border: 1px solid ${tag.border_color || tag.color};`
+                      : "";
+                    return `
+                      <span class="author-tag" style="
+                        color: ${tag.color};
+                        background-color: ${tag.color}15;
+                        ${borderStyle}
+                        padding: 1px 4px;
+                        border-radius: 2px;
+                        font-size: 10px;
+                        margin-left: 4px;
+                        display: inline-block;
+                      ">${tag.text}</span>
+                    `;
+                  })
+                  .join("");
+              }
+
+              if (childHasReplyTo) {
+                // 有回复关系：显示 作者 -> 回复作者，不显示签名
+                const replyToAuthor = child.reply_to_author!;
+                const replyToAuthorUrl =
+                  replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
+                const replyToAvatarUrl = replyToAuthor.avatar_url || "";
+                const replyToAuthorName = replyToAuthor.name || "匿名用户";
+
+                childAuthorDisplayHtml = `
+                  <div>
+                    <div class="zhihu-child-comment-author-name zhihu-reply-chain">
+                      <a href="${childAuthorUrl}" title="点击查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
+                      ${childAuthorTagsHtml}
+                      <span class="reply-arrow" title="向...回复">→</span>
+                      <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
+                      <a href="${replyToAuthorUrl}" title="点击查看作者【${replyToAuthorName}】知乎首页">${replyToAuthorName}</a>
+                    </div>
+                  </div>
+                `;
+              } else {
+                // 无回复关系：正常显示作者和签名
+                childAuthorDisplayHtml = `
+                  <div>
+                    <div class="zhihu-child-comment-author-name">
+                      <a href="${childAuthorUrl}" title="点击查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
+                      ${childAuthorTagsHtml}
+                    </div>
+                    ${
+                      childAuthorHeadline
+                        ? `<div class="zhihu-child-comment-author-headline" title="${childAuthorHeadline}">${childAuthorHeadline}</div>`
+                        : ""
+                    }
+                  </div>
+                `;
+              }
+
               return `
               <div class="zhihu-child-comment">
                 <div class="zhihu-child-comment-header">
                   <img class="zhihu-child-comment-avatar" src="${childAvatarUrl}" alt="${childAuthorName}" referrerpolicy="no-referrer">
-                  <div>
-                    <div class="zhihu-child-comment-author-name">
-                      <a href="${childAuthorUrl}" title="点击查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
-                    </div>
-                  </div>
+                  ${childAuthorDisplayHtml}
                 </div>
                 <div class="zhihu-child-comment-content">${childFormattedContent}</div>
                 <div class="zhihu-child-comment-footer">
                   <span>${CommentsUtils.formatTime(child.created_time)}</span>
+                  ${childCommentTagsHtml ? ` · ${childCommentTagsHtml}` : ""}
                   ${
                     childVoteCount > 0
-                      ? `<span> · ${childVoteCount}赞</span>`
+                      ? ` · <span>${childVoteCount}赞</span>`
                       : ""
                   }
                 </div>
@@ -315,23 +457,15 @@ export class CommentsComponent implements Component {
       <div class="zhihu-comment" data-comment-id="${comment.id}">
         <div class="zhihu-comment-header">
           <img class="zhihu-comment-avatar" src="${avatarUrl}" alt="${authorName}" referrerpolicy="no-referrer">
-          <div class="zhihu-comment-author">
-            <div class="zhihu-comment-author-name">
-              <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
-            </div>
-            ${
-              authorHeadline
-                ? `<div class="zhihu-comment-author-headline" title="${authorHeadline}">${authorHeadline}</div>`
-                : ""
-            }
-          </div>
+          ${authorDisplayHtml}
         </div>
         <div class="zhihu-comment-content">${formattedContent}</div>
         <div class="zhihu-comment-footer">
           <span>${createdTime}</span>
+          ${commentTagsHtml ? ` · ${commentTagsHtml}` : ""}
           ${
             voteCount > 0
-              ? `<span> · <div class="zhihu-comment-like">${voteCount}赞</div></span>`
+              ? ` · <span class="zhihu-comment-like">${voteCount}赞</span>`
               : ""
           }
         </div>
@@ -485,6 +619,86 @@ export class ChildCommentsModalComponent implements Component {
       this.parentComment.created_time
     );
 
+    // 渲染父评论标签（移到footer）
+    let parentCommentTagsHtml = "";
+    if (
+      this.parentComment.comment_tag &&
+      this.parentComment.comment_tag.length > 0
+    ) {
+      parentCommentTagsHtml = this.parentComment.comment_tag
+        .map((tag) => tag.text)
+        .join(" · ");
+    }
+
+    // 处理父评论的回复关系 - 在作者栏显示
+    let parentAuthorDisplayHtml = "";
+    const parentHasReplyTo =
+      this.parentComment.reply_to_author &&
+      this.parentComment.reply_to_author.name;
+
+    // 处理父评论的作者标签
+    let parentAuthorTagsHtml = "";
+    if (
+      this.parentComment.author_tag &&
+      this.parentComment.author_tag.length > 0
+    ) {
+      parentAuthorTagsHtml = this.parentComment.author_tag
+        .map((tag) => {
+          const borderStyle = tag.has_border
+            ? `border: 1px solid ${tag.border_color || tag.color};`
+            : "";
+          return `
+            <span class="author-tag" style="
+              color: ${tag.color};
+              background-color: ${tag.color}15;
+              ${borderStyle}
+              padding: 1px 4px;
+              border-radius: 2px;
+              font-size: 10px;
+              margin-left: 4px;
+              display: inline-block;
+            ">${tag.text}</span>
+          `;
+        })
+        .join("");
+    }
+
+    if (parentHasReplyTo) {
+      // 有回复关系：显示 作者 -> 回复作者，不显示签名
+      const replyToAuthor = this.parentComment.reply_to_author!;
+      const replyToAuthorUrl =
+        replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
+      const replyToAvatarUrl = replyToAuthor.avatar_url || "";
+      const replyToAuthorName = replyToAuthor.name || "匿名用户";
+
+      parentAuthorDisplayHtml = `
+        <div class="zhihu-comment-author">
+          <div class="zhihu-comment-author-name zhihu-reply-chain">
+            <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
+            ${parentAuthorTagsHtml}
+            <span class="reply-arrow" title="向...回复">→</span>
+            <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
+            <a href="${replyToAuthorUrl}" title="点击查看作者【${replyToAuthorName}】知乎首页">${replyToAuthorName}</a>
+          </div>
+        </div>
+      `;
+    } else {
+      // 无回复关系：正常显示作者和签名
+      parentAuthorDisplayHtml = `
+        <div class="zhihu-comment-author">
+          <div class="zhihu-comment-author-name">
+            <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
+            ${parentAuthorTagsHtml}
+          </div>
+          ${
+            authorHeadline
+              ? `<div class="zhihu-comment-author-headline" title="${authorHeadline}">${authorHeadline}</div>`
+              : ""
+          }
+        </div>
+      `;
+    }
+
     // 子评论HTML列表
     const childCommentsHtml = this.childComments
       .map((child) => {
@@ -502,13 +716,69 @@ export class ChildCommentsModalComponent implements Component {
         const childVoteCount = child.like_count || 0;
         const childCreatedTime = CommentsUtils.formatTime(child.created_time);
 
-        return `
-        <div class="zhihu-comment">
-          <div class="zhihu-comment-header">
-            <img class="zhihu-comment-avatar" src="${childAvatarUrl}" alt="${childAuthorName}" referrerpolicy="no-referrer">
+        // 渲染子评论标签（移到footer）
+        let childCommentTagsHtml = "";
+        if (child.comment_tag && child.comment_tag.length > 0) {
+          childCommentTagsHtml = child.comment_tag
+            .map((tag) => tag.text)
+            .join(" · ");
+        }
+
+        // 处理子评论的回复关系 - 在作者栏显示
+        let childAuthorDisplayHtml = "";
+        const childHasReplyTo =
+          child.reply_to_author && child.reply_to_author.name;
+
+        // 处理子评论的作者标签
+        let childAuthorTagsHtml = "";
+        if (child.author_tag && child.author_tag.length > 0) {
+          childAuthorTagsHtml = child.author_tag
+            .map((tag) => {
+              const borderStyle = tag.has_border
+                ? `border: 1px solid ${tag.border_color || tag.color};`
+                : "";
+              return `
+                <span class="author-tag" style="
+                  color: ${tag.color}; 
+                  background-color: ${tag.color}15;
+                  ${borderStyle}
+                  padding: 1px 4px; 
+                  border-radius: 2px; 
+                  font-size: 10px; 
+                  margin-left: 4px;
+                  display: inline-block;
+                ">${tag.text}</span>
+              `;
+            })
+            .join("");
+        }
+
+        if (childHasReplyTo) {
+          // 有回复关系：显示 作者 -> 回复作者，不显示签名
+          const replyToAuthor = child.reply_to_author!;
+          const replyToAuthorUrl =
+            replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
+          const replyToAvatarUrl = replyToAuthor.avatar_url || "";
+          const replyToAuthorName = replyToAuthor.name || "匿名用户";
+
+          childAuthorDisplayHtml = `
+            <div class="zhihu-comment-author">
+              <div class="zhihu-comment-author-name zhihu-reply-chain">
+                <a href="${childAuthorUrl}" title="点击查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
+                ${childAuthorTagsHtml}
+                <span class="reply-arrow" title="向...回复">→</span>
+                <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
+                <a href="${replyToAuthorUrl}" title="点击查看作者【${replyToAuthorName}】知乎首页">${replyToAuthorName}</a>
+              </div>
+            </div>
+          `;
+        } else {
+          // 无回复关系：正常显示作者和签名
+          childAuthorDisplayHtml = `
             <div class="zhihu-comment-author">
               <div class="zhihu-comment-author-name">
                 <a href="${childAuthorUrl}" title="点击查看作者【${childAuthorName}】知乎首页">${childAuthorName}</a>
+                ${childAuthorTagsHtml}
               </div>
               ${
                 childAuthorHeadline
@@ -516,13 +786,22 @@ export class ChildCommentsModalComponent implements Component {
                   : ""
               }
             </div>
+          `;
+        }
+
+        return `
+        <div class="zhihu-comment">
+          <div class="zhihu-comment-header">
+            <img class="zhihu-comment-avatar" src="${childAvatarUrl}" alt="${childAuthorName}" referrerpolicy="no-referrer">
+            ${childAuthorDisplayHtml}
           </div>
           <div class="zhihu-comment-content">${childFormattedContent}</div>
           <div class="zhihu-comment-footer">
             <span>${childCreatedTime}</span>
+            ${childCommentTagsHtml ? ` · ${childCommentTagsHtml}` : ""}
             ${
               childVoteCount > 0
-                ? `<span> · <div class="zhihu-comment-like">${childVoteCount}赞</div></span>`
+                ? ` · <span class="zhihu-comment-like">${childVoteCount}赞</span>`
                 : ""
             }
           </div>
@@ -576,23 +855,15 @@ export class ChildCommentsModalComponent implements Component {
           <div class="zhihu-comments-modal-parent-comment">
             <div class="zhihu-comment-header">
               <img class="zhihu-comment-avatar" src="${avatarUrl}" alt="${authorName}" referrerpolicy="no-referrer">
-              <div class="zhihu-comment-author">
-                <div class="zhihu-comment-author-name">
-                  <a href="${authorUrl}" title="点击查看作者【${authorName}】知乎首页">${authorName}</a>
-                </div>
-                ${
-                  authorHeadline
-                    ? `<div class="zhihu-comment-author-headline" title="${authorHeadline}">${authorHeadline}</div>`
-                    : ""
-                }
-              </div>
+              ${parentAuthorDisplayHtml}
             </div>
             <div class="zhihu-comment-content">${formattedContent}</div>
             <div class="zhihu-comment-footer">
               <span>${createdTime}</span>
+              ${parentCommentTagsHtml ? ` · ${parentCommentTagsHtml}` : ""}
               ${
                 voteCount > 0
-                  ? `<span> · <div class="zhihu-comment-like">${voteCount}赞</div></span>`
+                  ? ` · <span class="zhihu-comment-like">${voteCount}赞</span>`
                   : ""
               }
             </div>
@@ -700,10 +971,57 @@ export class CommentsManager {
 
       return {
         comments: response.data.data.map((comment: any) => {
+          // 处理 address_text，将其转换为 comment_tag
+          const addressTag = comment.address_text
+            ? {
+                type: "location",
+                text: comment.address_text,
+                color: "#8c8c8c",
+                night_color: "#8c8c8c",
+                has_border: false,
+              }
+            : null;
+
+          // 合并原有的 comment_tag 和地址标签
+          const combinedCommentTags = [
+            ...(comment.comment_tag || []),
+            ...(addressTag ? [addressTag] : []),
+          ];
+
           return {
             ...comment,
             author: comment.author.member,
+            // 添加处理后的 comment_tag
+            comment_tag: combinedCommentTags,
+            // 处理回复关系 - 适配新的数据结构
+            reply_to_author: comment.reply_to_author?.member
+              ? {
+                  ...comment.reply_to_author.member,
+                  url:
+                    comment.reply_to_author.member.url?.replace(
+                      "api/v4/",
+                      ""
+                    ) || "",
+                }
+              : comment.reply_to_author,
             child_comments: comment.child_comments.map((child: any) => {
+              // 处理子评论的 address_text
+              const childAddressTag = child.address_text
+                ? {
+                    type: "location",
+                    text: child.address_text,
+                    color: "#8c8c8c",
+                    night_color: "#8c8c8c",
+                    has_border: false,
+                  }
+                : null;
+
+              // 合并子评论的 comment_tag 和地址标签
+              const childCombinedCommentTags = [
+                ...(child.comment_tag || []),
+                ...(childAddressTag ? [childAddressTag] : []),
+              ];
+
               child.author.member.url = child.author.member.url.replace(
                 "api/v4/",
                 ""
@@ -711,6 +1029,19 @@ export class CommentsManager {
               return {
                 ...child,
                 author: child.author.member,
+                // 添加处理后的 comment_tag
+                comment_tag: childCombinedCommentTags,
+                // 处理子评论的回复关系
+                reply_to_author: child.reply_to_author?.member
+                  ? {
+                      ...child.reply_to_author.member,
+                      url:
+                        child.reply_to_author.member.url?.replace(
+                          "api/v4/",
+                          ""
+                        ) || "",
+                    }
+                  : child.reply_to_author,
               };
             }),
           };
@@ -887,7 +1218,30 @@ export class CommentsManager {
           : Math.floor(Number(offset) / limit) + 1;
 
       return {
-        comments: response.data.data,
+        comments: response.data.data.map((comment: any) => {
+          // 处理子评论的 address_text，将其转换为 comment_tag
+          const addressTag = comment.address_text
+            ? {
+                type: "location",
+                text: comment.address_text,
+                color: "#8c8c8c",
+                night_color: "#8c8c8c",
+                has_border: false,
+              }
+            : null;
+
+          // 合并原有的 comment_tag 和地址标签
+          const combinedCommentTags = [
+            ...(comment.comment_tag || []),
+            ...(addressTag ? [addressTag] : []),
+          ];
+
+          return {
+            ...comment,
+            // 添加处理后的 comment_tag
+            comment_tag: combinedCommentTags,
+          };
+        }),
         paging: {
           is_end: is_end,
           is_start: offset === 0 || offset === "0" || !offset,
@@ -1525,9 +1879,8 @@ export class CommentsUtils {
 
       // 检查是否是知乎图片链接
       if (href && href.includes("pic") && href.includes(".zhimg.com")) {
-        // 无媒体模式时移除图片链接
+        // 无媒体模式时只显示链接
         if (mediaDisplayMode === "none") {
-          link.remove();
           return;
         }
 
@@ -1565,10 +1918,10 @@ export class CommentsUtils {
         // 创建新的图片元素，直接在img上使用FancyBox
         const imageContainer = $(`
           <div class="comment-image-container" style="margin: 8px 0;">
-            <img 
-              src="${imageUrl}" 
-              alt="评论图片" 
-              class="comment-image" 
+            <img
+              src="${imageUrl}"
+              alt="评论图片"
+              class="comment-image"
               style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: cover;"
               data-original-width="${originalWidth}"
               data-original-height="${originalHeight}"
@@ -1587,12 +1940,263 @@ export class CommentsUtils {
       }
     });
 
+    // 处理评论中的动图链接
+    $("a.comment_gif").each(function () {
+      const link = $(this);
+      const href = link.attr("href");
+      const dataWidth = link.attr("data-width");
+      const dataHeight = link.attr("data-height");
+
+      // 检查是否是知乎动图链接
+      if (href && href.includes("pic") && href.includes(".zhimg.com")) {
+        // 无媒体模式时移除动图链接
+        if (mediaDisplayMode === "none") {
+          link.remove();
+          return;
+        }
+
+        // 计算动图显示尺寸
+        const originalWidth = parseInt(dataWidth || "200");
+        const originalHeight = parseInt(dataHeight || "120");
+
+        let displayWidth = Math.min(originalWidth, 200);
+        let displayHeight = Math.min(originalHeight, 120);
+
+        // 保持宽高比
+        const aspectRatio = originalWidth / originalHeight;
+        if (aspectRatio > 1) {
+          // 横向动图
+          displayHeight = Math.round(displayWidth / aspectRatio);
+        } else {
+          // 纵向动图
+          displayWidth = Math.round(displayHeight * aspectRatio);
+        }
+
+        // 小图模式缩放，但保证最小尺寸
+        if (mediaDisplayMode === "mini") {
+          displayWidth = Math.max(Math.round(displayWidth * 0.7), 30);
+          displayHeight = Math.max(Math.round(displayHeight * 0.7), 20);
+        }
+
+        // 确保动图URL是完整的HTTPS地址
+        let gifUrl = href;
+        if (gifUrl.startsWith("//")) {
+          gifUrl = "https:" + gifUrl;
+        } else if (!gifUrl.startsWith("http")) {
+          gifUrl = "https://" + gifUrl;
+        }
+
+        // 创建新的动图元素
+        const gifContainer = $(`
+          <div class="comment-gif-container" style="margin: 8px 0;">
+            <img
+              src="${gifUrl}"
+              alt="评论动图"
+              class="comment-gif"
+              style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: cover;"
+              data-original-width="${originalWidth}"
+              data-original-height="${originalHeight}"
+              data-fancybox="comment-gallery"
+              data-caption="评论动图"
+              data-src="${gifUrl}"
+              referrerpolicy="no-referrer"
+              loading="lazy"
+              title="点击查看大图"
+            />
+            <div class="gif-indicator" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">GIF</div>
+          </div>
+        `);
+
+        // 替换原有的链接
+        link.replaceWith(gifContainer);
+      }
+    });
+
+    // 处理评论中的表情包
+    $("a.comment_sticker").each(function () {
+      const link = $(this);
+      const href = link.attr("href");
+      const dataWidth = link.attr("data-width");
+      const dataHeight = link.attr("data-height");
+      const stickerId = link.attr("data-sticker-id");
+      const title = link.attr("title");
+      const stickerText = link.text(); // 获取表情包的文本，如 [吃瓜]
+
+      // 检查是否是知乎表情包链接
+      if (href && href.includes("pic") && href.includes(".zhimg.com")) {
+        // 无媒体模式时只显示文本，不显示图片
+        if (mediaDisplayMode === "none") {
+          const textSpan = $(
+            `<span class="comment-sticker-text"">${stickerText}</span>`
+          );
+          link.replaceWith(textSpan);
+          return;
+        }
+
+        // 表情包通常尺寸较小，设置默认尺寸
+        let originalWidth = parseInt(dataWidth || "0");
+        let originalHeight = parseInt(dataHeight || "0");
+
+        // 如果没有尺寸信息，使用默认的表情包尺寸
+        if (originalWidth === 0 || originalHeight === 0) {
+          originalWidth = 64;
+          originalHeight = 64;
+        }
+
+        let displayWidth = Math.min(originalWidth, 64);
+        let displayHeight = Math.min(originalHeight, 64);
+
+        // 保持宽高比
+        if (originalWidth > 0 && originalHeight > 0) {
+          const aspectRatio = originalWidth / originalHeight;
+          if (aspectRatio > 1) {
+            // 横向表情包
+            displayHeight = Math.round(displayWidth / aspectRatio);
+          } else {
+            // 纵向表情包
+            displayWidth = Math.round(displayHeight * aspectRatio);
+          }
+        }
+
+        // 小图模式缩放
+        if (mediaDisplayMode === "mini") {
+          displayWidth = Math.max(Math.round(displayWidth * 0.8), 24);
+          displayHeight = Math.max(Math.round(displayHeight * 0.8), 24);
+        }
+
+        // 确保表情包URL是完整的HTTPS地址
+        let stickerUrl = href;
+        if (stickerUrl.startsWith("//")) {
+          stickerUrl = "https:" + stickerUrl;
+        } else if (!stickerUrl.startsWith("http")) {
+          stickerUrl = "https://" + stickerUrl;
+        }
+
+        // 创建新的表情包元素
+        const stickerContainer = $(`
+          <span class="comment-sticker-container" style="
+            display: inline-block;
+            margin: 0 2px;
+            vertical-align: middle;
+            position: relative;
+          ">
+            <img
+              src="${stickerUrl}"
+              alt="${stickerText}"
+              class="comment-sticker"
+              style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: contain;"
+              data-original-width="${originalWidth}"
+              data-original-height="${originalHeight}"
+              data-sticker-id="${stickerId || ""}"
+              data-fancybox="comment-gallery"
+              data-caption="表情包: ${stickerText}"
+              data-src="${stickerUrl}"
+              referrerpolicy="no-referrer"
+              loading="lazy"
+              title="${title || stickerText}"
+            />
+          </span>
+        `);
+
+        // 替换原有的链接
+        link.replaceWith(stickerContainer);
+      }
+    });
+
+    // 处理纯文本的图片链接（如 [图片]、[动图]、[表情] 等）
+    $("a").each(function () {
+      const link = $(this);
+      const href = link.attr("href");
+      const linkText = link.text().trim();
+
+      // 检查是否是图片、动图或表情的文本链接
+      if (
+        href &&
+        (linkText === "[图片]" ||
+          linkText === "[动图]" ||
+          linkText.match(/^\[.*\]$/))
+      ) {
+        // 检查是否是知乎图片链接
+        if (href.includes("pic") && href.includes(".zhimg.com")) {
+          // 无媒体模式时只保留文本
+          if (mediaDisplayMode === "none") {
+            return;
+          }
+
+          // 确保图片URL是完整的HTTPS地址
+          let imageUrl = href;
+          if (imageUrl.startsWith("//")) {
+            imageUrl = "https:" + imageUrl;
+          } else if (!imageUrl.startsWith("http")) {
+            imageUrl = "https://" + imageUrl;
+          }
+
+          // 根据链接文本类型决定显示样式
+          let displayWidth, displayHeight, elementClass, indicator;
+
+          if (linkText === "[动图]") {
+            // 动图样式
+            displayWidth = 120;
+            displayHeight = 80;
+            elementClass = "comment-gif";
+            indicator =
+              '<div class="gif-indicator" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">GIF</div>';
+          } else if (linkText.match(/^\[.*\]$/) && linkText !== "[图片]") {
+            // 表情包样式
+            displayWidth = 48;
+            displayHeight = 48;
+            elementClass = "comment-sticker";
+            indicator = "";
+          } else {
+            // 普通图片样式
+            displayWidth = 100;
+            displayHeight = 100;
+            elementClass = "comment-image";
+            indicator = "";
+          }
+
+          // 小图模式缩放
+          if (mediaDisplayMode === "mini") {
+            displayWidth = Math.max(Math.round(displayWidth * 0.7), 24);
+            displayHeight = Math.max(Math.round(displayHeight * 0.7), 24);
+          }
+
+          // 创建图片元素
+          const imageContainer = $(`
+            <div class="comment-image-container" style="margin: 8px 0; position: relative; display: inline-block;">
+              <img
+                src="${imageUrl}"
+                alt="${linkText}"
+                class="${elementClass}"
+                style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: cover;"
+                data-fancybox="comment-gallery"
+                data-caption="${linkText}"
+                data-src="${imageUrl}"
+                referrerpolicy="no-referrer"
+                loading="lazy"
+                title="点击查看大图"
+              />
+              ${indicator}
+            </div>
+          `);
+
+          // 替换原有的链接
+          link.replaceWith(imageContainer);
+        }
+      }
+    });
+
     // 处理知乎重定向链接
     $("a").each(function () {
       const link = $(this);
       let href = link.attr("href");
 
-      if (href && href.includes("link.zhihu.com/?target=")) {
+      // 跳过已经处理过的图片链接
+      if (link.hasClass("zhihu-redirect-processed") || !href) {
+        return;
+      }
+
+      if (href.includes("link.zhihu.com/?target=")) {
         try {
           const targetParam = new URL(href).searchParams.get("target");
           if (targetParam) {

@@ -210,8 +210,8 @@ export class ToolbarComponent implements Component {
 
       <!-- 沉浸模式下的工具栏按钮 -->
       <div class="fixed-toolbar">
-        <!-- 回到顶部按钮 - 始终显示 -->
-        <button class="button toolbar-essential" id="scroll-to-top" onclick="backTop()" tooltip="回到顶部(V)" placement="left">
+        <!-- 回到顶部按钮 - 滚动后显示 -->
+        <button class="button" id="scroll-to-top" onclick="backTop()" tooltip="回到顶部(V)" placement="left">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M4.08 11.92L12 4l7.92 7.92l-1.42 1.41l-5.5-5.5V22h-2V7.83l-5.5 5.5zM12 4h10V2H2v2z"/>
           </svg>
