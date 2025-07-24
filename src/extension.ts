@@ -52,7 +52,10 @@ export function activate(context: vscode.ExtensionContext) {
   // 当配置变更时触发刷新
   vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("zhihu-fisher")) {
-      if (e.affectsConfiguration("zhihu-fisher.mediaDisplayMode")) {
+      if (
+        e.affectsConfiguration("zhihu-fisher.mediaDisplayMode") ||
+        e.affectsConfiguration("zhihu-fisher.miniMediaScale")
+      ) {
         // 媒体显示模式变更时，需要刷新所有侧边栏以更新图片显示
         console.log("媒体显示模式已变更，刷新侧边栏显示");
         // 使用新的 refreshView 方法来更新视图，而不重新加载数据

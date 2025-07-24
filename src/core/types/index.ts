@@ -343,15 +343,23 @@ export class TreeItem extends vscode.TreeItem {
       }
     }
     // 添加内容类型标识
-    const typeLabel = listItem.type === "article" ? "*[文章]*" : "*[问题]*";
+    const typeLabel =
+      listItem.type === "article"
+        ? `**<span style="color:#2196F3;background-color:#2196F333;">[文章]</span>**`
+        : `**<span style="color:#f68b83;background-color:#f68b8333;">[问题]</span>**`;
+
+    const link = listItem.url || "";
+    const linkLabel = link ? ` [链接](${link})` : "";
 
     // 设置工具提示：根据配置和图片可用性决定
     if (shouldShowImage) {
       const markdownTooltip = new vscode.MarkdownString();
+      markdownTooltip.isTrusted = true;
+      markdownTooltip.supportThemeIcons = true;
       markdownTooltip.supportHtml = true;
 
       markdownTooltip.appendMarkdown(
-        `#### **${listItem.title}** ${typeLabel}\n\n`
+        `#### ${typeLabel} **${listItem.title}** ${linkLabel}\n\n`
       );
 
       if (listItem.hotValue) {
@@ -362,7 +370,7 @@ export class TreeItem extends vscode.TreeItem {
 
       if (listItem.excerpt) {
         const excerptPreview = listItem.excerpt;
-        markdownTooltip.appendMarkdown(`${excerptPreview}\n\n`);
+        markdownTooltip.appendMarkdown(`\n ${excerptPreview} \n\n`);
       }
 
       // 根据显示模式和缩放比例计算图片宽度
@@ -389,10 +397,12 @@ export class TreeItem extends vscode.TreeItem {
     } else {
       // 没有图片时的简单tooltip
       const simpleTooltip = new vscode.MarkdownString();
+      simpleTooltip.isTrusted = true;
+      simpleTooltip.supportThemeIcons = true;
       simpleTooltip.supportHtml = true;
 
       simpleTooltip.appendMarkdown(
-        `#### **${listItem.title}** ${typeLabel}\n\n`
+        `#### ${typeLabel} **${listItem.title} ${linkLabel}**\n\n`
       );
 
       if (listItem.hotValue) {
