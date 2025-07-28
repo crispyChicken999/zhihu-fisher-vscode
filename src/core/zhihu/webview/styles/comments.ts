@@ -116,8 +116,8 @@ export const commentsCss = `
 }
 
 .zhihu-comment-avatar {
-  width: 32px;
-  height: 32px;
+  width: 2.5em;
+  height: 2.5em;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -184,8 +184,8 @@ export const commentsCss = `
 .comments-container.mini-media img.zhihu-comment-avatar,
 .comments-modal-container.mini-media img.zhihu-comment-avatar {
   display: block !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 2em !important;
+  height: 2em !important;
 }
 
 /* 评论内容中的图片和链接居中显示 */
@@ -249,8 +249,8 @@ export const commentsCss = `
 }
 
 .zhihu-child-comment-avatar {
-  width: 24px;
-  height: 24px;
+  width: 1.5em;
+  height: 1.5em;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -612,8 +612,8 @@ export const commentsCss = `
 }
 
 .zhihu-reply-to-avatar {
-  width: 20px;
-  height: 20px;
+  width: 1.5em;
+  height: 1.5em;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;

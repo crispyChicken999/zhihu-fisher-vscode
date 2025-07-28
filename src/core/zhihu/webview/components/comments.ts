@@ -47,6 +47,244 @@ export class CommentsContainerComponent implements Component {
       }[mediaDisplayMode] || "";
   }
 
+  /** 获取知乎评论区表情包列表 */
+  public static getEmojis(): Array<{ name: string; url: string }> {
+    return [
+      {
+        name: "感谢",
+        url: "https://pic1.zhimg.com/v2-694cac2ec9f3c63f774e723f77d8c840.png",
+      },
+      {
+        name: "哇",
+        url: "https://picx.zhimg.com/v2-6a766571a6d6d3a4d8d16f433e5b284c.png",
+      },
+      {
+        name: "打招呼",
+        url: "https://picx.zhimg.com/v2-95c560d0c9c0491f6ef404cc010878fc.png",
+      },
+      {
+        name: "握手",
+        url: "https://pic2.zhimg.com/v2-f5aa165e86b5c9ed3b7bee821da59365.png",
+      },
+      {
+        name: "知乎益蜂",
+        url: "https://pica.zhimg.com/v2-11d9b8b6edaae71e992f95007c777446.png",
+      },
+      {
+        name: "百分百赞",
+        url: "https://picx.zhimg.com/v2-27521d5ba23dfc1ea58fd9ebb220e304.png",
+      },
+      {
+        name: "为爱发乎",
+        url: "https://pic1.zhimg.com/v2-609b1f168acfa22d59fa09d3cb0846ee.png",
+      },
+      {
+        name: "脑爆",
+        url: "https://pica.zhimg.com/v2-b6f53e9726998343e7713f564a422575.png",
+      },
+      {
+        name: "暗中学习",
+        url: "https://pica.zhimg.com/v2-5dc88b4f8cbc58d7597e2134a384e392.png",
+      },
+      {
+        name: "匿了",
+        url: "https://pic1.zhimg.com/v2-c1e799b8357888525ec45793e8270306.png",
+      },
+      {
+        name: "谢邀",
+        url: "https://pic2.zhimg.com/v2-6fe2283baa639ae1d7c024487f1d68c7.png",
+      },
+      {
+        name: "赞同",
+        url: "https://pic2.zhimg.com/v2-419a1a3ed02b7cfadc20af558aabc897.png",
+      },
+      {
+        name: "蹲",
+        url: "https://pic4.zhimg.com/v2-66e5de3da039ac969d3b9d4dc5ef3536.png",
+      },
+      {
+        name: "爱",
+        url: "https://pic1.zhimg.com/v2-0942128ebfe78f000e84339fbb745611.png",
+      },
+      {
+        name: "害羞",
+        url: "https://pic4.zhimg.com/v2-52f8c87376792e927b6cf0896b726f06.png",
+      },
+      {
+        name: "好奇",
+        url: "https://pic2.zhimg.com/v2-72b9696632f66e05faaca12f1f1e614b.png",
+      },
+      {
+        name: "思考",
+        url: "https://pic4.zhimg.com/v2-bffb2bf11422c5ef7d8949788114c2ab.png",
+      },
+      {
+        name: "酷",
+        url: "https://pic4.zhimg.com/v2-c96dd18b15beb196b2daba95d26d9b1c.png",
+      },
+      {
+        name: "大笑",
+        url: "https://pic1.zhimg.com/v2-3ac403672728e5e91f5b2d3c095e415a.png",
+      },
+      {
+        name: "微笑",
+        url: "https://pic1.zhimg.com/v2-3700cc07f14a49c6db94a82e989d4548.png",
+      },
+      {
+        name: "捂脸",
+        url: "https://pic1.zhimg.com/v2-b62e608e405aeb33cd52830218f561ea.png",
+      },
+      {
+        name: "捂嘴",
+        url: "https://pic4.zhimg.com/v2-0e26b4bbbd86a0b74543d7898fab9f6a.png",
+      },
+      {
+        name: "飙泪笑",
+        url: "https://pic4.zhimg.com/v2-3bb879be3497db9051c1953cdf98def6.png",
+      },
+      {
+        name: "耶",
+        url: "https://pic2.zhimg.com/v2-f3b3b8756af8b42bd3cb534cbfdbe741.png",
+      },
+      {
+        name: "可怜",
+        url: "https://pic1.zhimg.com/v2-aa15ce4a2bfe1ca54c8bb6cc3ea6627b.png",
+      },
+      {
+        name: "惊喜",
+        url: "https://pic2.zhimg.com/v2-3846906ea3ded1fabbf1a98c891527fb.png",
+      },
+      {
+        name: "流泪",
+        url: "https://pic4.zhimg.com/v2-dd613c7c81599bcc3085fc855c752950.png",
+      },
+      {
+        name: "大哭",
+        url: "https://pic1.zhimg.com/v2-41f74f3795489083630fa29fde6c1c4d.png",
+      },
+      {
+        name: "生气",
+        url: "https://pic4.zhimg.com/v2-6a976b21fd50b9535ab3e5b17c17adc7.png",
+      },
+      {
+        name: "惊讶",
+        url: "https://pic4.zhimg.com/v2-0d9811a7961c96d84ee6946692a37469.png",
+      },
+      {
+        name: "调皮",
+        url: "https://pic1.zhimg.com/v2-76c864a7fd5ddc110965657078812811.png",
+      },
+      {
+        name: "衰",
+        url: "https://pic1.zhimg.com/v2-d6d4d1689c2ce59e710aa40ab81c8f10.png",
+      },
+      {
+        name: "发呆",
+        url: "https://pic2.zhimg.com/v2-7f09d05d34f03eab99e820014c393070.png",
+      },
+      {
+        name: "机智",
+        url: "https://pic1.zhimg.com/v2-4e025a75f219cf79f6d1fda7726e297f.png",
+      },
+      {
+        name: "嘘",
+        url: "https://pic4.zhimg.com/v2-f80e1dc872d68d4f0b9ac76e8525d402.png",
+      },
+      {
+        name: "尴尬",
+        url: "https://pic3.zhimg.com/v2-b779f7eb3eac05cce39cc33e12774890.png",
+      },
+      {
+        name: "小情绪",
+        url: "https://pic1.zhimg.com/v2-c65aaaa25730c59f5097aca04e606d88.png",
+      },
+      {
+        name: "为难",
+        url: "https://pic1.zhimg.com/v2-132ab52908934f6c3cd9166e51b99f47.png",
+      },
+      {
+        name: "吃瓜",
+        url: "https://pic4.zhimg.com/v2-74ecc4b114fce67b6b42b7f602c3b1d6.png",
+      },
+      {
+        name: "语塞",
+        url: "https://pic2.zhimg.com/v2-58e3ec448b58054fde642914ebb850f9.png",
+      },
+      {
+        name: "看看你",
+        url: "https://pic3.zhimg.com/v2-4e4870fc6e57bb76e7e5924375cb20b6.png",
+      },
+      {
+        name: "撇嘴",
+        url: "https://pic2.zhimg.com/v2-1043b00a7b5776e2e6e1b0af2ab7445d.png",
+      },
+      {
+        name: "魔性笑",
+        url: "https://pic2.zhimg.com/v2-e6270881e74c90fc01994e8cd072bd3a.png",
+      },
+      {
+        name: "潜水",
+        url: "https://pic1.zhimg.com/v2-99bb6a605b136b95e442f5b69efa2ccc.png",
+      },
+      {
+        name: "口罩",
+        url: "https://pic4.zhimg.com/v2-6551348276afd1eaf836551b93a94636.png",
+      },
+      {
+        name: "开心",
+        url: "https://pic2.zhimg.com/v2-c99cdc3629ff004f83ff44a952e5b716.png",
+      },
+      {
+        name: "滑稽",
+        url: "https://pic4.zhimg.com/v2-8a8f1403a93ddd0a458bed730bebe19b.png",
+      },
+      {
+        name: "笑哭",
+        url: "https://pic4.zhimg.com/v2-ca0015e8ed8462cfce839fba518df585.png",
+      },
+      {
+        name: "白眼",
+        url: "https://pic2.zhimg.com/v2-d4f78d92922632516769d3f2ce055324.png",
+      },
+      {
+        name: "红心",
+        url: "https://pic2.zhimg.com/v2-9ab384e3947547851cb45765e6fc1ea8.png",
+      },
+      {
+        name: "柠檬",
+        url: "https://pic4.zhimg.com/v2-a8f46a21217d58d2b4cdabc4568fde15.png",
+      },
+      {
+        name: "拜托",
+        url: "https://pic2.zhimg.com/v2-3e36d546a9454c8964fbc218f0db1ff8.png",
+      },
+      {
+        name: "赞",
+        url: "https://pic1.zhimg.com/v2-c71427010ca7866f9b08c37ec20672e0.png",
+      },
+      {
+        name: "发火",
+        url: "https://pic1.zhimg.com/v2-d5c0ed511a09bf5ceb633387178e0d30.png",
+      },
+      {
+        name: "不抬杠",
+        url: "https://pic4.zhimg.com/v2-395d272d5635143119b1dbc0b51e05e4.png",
+      },
+      {
+        name: "种草",
+        url: "https://pic2.zhimg.com/v2-cb191a92f1296e33308b2aa16f61bfb9.png",
+      },
+      {
+        name: "抱抱",
+        url: "https://pic2.zhimg.com/v2-b2e3fa9e0b6f431bd18d4a9d5d3c6596.png",
+      },
+      {
+        name: "doge",
+        url: "https://pic4.zhimg.com/v2-501ff2e1fb7cf3f9326ec5348dc8d84f.png",
+      },
+    ];
+  }
+
   /**
    * 渲染评论容器组件
    * @returns 评论容器的HTML
@@ -302,11 +540,15 @@ export class CommentsComponent implements Component {
       authorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name zhihu-reply-chain">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${
+        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+      }&#010(点击前往主页)">${authorName}</a>
             ${authorTagsHtml}
             <span class="reply-arrow" title="向...回复">→</span>
             <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
-            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${replyToAuthorName}</a>
+            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${
+        replyToAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+      }&#010(点击前往主页)">${replyToAuthorName}</a>
           </div>
         </div>
       `;
@@ -315,7 +557,9 @@ export class CommentsComponent implements Component {
       authorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${
+        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+      }&#010(点击前往主页)">${authorName}</a>
             ${authorTagsHtml}
           </div>
           ${
@@ -396,11 +640,15 @@ export class CommentsComponent implements Component {
                 childAuthorDisplayHtml = `
                   <div>
                     <div class="zhihu-child-comment-author-name zhihu-reply-chain">
-                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${childAuthorName}</a>
+                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
+                  childAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+                }&#010(点击前往主页)">${childAuthorName}</a>
                       ${childAuthorTagsHtml}
                       <span class="reply-arrow" title="向...回复">→</span>
                       <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
-                      <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${replyToAuthorName}</a>
+                      <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${
+                  replyToAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+                }&#010(点击前往主页)">${replyToAuthorName}</a>
                     </div>
                   </div>
                 `;
@@ -409,7 +657,9 @@ export class CommentsComponent implements Component {
                 childAuthorDisplayHtml = `
                   <div>
                     <div class="zhihu-child-comment-author-name">
-                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${childAuthorName}</a>
+                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
+                  childAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+                }&#010(点击前往主页)">${childAuthorName}</a>
                       ${childAuthorTagsHtml}
                     </div>
                     ${
@@ -677,11 +927,15 @@ export class ChildCommentsModalComponent implements Component {
       parentAuthorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name zhihu-reply-chain">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${
+        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+      }&#010(点击前往主页)">${authorName}</a>
             ${parentAuthorTagsHtml}
             <span class="reply-arrow" title="向...回复">→</span>
             <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
-            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${replyToAuthorName}</a>
+            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${
+        replyToAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+      }&#010(点击前往主页)">${replyToAuthorName}</a>
           </div>
         </div>
       `;
@@ -690,7 +944,9 @@ export class ChildCommentsModalComponent implements Component {
       parentAuthorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${
+        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+      }&#010(点击前往主页)">${authorName}</a>
             ${parentAuthorTagsHtml}
           </div>
           ${
@@ -1858,6 +2114,24 @@ export class CommentsManager {
  */
 export class CommentsUtils {
   /**
+   * 静态表情包映射，避免重复创建
+   */
+  private static emojiMap: Map<string, string> | null = null;
+
+  /**
+   * 获取表情包映射（懒加载单例）
+   */
+  private static getEmojiMap(): Map<string, string> {
+    if (!CommentsUtils.emojiMap) {
+      CommentsUtils.emojiMap = new Map<string, string>();
+      CommentsContainerComponent.getEmojis().forEach((emoji) => {
+        CommentsUtils.emojiMap!.set(emoji.name, emoji.url);
+      });
+    }
+    return CommentsUtils.emojiMap;
+  }
+
+  /**
    * 处理评论内容，转换图片链接为实际图片元素
    * @param content 原始评论内容
    * @param mediaDisplayMode 媒体显示模式
@@ -2215,7 +2489,64 @@ export class CommentsUtils {
       }
     });
 
-    return $.html();
+    // 处理文本形式的表情包（如 [doge]、[感谢] 等）
+    let htmlContent = $.html();
+    htmlContent = CommentsUtils.processTextEmojis(
+      htmlContent,
+      mediaDisplayMode
+    );
+
+    return htmlContent;
+  }
+
+  /**
+   * 处理文本形式的表情包
+   * @param content HTML内容
+   * @param mediaDisplayMode 媒体显示模式
+   * @returns 处理后的内容
+   */
+  private static processTextEmojis(
+    content: string,
+    mediaDisplayMode: string
+  ): string {
+    // 无图模式时不处理，保持原文
+    if (mediaDisplayMode === "none") {
+      return content;
+    }
+
+    // 使用静态的表情包映射，避免重复创建
+    const emojiMap = CommentsUtils.getEmojiMap();
+
+    // 匹配 [表情名] 格式的文本
+    const emojiRegex = /\[([^\]]+)\]/g;
+
+    return content.replace(emojiRegex, (match, emojiName) => {
+      const emojiUrl = emojiMap.get(emojiName);
+
+      // 如果找到对应的表情包图片
+      if (emojiUrl) {
+        // 根据媒体显示模式设置尺寸
+        let size: number;
+        if (mediaDisplayMode === "mini") {
+          size = 1;
+        } else {
+          size = 1.1;
+        }
+
+        return `
+          <img src="${emojiUrl}"
+            alt="${match}"
+            title="${match}"
+            class="comment-text-emoji"
+            style="width: ${size}em; height: ${size}em; display: inline; object-fit: contain;"
+            referrerpolicy="no-referrer"
+            loading="lazy" />
+        `;
+      }
+
+      // 如果没有找到对应的表情包，保持原文
+      return match;
+    });
   }
 
   /**
