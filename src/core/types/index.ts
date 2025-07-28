@@ -345,11 +345,10 @@ export class TreeItem extends vscode.TreeItem {
     // 添加内容类型标识
     const typeLabel =
       listItem.type === "article"
-        ? `**<span style="color:#2196F3;background-color:#2196F333;">[文章]</span>**`
-        : `**<span style="color:#f68b83;background-color:#f68b8333;">[问题]</span>**`;
+        ? `**<span style="color:#2196F3;background-color:#2196F333;">&nbsp;文章&nbsp;</span>**`
+        : `**<span style="color:#f68b83;background-color:#f68b8333;">&nbsp;问题&nbsp;</span>**`;
 
-    const link = listItem.url || "";
-    const linkLabel = link ? ` [链接](${link})` : "";
+    const link = listItem.url || "https://www.zhihu.com/";
 
     // 设置工具提示：根据配置和图片可用性决定
     if (shouldShowImage) {
@@ -359,7 +358,7 @@ export class TreeItem extends vscode.TreeItem {
       markdownTooltip.supportHtml = true;
 
       markdownTooltip.appendMarkdown(
-        `#### ${typeLabel} **${listItem.title}** ${linkLabel}\n\n`
+        `#### ${typeLabel} <b>${listItem.title}</b> \n\n`
       );
 
       if (listItem.hotValue) {
@@ -402,7 +401,7 @@ export class TreeItem extends vscode.TreeItem {
       simpleTooltip.supportHtml = true;
 
       simpleTooltip.appendMarkdown(
-        `#### ${typeLabel} **${listItem.title} ${linkLabel}**\n\n`
+        `#### ${typeLabel} <b>${listItem.title}</b> \n\n`
       );
 
       if (listItem.hotValue) {
@@ -417,7 +416,7 @@ export class TreeItem extends vscode.TreeItem {
       this.tooltip = simpleTooltip;
     }
 
-    this.tooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`);
+    this.tooltip.appendMarkdown(`\n ___ \n\n **[原文链接](${link})**  |  *按住 Alt 键将鼠标悬停* `);
 
     // 只有当热度值存在且不为空时才显示
     this.description =

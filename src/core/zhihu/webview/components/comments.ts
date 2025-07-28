@@ -244,7 +244,7 @@ export class CommentsComponent implements Component {
     const author = comment.author;
     const avatarUrl = author.avatar_url || "";
     const authorName = author.name || "匿名用户";
-    const authorHeadline = author.headline || "神秘人，没有留下签名哦🤔";
+    const authorHeadline = author.headline || "";
     const authorUrl = author.url?.replace("api/v4/", "") || "";
 
     // 处理评论内容中的图片
@@ -297,16 +297,16 @@ export class CommentsComponent implements Component {
         replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
       const replyToAvatarUrl = replyToAuthor.avatar_url || "";
       const replyToAuthorName = replyToAuthor.name || "匿名用户";
-      const replyToAuthorHeadline = replyToAuthor.headline || "神秘人，没有留下签名哦🤔";
+      const replyToAuthorHeadline = replyToAuthor.headline || "";
 
       authorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name zhihu-reply-chain">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
             ${authorTagsHtml}
             <span class="reply-arrow" title="向...回复">→</span>
             <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
-            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline}&#010(点击前往主页)">${replyToAuthorName}</a>
+            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${replyToAuthorName}</a>
           </div>
         </div>
       `;
@@ -315,7 +315,7 @@ export class CommentsComponent implements Component {
       authorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
             ${authorTagsHtml}
           </div>
           ${
@@ -339,7 +339,7 @@ export class CommentsComponent implements Component {
               const childAuthorName = childAuthor.name || "匿名用户";
               const childAuthorUrl =
                 childAuthor.url?.replace("api/v4/", "") || "";
-              const childAuthorHeadline = childAuthor.headline || "神秘人，没有留下签名哦🤔";
+              const childAuthorHeadline = childAuthor.headline || "";
               // 处理子评论内容中的图片
               const childFormattedContent = CommentsUtils.processCommentContent(
                 child.content || "",
@@ -391,16 +391,16 @@ export class CommentsComponent implements Component {
                   replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
                 const replyToAvatarUrl = replyToAuthor.avatar_url || "";
                 const replyToAuthorName = replyToAuthor.name || "神秘人";
-                const replyToAuthorHeadline = replyToAuthor.headline || "神秘人，没有留下签名哦🤔";
+                const replyToAuthorHeadline = replyToAuthor.headline || "";
 
                 childAuthorDisplayHtml = `
                   <div>
                     <div class="zhihu-child-comment-author-name zhihu-reply-chain">
-                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline}&#010(点击前往主页)">${childAuthorName}</a>
+                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${childAuthorName}</a>
                       ${childAuthorTagsHtml}
                       <span class="reply-arrow" title="向...回复">→</span>
                       <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
-                      <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline}&#010(点击前往主页)">${replyToAuthorName}</a>
+                      <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${replyToAuthorName}</a>
                     </div>
                   </div>
                 `;
@@ -409,7 +409,7 @@ export class CommentsComponent implements Component {
                 childAuthorDisplayHtml = `
                   <div>
                     <div class="zhihu-child-comment-author-name">
-                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline}&#010(点击前往主页)">${childAuthorName}</a>
+                      <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${childAuthorName}</a>
                       ${childAuthorTagsHtml}
                     </div>
                     ${
@@ -608,7 +608,7 @@ export class ChildCommentsModalComponent implements Component {
     const avatarUrl = author.avatar_url || "";
     const authorUrl = author.url?.replace("api/v4/", "") || "";
     const authorName = author.name || "匿名用户";
-    const authorHeadline = author.headline || "神秘人，没有留下签名哦🤔";
+    const authorHeadline = author.headline || "";
     // 获取媒体显示模式（这里需要从全局配置获取）
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
@@ -672,16 +672,16 @@ export class ChildCommentsModalComponent implements Component {
         replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
       const replyToAvatarUrl = replyToAuthor.avatar_url || "";
       const replyToAuthorName = replyToAuthor.name || "匿名用户";
-      const replyToAuthorHeadline = replyToAuthor.headline || "神秘人，没有留下签名哦🤔";
+      const replyToAuthorHeadline = replyToAuthor.headline || "";
 
       parentAuthorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name zhihu-reply-chain">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
             ${parentAuthorTagsHtml}
             <span class="reply-arrow" title="向...回复">→</span>
             <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
-            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline}&#010(点击前往主页)">${replyToAuthorName}</a>
+            <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${replyToAuthorName}</a>
           </div>
         </div>
       `;
@@ -690,7 +690,7 @@ export class ChildCommentsModalComponent implements Component {
       parentAuthorDisplayHtml = `
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name">
-            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline}&#010(点击前往主页)">${authorName}</a>
+            <a href="${authorUrl}" title="『${authorName}』&#010签名：${authorHeadline ?? '神秘人，没有留下签名哦🤔'}&#010(点击前往主页)">${authorName}</a>
             ${parentAuthorTagsHtml}
           </div>
           ${
@@ -710,7 +710,7 @@ export class ChildCommentsModalComponent implements Component {
         const childAuthorName = childAuthor.name || "神秘人";
         const childAuthorUrl =
           childAuthor.url?.replace("api/v4/comment_v5/", "") || "";
-        const childAuthorHeadline = childAuthor.headline || "神秘人，没有留下签名哦🤔";
+        const childAuthorHeadline = childAuthor.headline || "";
         // 处理子评论内容中的图片
         const childFormattedContent = CommentsUtils.processCommentContent(
           child.content || "",
@@ -763,7 +763,7 @@ export class ChildCommentsModalComponent implements Component {
             replyToAuthor.url?.replace("api/v4/comment_v5/", "") || "";
           const replyToAvatarUrl = replyToAuthor.avatar_url || "";
           const replyToAuthorName = replyToAuthor.name || "神秘人";
-          const replyToAuthorHeadline = replyToAuthor.headline || "神秘人，没有留下签名哦🤔";
+          const replyToAuthorHeadline = replyToAuthor.headline || "";
 
           childAuthorDisplayHtml = `
             <div class="zhihu-comment-author">

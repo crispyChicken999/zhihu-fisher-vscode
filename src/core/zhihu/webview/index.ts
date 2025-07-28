@@ -273,9 +273,60 @@ export class WebviewManager {
             // 更新WebView显示特定回答
             this.updateWebview(webviewId);
             console.log(`成功预加载特定回答: ${preloadedAnswer.id}`);
+          } else {
+            // 如果没有获取到内容，显示错误页面
+            console.error("特定回答内容为空");
+
+            // 隐藏状态栏加载提示
+            this.hideStatusBarItem(webviewId);
+
+            // 显示错误页面
+            const errorTitle = "特定回答不存在";
+            const errorDescription = "无法找到指定的回答内容";
+            const errorReasons = [
+              "该回答可能已被作者删除",
+              "该回答可能已被知乎管理员删除",
+              "回答URL可能不正确",
+              "该回答可能仅对部分用户可见",
+              "网络问题导致无法获取内容",
+            ];
+
+            webviewItem.webviewPanel.webview.html = HtmlRenderer.getErrorHtml(
+              errorTitle,
+              errorDescription,
+              webviewItem.article.specificAnswerUrl || webviewItem.url,
+              errorReasons
+            );
+
+            webviewItem.isLoading = false;
+            return;
           }
         } catch (error) {
           console.error("预加载特定回答失败:", error);
+
+          // 隐藏状态栏加载提示
+          this.hideStatusBarItem(webviewId);
+
+          // 显示错误页面
+          const errorTitle = "特定回答加载失败";
+          const errorDescription = "无法获取指定的回答内容";
+          const errorReasons = [
+            "该回答可能已被删除或隐藏",
+            "回答URL格式不正确",
+            "网络连接问题导致内容加载失败",
+            "知乎反爬机制阻止了内容获取",
+            "Cookie可能已过期，需要重新登录",
+          ];
+
+          webviewItem.webviewPanel.webview.html = HtmlRenderer.getErrorHtml(
+            errorTitle,
+            errorDescription,
+            webviewItem.article.specificAnswerUrl || webviewItem.url,
+            errorReasons
+          );
+
+          webviewItem.isLoading = false;
+          return;
         }
       }
 
@@ -328,6 +379,40 @@ export class WebviewManager {
         webviewItem.batchConfig.afterLoadCount =
           webviewItem.article.answerList.length;
       await this.parseAllAnswers(webviewId, page); // 解析页面中的全部回答
+
+      // 检查是否爬取到了任何回答
+      const webviewItemAfterParsing = Store.webviewMap.get(webviewId);
+      if (
+        webviewItemAfterParsing &&
+        webviewItemAfterParsing.article.answerList.length === 0
+      ) {
+        console.log("未爬取到任何回答，显示错误页面");
+
+        // 隐藏状态栏加载提示
+        this.hideStatusBarItem(webviewId);
+
+        // 显示错误页面
+        const errorTitle = "未找到任何回答";
+        const errorDescription = "该问题下没有可显示的回答内容";
+        const errorReasons = [
+          "该问题可能已被知乎删除或隐藏",
+          "该问题可能没有任何回答",
+          "网络连接问题导致内容加载失败",
+          "知乎反爬机制阻止了内容获取",
+          "Cookie可能已过期，需要重新登录",
+        ];
+
+        webviewItemAfterParsing.webviewPanel.webview.html =
+          HtmlRenderer.getErrorHtml(
+            errorTitle,
+            errorDescription,
+            webviewItemAfterParsing.url,
+            errorReasons
+          );
+
+        webviewItemAfterParsing.isLoading = false;
+        return;
+      }
 
       await this.loadMoreAnswers(webviewId, page); // 加载更多回答
     } catch (error) {
@@ -1215,6 +1300,35 @@ export class WebviewManager {
           }
           break;
 
+        case "reloadPage":
+          // 处理错误页面的重新加载请求
+          const webviewItemForReload = Store.webviewMap.get(webviewId);
+          if (webviewItemForReload) {
+            webviewItemForReload.webviewPanel.webview.html =
+              HtmlRenderer.getLoadingHtml(
+                webviewItemForReload.article.title,
+                webviewItemForReload.article.excerpt || "重新加载中...",
+                ""
+              );
+            // 重新爬取数据
+            await this.crawlingURLData(webviewId);
+          }
+          break;
+
+        case "setCookie":
+          // 处理错误页面的设置Cookie请求
+          await vscode.commands.executeCommand("zhihu-fisher.setCookie");
+          const webviewItemForCookie = Store.webviewMap.get(webviewId);
+          if (webviewItemForCookie) {
+            webviewItemForCookie.webviewPanel.webview.html =
+              HtmlRenderer.getLoadingHtml(
+                webviewItemForCookie.article.title,
+                webviewItemForCookie.article.excerpt || "正在重新加载...",
+                ""
+              );
+          }
+          break;
+
         case "toggleMedia":
           await this.toggleMedia(webviewId);
           break;
@@ -1435,11 +1549,15 @@ export class WebviewManager {
    */
   private static async handleToggleDisguise(enabled: boolean): Promise<void> {
     try {
-      const config = vscode.workspace.getConfiguration('zhihu-fisher');
-      await config.update('enableDisguise', enabled, vscode.ConfigurationTarget.Global);
-      
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update(
+        "enableDisguise",
+        enabled,
+        vscode.ConfigurationTarget.Global
+      );
+
       vscode.window.showInformationMessage(
-        `智能伪装功能已${enabled ? '启用' : '禁用'}`
+        `智能伪装功能已${enabled ? "启用" : "禁用"}`
       );
     } catch (error) {
       console.error("切换智能伪装功能时出错:", error);

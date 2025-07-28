@@ -13,6 +13,7 @@ import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts";
 import { loadingTemplate } from "./templates/loading";
 import { cookieTipsTemplate } from "./templates/cookieTips";
+import { errorTemplate } from "./templates/error";
 import { articleKeyboardTips, questionKeyboardTips } from "./templates/keyboardTips";
 // 导入样式文件
 import { mainCss } from "./styles/main";
@@ -76,6 +77,37 @@ export class HtmlRenderer {
    */
   public static getCookieExpiredHtml(): string {
     return cookieTipsTemplate;
+  }
+
+  /**
+   * 生成错误页面的HTML内容
+   * @param title 错误标题
+   * @param description 错误描述
+   * @param sourceUrl 源URL
+   * @param reasons 错误原因列表
+   * @param actions 可执行的操作按钮HTML
+   * @returns 错误页面的HTML字符串
+   */
+  public static getErrorHtml(
+    title: string,
+    description: string,
+    sourceUrl: string,
+    reasons: string[],
+    actions?: string
+  ): string {
+    const reasonsHtml = reasons.map(reason => `<li>${this.escapeHtml(reason)}</li>`).join('');
+    const defaultActions = `
+      <button class="action-button" onclick="reloadPage()">重新加载</button>
+      <button class="action-button secondary" onclick="openInBrowser('${this.escapeHtml(sourceUrl)}')">在浏览器中打开</button>
+      <button class="action-button secondary" onclick="setCookie()">更新Cookie</button>
+    `;
+
+    return errorTemplate
+      .replace('${ERROR_TITLE}', this.escapeHtml(title))
+      .replace('${ERROR_DESCRIPTION}', this.escapeHtml(description))
+      .replace('${SOURCE_URL}', this.escapeHtml(sourceUrl))
+      .replace('${ERROR_REASONS}', reasonsHtml)
+      .replace('${ERROR_ACTIONS}', actions || defaultActions);
   }
 
   /**
