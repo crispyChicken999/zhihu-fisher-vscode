@@ -102,7 +102,6 @@ export const toolbarCss = `
 /* 沉浸模式下隐藏相关元素 */
 body.immersive-mode .author-info,
 body.immersive-mode .article-meta,
-body.immersive-mode .answer-meta,
 body.immersive-mode .toolbar,
 body.immersive-mode .zhihu-load-comments-btn,
 body.immersive-mode .zhihu-expand-comments-btn,
@@ -111,8 +110,51 @@ body.immersive-mode .navigation .navigation-buttons {
   display: none !important;
 }
 
+/* 正常模式下：隐藏第二个 answer-meta（文章内容后的） */
+body:not(.immersive-mode) .article-content + .answer-meta {
+  display: none !important;
+}
+
+/* 沉浸模式下：隐藏第一个 answer-meta（文章内容前的），显示第二个 */
+body.immersive-mode header + * + .answer-meta {
+  display: none !important;
+}
+
+/* 沉浸模式下保持显示的元素（第二个 answer-meta） */
+body.immersive-mode .article-content + .answer-meta {
+  display: flex !important;
+  justify-content: center;
+  padding: 0;
+  margin: 10px 0;
+  background: none;
+  border-radius: 0px;
+  max-width: fit-content;
+  font-size: 0.9em;
+  gap: 10px;
+}
+
+/* 沉浸模式下的 meta-item 样式优化 */
+body.immersive-mode .answer-meta .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  color: var(--vscode-descriptionForeground) !important;
+}
+
+body.immersive-mode .answer-meta .meta-item svg {
+  opacity: 1;
+  width: 15px;
+  height: 15px;
+  filter: grayscale(100%);
+}
+
 body.immersive-mode .navigation {
   justify-content: center;
+}
+
+body.immersive-mode .comments-modal-container + .navigation {
+  display: none !important;
 }
 
 /* 固定工具栏中的沉浸模式按钮 */

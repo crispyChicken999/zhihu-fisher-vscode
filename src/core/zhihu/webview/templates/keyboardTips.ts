@@ -1,7 +1,6 @@
 /**
  * 键盘提示模板
  */
-
 // 文章类型的键盘提示（只显示图片/视频调整）
 export const articleKeyboardTips = `
 <div style="display: inline-flex; align-items: center; gap: 5px;">

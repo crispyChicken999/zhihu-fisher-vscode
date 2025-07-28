@@ -163,7 +163,7 @@ export class HtmlRenderer {
       .replace("${PANEL_CSS}", panelCss)
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
-      .replace("${META_COMPONENT}", metaComponent.render())
+      .replaceAll("${META_COMPONENT}", metaComponent.render())
       .replace("${ARTICLE_CONTENT}", contentComponent.render())
       .replace("${COMMENTS_COMPONENT}", commentsComponent.render())
       .replace("${TOOLBAR_COMPONENT}", toolbarComponent.render())

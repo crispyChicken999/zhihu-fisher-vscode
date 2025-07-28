@@ -254,6 +254,12 @@ export class ArticleContentComponent implements Component {
       }
     });
 
+    // FeeConsultCard去除（咨询卡片，谁要咨询啊无语）
+    $(".FeeConsultCard").remove();
+
+    // RichText-ADLinkCardContainer 去除（广告，走开啊）
+    $(".RichText-ADLinkCardContainer").remove();
+
     return $.html();
   }
 }

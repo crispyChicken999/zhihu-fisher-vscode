@@ -98,6 +98,10 @@ export const commentsCss = `
   margin-bottom: 10px;
 }
 
+.zhihu-comments-modal-child-comments .zhihu-comment:last-child {
+  margin-bottom: 0;
+}
+
 .zhihu-comment:hover {
   border-color: var(--vscode-commandCenter-activeBorder);
   box-shadow: inset 0px 0px 10px 0px var(--vscode-commandCenter-activeBorder);

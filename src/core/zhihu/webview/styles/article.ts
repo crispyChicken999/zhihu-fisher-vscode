@@ -100,6 +100,10 @@ export const articleCss = `
   font-size: 0.9em;
 }
 
+p.ztext-empty-paragraph {
+  display: none;
+}
+
 .RichText-LinkCardContainer {
   display: flex;
   justify-content: center;

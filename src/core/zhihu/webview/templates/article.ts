@@ -47,6 +47,8 @@ export const articleTemplate = `
 
     <div class="article-content \${MEDIA_MODE_CLASS}">\${ARTICLE_CONTENT}</div>
 
+    \${META_COMPONENT}
+
     <!-- 评论区 -->
     \${COMMENTS_COMPONENT}
 
