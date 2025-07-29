@@ -194,7 +194,7 @@ export class WebViewUtils {
 
           // 提取评论数
           const commentElement = answerElement.querySelector(
-            ".ContentItem-action .Button--withLabel"
+            ".ContentItem-action"
           );
           let commentCount = 0;
           if (commentElement) {
