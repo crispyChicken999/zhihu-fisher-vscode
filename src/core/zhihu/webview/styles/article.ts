@@ -120,6 +120,7 @@ p.ztext-empty-paragraph {
   color: var(--vscode-textLink-activeForeground);
   text-decoration: none;
   transition: all 0.2s ease;
+  word-break: break-all;
 }
 
 .RichText-LinkCardContainer a:before {
