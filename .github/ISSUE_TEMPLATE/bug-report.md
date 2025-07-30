@@ -1,6 +1,6 @@
 ---
-name: Bug report
-about: 感谢您花时间填写此错误报告 (Thanks for taking the time to fill out this bug report)
+name: Bug Report
+about: "不好用我要提BUG\U0001F625"
 title: "[BUG]"
 labels: bug
 assignees: ''
