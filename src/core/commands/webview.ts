@@ -12,7 +12,7 @@ export function registerWebviewCommands(): vscode.Disposable[] {
   // 注册打开文章命令
   const openArticleCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openArticle",
-    (item: LinkItem, sourceType?: "collection" | "recommend" | "hot" | "search") => {
+    (item: LinkItem, sourceType?: "collection" | "recommend" | "hot" | "search", collectionId?: string) => {
       // 检查热榜列表是否正在加载中
       if (Store.Zhihu.hot.isLoading) {
         vscode.window.showInformationMessage(
@@ -50,7 +50,7 @@ export function registerWebviewCommands(): vscode.Disposable[] {
       }
 
       const finalSourceType = sourceType || inferredSourceType;
-      WebviewManager.openWebview(item, finalSourceType);
+      WebviewManager.openWebview(item, finalSourceType, collectionId);
     }
   );
   commands.push(openArticleCommand);

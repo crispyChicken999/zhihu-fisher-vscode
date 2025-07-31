@@ -49,7 +49,7 @@ export const panelCss = `
   left: 50%;
   line-height: 1.5;
   transform: translate(-50%, -50%);
-  width: 350px;
+  width: 380px;
   max-width: 90%;
   font-size: 12px;
   background-color: var(--vscode-editor-background);

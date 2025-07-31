@@ -71,7 +71,7 @@ export function registerCollectionCommands(
   // 注册打开收藏项命令
   const openCollectionItemCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openCollectionItem",
-    async (collectionItem: CollectionItem) => {
+    async (collectionItem: CollectionItem, collectionId?: string) => {
       if (!collectionItem) {
         vscode.window.showErrorMessage("无法获取收藏项信息");
         return;
@@ -91,7 +91,8 @@ export function registerCollectionCommands(
         await vscode.commands.executeCommand(
           "zhihu-fisher.openArticle",
           linkItem,
-          "collection"
+          "collection",
+          collectionId
         );
       } else if (collectionItem.type === "question") {
         // 问题直接打开
@@ -106,7 +107,8 @@ export function registerCollectionCommands(
         await vscode.commands.executeCommand(
           "zhihu-fisher.openArticle",
           linkItem,
-          "collection"
+          "collection",
+          collectionId
         );
       } else if (collectionItem.type === "answer") {
         // 回答需要特殊处理：构建一个包含该回答的问题页面
@@ -116,7 +118,7 @@ export function registerCollectionCommands(
         }
 
         const linkItem: LinkItem = {
-          id: collectionItem.question.id,
+          id: collectionItem.id || collectionItem.question.id,
           url: collectionItem.question.url,
           title: collectionItem.question.title,
           excerpt: collectionItem.excerpt,
@@ -129,7 +131,8 @@ export function registerCollectionCommands(
         await vscode.commands.executeCommand(
           "zhihu-fisher.openArticle",
           linkItem,
-          "collection"
+          "collection",
+          collectionId
         );
       }
     }

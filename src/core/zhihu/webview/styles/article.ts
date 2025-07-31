@@ -108,6 +108,11 @@ p.ztext-empty-paragraph {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+}
+
+.ReferenceList a {
+  word-break: break-all;
 }
 
 .RichText-LinkCardContainer a {

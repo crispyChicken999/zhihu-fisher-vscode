@@ -98,7 +98,7 @@ export class HtmlRenderer {
     const reasonsHtml = reasons.map(reason => `<li>${this.escapeHtml(reason)}</li>`).join('');
     const defaultActions = `
       <button class="action-button" onclick="reloadPage()">重新加载</button>
-      <button class="action-button secondary" onclick="openInBrowser('${this.escapeHtml(sourceUrl)}')">在浏览器中打开</button>
+      <button class="action-button secondary" onclick="openInBrowser('${this.escapeHtml(sourceUrl)}')">🌐 浏览器打开</button>
       <button class="action-button secondary" onclick="setCookie()">更新Cookie</button>
     `;
 

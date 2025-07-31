@@ -1215,6 +1215,7 @@ export class CommentsManager {
   }> {
     try {
       const url = this.commentRequestURL(answerId, offset, limit);
+      console.log('评论获取API链接：', url);
       const response = await axios.get(url, {
         headers: {
           "User-Agent":

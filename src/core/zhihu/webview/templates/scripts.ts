@@ -396,6 +396,42 @@ function setupKeyboardNavigation() {
       loadNextAnswer();
     }
 
+    // Ctrl + 上箭头 - 上一篇文章/问题
+    if (event.ctrlKey && event.key === 'ArrowUp') {
+      loadPreviousArticle();
+      event.preventDefault();
+    }
+
+    // Ctrl + 下箭头 - 下一篇文章/问题
+    if (event.ctrlKey && event.key === 'ArrowDown') {
+      loadNextArticle();
+      event.preventDefault();
+    }
+
+    // W键 - 上一篇文章/问题
+    if (event.key === 'w' || event.key === 'W') {
+      loadPreviousArticle();
+      event.preventDefault();
+    }
+
+    // S键 - 下一篇文章/问题
+    if (event.key === 's' || event.key === 'S') {
+      loadNextArticle();
+      event.preventDefault();
+    }
+
+    // A键 - 上一个回答
+    if (event.key === 'a' || event.key === 'A') {
+      loadPreviousAnswer();
+      event.preventDefault();
+    }
+
+    // D键 - 下一个回答
+    if (event.key === 'd' || event.key === 'D') {
+      loadNextAnswer();
+      event.preventDefault();
+    }
+
     // 按 / 键切换媒体显示模式
     if (event.key === '/') {
       toggleMediaDisplay();
@@ -877,6 +913,22 @@ function jumpToAnswer(index) {
     command: "jumpToAnswer",
     index: parseInt(index, 10)
   });
+}
+
+/**
+ * 加载上一篇文章/问题
+ */
+function loadPreviousArticle() {
+  window.scrollTo(0, 0); // 滚动到顶部
+  vscode.postMessage({ command: "loadPreviousArticle" });
+}
+
+/**
+ * 加载下一篇文章/问题
+ */
+function loadNextArticle() {
+  window.scrollTo(0, 0); // 滚动到顶部
+  vscode.postMessage({ command: "loadNextArticle" });
 }
 
 /**

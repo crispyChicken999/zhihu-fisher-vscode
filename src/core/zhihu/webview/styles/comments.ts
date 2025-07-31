@@ -182,7 +182,8 @@ export const commentsCss = `
 }
 
 .comments-container.mini-media img.zhihu-comment-avatar,
-.comments-modal-container.mini-media img.zhihu-comment-avatar {
+.comments-modal-container.mini-media img.zhihu-comment-avatar,
+.comments-modal-container.mini-media img.zhihu-reply-to-avatar {
   display: block !important;
   width: 2em !important;
   height: 2em !important;

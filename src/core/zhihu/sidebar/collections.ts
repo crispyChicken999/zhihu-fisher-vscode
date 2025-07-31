@@ -126,7 +126,8 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
     public readonly collectionItem: CollectionItem,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode
       .TreeItemCollapsibleState.None,
-    public readonly canRemove: boolean = false
+    public readonly canRemove: boolean = false,
+    public readonly collectionId?: string // 添加收藏夹ID参数
   ) {
     super(collectionItem.title, collapsibleState);
 
@@ -304,7 +305,7 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
     this.command = {
       command: "zhihu-fisher.openCollectionItem",
       title: "打开内容",
-      arguments: [collectionItem],
+      arguments: [collectionItem, collectionId],
     };
 
     // 如果有图片且需要显示，设置描述以显示图片
@@ -637,7 +638,8 @@ export class sidebarCollectionsDataProvider
         new CollectionItemTreeItem(
           item,
           vscode.TreeItemCollapsibleState.None,
-          canRemove
+          canRemove,
+          folder.id // 传递收藏夹ID
         )
       );
     });

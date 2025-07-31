@@ -10,13 +10,15 @@ export class WebViewUtils {
    * @param sourceType 来源类型（collection、recommend、hot、search）
    * @param contentType 内容类型（article、answer）
    * @param answerId 可选的回答ID，用于特定回答
+   * @param collectionId 可选的收藏夹ID，用于区分不同收藏夹中的相同内容
    * @returns 唯一的 WebView ID
    */
   public static generateUniqueWebViewId(
     baseId: string,
     sourceType: "collection" | "recommend" | "hot" | "search",
     contentType: "article" | "answer",
-    answerId?: string
+    answerId?: string,
+    collectionId?: string
   ): string {
     // 提取纯净的ID，避免重复前缀
     let cleanBaseId = baseId;
@@ -26,6 +28,11 @@ export class WebViewUtils {
     }
 
     let webviewId = `${contentType}-${cleanBaseId}-${sourceType}`;
+
+    // 如果是收藏夹来源，添加收藏夹ID以区分不同收藏夹中的相同内容
+    if (sourceType === "collection" && collectionId) {
+      webviewId += `-col-${collectionId}`;
+    }
 
     // 如果是特定回答，添加回答ID
     if (answerId) {

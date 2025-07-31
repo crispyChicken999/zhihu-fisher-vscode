@@ -15,7 +15,8 @@ export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
   static async openWebview(
     item: LinkItem,
-    sourceType: "collection" | "recommend" | "hot" | "search" = "recommend"
+    sourceType: "collection" | "recommend" | "hot" | "search" = "recommend",
+    collectionId?: string
   ): Promise<void> {
     // 提取基础ID和内容类型
     let baseId = item.id;
@@ -50,7 +51,8 @@ export class WebviewManager {
       baseId,
       sourceType,
       contentType,
-      answerId
+      answerId,
+      collectionId
     );
 
     // 检查是否已经打开了这个特定的内容
@@ -124,6 +126,9 @@ export class WebviewManager {
       id: webviewId, // 使用生成的唯一ID
       url: targetUrl, // 使用处理后的目标URL
       webviewPanel: panel,
+      sourceType: sourceType, // 保存来源类型
+      originalItem: item, // 保存原始链接项数据
+      collectionId: collectionId, // 保存收藏夹ID（仅当sourceType为collection时有效）
       article: {
         title: item.title,
         excerpt: item.excerpt,
@@ -734,6 +739,196 @@ export class WebviewManager {
         console.log("页面已关闭，忽略加载错误");
       }
     }
+  }
+
+  /** 加载上一篇文章/问题 */
+  public static async loadPreviousArticle(webviewId: string): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 中断当前正在进行的加载操作
+      if (webviewItem.batchConfig.isLoadingBatch || webviewItem.isLoading) {
+        webviewItem.batchConfig.isLoadingBatch = false;
+        webviewItem.isLoading = false;
+        console.log("中断当前加载操作，准备切换上一篇");
+      }
+
+      const sourceType = webviewItem.sourceType;
+      const originalItem = webviewItem.originalItem;
+      const collectionId = webviewItem.collectionId;
+
+      // 根据来源类型获取对应的列表
+      const list = this.getListBySourceType(sourceType, collectionId);
+      if (!list) {
+        vscode.window.showErrorMessage(
+          "未找到对应的列表数据，列表可能已经刷新了"
+        );
+        return;
+      }
+
+      // 查找当前项在列表中的位置
+      const currentIndex = this.findItemIndexInList(originalItem, list);
+      if (currentIndex === -1) {
+        vscode.window.showErrorMessage("未找到上一篇内容，列表可能已经刷新了");
+        return;
+      }
+
+      // 检查是否已是第一篇
+      if (currentIndex === 0) {
+        vscode.window.showInformationMessage("已经是第一篇了");
+        return;
+      }
+
+      // 获取上一篇内容
+      const previousItem = list[currentIndex - 1];
+
+      // 创建新的webview显示上一篇内容
+      await this.openWebview(previousItem, sourceType, collectionId);
+    } catch (error) {
+      console.error("切换上一篇文章时出错:", error);
+      vscode.window.showErrorMessage("切换上一篇文章时出错:" + error);
+    }
+  }
+
+  /** 加载下一篇文章/问题 */
+  public static async loadNextArticle(webviewId: string): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 中断当前正在进行的加载操作
+      if (webviewItem.batchConfig.isLoadingBatch || webviewItem.isLoading) {
+        webviewItem.batchConfig.isLoadingBatch = false;
+        webviewItem.isLoading = false;
+        console.log("中断当前加载操作，准备切换下一篇");
+      }
+
+      const sourceType = webviewItem.sourceType;
+      const originalItem = webviewItem.originalItem;
+      const collectionId = webviewItem.collectionId;
+
+      // 根据来源类型获取对应的列表
+      const list = this.getListBySourceType(sourceType, collectionId);
+      if (!list) {
+        vscode.window.showErrorMessage(
+          "未找到对应的列表数据，列表可能已经刷新了"
+        );
+        return;
+      }
+
+      // 查找当前项在列表中的位置
+      const currentIndex = this.findItemIndexInList(originalItem, list);
+      if (currentIndex === -1) {
+        vscode.window.showErrorMessage("未找到下一篇内容，列表可能已经刷新了");
+        return;
+      }
+
+      // 检查是否已是最后一篇
+      if (currentIndex === list.length - 1) {
+        vscode.window.showInformationMessage("已经是最后一篇了");
+        return;
+      }
+
+      // 获取下一篇内容
+      const nextItem = list[currentIndex + 1];
+
+      // 创建新的webview显示下一篇内容
+      await this.openWebview(nextItem, sourceType, collectionId);
+    } catch (error) {
+      console.error("切换下一篇文章时出错:", error);
+      vscode.window.showErrorMessage("切换下一篇文章时出错:" + error);
+    }
+  }
+
+  /** 根据来源类型获取对应的列表 */
+  private static getListBySourceType(
+    sourceType: "collection" | "recommend" | "hot" | "search",
+    collectionId?: string
+  ): LinkItem[] | null {
+    switch (sourceType) {
+      case "hot":
+        return Store.Zhihu.hot.list;
+      case "recommend":
+        return Store.Zhihu.recommend.list;
+      case "search":
+        return Store.Zhihu.search.list;
+      case "collection":
+        // 收藏夹的处理比较复杂，需要特殊处理
+        return this.getCollectionItemsList(collectionId);
+      default:
+        return null;
+    }
+  }
+
+  /** 获取所有收藏夹的内容列表（转换为LinkItem格式） */
+  private static getCollectionItemsList(collectionId?: string): LinkItem[] {
+    const allCollections = [
+      ...Store.Zhihu.collections.myCollections,
+      ...Store.Zhihu.collections.followingCollections,
+    ];
+
+    const linkItems: LinkItem[] = [];
+
+    // 如果指定了收藏夹ID，只处理该收藏夹
+    const targetCollections = collectionId
+      ? allCollections.filter((collection) => collection.id === collectionId)
+      : allCollections;
+
+    for (const collection of targetCollections) {
+      for (const item of collection.items) {
+        // 将CollectionItem转换为LinkItem格式
+        let linkItemId = item.id;
+        let linkItemType: "question" | "article" = item.type as
+          | "question"
+          | "article";
+
+        // 对于回答类型，需要特殊处理ID和类型
+        if (item.type === "answer") {
+          // 回答类型：从URL中提取回答ID作为真实ID
+          const answerIdMatch = item.url.match(/\/answer\/(\d+)/);
+          if (answerIdMatch) {
+            linkItemId = answerIdMatch[1]; // 使用回答的真实ID
+          }
+          linkItemType = "question"; // 转换为question类型，因为界面上需要这样显示
+        }
+
+        const linkItem: LinkItem = {
+          id: linkItemId,
+          url: item.url,
+          title: item.title,
+          excerpt: item.excerpt,
+          type: linkItemType,
+          imgUrl: item.thumbnail,
+          // 对于回答类型，保存answerUrl以便匹配
+          answerUrl: item.type === "answer" ? item.url : undefined,
+        };
+        linkItems.push(linkItem);
+      }
+    }
+
+    return linkItems;
+  }
+
+  /** 在列表中查找指定项的索引 */
+  private static findItemIndexInList(
+    targetItem: LinkItem,
+    list: LinkItem[]
+  ): number {
+    return list.findIndex((item) => {
+      // 如果有answerUrl，说明这是一个回答类型的内容
+      if (targetItem.answerUrl && item.answerUrl) {
+        // 对于回答类型，比较answerUrl是否相同
+        return targetItem.answerUrl === item.answerUrl;
+      }
+
+      // 对于其他类型，比较ID和URL
+      return item.id === targetItem.id && item.url === targetItem.url;
+    });
   }
 
   /** 跳转到指定回答 */
@@ -1347,6 +1542,14 @@ export class WebviewManager {
 
         case "loadNextAnswer":
           await this.loadNextAnswer(webviewId);
+          break;
+
+        case "loadPreviousArticle":
+          await this.loadPreviousArticle(webviewId);
+          break;
+
+        case "loadNextArticle":
+          await this.loadNextArticle(webviewId);
           break;
 
         case "jumpToAnswer":

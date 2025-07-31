@@ -206,6 +206,19 @@ export class ToolbarComponent implements Component {
             <path fill="currentColor" d="M11 18q-2.925 0-4.962-2.037T4 11V5q0-.825.588-1.412T6 3h12.5q1.45 0 2.475 1.025T22 6.5t-1.025 2.475T18.5 10H18v1q0 2.925-2.037 4.963T11 18M6 8h10V5H6zm12 0h.5q.625 0 1.063-.437T20 6.5t-.437-1.062T18.5 5H18zM4 21v-2h16v2z"/>
           </svg>
         </button>
+
+        <!-- 上下篇文章/问题切换按钮 -->
+        <button class="button prev-article-button" onclick="loadPreviousArticle()" tooltip="上一篇内容(Ctrl+↑ / W)" placement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M11 20V7.825l-5.6 5.6L4 12l8-8l8 8l-1.4 1.425l-5.6-5.6V20z"/>
+          </svg>
+        </button>
+
+        <button class="button next-article-button" onclick="loadNextArticle()" tooltip="下一篇内容(Ctrl+↓ / S)" placement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M11 4v12.175l-5.6-5.6L4 12l8 8l8-8l-1.4-1.425l-5.6 5.6V4z"/>
+          </svg>
+        </button>
       </div>
 
       <!-- 沉浸模式下的工具栏按钮 -->
@@ -287,18 +300,31 @@ export class ToolbarComponent implements Component {
             </svg>
           </button>
 
-          ${
-            !this.isArticle
-              ? `
-          <button class="button toolbar-expandable-item prev-button" onclick="loadPreviousAnswer()" tooltip="上一个回答(←)" placement="left">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
-              <path fill="currentColor" d="m5.83 9l5.58-5.58L10 2l-8 8l8 8l1.41-1.41L5.83 11H18V9z"/>
+          <!-- 上下篇文章/问题切换按钮 -->
+          <button class="button toolbar-expandable-item prev-article-button" onclick="loadPreviousArticle()" tooltip="上一篇内容(Ctrl+↑ | W)" placement="left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M11 20V7.825l-5.6 5.6L4 12l8-8l8 8l-1.4 1.425l-5.6-5.6V20z"/>
             </svg>
           </button>
 
-          <button class="button toolbar-expandable-item next-button" onclick="loadNextAnswer()" tooltip="下一个回答(→)" placement="left">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
-              <path fill="currentColor" d="M2 11h12.2l-5.6 5.6L10 18l8-8l-8-8l-1.4 1.4L14.2 9H2z"/>
+          <button class="button toolbar-expandable-item next-article-button" onclick="loadNextArticle()" tooltip="下一篇内容(Ctrl+↓ | S)" placement="left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M11 4v12.175l-5.6-5.6L4 12l8 8l8-8l-1.4-1.425l-5.6 5.6V4z"/>
+            </svg>
+          </button>
+
+          ${
+            !this.isArticle
+              ? `
+          <button class="button toolbar-expandable-item prev-button" onclick="loadPreviousAnswer()" tooltip="上一个回答(← | A)" placement="left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="transform: rotate(-90deg);">
+              <path fill="currentColor" d="M11 20V7.825l-5.6 5.6L4 12l8-8l8 8l-1.4 1.425l-5.6-5.6V20z"/>
+            </svg>
+          </button>
+
+          <button class="button toolbar-expandable-item next-button" onclick="loadNextAnswer()" tooltip="下一个回答(→ | D)" placement="left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="transform: rotate(-90deg);">
+              <path fill="currentColor" d="M11 4v12.175l-5.6-5.6L4 12l8 8l8-8l-1.4-1.425l-5.6 5.6V4z"/>
             </svg>
           </button>
           `
