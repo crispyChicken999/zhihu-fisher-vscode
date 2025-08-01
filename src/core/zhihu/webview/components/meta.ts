@@ -131,7 +131,7 @@ export class MetaComponent implements Component {
             </svg>
             <span>${likeCount}</span>
           </div>
-          <div class="meta-item comment" title="${this.answer.commentCount}条评论 (可能和真实数量有出入，以加载评论的时候为准)">
+          <div class="meta-item comment" title="${this.answer.commentCount}条评论&#010(可能和真实数量有出入，以加载评论的时候为准)&#010[点击加载评论]" onclick="loadComments('${this.answer.id}')">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
               <g fill="none">
                 <path fill="currentColor" d="M12 21a9 9 0 1 0-9-9c0 1.488.36 2.89 1 4.127L3 21l4.873-1c1.236.639 2.64 1 4.127 1" opacity=".16"/>

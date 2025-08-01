@@ -39,16 +39,23 @@ export class StylePanelComponent implements Component {
           </button>
         </div>
 
-        <div class="style-panel-tips">
-          <span style="flex: 0 0 auto;">使用键盘</span>
-          <span style="flex: 0 0 auto; display: inline-flex; align-items: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0"/></g></svg>
-          </span>
-          <span style="flex: 0 0 auto;">快速设置页面样式</span>
+        <div class="style-panel-tips-wrapper">
+          <div class="style-panel-tips">
+            <span style="flex: 0 0 auto;">使用键盘</span>
+            <span style="flex: 0 0 auto; display: inline-flex; align-items: center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                  <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0"/>
+                </g>
+              </svg>
+            </span>
+            <span style="flex: 0 0 auto;">快速设置页面样式</span>
+          </div>
         </div>
 
-        <div class="style-panel-content" style="padding: 0 20px 20px 20px;">
-          <div class="style-option" style="margin: 10px 0;">
+        <div class="style-panel-content">
+          <div class="style-option">
             <label for="font-size-slider" style="display: block; margin-bottom: 5px;">字体大小</label>
             <div style="display: flex; align-items: center; gap: 10px;">
               <input type="range" id="font-size-slider" min="8" max="24" value="14" style="flex: 1;">
@@ -56,7 +63,7 @@ export class StylePanelComponent implements Component {
             </div>
           </div>
 
-          <div class="style-option" style="margin: 10px 0;">
+          <div class="style-option">
             <label for="line-height-slider" style="display: block; margin-bottom: 5px;">行高</label>
             <div style="display: flex; align-items: center; gap: 10px;">
               <input type="range" id="line-height-slider" min="1" max="2.5" value="1.6" step="0.1" style="flex: 1;">
@@ -64,7 +71,7 @@ export class StylePanelComponent implements Component {
             </div>
           </div>
 
-          <div class="style-option" style="margin: 10px 0;">
+          <div class="style-option">
             <label for="max-width-slider" style="display: block; margin-bottom: 5px;">最大宽度</label>
             <div style="display: flex; align-items: center; gap: 10px;">
               <input type="range" id="max-width-slider" min="300" max="2400" value="800" step="50" style="flex: 1;">
@@ -72,7 +79,7 @@ export class StylePanelComponent implements Component {
             </div>
           </div>
 
-          <div class="style-option" style="margin: 10px 0;">
+          <div class="style-option">
             <label for="font-family-select" style="display: block; margin-bottom: 5px;">字体</label>
             <select id="font-family-select" placeholder="点击设置显示字体" class="panel-select">
               <option value="">系统默认</option>
@@ -99,30 +106,54 @@ export class StylePanelComponent implements Component {
             </div>
           </div>
 
-          <div class="style-option" style="margin: 20px 0 10px 0;">
-            <label style="display: block; margin-bottom: 10px;" for="media-display-select">媒体（图片、视频等）显示方式</label>
+          <div class="style-option">
+            <label style="display: block; margin-bottom: 10px;">对齐方式</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="radio" name="text-align" value="left" checked>
+                <span>左对齐</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="radio" name="text-align" value="center">
+                <span>居中对齐</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="radio" name="text-align" value="right">
+                <span>右对齐</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="radio" name="text-align" value="justify">
+                <span>两端对齐</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="style-option-divider"></div>
+
+          <div class="style-option">
+            <label style="display: block; margin-bottom: 10px;" for="media-display-select">多媒体（图片、视频等）显示方式</label>
             <select
               id="media-display-select"
               class="panel-select"
               onchange="changeMediaMode(this.value)"
-              title="选择图片、视频等媒体的显示方式"
+              title="选择图片、视频等多媒体的显示方式"
             >
               <option value="normal" ${
                 this.mediaDisplayMode === "normal" ? "selected" : ""
-              }>正常显示图片和视频</option>
+              }>正常显示</option>
               <option value="mini" ${
                 this.mediaDisplayMode === "mini" ? "selected" : ""
-              }>图片、视频缩小显示</option>
+              }>迷你模式</option>
               <option value="none" ${
                 this.mediaDisplayMode === "none" ? "selected" : ""
-              }>图片、视频全部隐藏</option>
+              }>全部隐藏</option>
             </select>
           </div>
 
-          <div class="style-option" id="mini-scale-option" style="margin: 10px 0; ${
+          <div class="style-option" id="mini-scale-option" style="${
             this.mediaDisplayMode === "mini" ? "" : "display: none;"
           }">
-            <label for="mini-media-scale-slider" style="display: block; margin-bottom: 5px;">Mini模式图片缩放比例</label>
+            <label for="mini-media-scale-slider" style="display: block; margin-bottom: 5px;">迷你模式下，多媒体（图片、视频）缩放比例</label>
             <div style="display: flex; align-items: center; gap: 10px;">
               <input type="range" id="mini-media-scale-slider" min="1" max="100" value="${
                 this.miniMediaScale
@@ -133,7 +164,9 @@ export class StylePanelComponent implements Component {
             </div>
           </div>
 
-          <div class="style-option" style="margin: 20px 0 10px 0;">
+          <div class="style-option-divider"></div>
+
+          <div class="style-option">
             <label style="display: block; margin-bottom: 10px;">
               智能伪装功能
               <span style="color: #666; font-size: 12px; margin-left: 8px;">
@@ -165,7 +198,9 @@ export class StylePanelComponent implements Component {
             </div>
           </div>
 
-          <div class="style-option" style="margin: 20px 0 10px 0;">
+          <div class="style-option-divider"></div>
+
+          <div class="style-option">
             <label style="display: block; margin-bottom: 10px;">
               灰色模式
               <span style="color: #666; font-size: 12px; margin-left: 8px;">
@@ -194,30 +229,44 @@ export class StylePanelComponent implements Component {
             </div>
           </div>
 
-          <div class="style-option" style="margin: 20px 0 10px 0;">
-            <label style="display: block; margin-bottom: 10px;">对齐方式</label>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="text-align" value="left" checked>
-                <span>左对齐</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="text-align" value="center">
-                <span>居中对齐</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="text-align" value="right">
-                <span>右对齐</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="text-align" value="justify">
-                <span>两端对齐</span>
-              </label>
+          <div class="style-option-divider"></div>
+
+          <!-- 工具栏自定义设置区域 -->
+          <div class="style-option">
+            <label style="display: block; margin-bottom: 10px; font-weight: bold;">
+              工具栏自定义
+              <span style="color: #666; font-size: 12px; margin-left: 8px;">
+                (自定义显示哪些按钮及其顺序)
+              </span>
+            </label>
+            <div style="font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; padding: 8px 12px; background: var(--vscode-textBlockQuote-background); border: 1px solid var(--vscode-textBlockQuote-border); border-radius: 4px; margin-bottom: 10px;">
+              <div style="margin-bottom: 4px;">
+                <strong style="color: var(--vscode-editor-foreground);">功能说明：</strong>可以自定义显示哪些工具栏按钮，以及调整它们的显示顺序
+              </div>
+              <div style="margin-bottom: 4px;">
+                <strong style="color: var(--vscode-editor-foreground);">使用方法：</strong>勾选要显示的按钮，拖拽按钮项调整顺序，设置会自动保存
+              </div>
+              <div>
+                <strong style="color: var(--vscode-textLink-foreground);">提示：</strong>按钮按顺序号排列，彩色标签表示功能分类，在沉浸模式下可悬停按钮点击 × 快速隐藏
+              </div>
+            </div>
+
+            <div id="toolbar-config-container" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 10px;">
+              <!-- 工具栏按钮配置将在这里动态生成 -->
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <button class="button" onclick="resetToolbarConfig()" style="flex: 1; font-size: 12px;">
+                恢复默认配置
+              </button>
+              <button class="button" onclick="toggleAllToolbarButtons()" style="flex: 1; font-size: 12px;">
+                全选/全不选
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="style-buttons" >
+        <div class="style-buttons">
           <button class="button" id="style-reset-button" style="flex: 1;">重置样式</button>
         </div>
       </div>

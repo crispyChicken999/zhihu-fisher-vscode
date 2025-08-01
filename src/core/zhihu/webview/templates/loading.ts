@@ -35,10 +35,11 @@ export const loadingTemplate = `
       max-height: 90vh;
       justify-content: center;
       overflow: auto;
-      padding-right: 20px;
+      padding: 0 20px;
       width: 100%;
       text-align: center;
     }
+
     .loading-spinner {
       flex: 0 0 40px;
       width: 40px;
@@ -346,7 +347,7 @@ export const loadingTemplate = `
     <div class="divider"></div>
 
     <p class="excerpt" >\${EXCERPT}</p>
-    <button class="button" onclick="openInBrowser()">在浏览器中打开</button>
+    <button class="button" onclick="openInBrowser()">🌐 在浏览器中打开</button>
 
     <!-- 故障排除弹窗 -->
     <div id="troubleshootingModal" class="modal-overlay" onclick="closeTroubleshootingModal(event)">

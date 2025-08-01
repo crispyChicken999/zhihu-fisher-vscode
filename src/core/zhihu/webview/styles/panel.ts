@@ -49,8 +49,9 @@ export const panelCss = `
   left: 50%;
   line-height: 1.5;
   transform: translate(-50%, -50%);
-  width: 380px;
-  max-width: 90%;
+  min-width: 450px;
+  width: 75vw;
+  max-width: 650px;
   font-size: 12px;
   background-color: var(--vscode-editor-background);
   border: 1px solid var(--vscode-panel-border);
@@ -59,7 +60,6 @@ export const panelCss = `
   z-index: 9999;
   display: none;
   flex-direction: column;
-  transition: all 0.2s ease-in-out;
   user-select: none;
 }
 
@@ -75,7 +75,7 @@ export const panelCss = `
 .style-panel-tips {
   font-size: 12px;
   color: var(--vscode-descriptionForeground);
-  margin: 15px 15px 0;
+  margin: 10px;
   padding: 5px 0;
   display: flex;
   gap: 5px;
@@ -85,15 +85,31 @@ export const panelCss = `
   align-items: center;
 }
 
+.style-panel-tips-wrapper {
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
 .style-panel-content {
-  max-height: 60vh;
+  margin-top: 1px;
+  max-height: 70vh;
   overflow-y: auto;
+  padding: 0 10px 0px 20px;
+}
+
+.style-option {
+  margin: 10px 0;
+}
+
+.style-option-divider {
+  margin: 15px 0;
+  border-bottom: 1px dashed var(--vscode-panel-border);
 }
 
 .style-buttons {
   display: flex;
   gap: 10px;
-  padding: 0 15px 15px;
+  padding: 10px;
+  border-top: 1px solid var(--vscode-panel-border);
 }
 
 .style-panel-mask {

@@ -139,7 +139,7 @@ body.immersive-mode .answer-meta .meta-item {
   align-items: center;
   gap: 5px;
   font-weight: 500;
-  color: var(--vscode-descriptionForeground) !important;
+  color: var(--vscode-descriptionForeground);
 }
 
 body.immersive-mode .answer-meta .meta-item svg {
@@ -168,12 +168,12 @@ body.immersive-mode .immersive-button {
 
 /* 基础按钮 - 始终显示 */
 .toolbar-essential {
-  display: flex !important;
+  display: flex;
 }
 
 /* 切换按钮 */
 .toolbar-toggle {
-  display: flex !important;
+  display: flex;
   background-color: var(--vscode-button-background);
   border: 1px solid var(--vscode-button-border, transparent);
 }
@@ -205,7 +205,66 @@ body.immersive-mode .immersive-button {
 
 /* 可展开按钮项 */
 .toolbar-expandable-item {
-  display: flex !important;
+  display: flex;
+  position: relative;
+}
+
+/* 按钮关闭功能 */
+.toolbar-expandable-item .button-close {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--vscode-errorForeground);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  border: 1px solid var(--vscode-activityBarTop-activeBorder, transparent);
+  transition: all 0.3s;
+}
+
+.toolbar-expandable-item:hover .button-close {
+  display: flex;
+  top: -6px;
+  opacity: 1;
+}
+
+.button-close:hover {
+  background-color: var(--vscode-errorHoverBackground, #f14c4c);
+}
+
+.button-close svg {
+  width: 8px;
+  height: 8px;
+  color: white;
+}
+
+/* 沉浸模式下的工具栏按钮 */
+.toolbar-config-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  background: var(--vscode-editor-background);
+  transition: all 0.2s ease;
+  cursor: move;
+}
+
+.toolbar-config-item:hover .drag-handle {
+  background: var(--vscode-button-hoverBackground);
+  border-radius: 4px;
+}
+
+.toolbar-config-item:hover {
+  background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-focusBorder);
 }
 
 /* 非沉浸模式下隐藏固定工具栏的展开按钮和扩展项 */
@@ -215,11 +274,11 @@ body:not(.immersive-mode) .toolbar-expandable-item {
 }
 
 body.immersive-mode .toolbar-toggle {
-  display: flex !important;
+  display: flex;
 }
 
 body.immersive-mode .toolbar-expandable-item {
-  display: flex !important;
+  display: flex;
 }
 
 /* 作者信息悬浮提示 */

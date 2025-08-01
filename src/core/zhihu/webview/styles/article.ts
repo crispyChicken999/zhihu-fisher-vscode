@@ -86,8 +86,14 @@ export const articleCss = `
 
 .meta-item.comment {
   color: #42a5f5;
+  cursor: pointer;
 }
-
+.meta-item.comment:hover {
+  color: #1675fb !important;
+}
+.meta-item.comment:hover svg{
+  filter: none !important;
+}
 .meta-item.time {
   color: var(--vscode-descriptionForeground);
   display: flex;
