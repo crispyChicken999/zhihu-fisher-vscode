@@ -541,13 +541,15 @@ export class CommentsComponent implements Component {
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name zhihu-reply-chain">
             <a href="${authorUrl}" title="『${authorName}』&#010签名：${
-        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+        authorHeadline !== "" ? authorHeadline : "神秘人，没有留下签名哦🤔"
       }&#010(点击前往主页)">${authorName}</a>
             ${authorTagsHtml}
             <span class="reply-arrow" title="向...回复">→</span>
             <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
             <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${
-        replyToAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+        replyToAuthorHeadline !== ""
+          ? replyToAuthorHeadline
+          : "神秘人，没有留下签名哦🤔"
       }&#010(点击前往主页)">${replyToAuthorName}</a>
           </div>
         </div>
@@ -558,7 +560,7 @@ export class CommentsComponent implements Component {
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name">
             <a href="${authorUrl}" title="『${authorName}』&#010签名：${
-        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+        authorHeadline !== "" ? authorHeadline : "神秘人，没有留下签名哦🤔"
       }&#010(点击前往主页)">${authorName}</a>
             ${authorTagsHtml}
           </div>
@@ -641,13 +643,17 @@ export class CommentsComponent implements Component {
                   <div>
                     <div class="zhihu-child-comment-author-name zhihu-reply-chain">
                       <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
-                  childAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+                  childAuthorHeadline !== ""
+                    ? childAuthorHeadline
+                    : "神秘人，没有留下签名哦🤔"
                 }&#010(点击前往主页)">${childAuthorName}</a>
                       ${childAuthorTagsHtml}
                       <span class="reply-arrow" title="向...回复">→</span>
                       <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
                       <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${
-                  replyToAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+                  replyToAuthorHeadline !== ""
+                    ? replyToAuthorHeadline
+                    : "神秘人，没有留下签名哦🤔"
                 }&#010(点击前往主页)">${replyToAuthorName}</a>
                     </div>
                   </div>
@@ -658,7 +664,9 @@ export class CommentsComponent implements Component {
                   <div>
                     <div class="zhihu-child-comment-author-name">
                       <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
-                  childAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+                  childAuthorHeadline !== ""
+                    ? childAuthorHeadline
+                    : "神秘人，没有留下签名哦🤔"
                 }&#010(点击前往主页)">${childAuthorName}</a>
                       ${childAuthorTagsHtml}
                     </div>
@@ -928,13 +936,15 @@ export class ChildCommentsModalComponent implements Component {
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name zhihu-reply-chain">
             <a href="${authorUrl}" title="『${authorName}』&#010签名：${
-        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+        authorHeadline !== "" ? authorHeadline : "神秘人，没有留下签名哦🤔"
       }&#010(点击前往主页)">${authorName}</a>
             ${parentAuthorTagsHtml}
             <span class="reply-arrow" title="向...回复">→</span>
             <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
             <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${
-        replyToAuthorHeadline ?? "神秘人，没有留下签名哦🤔"
+        replyToAuthorHeadline !== ""
+          ? replyToAuthorHeadline
+          : "神秘人，没有留下签名哦🤔"
       }&#010(点击前往主页)">${replyToAuthorName}</a>
           </div>
         </div>
@@ -945,7 +955,7 @@ export class ChildCommentsModalComponent implements Component {
         <div class="zhihu-comment-author">
           <div class="zhihu-comment-author-name">
             <a href="${authorUrl}" title="『${authorName}』&#010签名：${
-        authorHeadline ?? "神秘人，没有留下签名哦🤔"
+        authorHeadline !== "" ? authorHeadline : "神秘人，没有留下签名哦🤔"
       }&#010(点击前往主页)">${authorName}</a>
             ${parentAuthorTagsHtml}
           </div>
@@ -1024,11 +1034,19 @@ export class ChildCommentsModalComponent implements Component {
           childAuthorDisplayHtml = `
             <div class="zhihu-comment-author">
               <div class="zhihu-comment-author-name zhihu-reply-chain">
-                <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline}&#010(点击前往主页)">${childAuthorName}</a>
+                <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
+            childAuthorHeadline !== ""
+              ? childAuthorHeadline
+              : "神秘人，没有留下签名哦🤔"
+          }&#010(点击前往主页)">${childAuthorName}</a>
                 ${childAuthorTagsHtml}
                 <span class="reply-arrow" title="向...回复">→</span>
                 <img class="zhihu-reply-to-avatar" src="${replyToAvatarUrl}" alt="${replyToAuthorName}" referrerpolicy="no-referrer">
-                <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${replyToAuthorHeadline}&#010(点击前往主页)">${replyToAuthorName}</a>
+                <a href="${replyToAuthorUrl}" title="『${replyToAuthorName}』&#010签名：${
+            replyToAuthorHeadline !== ""
+              ? replyToAuthorHeadline
+              : "神秘人，没有留下签名哦🤔"
+          }&#010(点击前往主页)">${replyToAuthorName}</a>
               </div>
             </div>
           `;
@@ -1037,7 +1055,11 @@ export class ChildCommentsModalComponent implements Component {
           childAuthorDisplayHtml = `
             <div class="zhihu-comment-author">
               <div class="zhihu-comment-author-name">
-                <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${childAuthorHeadline}&#010(点击前往主页)">${childAuthorName}</a>
+                <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
+            childAuthorHeadline !== ""
+              ? childAuthorHeadline
+              : "神秘人，没有留下签名哦🤔"
+          }&#010(点击前往主页)">${childAuthorName}</a>
                 ${childAuthorTagsHtml}
               </div>
               ${
@@ -1215,7 +1237,7 @@ export class CommentsManager {
   }> {
     try {
       const url = this.commentRequestURL(answerId, offset, limit);
-      console.log('评论获取API链接：', url);
+      console.log("评论获取API链接：", url);
       const response = await axios.get(url, {
         headers: {
           "User-Agent":
