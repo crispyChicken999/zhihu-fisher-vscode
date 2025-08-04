@@ -208,7 +208,7 @@ export const commentsCss = `
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: 0.9em;
   opacity: 0.8;
 }
 
@@ -271,7 +271,7 @@ export const commentsCss = `
 }
 
 .zhihu-child-comment-footer {
-  font-size: 12px;
+  font-size: 0.9em;
   opacity: 0.8;
 }
 
