@@ -528,7 +528,6 @@ export class CommentsComponent implements Component {
         .join("");
     }
 
-    console.log('comment: ', comment);
     if (comment.author.role === "author") {
       // 如果作者是回答者，显示作者标签
       authorTagsHtml += `

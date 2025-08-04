@@ -356,7 +356,7 @@ export class TreeItem extends vscode.TreeItem {
         ? `**<span style="color:#2196F3;background-color:#2196F333;">&nbsp;文章&nbsp;</span>**`
         : `**<span style="color:#f68b83;background-color:#f68b8333;">&nbsp;问题&nbsp;</span>**`;
 
-    const link = listItem.url || "https://www.zhihu.com/";
+    const link = listItem.answerUrl || listItem.url || "https://www.zhihu.com/";
 
     // 设置工具提示：根据配置和图片可用性决定
     if (shouldShowImage) {
