@@ -46,6 +46,11 @@ document.addEventListener("DOMContentLoaded", function() {
     initializeToolbarConfigFromLocalStorage();
   }, 100);
 
+  // 渲染数学公式
+  setTimeout(() => {
+    renderMathJax();
+  }, 200);
+
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
 
@@ -116,6 +121,17 @@ window.addEventListener('message', event => {
     }, 100);
   }
 });
+
+/**
+ * 重新渲染数学公式
+ */
+function renderMathJax() {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise().catch((err) => {
+      console.warn('MathJax 渲染失败:', err);
+    });
+  }
+}
 
 /**
  * 设置图片FancyBox功能

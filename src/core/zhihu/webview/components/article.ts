@@ -91,7 +91,9 @@ export class ArticleContentComponent implements Component {
           <div class="uncomfortable-image-container">
             <!-- 遮挡层 -->
             <div class="image-mask">
-              <img src="${maskImg.attr("src") || ""}" style="width: ${imageWidth}; filter:
+              <img src="${
+                maskImg.attr("src") || ""
+              }" style="width: ${imageWidth}; filter:
               blur(10px);" referrerpolicy="no-referrer" />
               <div class="mask-overlay" onclick="showUncomfortableImage(this)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -116,7 +118,9 @@ export class ArticleContentComponent implements Component {
               </div>
             </div>
             <!-- 真实图片（隐藏） -->
-            <img class="real-image" src="${realSrc || ""}" style="display: none; width:
+            <img class="real-image" src="${
+              realSrc || ""
+            }" style="display: none; width:
             ${imageWidth};" referrerpolicy="no-referrer"
             data-width="${originalImg.attr("data-rawwidth") || ""}"
             data-height="${originalImg.attr("data-rawheight") || ""}" />
@@ -222,6 +226,82 @@ export class ArticleContentComponent implements Component {
     $(".ztext-math").each((i, el) => {
       const mathEl = $(el);
       mathEl.addClass("latex-formula");
+
+      // 提取数学公式内容
+      let mathContent = "";
+
+      // 尝试从不同的位置提取数学公式
+      const texScript = mathEl.find('script[type*="math/tex"]');
+      const mathHolder = mathEl.find(".math-holder");
+      const dataTeX = mathEl.attr("data-tex");
+
+      if (texScript.length > 0) {
+        // 从 script 标签中提取
+        mathContent = texScript.text().trim();
+      } else if (mathHolder.length > 0) {
+        // 从 math-holder 中提取
+        mathContent = mathHolder.text().trim();
+      } else if (dataTeX) {
+        // 从 data-tex 属性中提取
+        mathContent = dataTeX.trim();
+      } else {
+        // 从元素的文本内容中提取
+        mathContent = mathEl.text().trim();
+      }
+
+      if (mathContent) {
+        // 检查是否为行内公式还是块级公式
+        const isInline =
+          texScript.attr("type")?.includes("inline") ||
+          (!mathContent.includes("\\[") && !mathContent.includes("$$"));
+
+        // 清理公式内容，移除可能的包装符号
+        mathContent = mathContent
+          .replace(/^\$\$|\$\$$/, "") // 移除块级公式的 $$
+          .replace(/^\$|\$$/, "") // 移除行内公式的 $
+          .replace(/^\\\[|\\\]$/, "") // 移除 \[ \] 包装
+          .replace(/^\\\(|\\\)$/, "") // 移除 \( \) 包装
+          .trim();
+
+        // 创建新的数学公式元素
+        if (isInline) {
+          // 行内公式
+          mathEl.html(
+            `<span class="math-inline" data-math="${mathContent}">\\(${mathContent}\\)</span>`
+          );
+        } else {
+          // 块级公式
+          mathEl.html(
+            `<div class="math-display" data-math="${mathContent}">\\[${mathContent}\\]</div>`
+          );
+        }
+      }
+    });
+
+    // 处理其他可能的数学公式元素
+    $('script[type*="math/tex"]').each((i, el) => {
+      const script = $(el);
+      const mathContent = script.text().trim();
+      const isInline = script.attr("type")?.includes("inline");
+
+      if (mathContent) {
+        let cleanContent = mathContent
+          .replace(/^\$\$|\$\$$/, "")
+          .replace(/^\$|\$$/, "")
+          .replace(/^\\\[|\\\]$/, "")
+          .replace(/^\\\(|\\\)$/, "")
+          .trim();
+
+        if (isInline) {
+          script.replaceWith(
+            `<span class="math-inline" data-math="${cleanContent}">\\(${cleanContent}\\)</span>`
+          );
+        } else {
+          script.replaceWith(
+            `<div class="math-display" data-math="${cleanContent}">\\[${cleanContent}\\]</div>`
+          );
+        }
+      }
     });
 
     // 处理所有链接（包括普通a标签和LinkCard）

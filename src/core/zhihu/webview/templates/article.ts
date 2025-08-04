@@ -12,6 +12,40 @@ export const articleTemplate = `
     <!-- FancyBox CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
 
+    <!-- MathJax 配置 -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['\\\\(', '\\\\)']],
+          displayMath: [['\\\\[', '\\\\]']],
+          processEscapes: true,
+          processEnvironments: true
+        },
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        },
+        startup: {
+          ready() {
+            MathJax.startup.defaultReady();
+            // 页面加载完成后重新渲染数学公式
+            setTimeout(() => {
+              if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise();
+              }
+            }, 100);
+          }
+        }
+      };
+    </script>
+
+    <!-- FancyBox JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js" async></script>
+
+    <!-- MathJax JS -->
+    <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
     <style>
       \${MAIN_CSS}
       \${COMPONENTS_CSS}
@@ -67,9 +101,6 @@ export const articleTemplate = `
     <script>
       \${SCRIPTS}
     </script>
-
-    <!-- FancyBox JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js" defer></script>
   </body>
 </html>
 `;
