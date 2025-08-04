@@ -242,6 +242,8 @@ export interface CommentItem {
     headline: string;
     /** 作者的头像 */
     avatar_url: string;
+    /** 这条评论的角色，如果是author说明该评论的作者，是回答的作者 */
+    role: "author" | "normal";
   };
   /** 作者标签 */
   author_tag?: Array<{

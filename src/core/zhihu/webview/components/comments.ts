@@ -518,14 +518,31 @@ export class CommentsComponent implements Component {
               background-color: ${tag.color}15;
               ${borderStyle}
               padding: 1px 4px;
-              border-radius: 2px;
-              font-size: 10px;
-              margin-left: 4px;
+              border-radius: 4px;
+              font-size: 1em;
+              margin-left: 2px;
               display: inline-block;
             ">${tag.text}</span>
           `;
         })
         .join("");
+    }
+
+    console.log('comment: ', comment);
+    if (comment.author.role === "author") {
+      // 如果作者是回答者，显示作者标签
+      authorTagsHtml += `
+        <span class="author-tag" style="
+          color: #999999;
+          background-color: #99999915;
+          padding: 1px 4px;
+          border-radius: 2px;
+          border: 1px solid #D3D3D3;
+          font-size: 1em;
+          margin-left: 0px;
+          display: inline-block;
+        ">作者</span>
+      `;
     }
 
     if (hasReplyTo) {
@@ -628,6 +645,22 @@ export class CommentsComponent implements Component {
                     `;
                   })
                   .join("");
+              }
+
+              if (child.author.role === "author") {
+                // 如果子评论作者是回答者，显示作者标签
+                childAuthorTagsHtml += `
+                  <span class="author-tag" style="
+                    color: #999999;
+                    background-color: #99999915;
+                    padding: 1px 4px;
+                    border-radius: 2px;
+                    border: 1px solid #D3D3D3;
+                    font-size: 1em;
+                    margin-left: 0px;
+                    display: inline-block;
+                  ">作者</span>
+                `;
               }
 
               if (childHasReplyTo) {
@@ -1273,7 +1306,10 @@ export class CommentsManager {
 
           return {
             ...comment,
-            author: comment.author.member,
+            author: {
+              ...comment.author.member,
+              role: comment.author.role || "normal",
+            },
             // 添加处理后的 comment_tag
             comment_tag: combinedCommentTags,
             // 处理回复关系 - 适配新的数据结构
@@ -1311,7 +1347,10 @@ export class CommentsManager {
               );
               return {
                 ...child,
-                author: child.author.member,
+                author: {
+                  ...child.author.member,
+                  role: child.author.role || "normal",
+                },
                 // 添加处理后的 comment_tag
                 comment_tag: childCombinedCommentTags,
                 // 处理子评论的回复关系
@@ -1658,6 +1697,7 @@ export class CommentsManager {
             avatar_url: comment.author?.avatar_url || "",
             headline: comment.author?.headline || "",
             url: comment.author?.url || "",
+            role: comment.author?.role || "normal",
           },
           vote_count: comment.like_count || 0,
           like_count: comment.like_count || 0,
@@ -1673,6 +1713,7 @@ export class CommentsManager {
                 avatar_url: child.author?.avatar_url || "",
                 headline: child.author?.headline || "",
                 url: child.author?.url || "",
+                role: child.author?.role || "normal",
               },
               vote_count: child.like_count || 0,
               like_count: child.like_count || 0,

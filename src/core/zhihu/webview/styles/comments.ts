@@ -636,7 +636,7 @@ export const commentsCss = `
   display: inline-block;
   padding: 1px 4px;
   border-radius: 2px;
-  font-size: 10px;
+  font-size: 1em;
   margin-left: 4px;
   vertical-align: middle;
 }
