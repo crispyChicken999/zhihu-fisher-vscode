@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.2.9-green.svg)
+![Version](https://img.shields.io/badge/Version-0.3.0-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
 
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、图片/视频展示方式、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索、收藏夹等功能。
@@ -14,9 +14,9 @@
 ## 🔮 背景 🔮
 
 - 其实就是想上班摸会鱼，直接网页刷知乎容易被抓包，而且网页有很多图片，老板/同事一看就知道你在摸鱼。
-- 假装敲代码，实则在 VSCode 中刷知乎，结果发现市场中的那些插件，基本上都是几年前的产物了，不更新了或者根本用不了😥，索性直接写了一个。
+- 假装敲代码，实则在 VSCode 中刷知乎，结果发现市场中的那些插件，基本上都是几年前的产物了，不更新了或者根本用不了 😥，索性直接写了一个。
 - 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！🤣 独摸摸不如众摸摸~
-- 如果有更多的意见和建议，欢迎提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。欢迎许愿🤓☝
+- 如果有更多的意见和建议，欢迎提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)，我会尽快修复和更新。欢迎许愿 🤓☝
 - 如果对您有所帮助，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 
 ## 🚀 主要功能 🚀
@@ -57,26 +57,19 @@
 
 #### 2.1 配置方式
 
-插件提供两种配置方式：`安装浏览器` 和 `使用本地浏览器`。
+插件提供两种配置方式：`使用本地浏览器（推荐）` 和 `安装浏览器` 。
 
-#### 2.2 安装浏览器
-
-如果你选择了安装，那么这个浏览器安装完成后会在：
-
-- Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`
-- Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`
-
-#### 2.3 使用本地浏览器
+#### 2.2 使用本地浏览器
 
 你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置，或者`Ctrl/Commend`+`,`打开设置，搜索框输入`zhihu`，找到`Custom Chrome Path`，输入本地浏览器的路径即可。
 
-本地浏览器地址类似：
+本地浏览器地址类似：（谷歌浏览器的安装路径，其实默认就是下面的路径，但是实际安装不一定是默认的路径，就需要你指定一下）
 
 - Windows 用户：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
 - Mac 用户：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
-- Linux 用户：`/usr/bin/google-chrome` 或 `snap/bin/chromium`？第一个是可以的，第二个不清楚
+- Linux 用户：`/usr/bin/google-chrome` 或 `/snap/bin/chromium`？ 第一个路径是可以的，第二个的话不清楚
 
-##### 2.3.1 Windows 获取本地 Chrome 浏览器路径的方法
+##### 2.2.1 Windows 获取本地 Chrome 浏览器路径的方法
 
 1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"
 2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径
@@ -85,20 +78,28 @@
 - 如果还是不清楚，可以参照下图：
   ![获取本地浏览器路径的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png)
 
-##### 2.3.2 Mac 获取本地 Chrome 浏览器路径的方法
+##### 2.2.2 Mac 获取本地 Chrome 浏览器路径的方法
 
 1. 打开终端（Terminal），输入以下命令：`ls /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
 3. 如果没有安装，可以在终端中输入以下命令进行安装：`brew install --cask google-chrome`
 4. 安装完成后，重新运行第一步的命令即可（如果找不到请百度，因为手头没有 Mac 电脑，无法测试）
 
-##### 2.3.3 Linux 获取本地 Chrome 浏览器路径的方法
+##### 2.2.3 Linux 获取本地 Chrome 浏览器路径的方法
 
 1. 打开终端，输入以下命令：`which google-chrome` 或 `which chromium-browser`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
 3. 如果没有安装，可以在终端中输入以下命令进行安装：`sudo apt install google-chrome-stable` 或 `sudo apt install chromium-browser`
 4. 安装完成后，重新运行第一步的命令即可
 5. 如果还是不清楚，可以百度一下，因为手头没有 Linux 电脑，无法测试 🤔
+
+#### 2.3 安装浏览器
+
+如果你选择了安装，那么这个浏览器安装完成后会在：
+
+- Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`
+- Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`
+- Linux 用户：`/home/[用户名]/.cache/puppeteer/chrome/linux-x64-135.0.7049.84/chrome-linux-x64/chrome`
 
 ### 3. 配置 Cookie
 
@@ -133,24 +134,29 @@
 ## 📝 TODO 📝
 
 - ~~重构代码，简化流程~~ **(v0.0.6 已重构)**
-- ~~增加更多功能，比如搜索~~、收藏等 **(v0.0.8 已实现搜索功能)**
+- ~~增加更多功能，比如搜索、收藏等~~ **(v0.0.8 已实现搜索功能，v0.2.2 已实现收藏功能)**
 - ~~详情页面添加回答跳转功能~~ **(v0.0.7 已实现分页跳转)**
 - ~~支持快捷键切换图片隐藏和显示~~ **(v0.1.0 已实现)**
 - ~~支持用户指定自己的 Chrome.exe 浏览器地址，就不用下载新的了~~ **(v0.1.1 已实现)**
 - ~~支持小图模式，比如想要摸鱼，但是也想偷偷看图片~~ **(v0.1.3 已实现)**
 - ~~支持设置文章的各种样式，比如字体大小、颜色等~~ **(v0.1.3 已实现)**
-- ~~支持爬回答的评论等。~~ **(v0.1.4 已实现)**
+- ~~支持加载回答的评论等。~~ **(v0.1.4 已实现)**
+
+🤗 更多功能，欢迎许愿 🎉~
 
 ## 🐞 已知问题 🐞
 
 1.  推荐列表可能加载不出来，可能跟 Cookie 中 BEC 参数有关，那么需要你前往知乎首页，点击推荐切换到推荐列表，然后刷新页面，获取新的 Cookie，粘贴到 VSCode 中即可。（我猜这个参数可能记录了用户的操作，比如之前切换到热榜列表，那么下次打开知乎也切到热榜，所以需要切到推荐后再拿 Cookie）
-2.  为啥要等推荐列表加载出来才能查看内容呢？因为知乎首页很鸡贼，如果在加载过程中，你查看了内容，那么 Puppeteer 就会打开一个新标签页获取内容，那么首页的标签页失去焦点，滚动加载更多就失效了，所以需要等推荐列表加载完成后再查看内容。【万恶的反爬机制，我是想着不管你机制怎么变，我都是模拟人在访问，那么就算慢点也无妨，毕竟也能够加载出来 😂】
-3.  评论用的是旧版接口，因为新版接口加了反爬机制，有时候可能会看到重复的评论，这个我也没招，毕竟是接口返回回来的。🤔
-4.  欢迎在 Issues 中反馈问题，或者直接在插件中反馈问题，我会尽快修复。
+2.  为啥要等推荐列表加载出来才能查看内容呢？因为知乎首页很鸡贼，如果在加载过程中，你查看了内容，那么 Puppeteer 就会打开一个新标签页获取内容，那么首页的标签页失去焦点，滚动加载更多就失效了，所以需要等推荐列表加载完成后再查看内容。【我是想着不管你机制怎么变，我都是模拟人在访问，那么就算慢点也无妨，毕竟也能够加载出来 😂】
+3.  因为新版接口有防爬机制，所以用的是无限制的旧版接口，那么有时候可能会看到重复的评论，这个我也没招，毕竟是接口返回回来的。哎凑合着看吧哈哈...
+4.  在加载回答的时候，会出现页面状态重置的问题。就比如打开了子评论的弹窗正看着，然后又加载了一批回答，那么页面就会回到初始状态（对应的就是子评论弹窗被关闭，页面回到顶部）。这个问题是因为直接将整个 html 文档替换来更新状态导致的。代码是用 ts 写的没用主流框架，暂时也没动力改了，凑合着用吧。（其实应该通过 postMessage 的方式去通知文档哪里需要更新，而不是整个文档重新生成然后替换）
+5.  欢迎在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中反馈问题，我会尽快修复。
 
 ## 🤓☝ 实现原理 🤓☝
 
 基于 VSCode 插件脚手架，使用 Puppeteer 来模拟浏览知乎，抓取内容并渲染成 HTML，最后在 VSCode 中显示。
+
+技术栈：TypeScript、Puppeteer、HTML、CSS
 
 ## 📬 反馈问题 📬
 
