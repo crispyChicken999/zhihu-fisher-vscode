@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.2.9-green.svg)
+![Version](https://img.shields.io/badge/Version-0.3.0-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
 
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、图片/视频展示方式、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索、收藏夹等功能。
@@ -57,27 +57,19 @@
 
 #### 2.1 配置方式
 
-插件提供两种配置方式：`安装浏览器` 和 `使用本地浏览器`。
+插件提供两种配置方式：`使用本地浏览器（推荐）` 和 `安装浏览器` 。
 
-#### 2.2 安装浏览器
-
-如果你选择了安装，那么这个浏览器安装完成后会在：
-
-- Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`
-- Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`
-- Linux 用户：`/home/[用户名]/.cache/puppeteer/chrome/linux-x64-135.0.7049.84/chrome-linux-x64/chrome`
-
-#### 2.3 使用本地浏览器
+#### 2.2 使用本地浏览器
 
 你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置，或者`Ctrl/Commend`+`,`打开设置，搜索框输入`zhihu`，找到`Custom Chrome Path`，输入本地浏览器的路径即可。
 
-本地浏览器地址类似：（浏览器安装路径其实默认就是下面的路径，但是实际不一定是默认的，就需要你指定一下）
+本地浏览器地址类似：（谷歌浏览器的安装路径，其实默认就是下面的路径，但是实际安装不一定是默认的路径，就需要你指定一下）
 
 - Windows 用户：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
 - Mac 用户：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
 - Linux 用户：`/usr/bin/google-chrome` 或 `/snap/bin/chromium`？ 第一个路径是可以的，第二个的话不清楚
 
-##### 2.3.1 Windows 获取本地 Chrome 浏览器路径的方法
+##### 2.2.1 Windows 获取本地 Chrome 浏览器路径的方法
 
 1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"
 2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径
@@ -86,20 +78,28 @@
 - 如果还是不清楚，可以参照下图：
   ![获取本地浏览器路径的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png)
 
-##### 2.3.2 Mac 获取本地 Chrome 浏览器路径的方法
+##### 2.2.2 Mac 获取本地 Chrome 浏览器路径的方法
 
 1. 打开终端（Terminal），输入以下命令：`ls /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
 3. 如果没有安装，可以在终端中输入以下命令进行安装：`brew install --cask google-chrome`
 4. 安装完成后，重新运行第一步的命令即可（如果找不到请百度，因为手头没有 Mac 电脑，无法测试）
 
-##### 2.3.3 Linux 获取本地 Chrome 浏览器路径的方法
+##### 2.2.3 Linux 获取本地 Chrome 浏览器路径的方法
 
 1. 打开终端，输入以下命令：`which google-chrome` 或 `which chromium-browser`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
 3. 如果没有安装，可以在终端中输入以下命令进行安装：`sudo apt install google-chrome-stable` 或 `sudo apt install chromium-browser`
 4. 安装完成后，重新运行第一步的命令即可
 5. 如果还是不清楚，可以百度一下，因为手头没有 Linux 电脑，无法测试 🤔
+
+#### 2.3 安装浏览器
+
+如果你选择了安装，那么这个浏览器安装完成后会在：
+
+- Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`
+- Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`
+- Linux 用户：`/home/[用户名]/.cache/puppeteer/chrome/linux-x64-135.0.7049.84/chrome-linux-x64/chrome`
 
 ### 3. 配置 Cookie
 
