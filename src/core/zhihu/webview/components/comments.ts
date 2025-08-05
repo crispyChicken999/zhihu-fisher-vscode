@@ -534,12 +534,14 @@ export class CommentsComponent implements Component {
         <span class="author-tag" style="
           color: #999999;
           background-color: #99999915;
-          padding: 1px 4px;
+          padding: 1px 2px;
           border-radius: 2px;
           border: 1px solid #D3D3D3;
-          font-size: 1em;
+          font-size: 12px;
           margin-left: 0px;
           display: inline-block;
+          height: 1em;
+          line-height: 1em;
         ">作者</span>
       `;
     }
@@ -652,12 +654,14 @@ export class CommentsComponent implements Component {
                   <span class="author-tag" style="
                     color: #999999;
                     background-color: #99999915;
-                    padding: 1px 4px;
+                    padding: 1px 2px;
                     border-radius: 2px;
                     border: 1px solid #D3D3D3;
-                    font-size: 1em;
+                    font-size: 12px;
                     margin-left: 0px;
                     display: inline-block;
+                    height: 1em;
+                    line-height: 1em;
                   ">作者</span>
                 `;
               }
