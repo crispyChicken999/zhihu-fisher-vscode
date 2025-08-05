@@ -187,6 +187,8 @@ export const commentsCss = `
   display: block !important;
   width: 2em !important;
   height: 2em !important;
+  max-width: 20px;
+  max-height: 20px;
 }
 
 /* 评论内容中的图片和链接居中显示 */

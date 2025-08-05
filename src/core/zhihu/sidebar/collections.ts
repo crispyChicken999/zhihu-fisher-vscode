@@ -282,7 +282,7 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
         tooltipContent += "\n ___ \n\n";
 
         const date = new Date(collectionItem.created);
-        tooltipContent += `**收藏时间**: ${date.toLocaleString()}`;
+        tooltipContent += `**发布时间**: ${date.toLocaleString()}`;
       }
 
       // Alt键提示
@@ -1407,7 +1407,7 @@ export class sidebarCollectionsDataProvider
 
       await puppeteerPage.goto(url, {
         waitUntil: "domcontentloaded",
-        timeout: 15000,
+        timeout: 60000,
       });
 
       // 等待页面稳定
@@ -1480,7 +1480,7 @@ export class sidebarCollectionsDataProvider
 
       await puppeteerPage.goto(url, {
         waitUntil: "domcontentloaded",
-        timeout: 15000,
+        timeout: 60000,
       });
 
       // 等待页面稳定
@@ -1659,7 +1659,7 @@ export class sidebarCollectionsDataProvider
         `https://www.zhihu.com/people/${userToken}/collections?page=${page}`,
         {
           waitUntil: "domcontentloaded",
-          timeout: 15000,
+          timeout: 60000,
         }
       );
 
@@ -1719,7 +1719,7 @@ export class sidebarCollectionsDataProvider
         `https://www.zhihu.com/people/${userToken}/collections/following?page=${page}`,
         {
           waitUntil: "domcontentloaded",
-          timeout: 15000,
+          timeout: 60000,
         }
       );
 

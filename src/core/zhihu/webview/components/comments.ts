@@ -538,7 +538,7 @@ export class CommentsComponent implements Component {
           border-radius: 2px;
           border: 1px solid #D3D3D3;
           font-size: 12px;
-          margin-left: 0px;
+          margin-left: 4px;
           display: inline-block;
           height: 1em;
           line-height: 1em;
