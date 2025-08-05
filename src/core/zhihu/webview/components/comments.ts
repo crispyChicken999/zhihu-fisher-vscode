@@ -2595,9 +2595,9 @@ export class CommentsUtils {
         // 根据媒体显示模式设置尺寸
         let size: number;
         if (mediaDisplayMode === "mini") {
-          size = 1;
+          size = 1.2;
         } else {
-          size = 1.1;
+          size = 1.5;
         }
 
         return `
@@ -2605,7 +2605,7 @@ export class CommentsUtils {
             alt="${match}"
             title="${match}"
             class="comment-text-emoji"
-            style="width: ${size}em; height: ${size}em; display: inline; object-fit: contain;"
+            style="width: ${size}em; height: ${size}em; display: inline; object-fit: contain; vertical-align: text-bottom;"
             referrerpolicy="no-referrer"
             loading="lazy" />
         `;
