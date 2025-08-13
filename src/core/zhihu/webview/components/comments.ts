@@ -1207,6 +1207,114 @@ export class ChildCommentsModalComponent implements Component {
  */
 export class CommentsManager {
   /**
+   * 生成评论关闭的HTML提示
+   * @param message 自定义消息，如果不提供则使用默认消息
+   * @returns 评论关闭的HTML字符串
+   */
+  private static generateCommentClosedHtml(message?: string): string {
+    const defaultMessage = "该内容的作者已关闭评论功能";
+    const displayMessage = message || defaultMessage;
+
+    return `
+      <div class="zhihu-comments-container">
+        <div class="zhihu-comments-closed-notice">
+          <div class="closed-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </div>
+          <h3>评论区已关闭</h3>
+          <div class="closed-message">${displayMessage}</div>
+        </div>
+      </div>
+      <style>
+        .zhihu-comments-closed-notice {
+          text-align: center;
+          padding: 40px 20px;
+          color: var(--vscode-descriptionForeground);
+          border: 1px solid var(--vscode-widget-border);
+          border-radius: 8px;
+          background: var(--vscode-editor-background);
+          margin: 10px 0;
+        }
+        .closed-icon {
+          margin-bottom: 16px;
+          opacity: 0.6;
+        }
+        .closed-icon svg {
+          color: var(--vscode-descriptionForeground);
+        }
+        .zhihu-comments-closed-notice h3 {
+          margin: 0 0 12px 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--vscode-foreground);
+        }
+        .closed-message {
+          font-size: 14px;
+          line-height: 1.5;
+          opacity: 0.8;
+        }
+      </style>
+    `;
+  }
+
+  /**
+   * 生成子评论关闭的模态框HTML
+   * @param message 自定义消息，如果不提供则使用默认消息
+   * @returns 子评论关闭的模态框HTML字符串
+   */
+  private static generateChildCommentClosedModalHtml(message?: string): string {
+    const defaultMessage = "该评论的子评论功能已被关闭";
+    const displayMessage = message || defaultMessage;
+
+    return `
+      <div class="zhihu-comments-modal">
+        <div class="zhihu-comments-modal-content">
+          <div class="zhihu-comments-modal-header">
+            <h3>子评论</h3>
+            <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
+          </div>
+          <div class="zhihu-comments-closed-notice">
+            <div class="closed-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </div>
+            <h4>子评论已关闭</h4>
+            <div class="closed-message">${displayMessage}</div>
+          </div>
+        </div>
+      </div>
+      <style>
+        .zhihu-comments-closed-notice {
+          text-align: center;
+          padding: 40px 20px;
+          color: var(--vscode-descriptionForeground);
+        }
+        .closed-icon {
+          margin-bottom: 16px;
+          opacity: 0.6;
+        }
+        .closed-icon svg {
+          color: var(--vscode-descriptionForeground);
+        }
+        .zhihu-comments-closed-notice h4 {
+          margin: 0 0 12px 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--vscode-foreground);
+        }
+        .closed-message {
+          font-size: 12px;
+          line-height: 1.5;
+          opacity: 0.8;
+        }
+      </style>
+    `;
+  }
+
+  /**
    * 获取评论的URL模板
    * @param answerId 回答ID
    * @param offset 起始偏移量（分页用）
@@ -1380,8 +1488,25 @@ export class CommentsManager {
           current: Math.floor(offset / limit) + 1,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("获取评论失败:", error);
+
+      // 检查是否是评论区关闭的错误
+      if (error.response && error.response.status === 403) {
+        const errorData = error.response.data;
+        if (
+          errorData?.error?.code === 106 &&
+          errorData?.error?.name === "ForbiddenError"
+        ) {
+          // 抛出特定的评论关闭错误，便于上层处理
+          const commentClosedError = new Error("评论已关闭");
+          (commentClosedError as any).isCommentClosed = true;
+          (commentClosedError as any).originalMessage =
+            errorData.error.message || "评论已关闭";
+          throw commentClosedError;
+        }
+      }
+
       throw new Error(`获取评论失败: ${error}`);
     }
   }
@@ -1476,8 +1601,25 @@ export class CommentsManager {
           current: Math.floor(offset / limit) + 1,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("获取专栏评论失败:", error);
+
+      // 检查是否是评论区关闭的错误
+      if (error.response && error.response.status === 403) {
+        const errorData = error.response.data;
+        if (
+          errorData?.error?.code === 106 &&
+          errorData?.error?.name === "ForbiddenError"
+        ) {
+          // 抛出特定的评论关闭错误，便于上层处理
+          const commentClosedError = new Error("评论已关闭");
+          (commentClosedError as any).isCommentClosed = true;
+          (commentClosedError as any).originalMessage =
+            errorData.error.message || "评论已关闭";
+          throw commentClosedError;
+        }
+      }
+
       throw new Error(`获取专栏评论失败: ${error}`);
     }
   }
@@ -1578,8 +1720,25 @@ export class CommentsManager {
           current: currentPage,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("获取子评论失败:", error);
+
+      // 检查是否是评论区关闭的错误
+      if (error.response && error.response.status === 403) {
+        const errorData = error.response.data;
+        if (
+          errorData?.error?.code === 106 &&
+          errorData?.error?.name === "ForbiddenError"
+        ) {
+          // 抛出特定的评论关闭错误，便于上层处理
+          const commentClosedError = new Error("评论已关闭");
+          (commentClosedError as any).isCommentClosed = true;
+          (commentClosedError as any).originalMessage =
+            errorData.error.message || "评论已关闭";
+          throw commentClosedError;
+        }
+      }
+
       throw new Error(`获取子评论失败: ${error}`);
     }
   }
@@ -1775,13 +1934,19 @@ export class CommentsManager {
         command: "updateComments",
         html: commentsHtml,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("加载专栏评论时出错:", error);
 
-      // 显示错误提示
-      webviewItem.webviewPanel.webview.postMessage({
-        command: "updateComments",
-        html: `
+      let errorHtml = "";
+
+      // 检查是否是评论关闭错误
+      if (error.isCommentClosed) {
+        const message =
+          error.originalMessage || "该专栏文章的作者已关闭评论功能";
+        errorHtml = this.generateCommentClosedHtml(message);
+      } else {
+        // 普通错误提示
+        errorHtml = `
           <div class="zhihu-comments-container">
             <h3>专栏评论加载失败</h3>
             <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
@@ -1791,7 +1956,13 @@ export class CommentsManager {
               重新加载
             </button>
           </div>
-        `,
+        `;
+      }
+
+      // 显示错误提示
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateComments",
+        html: errorHtml,
       });
     }
   }
@@ -1950,23 +2121,34 @@ export class CommentsManager {
           html: commentsHtml,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("加载评论时出错:", error);
+
+      let errorHtml = "";
+
+      // 检查是否是评论关闭错误
+      if (error.isCommentClosed) {
+        const message = error.originalMessage || "该内容的作者已关闭评论功能";
+        errorHtml = this.generateCommentClosedHtml(message);
+      } else {
+        // 普通错误提示
+        errorHtml = `
+          <div class="zhihu-comments-container">
+            <h3>评论加载失败</h3>
+            <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
+              ${error}
+            </div>
+            <button class="zhihu-load-comments-btn" onclick="loadComments('${answerId}')">
+              重新加载
+            </button>
+          </div>
+        `;
+      }
 
       // 显示错误提示
       webviewItem.webviewPanel.webview.postMessage({
         command: "updateComments",
-        html: `
-            <div class="zhihu-comments-container">
-              <h3>评论加载失败</h3>
-              <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
-                ${error}
-              </div>
-              <button class="zhihu-load-comments-btn" onclick="loadComments('${answerId}')">
-                重新加载
-              </button>
-            </div>
-          `,
+        html: errorHtml,
       });
     }
   }
@@ -2076,29 +2258,40 @@ export class CommentsManager {
         command: "updateChildCommentsModal",
         html: modalHtml,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("加载子评论时出错:", error);
+
+      let modalHtml = "";
+
+      // 检查是否是评论关闭错误
+      if (error.isCommentClosed) {
+        const message = error.originalMessage || "该评论的子评论功能已被关闭";
+        modalHtml = this.generateChildCommentClosedModalHtml(message);
+      } else {
+        // 普通错误提示
+        modalHtml = `
+          <div class="zhihu-comments-modal">
+            <div class="zhihu-comments-modal-content">
+              <div class="zhihu-comments-modal-header">
+                <h3>加载失败</h3>
+                <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
+              </div>
+              <div style="text-align: center; padding: 40px; color: var(--vscode-errorForeground);">
+                加载子评论失败: ${error}
+                <div style="margin-top: 20px; display: flex; justify-content: center;">
+                  <button class="button" onclick="loadAllChildComments('${commentId}')">重试</button>
+                  <button class="button" onclick="closeCommentsModal()" style="margin-left: 10px;">关闭</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
 
       // 显示错误提示
       webviewItem.webviewPanel.webview.postMessage({
         command: "updateChildCommentsModal",
-        html: `
-            <div class="zhihu-comments-modal">
-              <div class="zhihu-comments-modal-content">
-                <div class="zhihu-comments-modal-header">
-                  <h3>加载失败</h3>
-                  <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
-                </div>
-                <div style="text-align: center; padding: 40px; color: var(--vscode-errorForeground);">
-                  加载子评论失败: ${error}
-                  <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <button class="button" onclick="loadAllChildComments('${commentId}')">重试</button>
-                    <button class="button" onclick="closeCommentsModal()" style="margin-left: 10px;">关闭</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `,
+        html: modalHtml,
       });
     }
   }
