@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.3.0-green.svg)
+![Version](https://img.shields.io/badge/Version-0.3.1-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
 
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、图片/视频展示方式、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索、收藏夹等功能。
@@ -24,7 +24,7 @@
 1. 支持 加载知乎热榜
 2. 支持 加载知乎推荐
 3. 支持 加载搜索结果
-4. 支持 文章、回答内容的加载
+4. 支持 文章、回答内容的加载，支持对内容进行赞同/不赞同的操作
 5. 支持 完整的收藏夹功能，查看和管理自己创建和关注的收藏夹
 6. 支持 切换媒体（图片、视频等）模式（隐藏|迷你|正常）的功能，避免摸鱼被发现
 7. 支持 快捷键操作，键盘 ←→ 左右箭头可以切换上/下一个回答，按`/`可以切换图片的显示和隐藏，按 Crtl+↑↓ 上下箭头可以切换上/下篇内容
