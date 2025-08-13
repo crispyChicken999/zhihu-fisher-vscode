@@ -199,6 +199,51 @@ export class WebViewUtils {
             }
           }
 
+          // 检测用户的投票状态
+          let voteStatus: "up" | "down" | "neutral" = "neutral";
+
+          // 查找投票按钮区域
+          const contentItemActions = answerElement.querySelector(
+            ".ContentItem-actions"
+          );
+          if (contentItemActions) {
+            // 先检查所有投票相关的按钮
+            const allVoteButtons = contentItemActions.querySelectorAll(
+              "[class*='VoteButton']"
+            );
+            console.log(
+              `特定回答 ${answerId} 找到 ${allVoteButtons.length} 个投票按钮`
+            );
+
+            // 更精确地查找赞同按钮：VoteButton + is-active，但不包含 VoteButton--down
+            const upVoteButton = contentItemActions.querySelector(
+              ".VoteButton.is-active:not(.VoteButton--down)"
+            );
+            // 查找不赞同按钮：VoteButton--down + is-active
+            const downVoteButton = contentItemActions.querySelector(
+              ".VoteButton--down.is-active"
+            );
+
+            // 输出调试信息
+            if (allVoteButtons.length > 0) {
+              allVoteButtons.forEach((btn, index) => {
+                console.log(`特定回答按钮${index}: class="${btn.className}"`);
+              });
+            }
+
+            if (upVoteButton) {
+              voteStatus = "up";
+              console.log(`特定回答 ${answerId} 检测到赞同状态`);
+            } else if (downVoteButton) {
+              voteStatus = "down";
+              console.log(`特定回答 ${answerId} 检测到不赞同状态`);
+            } else {
+              console.log(`特定回答 ${answerId} 检测到中立状态`);
+            }
+          } else {
+            console.log(`特定回答 ${answerId} 未找到投票按钮区域`);
+          }
+
           // 提取评论数
           const commentElement = answerElement.querySelector(
             ".ContentItem-action"
@@ -231,6 +276,7 @@ export class WebViewUtils {
             commentCount,
             publishTime,
             url: window.location.href,
+            voteStatus, // 添加投票状态
           };
         });
 

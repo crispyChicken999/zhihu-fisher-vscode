@@ -5,6 +5,12 @@ export const commentsCss = `
   border-top: 1px solid var(--vscode-panel-border);
 }
 
+.comments-container:has(.zhihu-expand-comments-btn),
+.comments-container:has(.zhihu-load-comments-btn) {
+  display: inline-flex;
+  vertical-align: top;
+}
+
 .zhihu-comments-header {
   display: flex;
   align-items: center;
@@ -35,7 +41,7 @@ export const commentsCss = `
   color: var(--vscode-button-foreground);
   border: none;
   border-radius: 2px;
-  padding: 6px 8px;
+  padding: 5px 8px;
   font-size: 14px;
   cursor: pointer;
   display: inline-flex;

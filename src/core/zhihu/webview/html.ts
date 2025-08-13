@@ -140,7 +140,7 @@ export class HtmlRenderer {
       renderOptions
     );
     const navigationComponent = new NavigationComponent(webview, article, contentType);
-    const metaComponent = new MetaComponent(currentAnswer);
+    const metaComponent = new MetaComponent(currentAnswer, contentType, webview);
     const contentComponent = new ArticleContentComponent(
       currentAnswer?.content,
       renderOptions

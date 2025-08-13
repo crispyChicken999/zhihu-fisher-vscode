@@ -77,8 +77,6 @@ export const articleTemplate = `
 
     \${NAVIGATION_COMPONENT}
 
-    \${META_COMPONENT}
-
     <div class="article-content \${MEDIA_MODE_CLASS}">\${ARTICLE_CONTENT}</div>
 
     \${META_COMPONENT}

@@ -59,13 +59,13 @@ export const articleCss = `
 /* 回答元数据样式 */
 .answer-meta {
   width: fit-content;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
-  margin: 10px 0;
+  gap: 8px;
+  margin-right: 4px;
   padding: 6px 10px;
-  border-radius: 4px;
+  border-radius: 2px;
   background-color: var(--vscode-editor-inactiveSelectionBackground);
   color: var(--vscode-descriptionForeground);
 }
@@ -78,6 +78,96 @@ export const articleCss = `
 
 .meta-item svg {
   opacity: 0.8;
+}
+
+/* 投票按钮样式 */
+.vote-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vote-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0px 2px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.vote-button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+  transform: translateY(-1px);
+}
+
+.vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.vote-button svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+/* 投票按钮激活状态 */
+.vote-button.active {
+  font-weight: 600;
+}
+
+.vote-button.vote-up.active {
+  background-color: var(--vscode-gitDecoration-addedResourceForeground, #28a745);
+  color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-gitDecoration-addedResourceForeground, #28a745);
+  opacity: 0.9;
+}
+
+.vote-button.vote-up.active svg {
+  color: var(--vscode-editor-background);
+  opacity: 1;
+}
+
+.vote-button.vote-down.active {
+  background-color: var(--vscode-gitDecoration-deletedResourceForeground, #dc3545);
+  color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-gitDecoration-deletedResourceForeground, #dc3545);
+  opacity: 0.9;
+}
+
+.vote-button.vote-down.active svg {
+  color: var(--vscode-editor-background);
+  opacity: 1;
+}
+
+.vote-button.vote-neutral.active {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: 1px solid var(--vscode-contrastBorder, var(--vscode-button-background));
+}
+
+.vote-button.vote-neutral.active svg {
+  color: var(--vscode-button-foreground);
+  opacity: 1;
+}
+
+/* 暗色主题适配 - 现在使用主题变量，这部分可以简化 */
+.vscode-dark .vote-button.vote-up.active,
+.vscode-dark .vote-button.vote-down.active {
+  opacity: 0.8;
+}
+
+.vscode-dark .vote-button.vote-neutral.active {
+  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border-color: var(--vscode-contrastBorder, var(--vscode-button-secondaryBackground));
 }
 
 .meta-item.like {

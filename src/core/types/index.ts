@@ -161,6 +161,12 @@ export interface ArticleInfo {
   isSpecificAnswer?: boolean;
   /** 特定回答的原始URL */
   specificAnswerUrl?: string;
+  /** 用户对该文章的投票状态：1(赞同), -1(不赞同), 0(中立) */
+  voteStatus?: 1 | -1 | 0;
+  /** 文章点赞数（对于专栏文章） */
+  likeCount?: number;
+  /** 是否正在处理投票请求 */
+  isVoting?: boolean;
 }
 
 /** 回答数据结构 */
@@ -175,6 +181,10 @@ export interface AnswerItem {
   likeCount: number;
   /** 回答的评论数 */
   commentCount: number;
+  /** 用户对该回答的投票状态：up(赞同), down(不赞同), neutral(中立) */
+  voteStatus?: "up" | "down" | "neutral";
+  /** 是否正在处理投票请求 */
+  isVoting?: boolean;
   /** 回答的评论列表（存储所有已加载的评论） */
   commentList: CommentItem[];
   /** 评论区的状态，收起|展开 */

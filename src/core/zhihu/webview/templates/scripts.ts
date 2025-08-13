@@ -1149,6 +1149,23 @@ function loadComments(answerId, page = 1) {
   });
 }
 
+// 投票功能
+function voteContent(contentId, voteValue, contentType) {
+  // 禁用所有投票按钮，防止重复点击
+  const voteButtons = document.querySelectorAll('.vote-button');
+  voteButtons.forEach(button => {
+    button.disabled = true;
+    button.style.opacity = '0.6';
+  });
+
+  vscode.postMessage({
+    command: "voteContent",
+    contentId: contentId,
+    voteValue: voteValue,
+    contentType: contentType
+  });
+}
+
 // 切换评论区的展开/收起状态
 function toggleCommentStatus(answerId) {
   vscode.postMessage({

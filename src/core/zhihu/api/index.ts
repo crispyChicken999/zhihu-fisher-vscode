@@ -328,4 +328,64 @@ export class ZhihuApiService {
       return { success: false, error: error.message || "删除收藏夹失败" };
     }
   }
+
+  /**
+   * 对回答进行投票
+   * @param answerId 回答ID
+   * @param voteType 投票类型：'up'(赞同), 'down'(不赞同), 'neutral'(中立)
+   * @returns Promise<any> 投票结果
+   */
+  static async voteAnswer(
+    answerId: string,
+    voteType: "up" | "down" | "neutral"
+  ): Promise<any> {
+    try {
+      const url = `https://www.zhihu.com/api/v4/answers/${answerId}/voters`;
+      
+      const result = await this.makeRequest(
+        url,
+        {
+          method: "POST",
+          body: JSON.stringify({ type: voteType }),
+          contentType: "application/json",
+        },
+        `回答投票(${voteType})`
+      );
+
+      return result;
+    } catch (error) {
+      console.error("回答投票时出错:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 对文章进行投票
+   * @param articleId 文章ID
+   * @param voting 投票类型：1(赞同), -1(不赞同), 0(中立)
+   * @returns Promise<any> 投票结果
+   */
+  static async voteArticle(
+    articleId: string,
+    voting: 1 | -1 | 0
+  ): Promise<any> {
+    try {
+      const url = `https://www.zhihu.com/api/v4/articles/${articleId}/voters`;
+      
+      const result = await this.makeRequest(
+        url,
+        {
+          method: "POST",
+          body: JSON.stringify({ voting }),
+          contentType: "application/json",
+        },
+        `文章投票(${voting})`
+      );
+
+      return result;
+    } catch (error) {
+      console.error("文章投票时出错:", error);
+      throw error;
+    }
+  }
 }

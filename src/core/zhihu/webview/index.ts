@@ -254,6 +254,7 @@ export class WebviewManager {
               },
               likeCount: preloadedAnswer.voteCount || 0,
               commentCount: preloadedAnswer.commentCount || 0,
+              voteStatus: preloadedAnswer.voteStatus || "neutral", // 添加投票状态
               publishTime: preloadedAnswer.publishTime,
               updateTime: preloadedAnswer.publishTime,
               content: marked.parse(preloadedAnswer.content) as string,
@@ -567,13 +568,46 @@ export class WebviewManager {
           : "";
 
         // 获取点赞数
-        const likeElement = document.querySelector(
-          ".VoteButton .VoteButton-TriangleUp"
-        );
+        const likeElement = document.querySelector(".VoteButton");
         const likeText = likeElement
-          ? likeElement.parentElement?.textContent?.trim() || "0"
+          ? likeElement.getAttribute("aria-label") || "0"
           : "0";
         const likeCount = parseInt(likeText.replace(/[^\d]/g, "") || "0", 10);
+
+        // 获取投票状态
+        let voteStatus: 1 | -1 | 0 = 0; // 默认为中立
+
+        // 先检查所有投票相关的按钮
+        const allVoteButtons = document.querySelectorAll(
+          "[class*='VoteButton']"
+        );
+        console.log(`文章找到 ${allVoteButtons.length} 个投票按钮`);
+
+        // 更精确地查找赞同按钮：VoteButton + is-active，但不包含 VoteButton--down
+        const upVoteButton = document.querySelector(
+          ".VoteButton.is-active:not(.VoteButton--down)"
+        );
+        // 查找不赞同按钮：VoteButton--down + is-active
+        const downVoteButton = document.querySelector(
+          ".VoteButton--down.is-active"
+        );
+
+        // 输出调试信息
+        if (allVoteButtons.length > 0) {
+          allVoteButtons.forEach((btn, index) => {
+            console.log(`文章按钮${index}: class="${btn.className}"`);
+          });
+        }
+
+        if (upVoteButton) {
+          voteStatus = 1; // 已赞同
+          console.log("文章检测到赞同状态");
+        } else if (downVoteButton) {
+          voteStatus = -1; // 已不赞同
+          console.log("文章检测到不赞同状态");
+        } else {
+          console.log("文章检测到中立状态");
+        }
 
         // 获取评论数
         const commentElement = document.querySelector(
@@ -598,6 +632,7 @@ export class WebviewManager {
           publishTime,
           likeCount,
           commentCount,
+          voteStatus,
         };
       });
 
@@ -644,6 +679,10 @@ export class WebviewManager {
       webviewItem.article.loadedAnswerCount = 1;
       webviewItem.article.totalAnswerCount = 1;
       webviewItem.article.currentAnswerIndex = 0;
+
+      // 保存文章的投票状态
+      webviewItem.article.voteStatus = articleData.voteStatus;
+      webviewItem.article.likeCount = articleData.likeCount;
 
       console.log("文章内容解析完成");
     } catch (error) {
@@ -1088,6 +1127,51 @@ export class WebviewManager {
             // 获取内容的HTML字符串
             const contentHtml = contentElement?.innerHTML || "";
 
+            // 检测用户的投票状态
+            let voteStatus: "up" | "down" | "neutral" = "neutral";
+
+            // 查找投票按钮区域，更精确的选择器
+            const contentItemActions = element.querySelector(
+              ".ContentItem-actions"
+            );
+            if (contentItemActions) {
+              // 先检查所有投票相关的按钮
+              const allVoteButtons = contentItemActions.querySelectorAll(
+                "[class*='VoteButton']"
+              );
+              console.log(
+                `回答 ${answerId} 找到 ${allVoteButtons.length} 个投票按钮`
+              );
+
+              // 更精确地查找赞同按钮：VoteButton + is-active，但不包含 VoteButton--down
+              const upVoteButton = contentItemActions.querySelector(
+                ".VoteButton.is-active:not(.VoteButton--down)"
+              );
+              // 查找不赞同按钮：VoteButton--down + is-active
+              const downVoteButton = contentItemActions.querySelector(
+                ".VoteButton--down.is-active"
+              );
+
+              // 输出调试信息
+              if (allVoteButtons.length > 0) {
+                allVoteButtons.forEach((btn, index) => {
+                  console.log(`按钮${index}: class="${btn.className}"`);
+                });
+              }
+
+              if (upVoteButton) {
+                voteStatus = "up";
+                console.log(`回答 ${answerId} 检测到赞同状态`);
+              } else if (downVoteButton) {
+                voteStatus = "down";
+                console.log(`回答 ${answerId} 检测到不赞同状态`);
+              } else {
+                console.log(`回答 ${answerId} 检测到中立状态`);
+              }
+            } else {
+              console.log(`回答 ${answerId} 未找到投票按钮区域`);
+            }
+
             list.push({
               id: answerId,
               url: `https://www.zhihu.com/question/${questionId}/answer/${answerId}`,
@@ -1101,6 +1185,7 @@ export class WebviewManager {
               },
               likeCount: parseInt(likeCount || "0", 10) || 0,
               commentCount: parseInt(commentCount || "0", 10) || 0,
+              voteStatus: voteStatus, // 添加投票状态
               publishTime: publishTime
                 ? new Date(publishTime).toLocaleString("zh-CN", {
                     timeZone: "Asia/Shanghai",
@@ -1604,6 +1689,16 @@ export class WebviewManager {
           // 处理智能伪装开关切换
           await this.handleToggleDisguise(message.enabled);
           break;
+
+        case "voteContent":
+          // 处理投票请求
+          await this.handleVoteContent(
+            webviewId,
+            message.contentId,
+            message.voteValue,
+            message.contentType
+          );
+          break;
       }
     });
   }
@@ -1767,6 +1862,114 @@ export class WebviewManager {
       vscode.window.showErrorMessage(
         `设置失败: ${error instanceof Error ? error.message : String(error)}`
       );
+    }
+  }
+
+  /** 处理投票请求 */
+  private static async handleVoteContent(
+    webviewId: string,
+    contentId: string,
+    voteValue: string | number,
+    contentType: "answer" | "article"
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 从API导入
+      const { ZhihuApiService } = await import("../api/index.js");
+
+      if (contentType === "answer") {
+        // 处理回答投票
+        const voteType = voteValue as "up" | "down" | "neutral";
+
+        // 找到对应的回答
+        const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
+        const currentAnswer =
+          webviewItem.article.answerList[currentAnswerIndex];
+
+        if (!currentAnswer || currentAnswer.id !== contentId) {
+          console.error("找不到对应的回答:", contentId);
+          return;
+        }
+
+        // 设置投票状态
+        currentAnswer.isVoting = true;
+        this.updateWebview(webviewId);
+
+        // 调用API
+        const result = await ZhihuApiService.voteAnswer(contentId, voteType);
+
+        // 更新回答状态
+        if (result.success) {
+          currentAnswer.voteStatus = voteType;
+          currentAnswer.likeCount =
+            result.voteup_count || result.up_count || currentAnswer.likeCount;
+
+          vscode.window.showInformationMessage(
+            `投票成功: ${
+              voteType === "up"
+                ? "赞同"
+                : voteType === "down"
+                ? "不赞同"
+                : "中立"
+            }`
+          );
+        } else {
+          vscode.window.showErrorMessage("投票失败，请稍后重试");
+        }
+      } else if (contentType === "article") {
+        // 处理文章投票
+        const voting = voteValue as 1 | -1 | 0;
+
+        // 设置投票状态
+        webviewItem.article.isVoting = true;
+        this.updateWebview(webviewId);
+
+        // 调用API
+        const result = await ZhihuApiService.voteArticle(contentId, voting);
+
+        // 更新文章状态
+        if (result.success) {
+          webviewItem.article.voteStatus = voting;
+          webviewItem.article.likeCount =
+            result.voteup_count ||
+            result.up_count ||
+            webviewItem.article.likeCount;
+
+          const voteText =
+            voting === 1 ? "赞同" : voting === -1 ? "不赞同" : "中立";
+          vscode.window.showInformationMessage(`投票成功: ${voteText}`);
+        } else {
+          vscode.window.showErrorMessage("投票失败，请稍后重试");
+        }
+      }
+    } catch (error: any) {
+      console.error("投票时出错:", error);
+
+      // 检查是否是评论关闭的错误
+      if (error.message?.includes("403")) {
+        vscode.window.showErrorMessage("无法投票：可能需要登录或权限不足");
+      } else {
+        vscode.window.showErrorMessage("投票失败，请检查网络连接和Cookie设置");
+      }
+    } finally {
+      // 重置投票状态
+      if (contentType === "answer") {
+        const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
+        const currentAnswer =
+          webviewItem.article.answerList[currentAnswerIndex];
+        if (currentAnswer) {
+          currentAnswer.isVoting = false;
+        }
+      } else {
+        webviewItem.article.isVoting = false;
+      }
+
+      // 更新界面
+      this.updateWebview(webviewId);
     }
   }
 }

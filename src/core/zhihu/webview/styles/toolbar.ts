@@ -112,12 +112,10 @@ body.immersive-mode .navigation .navigation-buttons {
 
 /* 正常模式下：隐藏第二个 answer-meta（文章内容后的） */
 body:not(.immersive-mode) .article-content + .answer-meta {
-  display: none !important;
 }
 
 /* 沉浸模式下：隐藏第一个 answer-meta（文章内容前的），显示第二个 */
 body.immersive-mode header + * + .answer-meta {
-  display: none !important;
 }
 
 /* 沉浸模式下保持显示的元素（第二个 answer-meta） */
@@ -141,7 +139,7 @@ body.immersive-mode .answer-meta .meta-item {
   font-weight: 500;
   color: var(--vscode-descriptionForeground);
 }
-
+body.immersive-mode .answer-meta .vote-buttons svg,
 body.immersive-mode .answer-meta .meta-item svg {
   opacity: 1;
   width: 15px;
