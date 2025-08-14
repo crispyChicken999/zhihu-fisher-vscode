@@ -90,12 +90,6 @@ export const articleTemplate = `
 
     \${STYLE_PANEL_COMPONENT}
 
-    <!-- 图片预览 -->
-    <div class="image-preview" id="image-preview">
-      <div class="image-preview-close" onclick="hideImagePreview()">&times;</div>
-      <img id="preview-image" src="" alt="图片预览" />
-    </div>
-
     <script>
       \${SCRIPTS}
     </script>

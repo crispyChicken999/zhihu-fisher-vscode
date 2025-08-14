@@ -1018,37 +1018,6 @@ function copyLink(button, url, isImmersiveMode = false) {
 }
 
 /**
- * 显示图片预览
- * @param {string} src 图片URL
- */
-function showImagePreview(src) {
-  const preview = document.getElementById('image-preview');
-  const previewImage = document.getElementById('preview-image');
-
-  if (preview && previewImage) {
-    previewImage.src = src;
-    preview.style.display = 'flex';
-
-    // 禁止滚动
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-/**
- * 隐藏图片预览
- */
-function hideImagePreview() {
-  const preview = document.getElementById('image-preview');
-
-  if (preview) {
-    preview.style.display = 'none';
-
-    // 恢复滚动
-    document.body.style.overflow = '';
-  }
-}
-
-/**
  * 复制代码
  * @param {HTMLElement} button 复制按钮
  */
