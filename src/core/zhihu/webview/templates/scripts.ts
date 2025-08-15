@@ -792,6 +792,9 @@ function setupStylePanel() {
       // 重置工具栏设置
       resetToolbarConfig();
       localStorage.removeItem('zhihu-fisher-toolbar-config');
+
+      // 重置伪装类型选择
+      resetDisguiseTypesSelection();
     });
   }
 
@@ -1308,6 +1311,25 @@ function previewDisguise() {
     command: "previewDisguise",
     selectedTypes: selectedTypes
   });
+}
+
+/**
+ * 重置伪装类型选择
+ */
+function resetDisguiseTypesSelection() {
+  // 清空localStorage中的伪装类型选择
+  localStorage.removeItem('zhihu-fisher-selected-disguise-types');
+
+  // 通知后端清空配置
+  vscode.postMessage({
+    command: "updateSelectedDisguiseTypes",
+    selectedTypes: []
+  });
+
+  // 重新初始化伪装类型选择器（会显示所有选项为未选中状态）
+  setTimeout(() => {
+    initializeDisguiseTypesSelector();
+  }, 100);
 }
 
 // 加载评论

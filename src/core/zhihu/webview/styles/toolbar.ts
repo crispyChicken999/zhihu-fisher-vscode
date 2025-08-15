@@ -260,7 +260,7 @@ body.immersive-mode .immersive-button {
   border-radius: 4px;
 }
 
-.toolbar-config-item:hover {
+.toolbar-config-item:hover label {
   background: var(--vscode-list-hoverBackground);
   border-color: var(--vscode-focusBorder);
 }
