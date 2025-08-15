@@ -91,6 +91,7 @@ export const panelCss = `
 
 .style-panel-content {
   margin-top: 1px;
+  min-height: 300px;
   max-height: 70vh;
   overflow-y: auto;
   padding: 0 10px 0px 20px;
@@ -155,4 +156,51 @@ export const panelCss = `
   border-radius: 3px;
   margin-left: auto;
 }
+
+/* Tab页样式 */
+.style-tabs {
+  margin-bottom: 15px;
+}
+
+.style-tab-button {
+  transition: all 0.2s ease;
+  position: relative;
+  font-weight: 500;
+}
+
+.style-tab-button:hover {
+  background: var(--vscode-list-hoverBackground) !important;
+  color: var(--vscode-textLink-foreground) !important;
+}
+
+.style-tab-button.active {
+  font-weight: 600;
+}
+
+.style-tab-button svg {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.style-tab-button:hover svg,
+.style-tab-button.active svg {
+  opacity: 1;
+}
+
+.style-tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 `;

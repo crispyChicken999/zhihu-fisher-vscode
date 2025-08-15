@@ -1120,6 +1120,39 @@ function downloadMedia(url, type) {
 }
 
 /**
+ * 切换样式设置面板Tab页
+ */
+function switchStyleTab(tabName) {
+  // 隐藏所有Tab内容
+  const tabContents = document.querySelectorAll('.style-tab-content');
+  tabContents.forEach(content => {
+    content.style.display = 'none';
+  });
+
+  // 移除所有Tab按钮的active状态
+  const tabButtons = document.querySelectorAll('.style-tab-button');
+  tabButtons.forEach(button => {
+    button.classList.remove('active');
+    button.style.borderBottomColor = 'transparent';
+    button.style.color = 'var(--vscode-foreground)';
+  });
+
+  // 显示选中的Tab内容
+  const selectedTab = document.getElementById(tabName + '-tab');
+  if (selectedTab) {
+    selectedTab.style.display = 'block';
+  }
+
+  // 激活选中的Tab按钮
+  const selectedButton = document.querySelector(\`[data-tab="\${tabName}"]\`);
+  if (selectedButton) {
+    selectedButton.classList.add('active');
+    selectedButton.style.borderBottomColor = 'var(--vscode-textLink-foreground)';
+    selectedButton.style.color = 'var(--vscode-textLink-foreground)';
+  }
+}
+
+/**
  * 切换样式面板显示
  */
 function toggleStylePanel() {
@@ -1302,11 +1335,7 @@ function clearAllDisguiseTypes() {
  */
 function previewDisguise() {
   const selectedTypes = getSelectedDisguiseTypes();
-  if (selectedTypes.length === 0) {
-    alert('请先选择要伪装的文件类型，或者选择"全选"来使用所有类型。');
-    return;
-  }
-
+  
   vscode.postMessage({
     command: "previewDisguise",
     selectedTypes: selectedTypes
@@ -1963,14 +1992,9 @@ function resetToolbarConfig() {
   const defaultConfig = getDefaultToolbarConfig();
   saveToolbarConfig(defaultConfig);
   renderToolbarConfig();
-  
+
   // 检查并更新工具栏容器的显示状态
   updateToolbarContainerVisibility(defaultConfig);
-
-  vscode.postMessage({
-    command: 'showNotification',
-    message: '工具栏配置已重置为默认设置'
-  });
 }
 
 /**
@@ -1989,7 +2013,7 @@ function toggleAllToolbarButtons() {
 
   saveToolbarConfig(config);
   renderToolbarConfig();
-  
+
   // 检查并更新工具栏容器的显示状态
   updateToolbarContainerVisibility(config);
 

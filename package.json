@@ -639,16 +639,16 @@
           "description": "自定义谷歌Chrome 浏览器路径。如果设置了，插件将使用此路径的浏览器，而不是 Puppeteer 安装的 Chrome 浏览器。",
           "scope": "machine"
         },
-        "zhihu-fisher.enableDisguise": {
-          "type": "boolean",
-          "default": true,
-          "description": "启用智能伪装功能。当 WebView 失去焦点时，自动将标题和图标伪装成代码文件，更好地摸鱼，避免被老板/同事发现(～￣▽￣)～。"
-        },
         "zhihu-fisher.cookie": {
           "type": "string",
           "default": "",
           "description": "知乎Cookie设置。用于访问需要登录的内容和完整评论。设置后可以获得更好的浏览体验。",
           "scope": "application"
+        },
+        "zhihu-fisher.enableDisguise": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用智能伪装功能。当 WebView 失去焦点时，自动将标题和图标伪装成代码文件，更好地摸鱼，避免被老板/同事发现(～￣▽￣)～。"
         },
         "zhihu-fisher.selectedDisguiseTypes": {
           "type": "array",
@@ -656,7 +656,7 @@
             "type": "string"
           },
           "default": [],
-          "description": "智能伪装模式下用户选择的文件类型。如果为空，则使用所有可用的文件类型进行随机伪装。"
+          "description": "智能伪装模式下用户选择的文件类型。如果为空，则使用所有可用的文件类型进行随机伪装。（请在Fisher 外观设置-功能增强 中进行修改，自行添加项可能导致运行异常）"
         }
       }
     }
