@@ -1204,17 +1204,31 @@ function initializeDisguiseTypesSelector() {
     "file_type_css.svg": { name: "CSS 样式文件", preview: "style.css" },
     "file_type_git.svg": { name: "Git 配置文件", preview: ".gitignore" },
     "file_type_html.svg": { name: "HTML 网页文件", preview: "index.html" },
+    "file_type_ini.svg": { name: "INI 配置文件", preview: "config.ini" },
     "file_type_java.svg": { name: "Java 源文件", preview: "Main.java" },
     "file_type_js.svg": { name: "JavaScript 源文件", preview: "index.js" },
     "file_type_json.svg": { name: "JSON 配置文件", preview: "package.json" },
     "file_type_less.svg": { name: "Less 样式文件", preview: "style.less" },
+    "file_type_light_tex.svg": { name: "LaTeX 文档", preview: "main.tex" },
+    "file_type_light_yaml.svg": { name: "YAML 配置文件", preview: "config.yaml" },
+    "file_type_log.svg": { name: "日志文件", preview: "application.log" },
+    "file_type_lua.svg": { name: "Lua 脚本", preview: "init.lua" },
+    "file_type_markdown.svg": { name: "Markdown 文档", preview: "README.md" },
     "file_type_php3.svg": { name: "PHP 源文件", preview: "index.php" },
     "file_type_powershell.svg": { name: "PowerShell 脚本", preview: "Install.ps1" },
+    "file_type_python.svg": { name: "Python 脚本", preview: "main.py" },
+    "file_type_r.svg": { name: "R 语言脚本", preview: "analysis.r" },
+    "file_type_ruby.svg": { name: "Ruby 脚本", preview: "app.rb" },
+    "file_type_rust.svg": { name: "Rust 源文件", preview: "main.rs" },
+    "file_type_rust_toolchain.svg": { name: "Rust 工具链配置", preview: "rust-toolchain" },
     "file_type_scss.svg": { name: "Sass 样式文件", preview: "_variables.scss" },
+    "file_type_sql.svg": { name: "SQL 脚本", preview: "schema.sql" },
+    "file_type_swift.svg": { name: "Swift 源文件", preview: "AppDelegate.swift" },
     "file_type_typescript.svg": { name: "TypeScript 源文件", preview: "index.ts" },
     "file_type_typescriptdef.svg": { name: "TypeScript 声明文件", preview: "global.d.ts" },
     "file_type_vue.svg": { name: "Vue 组件文件", preview: "App.vue" },
-    "file_type_xml.svg": { name: "XML 配置文件", preview: "config.xml" }
+    "file_type_xml.svg": { name: "XML 配置文件", preview: "config.xml" },
+    "file_type_xsl.svg": { name: "XSL 样式表", preview: "transform.xsl" }
   };
 
   // 获取当前已选择的类型
