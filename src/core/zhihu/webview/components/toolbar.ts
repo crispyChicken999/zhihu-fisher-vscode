@@ -28,12 +28,13 @@ export class ToolbarComponent implements Component {
   private contentToken: string = ""; // 内容ID，用于收藏功能
   private contentType: "article" | "answer" = "answer"; // 内容类型
   private toolbarConfig: ToolbarButtonConfig[] = []; // 工具栏按钮配置
+  private sourceType: string = ""; // 内容来源类型
 
   /**
    * 构造函数
    * @param url 回答或文章的URL
    */
-  constructor(url: string, renderOptions: RenderOptions, answer: AnswerItem) {
+  constructor(url: string, renderOptions: RenderOptions, answer: AnswerItem, sourceType: string) {
     this.url = url;
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
     // 从localStorage获取沉浸模式状态
@@ -59,6 +60,8 @@ export class ToolbarComponent implements Component {
       }
     }
 
+    this.sourceType = sourceType || "";
+
     // 初始化工具栏配置
     this.initToolbarConfig();
   }
@@ -80,7 +83,7 @@ export class ToolbarComponent implements Component {
       this.answer.updateTime;
 
     // 定义默认工具栏配置
-    const defaultConfig: ToolbarButtonConfig[] = [
+    let defaultConfig: ToolbarButtonConfig[] = [
       {
         id: "author",
         name: "作者信息",
@@ -234,6 +237,13 @@ export class ToolbarComponent implements Component {
           visible: true,
           order: 14,
         }
+      );
+    }
+
+    if (this.sourceType === "inner-link") {
+      // 如果是inner-link类型，不显示上下篇内容按钮
+      defaultConfig = defaultConfig.filter(
+        (btn) => btn.id !== "prev-article" && btn.id !== "next-article"
       );
     }
 

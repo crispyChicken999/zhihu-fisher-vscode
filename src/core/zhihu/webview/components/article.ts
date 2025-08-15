@@ -19,6 +19,41 @@ export class ArticleContentComponent implements Component {
   }
 
   /**
+   * 检查是否为知乎内部链接
+   * @param href 链接地址
+   * @returns 是否为知乎内部链接
+   */
+  private isZhihuInternalLink(href: string): boolean {
+    if (!href) return false;
+
+    try {
+      const url = new URL(href);
+      const hostname = url.hostname.toLowerCase();
+      const pathname = url.pathname;
+
+      // 检查是否为知乎域名
+      if (hostname !== "www.zhihu.com" && hostname !== "zhuanlan.zhihu.com") {
+        return false;
+      }
+
+      // 检查路径模式
+      if (hostname === "www.zhihu.com") {
+        // 匹配 /question/xxx 或 /question/xxx/answer/xxx
+        return /^\/question\/\d+(?:\/answer\/\d+)?(?:\/|$)/.test(pathname);
+      }
+
+      if (hostname === "zhuanlan.zhihu.com") {
+        // 匹配 /p/xxx
+        return /^\/p\/\d+(?:\/|$)/.test(pathname);
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
    * 渲染文章内容
    * @returns 处理后的HTML内容
    */
@@ -309,6 +344,18 @@ export class ArticleContentComponent implements Component {
       const link = $(el);
       let href = link.attr("href") || "";
 
+      // 处理相对协议的URL（以//开头的链接），补全为https://
+      if (href.startsWith("//")) {
+        href = "https:" + href;
+        link.attr("href", href);
+
+        // 同时处理title属性
+        const title = link.attr("title") || "";
+        if (title.startsWith("//")) {
+          link.attr("title", "https:" + title);
+        }
+      }
+
       // 处理知乎重定向链接
       if (href.includes("link.zhihu.com/?target=")) {
         try {
@@ -322,6 +369,27 @@ export class ArticleContentComponent implements Component {
         } catch (e) {
           // 如果解析失败，保留原始链接
         }
+      }
+
+      // 处理知乎内部链接，添加VSCode打开选项
+      const isZhihuInternalLink = this.isZhihuInternalLink(href);
+      if (isZhihuInternalLink) {
+        // 保持原有链接可以在浏览器中打开
+        link.attr("href", href);
+        link.attr("target", "_blank");
+
+        link.attr("title", `${href} (在浏览器中打开)`);
+
+        // 在原有链接后添加VSCode打开选项
+        const vscodeOption = $(
+          `<span class="zhihu-link-vscode" onclick="openWebView('${href}');" title="${href} (在 VSCode 中查看)">📖 在 VSCode 中查看</span>`
+        );
+
+        // 将VSCode选项添加到链接后面
+        link.after(vscodeOption);
+
+        // 添加标记表示已处理
+        link.addClass("zhihu-internal-processed");
       }
 
       // 对LinkCard进行特殊处理

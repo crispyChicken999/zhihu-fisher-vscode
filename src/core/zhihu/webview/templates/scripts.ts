@@ -20,6 +20,9 @@ let loadedAnswerCount = \${LOADED_ANSWER_COUNT};
 // 文章ID
 const articleId = "\${ARTICLE_ID}";
 
+// 来源类型
+const sourceType = "\${SOURCE_TYPE}";
+
 // 沉浸模式状态
 let isImmersiveMode = false;
 
@@ -438,24 +441,40 @@ function setupKeyboardNavigation() {
 
     // Ctrl + 上箭头 - 上一篇文章/问题
     if (event.ctrlKey && event.key === 'ArrowUp') {
+      // inner-link类型不响应上下篇切换快捷键
+      if (sourceType === 'inner-link') {
+        return;
+      }
       loadPreviousArticle();
       event.preventDefault();
     }
 
     // Ctrl + 下箭头 - 下一篇文章/问题
     if (event.ctrlKey && event.key === 'ArrowDown') {
+      // inner-link类型不响应上下篇切换快捷键
+      if (sourceType === 'inner-link') {
+        return;
+      }
       loadNextArticle();
       event.preventDefault();
     }
 
     // W键 - 上一篇文章/问题
     if (event.key === 'w' || event.key === 'W') {
+      // inner-link类型不响应上下篇切换快捷键
+      if (sourceType === 'inner-link') {
+        return;
+      }
       loadPreviousArticle();
       event.preventDefault();
     }
 
     // S键 - 下一篇文章/问题
     if (event.key === 's' || event.key === 'S') {
+      // inner-link类型不响应上下篇切换快捷键
+      if (sourceType === 'inner-link') {
+        return;
+      }
       loadNextArticle();
       event.preventDefault();
     }
@@ -983,6 +1002,18 @@ function openPage(url) {
   event.preventDefault(); // 阻止默认点击行为
   vscode.postMessage({
     command: 'openInBrowser',
+    url: url
+  });
+}
+
+/**
+ * 在VSCode中打开知乎链接
+ * @param {string} url 知乎链接URL
+ */
+function openWebView(url) {
+  event.preventDefault(); // 阻止默认点击行为
+  vscode.postMessage({
+    command: 'openZhihuLink',
     url: url
   });
 }

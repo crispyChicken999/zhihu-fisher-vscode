@@ -101,4 +101,25 @@ export const componentsCss = `
   height: 16px;
   margin-left: 5px;
 }
+
+/* 知乎链接VSCode打开选项样式 */
+.zhihu-link-vscode {
+  display: inline-block;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+  margin: 3px 0 0 5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: var(--vscode-button-secondaryBackground);
+  border: 1px solid var(--vscode-button-secondaryBorder, transparent);
+  transition: all 0.2s ease;
+}
+
+.zhihu-link-vscode:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground);
+  color: var(--vscode-textLink-activeForeground);
+  transform: translateY(-1px);
+}
 `;

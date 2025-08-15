@@ -115,7 +115,7 @@ export interface WebViewItem {
   /** 是否已加载 */
   isLoaded: boolean;
   /** 来源类型 - 新增字段 */
-  sourceType: "collection" | "recommend" | "hot" | "search";
+  sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link";
   /** 原始链接项数据 - 新增字段，用于查找列表位置 */
   originalItem: LinkItem;
   /** 收藏夹ID - 仅当sourceType为collection时有效 */

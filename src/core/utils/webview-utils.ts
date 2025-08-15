@@ -15,7 +15,7 @@ export class WebViewUtils {
    */
   public static generateUniqueWebViewId(
     baseId: string,
-    sourceType: "collection" | "recommend" | "hot" | "search",
+    sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link",
     contentType: "article" | "answer",
     answerId?: string,
     collectionId?: string

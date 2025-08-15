@@ -15,7 +15,12 @@ export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
   static async openWebview(
     item: LinkItem,
-    sourceType: "collection" | "recommend" | "hot" | "search" = "recommend",
+    sourceType:
+      | "collection"
+      | "recommend"
+      | "hot"
+      | "search"
+      | "inner-link" = "recommend",
     collectionId?: string
   ): Promise<void> {
     // 提取基础ID和内容类型
@@ -101,7 +106,11 @@ export class WebviewManager {
       if (e.webviewPanel.active) {
         // 获取当前的webviewID对应是否正在加载中
         // 激活时恢复原始标题和图标
-        panel.title = shortTitle;
+        const currentWebviewItem = Store.webviewMap.get(webviewId);
+        const currentTitle = currentWebviewItem
+          ? this.getShortTitle(currentWebviewItem.article.title)
+          : shortTitle;
+        panel.title = currentTitle;
         panel.iconPath = vscode.Uri.joinPath(
           Store.context!.extensionUri,
           "resources",
@@ -109,9 +118,13 @@ export class WebviewManager {
         );
       } else {
         // 失去焦点时使用智能伪装（支持配置开关）
+        const currentWebviewItem = Store.webviewMap.get(webviewId);
+        const currentTitle = currentWebviewItem
+          ? this.getShortTitle(currentWebviewItem.article.title)
+          : shortTitle;
         const disguise = DisguiseManager.getDisguiseOrDefault(
           webviewId,
-          shortTitle
+          currentTitle
         );
         panel.title = disguise.title;
         panel.iconPath = disguise.iconPath;
@@ -533,6 +546,30 @@ export class WebviewManager {
     }
 
     try {
+      // 对于inner-link类型，首先提取页面真实标题
+      if (webviewItem.sourceType === "inner-link") {
+        try {
+          const realTitle = await page.evaluate(() => {
+            // 专栏文章标题
+            const articleTitleElement = document.querySelector("h1.Post-Title");
+            if (articleTitleElement) {
+              return articleTitleElement.textContent?.trim() || "";
+            }
+            return "";
+          });
+
+          if (realTitle && realTitle !== webviewItem.article.title) {
+            console.log(
+              `更新专栏文章标题: ${webviewItem.article.title} -> ${realTitle}`
+            );
+            webviewItem.article.title = realTitle;
+            webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+          }
+        } catch (error) {
+          console.error("提取专栏文章标题失败:", error);
+        }
+      }
+
       const articleData = await page.evaluate(() => {
         // 获取文章主体内容
         const contentElement = document.querySelector(
@@ -886,7 +923,7 @@ export class WebviewManager {
 
   /** 根据来源类型获取对应的列表 */
   private static getListBySourceType(
-    sourceType: "collection" | "recommend" | "hot" | "search",
+    sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link",
     collectionId?: string
   ): LinkItem[] | null {
     switch (sourceType) {
@@ -1045,6 +1082,31 @@ export class WebviewManager {
       this.updateWebview(webviewId); // 更新WebView内容
 
       console.log("开始解析回答列表...");
+
+      // 对于inner-link类型，首先提取页面真实标题
+      if (webviewItem.sourceType === "inner-link") {
+        try {
+          const realTitle = await page.evaluate(() => {
+            const questionTitleElement = document.querySelector(
+              ".QuestionHeader-title"
+            );
+            if (questionTitleElement) {
+              return questionTitleElement.textContent?.trim() || "";
+            }
+            return "";
+          });
+
+          if (realTitle && realTitle !== webviewItem.article.title) {
+            console.log(
+              `更新页面标题: ${webviewItem.article.title} -> ${realTitle}`
+            );
+            webviewItem.article.title = realTitle;
+            webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+          }
+        } catch (error) {
+          console.error("提取页面标题失败:", error);
+        }
+      }
 
       // 解析回答列表
       const answerList = await page.evaluate(() => {
@@ -1699,6 +1761,11 @@ export class WebviewManager {
             message.contentType
           );
           break;
+
+        case "openZhihuLink":
+          // 处理在VSCode中打开知乎链接的请求
+          await this.handleOpenZhihuLink(message.url);
+          break;
       }
     });
   }
@@ -1970,6 +2037,89 @@ export class WebviewManager {
 
       // 更新界面
       this.updateWebview(webviewId);
+    }
+  }
+
+  /** 处理在VSCode中打开知乎链接的请求 */
+  private static async handleOpenZhihuLink(url: string): Promise<void> {
+    try {
+      // 从URL创建LinkItem
+      const linkItem = this.createLinkItemFromUrl(url);
+      if (linkItem) {
+        // 调用openWebview方法在VSCode中打开
+        await this.openWebview(linkItem, "inner-link");
+      } else {
+        vscode.window.showErrorMessage("无法解析知乎链接");
+        // 如果无法解析链接，尝试直接在浏览器中打开
+        const uri = vscode.Uri.parse(url);
+        const success = await vscode.env.openExternal(uri);
+        if (!success) {
+          vscode.window.showErrorMessage("无法打开知乎链接，请检查链接格式");
+        }
+      }
+    } catch (error) {
+      console.error("打开知乎链接时出错:", error);
+      vscode.window.showErrorMessage("打开知乎链接失败");
+    }
+  }
+
+  /** 从URL创建LinkItem */
+  private static createLinkItemFromUrl(url: string): LinkItem | null {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase();
+      const pathname = urlObj.pathname;
+
+      let id = "";
+      let title = "知乎内容";
+      let type: "question" | "article" = "question";
+
+      if (hostname === "www.zhihu.com") {
+        // 处理问题页面
+        const questionMatch = pathname.match(/^\/question\/(\d+)/);
+        const answerMatch = pathname.match(/^\/question\/\d+\/answer\/(\d+)/);
+
+        if (questionMatch) {
+          id = questionMatch[1];
+          title = `知乎问题 ${id}`;
+          type = "question";
+
+          // 如果是特定回答，设置answerUrl
+          if (answerMatch) {
+            return {
+              id: id,
+              url: `https://www.zhihu.com/question/${id}`,
+              title: `知乎回答 ${answerMatch[1]}`,
+              excerpt: "点击查看完整内容",
+              type: type,
+              answerUrl: url, // 保存特定回答的URL
+            };
+          }
+        }
+      } else if (hostname === "zhuanlan.zhihu.com") {
+        // 处理文章页面
+        const articleMatch = pathname.match(/^\/p\/(\d+)/);
+        if (articleMatch) {
+          id = articleMatch[1];
+          title = `知乎文章 ${id}`;
+          type = "article";
+        }
+      }
+
+      if (id) {
+        return {
+          id: id,
+          url: url,
+          title: title,
+          excerpt: "正在加载中，请稍后~",
+          type: type,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("解析URL时出错:", error);
+      return null;
     }
   }
 }

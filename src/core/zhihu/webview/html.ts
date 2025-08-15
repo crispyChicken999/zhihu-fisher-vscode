@@ -148,7 +148,8 @@ export class HtmlRenderer {
     const toolbarComponent = new ToolbarComponent(
       currentAnswer?.url || webview.url || "",
       renderOptions,
-      currentAnswer
+      currentAnswer,
+       webview.sourceType
     );
     const stylePanelComponent = new StylePanelComponent(renderOptions);
     const commentsComponent = CommentsManager.createCommentsContainerComponent(
@@ -175,7 +176,8 @@ export class HtmlRenderer {
         "${LOADED_ANSWER_COUNT}",
         (article.loadedAnswerCount || article.answerList.length).toString()
       )
-      .replace("${ARTICLE_ID}", webview.id || "");
+      .replace("${ARTICLE_ID}", webview.id || "")
+      .replace("${SOURCE_TYPE}", webview.sourceType);
 
     // 判断是否为文章类型，生成对应的键盘提示
     const isArticle = webview.url.includes('zhuanlan.zhihu.com/p/') || webview.url.includes('/p/');
