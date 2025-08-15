@@ -8,6 +8,7 @@ export class StylePanelComponent implements Component {
   private miniMediaScale: number = 50;
   private enableDisguise: boolean = true;
   private enableGrayscale: boolean = false;
+  private selectedDisguiseTypes: string[] = [];
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
@@ -16,6 +17,7 @@ export class StylePanelComponent implements Component {
       renderOptions.enableDisguise !== undefined
         ? renderOptions.enableDisguise
         : true;
+    this.selectedDisguiseTypes = renderOptions.selectedDisguiseTypes || [];
     // 灰色模式从localStorage读取，不依赖renderOptions
     this.enableGrayscale = false;
   }
@@ -194,6 +196,40 @@ export class StylePanelComponent implements Component {
               </div>
               <div>
                 更多设置请在 <strong style="color: var(--vscode-textLink-foreground);">设置 → 扩展 → 知乎摸鱼</strong> 中调整，或在侧边栏菜单中快速切换
+              </div>
+            </div>
+
+            <!-- 伪装文件类型选择 -->
+            <div style="margin-top: 15px;" id="disguise-types-section" ${this.enableDisguise ? '' : 'style="display: none;"'}>
+              <label style="display: block; margin-bottom: 10px; font-weight: 500;">
+                自定义伪装文件类型
+                <span style="color: #666; font-size: 12px; margin-left: 8px;">
+                  (选择希望伪装成的文件类型)
+                </span>
+              </label>
+              <div style="font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; padding: 8px 12px; background: var(--vscode-textBlockQuote-background); border: 1px solid var(--vscode-textBlockQuote-border); border-radius: 4px; margin-bottom: 10px;">
+                <div style="margin-bottom: 4px;">
+                  <strong style="color: var(--vscode-editor-foreground);">使用说明：</strong>勾选想要的文件类型，未勾选则使用全部类型随机伪装
+                </div>
+                <div>
+                  <strong style="color: var(--vscode-textLink-foreground);">提示：</strong>可以根据你的职业选择相关的文件类型，比如前端工程师选择 JS/HTML/CSS 等
+                </div>
+              </div>
+
+              <div id="disguise-types-container" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 10px;">
+                <!-- 文件类型选择项将在这里动态生成 -->
+              </div>
+
+              <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="button" onclick="selectAllDisguiseTypes()" style="flex: 1; font-size: 12px;">
+                  全选
+                </button>
+                <button class="button" onclick="clearAllDisguiseTypes()" style="flex: 1; font-size: 12px;">
+                  全不选
+                </button>
+                <button class="button" onclick="previewDisguise()" style="flex: 1; font-size: 12px;">
+                  预览效果
+                </button>
               </div>
             </div>
           </div>

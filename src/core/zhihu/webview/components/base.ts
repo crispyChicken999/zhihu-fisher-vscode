@@ -18,5 +18,6 @@ export interface RenderOptions {
   immersiveMode?: boolean; // 沉浸模式开关
   miniMediaScale?: number; // mini模式下图片缩放比例 (1-100)
   enableDisguise?: boolean; // 智能伪装功能开关
+  selectedDisguiseTypes?: string[]; // 用户选择的伪装文件类型
   [key: string]: any;
 }

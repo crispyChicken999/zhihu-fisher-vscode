@@ -123,6 +123,7 @@ export class HtmlRenderer {
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
     const miniMediaScale = config.get<number>("miniMediaScale", 50);
     const enableDisguise = config.get<boolean>('enableDisguise', true);
+    const selectedDisguiseTypes = config.get<string[]>('selectedDisguiseTypes', []);
 
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];    if (!currentAnswer) {
@@ -130,7 +131,7 @@ export class HtmlRenderer {
     }
 
     // 构建页面组件
-    const renderOptions = { mediaDisplayMode, miniMediaScale, enableDisguise };
+    const renderOptions = { mediaDisplayMode, miniMediaScale, enableDisguise, selectedDisguiseTypes };
 
     // 判断内容类型：通过URL判断专栏文章
     const contentType = webview.url.includes('zhuanlan.zhihu.com') ? "article" : "question";
@@ -168,6 +169,11 @@ export class HtmlRenderer {
       }[mediaDisplayMode] || "";
 
     // 生成JavaScript代码
+    const webviewItem = Store.webviewMap.get(webviewId);
+    const resourcesUri = webviewItem?.webviewPanel.webview.asWebviewUri(
+      vscode.Uri.joinPath(Store.context!.extensionUri, "resources")
+    ).toString() || "";
+
     const scriptContent = scriptsTemplate
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
       .replace("${MINI_MEDIA_SCALE}", miniMediaScale.toString())
@@ -177,7 +183,8 @@ export class HtmlRenderer {
         (article.loadedAnswerCount || article.answerList.length).toString()
       )
       .replace("${ARTICLE_ID}", webview.id || "")
-      .replace("${SOURCE_TYPE}", webview.sourceType);
+      .replace("${SOURCE_TYPE}", webview.sourceType)
+      .replace("${RESOURCES_BASE_PATH}", resourcesUri);
 
     // 判断是否为文章类型，生成对应的键盘提示
     const isArticle = webview.url.includes('zhuanlan.zhihu.com/p/') || webview.url.includes('/p/');

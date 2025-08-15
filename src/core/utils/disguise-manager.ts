@@ -113,9 +113,21 @@ export class DisguiseManager {
       return this.disguiseCache.get(webviewId)!;
     }
 
+    // 获取用户选择的文件类型
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const selectedTypes = config.get<string[]>("selectedDisguiseTypes", []);
+
+    // 如果用户没有选择任何类型，则使用所有类型
+    const availableTypes = selectedTypes.length > 0 ? selectedTypes : Object.keys(this.FILE_TYPE_MAP);
+
+    // 过滤掉无效的类型（防止配置文件中存在已删除的类型）
+    const validTypes = availableTypes.filter(type => this.FILE_TYPE_MAP.hasOwnProperty(type));
+
+    // 如果没有有效类型，则回退到所有类型
+    const finalTypes = validTypes.length > 0 ? validTypes : Object.keys(this.FILE_TYPE_MAP);
+
     // 随机选择一个文件类型
-    const iconFiles = Object.keys(this.FILE_TYPE_MAP);
-    const randomIconFile = iconFiles[Math.floor(Math.random() * iconFiles.length)];
+    const randomIconFile = finalTypes[Math.floor(Math.random() * finalTypes.length)];
     const fileTypeInfo = this.FILE_TYPE_MAP[randomIconFile as keyof typeof this.FILE_TYPE_MAP];
 
     // 随机生成文件名
@@ -214,7 +226,7 @@ export class DisguiseManager {
         )
       };
     }
-    
+
     return this.getRandomDisguise(webviewId);
   }
 
@@ -226,5 +238,81 @@ export class DisguiseManager {
       totalCached: this.disguiseCache.size,
       webviewIds: Array.from(this.disguiseCache.keys())
     };
+  }
+
+  /**
+   * 获取文件类型的详细信息（用于前端显示）
+   * @param iconFile 图标文件名
+   * @returns 文件类型信息
+   */
+  public static getFileTypeInfo(iconFile: string): any {
+    return this.FILE_TYPE_MAP[iconFile as keyof typeof this.FILE_TYPE_MAP];
+  }
+
+  /**
+   * 获取文件类型的预览示例
+   * @param iconFile 图标文件名
+   * @returns 预览文件名示例
+   */
+  public static getFileTypePreview(iconFile: string): string {
+    const fileTypeInfo = this.FILE_TYPE_MAP[iconFile as keyof typeof this.FILE_TYPE_MAP];
+    if (!fileTypeInfo) {
+      return "示例文件";
+    }
+
+    // 取第一个名称、第一个前缀、第一个扩展名作为预览
+    const name = fileTypeInfo.names[0] || "example";
+    const prefix = fileTypeInfo.prefixes[0] || "";
+    const extension = fileTypeInfo.extensions[0] || "";
+
+    return `${prefix}${name}${extension}`;
+  }
+
+  /**
+   * 获取文件类型的显示名称
+   * @param iconFile 图标文件名
+   * @returns 显示名称
+   */
+  public static getFileTypeDisplayName(iconFile: string): string {
+    const displayNames: { [key: string]: string } = {
+      "file_type_cheader.svg": "C 头文件",
+      "file_type_cpp.svg": "C++ 源文件",
+      "file_type_cppheader.svg": "C++ 头文件",
+      "file_type_csharp.svg": "C# 源文件",
+      "file_type_css.svg": "CSS 样式文件",
+      "file_type_git.svg": "Git 配置文件",
+      "file_type_html.svg": "HTML 网页文件",
+      "file_type_java.svg": "Java 源文件",
+      "file_type_js.svg": "JavaScript 源文件",
+      "file_type_json.svg": "JSON 配置文件",
+      "file_type_less.svg": "Less 样式文件",
+      "file_type_php3.svg": "PHP 源文件",
+      "file_type_powershell.svg": "PowerShell 脚本",
+      "file_type_scss.svg": "Sass 样式文件",
+      "file_type_typescript.svg": "TypeScript 源文件",
+      "file_type_typescriptdef.svg": "TypeScript 声明文件",
+      "file_type_vue.svg": "Vue 组件文件",
+      "file_type_xml.svg": "XML 配置文件"
+    };
+
+    return displayNames[iconFile] || iconFile.replace("file_type_", "").replace(".svg", "");
+  }
+
+  /**
+   * 获取用户当前选择的伪装类型
+   * @returns 用户选择的文件类型数组
+   */
+  public static getSelectedDisguiseTypes(): string[] {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    return config.get<string[]>("selectedDisguiseTypes", []);
+  }
+
+  /**
+   * 更新用户选择的伪装类型
+   * @param selectedTypes 新的选择类型数组
+   */
+  public static async updateSelectedDisguiseTypes(selectedTypes: string[]): Promise<void> {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    await config.update("selectedDisguiseTypes", selectedTypes, vscode.ConfigurationTarget.Global);
   }
 }

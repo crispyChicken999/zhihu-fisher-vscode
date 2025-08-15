@@ -127,4 +127,32 @@ export const panelCss = `
 .style-panel-mask.visible {
   display: flex;
 }
+
+/* 伪装类型选择样式 */
+#disguise-types-container {
+  background: var(--vscode-editor-background);
+}
+
+#disguise-types-container label {
+  transition: all 0.2s ease;
+}
+
+#disguise-types-container label:hover {
+  background: var(--vscode-list-hoverBackground) !important;
+  border-color: var(--vscode-textLink-foreground) !important;
+}
+
+#disguise-types-container input[type="checkbox"]:checked + img + div {
+  color: var(--vscode-textLink-foreground);
+}
+
+#disguise-types-container .file-type-preview {
+  font-family: var(--vscode-editor-font-family, 'Cascadia Code', Consolas, 'Courier New', monospace);
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  background: var(--vscode-textBlockQuote-background);
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: auto;
+}
 `;

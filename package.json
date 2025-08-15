@@ -649,6 +649,14 @@
           "default": "",
           "description": "知乎Cookie设置。用于访问需要登录的内容和完整评论。设置后可以获得更好的浏览体验。",
           "scope": "application"
+        },
+        "zhihu-fisher.selectedDisguiseTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "智能伪装模式下用户选择的文件类型。如果为空，则使用所有可用的文件类型进行随机伪装。"
         }
       }
     }

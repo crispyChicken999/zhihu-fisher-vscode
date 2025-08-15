@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Store } from '../stores';
 
 /**
  * 注册媒体显示相关命令
@@ -129,7 +130,9 @@ export function registerMediaCommands(): vscode.Disposable[] {
           {
             enableScripts: true,
             retainContextWhenHidden: true,
-            localResourceRoots: [],
+            localResourceRoots: [
+              vscode.Uri.joinPath(Store.context!.extensionUri, "resources")
+            ],
           }
         );
 

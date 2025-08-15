@@ -91,7 +91,9 @@ export class WebviewManager {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [],
+        localResourceRoots: [
+          vscode.Uri.joinPath(Store.context!.extensionUri, "resources")
+        ],
       }
     );
 
@@ -1752,6 +1754,16 @@ export class WebviewManager {
           await this.handleToggleDisguise(message.enabled);
           break;
 
+        case "updateSelectedDisguiseTypes":
+          // 处理更新选择的伪装类型
+          await this.handleUpdateSelectedDisguiseTypes(message.selectedTypes);
+          break;
+
+        case "previewDisguise":
+          // 处理预览伪装效果
+          await this.handlePreviewDisguise(webviewId, message.selectedTypes);
+          break;
+
         case "voteContent":
           // 处理投票请求
           await this.handleVoteContent(
@@ -2120,6 +2132,78 @@ export class WebviewManager {
     } catch (error) {
       console.error("解析URL时出错:", error);
       return null;
+    }
+  }
+
+  /**
+   * 处理更新选择的伪装类型
+   * @param selectedTypes 用户选择的伪装类型数组
+   */
+  private static async handleUpdateSelectedDisguiseTypes(selectedTypes: string[]): Promise<void> {
+    try {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update(
+        "selectedDisguiseTypes",
+        selectedTypes,
+        vscode.ConfigurationTarget.Global
+      );
+
+      console.log(`伪装类型已更新: ${selectedTypes.length > 0 ? selectedTypes.join(", ") : "使用全部类型"}`);
+    } catch (error) {
+      console.error("更新伪装类型时出错:", error);
+      vscode.window.showErrorMessage(
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * 处理预览伪装效果
+   * @param webviewId WebView的ID
+   * @param selectedTypes 选择的伪装类型
+   */
+  private static async handlePreviewDisguise(webviewId: string, selectedTypes: string[]): Promise<void> {
+    try {
+      // 导入DisguiseManager
+      const { DisguiseManager } = await import("../../utils/disguise-manager.js");
+      
+      // 临时更新配置以进行预览
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const originalTypes = config.get<string[]>("selectedDisguiseTypes", []);
+      
+      // 临时设置选择的类型
+      await config.update(
+        "selectedDisguiseTypes",
+        selectedTypes,
+        vscode.ConfigurationTarget.Global
+      );
+
+      // 清除当前缓存并生成新的伪装
+      DisguiseManager.clearDisguiseCache(webviewId);
+      const newDisguise = DisguiseManager.getRandomDisguise(webviewId);
+
+      // 获取WebView面板并更新标题和图标
+      const webviewItem = Store.webviewMap.get(webviewId);
+      if (webviewItem && webviewItem.webviewPanel) {
+        webviewItem.webviewPanel.title = newDisguise.title;
+        webviewItem.webviewPanel.iconPath = newDisguise.iconPath;
+      }
+
+      // 恢复原始配置
+      await config.update(
+        "selectedDisguiseTypes",
+        originalTypes,
+        vscode.ConfigurationTarget.Global
+      );
+
+      vscode.window.showInformationMessage(
+        `伪装预览: 当前页面已伪装为"${newDisguise.title}"`
+      );
+    } catch (error) {
+      console.error("预览伪装效果时出错:", error);
+      vscode.window.showErrorMessage(
+        `预览失败: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 }

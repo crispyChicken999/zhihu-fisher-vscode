@@ -23,6 +23,9 @@ const articleId = "\${ARTICLE_ID}";
 // 来源类型
 const sourceType = "\${SOURCE_TYPE}";
 
+// 资源基础路径
+const resourcesBasePath = "\${RESOURCES_BASE_PATH}";
+
 // 沉浸模式状态
 let isImmersiveMode = false;
 
@@ -791,6 +794,11 @@ function setupStylePanel() {
       localStorage.removeItem('zhihu-fisher-toolbar-config');
     });
   }
+
+  // 初始化伪装类型选择器
+  setTimeout(() => {
+    initializeDisguiseTypesSelector();
+  }, 100);
 }
 
 
@@ -1135,6 +1143,170 @@ function toggleDisguiseMode(enabled) {
   vscode.postMessage({
     command: "toggleDisguise",
     enabled: enabled
+  });
+
+  // 显示/隐藏伪装类型选择区域
+  const disguiseTypesSection = document.getElementById('disguise-types-section');
+  if (disguiseTypesSection) {
+    disguiseTypesSection.style.display = enabled ? 'block' : 'none';
+  }
+}
+
+/**
+ * 设置样式面板 - 初始化伪装类型选择器
+ */
+function initializeDisguiseTypesSelector() {
+  const container = document.getElementById('disguise-types-container');
+  if (!container) return;
+
+  // 文件类型定义 - 与后端保持一致
+  const fileTypes = {
+    "file_type_cheader.svg": { name: "C 头文件", preview: "stdio.h" },
+    "file_type_cpp.svg": { name: "C++ 源文件", preview: "main.cpp" },
+    "file_type_cppheader.svg": { name: "C++ 头文件", preview: "common.hpp" },
+    "file_type_csharp.svg": { name: "C# 源文件", preview: "Program.cs" },
+    "file_type_css.svg": { name: "CSS 样式文件", preview: "style.css" },
+    "file_type_git.svg": { name: "Git 配置文件", preview: ".gitignore" },
+    "file_type_html.svg": { name: "HTML 网页文件", preview: "index.html" },
+    "file_type_java.svg": { name: "Java 源文件", preview: "Main.java" },
+    "file_type_js.svg": { name: "JavaScript 源文件", preview: "index.js" },
+    "file_type_json.svg": { name: "JSON 配置文件", preview: "package.json" },
+    "file_type_less.svg": { name: "Less 样式文件", preview: "style.less" },
+    "file_type_php3.svg": { name: "PHP 源文件", preview: "index.php" },
+    "file_type_powershell.svg": { name: "PowerShell 脚本", preview: "Install.ps1" },
+    "file_type_scss.svg": { name: "Sass 样式文件", preview: "_variables.scss" },
+    "file_type_typescript.svg": { name: "TypeScript 源文件", preview: "index.ts" },
+    "file_type_typescriptdef.svg": { name: "TypeScript 声明文件", preview: "global.d.ts" },
+    "file_type_vue.svg": { name: "Vue 组件文件", preview: "App.vue" },
+    "file_type_xml.svg": { name: "XML 配置文件", preview: "config.xml" }
+  };
+
+  // 获取当前已选择的类型
+  const selectedTypes = getSelectedDisguiseTypes();
+
+  // 生成HTML
+  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px;">';
+  
+  Object.entries(fileTypes).forEach(([iconFile, info]) => {
+    const isChecked = selectedTypes.includes(iconFile);
+    html += \`
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border: 1px solid var(--vscode-panel-border); border-radius: 4px; background: var(--vscode-editor-background); \${isChecked ? 'border-color: var(--vscode-textLink-foreground);' : ''}">
+        <input
+          type="checkbox"
+          value="\${iconFile}"
+          \${isChecked ? 'checked' : ''}
+          onchange="updateDisguiseTypeSelection()"
+          style="transform: scale(1.1);"
+        >
+        <img
+          src="\${resourcesBasePath}/fake/\${iconFile}"
+          style="width: 16px; height: 16px; margin-right: 4px;"
+          alt=""
+        >
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-weight: 500; color: var(--vscode-editor-foreground); margin-bottom: 2px;">
+            \${info.name}
+          </div>
+          <div style="font-size: 11px; color: var(--vscode-descriptionForeground); font-family: monospace;">
+            示例: \${info.preview}
+          </div>
+        </div>
+      </label>
+    \`;
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+/**
+ * 获取当前选中的伪装类型
+ */
+function getSelectedDisguiseTypes() {
+  try {
+    return JSON.parse(localStorage.getItem('zhihu-fisher-selected-disguise-types') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 更新伪装类型选择
+ */
+function updateDisguiseTypeSelection() {
+  const container = document.getElementById('disguise-types-container');
+  if (!container) return;
+
+  const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+  const selectedTypes = Array.from(checkboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+
+  // 保存到localStorage
+  localStorage.setItem('zhihu-fisher-selected-disguise-types', JSON.stringify(selectedTypes));
+
+  // 通知后端更新配置
+  vscode.postMessage({
+    command: "updateSelectedDisguiseTypes",
+    selectedTypes: selectedTypes
+  });
+
+  // 更新选中状态的样式
+  checkboxes.forEach(cb => {
+    const label = cb.closest('label');
+    if (label) {
+      if (cb.checked) {
+        label.style.borderColor = 'var(--vscode-textLink-foreground)';
+        label.style.background = 'var(--vscode-textBlockQuote-background)';
+      } else {
+        label.style.borderColor = 'var(--vscode-panel-border)';
+        label.style.background = 'var(--vscode-editor-background)';
+      }
+    }
+  });
+}
+
+/**
+ * 全选伪装类型
+ */
+function selectAllDisguiseTypes() {
+  const container = document.getElementById('disguise-types-container');
+  if (!container) return;
+
+  const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = true;
+  });
+  updateDisguiseTypeSelection();
+}
+
+/**
+ * 清空所有伪装类型选择
+ */
+function clearAllDisguiseTypes() {
+  const container = document.getElementById('disguise-types-container');
+  if (!container) return;
+
+  const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = false;
+  });
+  updateDisguiseTypeSelection();
+}
+
+/**
+ * 预览伪装效果
+ */
+function previewDisguise() {
+  const selectedTypes = getSelectedDisguiseTypes();
+  if (selectedTypes.length === 0) {
+    alert('请先选择要伪装的文件类型，或者选择"全选"来使用所有类型。');
+    return;
+  }
+
+  vscode.postMessage({
+    command: "previewDisguise",
+    selectedTypes: selectedTypes
   });
 }
 
