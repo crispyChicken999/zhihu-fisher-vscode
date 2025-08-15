@@ -242,7 +242,7 @@ body.immersive-mode .immersive-button {
 }
 
 /* 沉浸模式下的工具栏按钮 */
-.toolbar-config-item {
+.toolbar-config-item label{
   display: flex;
   align-items: center;
   gap: 10px;

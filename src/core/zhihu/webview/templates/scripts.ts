@@ -1660,30 +1660,32 @@ function renderToolbarConfig() {
 
       html += \`
         <div class="toolbar-config-item" data-button-id="\${button.id}" draggable="true">
-          <!-- 复选框 -->
-          <input type="checkbox" id="toolbar-\${button.id}" \${button.visible ? 'checked' : ''}
-            onchange="toggleToolbarButton('\${button.id}', this.checked)"
-            style="margin: 0; cursor: pointer;">
+          <label for="toolbar-\${button.id}">
+            <!-- 复选框 -->
+            <input type="checkbox" id="toolbar-\${button.id}" \${button.visible ? 'checked' : ''}
+              onchange="toggleToolbarButton('\${button.id}', this.checked)"
+              style="margin: 0; cursor: pointer;">
 
-          <!-- 按钮信息 -->
-          <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
-            <label for="toolbar-\${button.id}" style="margin: 0; cursor: pointer; font-size: 13px; font-weight: 500; padding: 5px 0;">
-              \${button.name}
-            </label>
-            <span class="category-tag" style="font-size: 10px; padding: 2px 6px; border-radius: 10px; background: \${categoryColors[button.category]}; color: white; font-weight: bold;">
-              \${categoryNames[button.category]}
+            <!-- 按钮信息 -->
+            <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+              <span style="margin: 0; cursor: pointer; font-size: 13px; font-weight: 500; padding: 5px 0;">
+                \${button.name}
+              </span>
+              <span class="category-tag" style="font-size: 10px; padding: 2px 6px; border-radius: 10px; background: \${categoryColors[button.category]}; color: white; font-weight: bold;">
+                \${categoryNames[button.category]}
+              </span>
+            </div>
+
+            <!-- 顺序号 -->
+            <span style="font-size: 11px; color: var(--vscode-descriptionForeground); min-width: 20px; text-align: center; background: var(--vscode-button-secondaryBackground); padding: 2px 6px; border-radius: 4px;">
+              \${button.order}
             </span>
-          </div>
 
-          <!-- 顺序号 -->
-          <span style="font-size: 11px; color: var(--vscode-descriptionForeground); min-width: 20px; text-align: center; background: var(--vscode-button-secondaryBackground); padding: 2px 6px; border-radius: 4px;">
-            \${button.order}
-          </span>
-
-          <!-- 拖拽手柄 -->
-          <span class="drag-handle" style="color: var(--vscode-descriptionForeground); cursor: move; font-size: 14px; font-weight: bold; padding: 0 4px; margin: 4px 0;">
-            ⋮⋮
-          </span>
+            <!-- 拖拽手柄 -->
+            <span class="drag-handle" style="color: var(--vscode-descriptionForeground); cursor: move; font-size: 14px; font-weight: bold; padding: 0 4px; margin: 4px 0;">
+              ⋮⋮
+            </span>
+          </label>
         </div>
       \`;
     });
