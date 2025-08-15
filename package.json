@@ -184,6 +184,11 @@
         "icon": "$(bug)"
       },
       {
+        "command": "zhihu-fisher.openZhihuUrl",
+        "title": "浏览指定链接",
+        "icon": "$(link)"
+      },
+      {
         "command": "zhihu-fisher.refreshMyCollections",
         "title": "刷新我创建的收藏夹",
         "icon": "$(refresh)"
@@ -321,6 +326,11 @@
           "command": "zhihu-fisher.refreshCollections",
           "when": "view == zhihuCollectionsList",
           "group": "navigation@1"
+        },
+        {
+          "command": "zhihu-fisher.openZhihuUrl",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "group": "abrowser@5"
         },
         {
           "command": "zhihu-fisher.toggleDisguise",

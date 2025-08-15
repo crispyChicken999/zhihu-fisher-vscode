@@ -10,6 +10,7 @@ import { registerWebviewCommands } from './webview';
 import { registerGeneralCommands } from './general';
 import { registerRecommendCommands } from './recommend';
 import { registerCollectionCommands } from './collection';
+import { registerWebviewNavigationCommands } from './webview-navigation';
 import { sidebarHotListDataProvider } from '../zhihu/sidebar/hot';
 import { sidebarSearchListDataProvider } from '../zhihu/sidebar/search';
 import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
@@ -40,6 +41,7 @@ export function registerAllCommands(
     ...registerSearchCommands(sidebarSearch),
     ...registerBrowserCommands(),
     ...registerWebviewCommands(),
+    ...registerWebviewNavigationCommands(),
     ...registerCookieCommands(zhihuService, sidebarHot, sidebarRecommend, sidebarSearch, sidebarCollections),
     ...registerCollectionCommands(sidebarCollections),
     ...registerRecommendCommands(sidebarRecommend),

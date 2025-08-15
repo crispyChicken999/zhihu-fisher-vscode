@@ -1221,8 +1221,8 @@ function initializeDisguiseTypesSelector() {
   const selectedTypes = getSelectedDisguiseTypes();
 
   // 生成HTML
-  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px;">';
-  
+  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">';
+
   Object.entries(fileTypes).forEach(([iconFile, info]) => {
     const isChecked = selectedTypes.includes(iconFile);
     html += \`
@@ -1250,7 +1250,7 @@ function initializeDisguiseTypesSelector() {
       </label>
     \`;
   });
-  
+
   html += '</div>';
   container.innerHTML = html;
 }

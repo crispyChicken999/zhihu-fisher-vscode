@@ -2075,6 +2075,11 @@ export class WebviewManager {
     }
   }
 
+  /** 公共方法：从URL打开知乎链接 */
+  static async openZhihuUrlInWebview(url: string): Promise<void> {
+    await this.handleOpenZhihuLink(url);
+  }
+
   /** 从URL创建LinkItem */
   private static createLinkItemFromUrl(url: string): LinkItem | null {
     try {
