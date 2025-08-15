@@ -64,6 +64,19 @@ export function activate(context: vscode.ExtensionContext) {
         sidebarSearch.refreshView();
         sidebarCollections.refreshView();
       }
+
+      if (e.affectsConfiguration("zhihu-fisher.debugMode")) {
+        // 调试模式变更时，提示用户重启扩展
+        console.log("调试模式设置已变更");
+        vscode.window.showInformationMessage(
+          "调试模式设置已变更，请重启扩展使设置生效。",
+          "重启扩展"
+        ).then((selection) => {
+          if (selection === "重启扩展") {
+            vscode.commands.executeCommand("zhihu-fisher.restartExtension");
+          }
+        });
+      }
     }
   });
 

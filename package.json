@@ -179,6 +179,11 @@
         "icon": "$(tools)"
       },
       {
+        "command": "zhihu-fisher.toggleDebugMode",
+        "title": "调试模式",
+        "icon": "$(bug)"
+      },
+      {
         "command": "zhihu-fisher.refreshMyCollections",
         "title": "刷新我创建的收藏夹",
         "icon": "$(refresh)"
@@ -356,6 +361,11 @@
           "command": "zhihu-fisher.showTroubleshootingGuide",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "troubleshoot@2"
+        },
+        {
+          "command": "zhihu-fisher.toggleDebugMode",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "group": "troubleshoot@3"
         },
         {
           "command": "zhihu-fisher.openFeedback",
@@ -657,6 +667,12 @@
           },
           "default": [],
           "description": "智能伪装模式下用户选择的文件类型。如果为空，则使用所有可用的文件类型进行随机伪装。（请在Fisher 外观设置-功能增强 中进行修改，自行添加项可能导致运行异常）"
+        },
+        "zhihu-fisher.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用调试模式。开启后，浏览器将以可见模式运行，方便调试和排查问题。修改此设置需要重启扩展才能生效。",
+          "scope": "application"
         }
       }
     }

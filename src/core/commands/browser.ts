@@ -1,7 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { PuppeteerManager } from '../zhihu/puppeteer';
+import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
+import { PuppeteerManager } from "../zhihu/puppeteer";
 
 /**
  * 注册浏览器配置相关命令
@@ -205,6 +205,54 @@ export function registerBrowserCommands(): vscode.Disposable[] {
     }
   );
   commands.push(setCustomChromePathCommand);
+
+  // 注册调试模式切换命令
+  const toggleDebugModeCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.toggleDebugMode",
+    async () => {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const currentDebugMode = config.get<boolean>("debugMode", false);
+
+      const message = currentDebugMode
+        ? "调试模式已启用，浏览器将以可见模式运行，方便你观察浏览器的工作过程和排查问题。\n\n是否要关闭调试模式？"
+        : "调试模式可以让浏览器以可见模式运行，这样你就能看到浏览器页面的加载过程，方便排查问题和调试。\n\n启用调试模式后需要重启扩展才能生效。\n\n是否要启用调试模式？";
+
+      const actionText = currentDebugMode ? "关闭调试模式" : "启用调试模式";
+      const restartText = "重启扩展";
+
+      const selection = await vscode.window.showInformationMessage(
+        message,
+        { modal: true },
+        actionText,
+        restartText
+      );
+
+      if (selection === actionText) {
+        const newDebugMode = !currentDebugMode;
+        await config.update(
+          "debugMode",
+          newDebugMode,
+          vscode.ConfigurationTarget.Global
+        );
+
+        const statusMessage = newDebugMode
+          ? "调试模式已启用！请重启扩展使设置生效。启用后浏览器将以可见模式运行。"
+          : "调试模式已关闭！请重启扩展使设置生效。关闭后浏览器将在后台运行。";
+
+        const restartSelection = await vscode.window.showInformationMessage(
+          statusMessage,
+          "重启扩展"
+        );
+
+        if (restartSelection === "重启扩展") {
+          vscode.commands.executeCommand("zhihu-fisher.restartExtension");
+        }
+      } else if (selection === restartText) {
+        vscode.commands.executeCommand("zhihu-fisher.restartExtension");
+      }
+    }
+  );
+  commands.push(toggleDebugModeCommand);
 
   return commands;
 }

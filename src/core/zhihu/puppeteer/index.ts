@@ -118,6 +118,15 @@ export class PuppeteerManager {
   }
 
   /**
+   * 获取调试模式设置
+   * @returns 是否启用调试模式
+   */
+  static isDebugModeEnabled(): boolean {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    return config.get<boolean>("debugMode", false);
+  }
+
+  /**
    * 获取或创建浏览器实例（单例模式）
    */
   static async getBrowserInstance(): Promise<Puppeteer.Browser> {
@@ -138,10 +147,21 @@ export class PuppeteerManager {
         for (let i = 0; i < browserStartAttempts; i++) {
           try {
             console.log(`尝试启动浏览器，第${i + 1}次尝试...`);
+
+            // 检查是否启用调试模式
+            const isDebugMode = PuppeteerManager.isDebugModeEnabled();
+            const headlessMode = !isDebugMode; // 调试模式下设置为false，即显示浏览器
+
+            if (isDebugMode) {
+              console.log("调试模式已启用，浏览器将以可见模式运行");
+            } else {
+              console.log("浏览器将在后台运行（headless模式）");
+            }
+
             // 尝试启动浏览器
             Store.browserInstance = await Puppeteer.launch({
               executablePath: executablePath,
-              headless: true,
+              headless: headlessMode,
               args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
@@ -151,7 +171,7 @@ export class PuppeteerManager {
             });
             await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒钟
             // console.log("浏览器实例创建成功！")
-            console.log(`第${i + 1}次尝试后，成功启动浏览器！`);
+            console.log(`第${i + 1}次尝试后，成功启动浏览器！${isDebugMode ? "（调试模式）" : "（后台模式）"}`);
             break; // 成功启动后跳出循环
           } catch (error) {
             console.error("尝试启动浏览器失败:", error);
