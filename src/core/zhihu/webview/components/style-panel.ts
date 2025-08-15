@@ -42,7 +42,7 @@ export class StylePanelComponent implements Component {
         <div class="style-panel-tips-wrapper">
           <div class="style-panel-tips">
             <span style="flex: 0 0 auto;">使用键盘</span>
-            <span style="flex: 0 0 auto; display: inline-flex; align-items: center;">
+            <span style="flex: 0 0 auto; display: inline-flex; align-items: center;" title="句号。键">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                 <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
                   <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>

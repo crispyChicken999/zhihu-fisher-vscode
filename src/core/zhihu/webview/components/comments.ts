@@ -537,9 +537,9 @@ export class CommentsComponent implements Component {
           padding: 1px 2px;
           border-radius: 2px;
           border: 1px solid #D3D3D3;
-          font-size: 12px;
           margin-left: 4px;
           display: inline-block;
+          font-size: 1em;
           height: 1em;
           line-height: 1em;
         ">作者</span>
@@ -639,7 +639,7 @@ export class CommentsComponent implements Component {
                         ${borderStyle}
                         padding: 1px 4px;
                         border-radius: 2px;
-                        font-size: 10px;
+                        font-size: 1em;
                         margin-left: 4px;
                         display: inline-block;
                       ">${tag.text}</span>
@@ -657,7 +657,7 @@ export class CommentsComponent implements Component {
                     padding: 1px 2px;
                     border-radius: 2px;
                     border: 1px solid #D3D3D3;
-                    font-size: 12px;
+                    font-size: 1em;
                     margin-left: 0px;
                     display: inline-block;
                     height: 1em;
@@ -950,7 +950,7 @@ export class ChildCommentsModalComponent implements Component {
               ${borderStyle}
               padding: 1px 4px;
               border-radius: 2px;
-              font-size: 10px;
+              font-size: 1em;
               margin-left: 4px;
               display: inline-block;
             ">${tag.text}</span>
@@ -1049,7 +1049,7 @@ export class ChildCommentsModalComponent implements Component {
                   ${borderStyle}
                   padding: 1px 4px;
                   border-radius: 2px;
-                  font-size: 10px;
+                  font-size: 1em;
                   margin-left: 4px;
                   display: inline-block;
                 ">${tag.text}</span>
@@ -2379,6 +2379,41 @@ export class CommentsUtils {
   private static emojiMap: Map<string, string> | null = null;
 
   /**
+   * 检查是否为知乎内部链接
+   * @param href 链接地址
+   * @returns 是否为知乎内部链接
+   */
+  public static isZhihuInternalLink(href: string): boolean {
+    if (!href) return false;
+
+    try {
+      const url = new URL(href);
+      const hostname = url.hostname.toLowerCase();
+      const pathname = url.pathname;
+
+      // 检查是否为知乎域名
+      if (hostname !== "www.zhihu.com" && hostname !== "zhuanlan.zhihu.com") {
+        return false;
+      }
+
+      // 检查路径模式
+      if (hostname === "www.zhihu.com") {
+        // 匹配 /question/xxx 或 /question/xxx/answer/xxx
+        return /^\/question\/\d+(?:\/answer\/\d+)?(?:\/|$)/.test(pathname);
+      }
+
+      if (hostname === "zhuanlan.zhihu.com") {
+        // 匹配 /p/xxx
+        return /^\/p\/\d+(?:\/|$)/.test(pathname);
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
    * 获取表情包映射（懒加载单例）
    */
   private static getEmojiMap(): Map<string, string> {
@@ -2724,7 +2759,7 @@ export class CommentsUtils {
       }
     });
 
-    // 处理知乎重定向链接
+    // 处理知乎重定向链接和内部链接
     $("a").each(function () {
       const link = $(this);
       let href = link.attr("href");
@@ -2732,6 +2767,18 @@ export class CommentsUtils {
       // 跳过已经处理过的图片链接
       if (link.hasClass("zhihu-redirect-processed") || !href) {
         return;
+      }
+
+      // 处理相对协议的URL（以//开头的链接），补全为https://
+      if (href.startsWith("//")) {
+        href = "https:" + href;
+        link.attr("href", href);
+
+        // 同时处理title属性
+        const title = link.attr("title") || "";
+        if (title.startsWith("//")) {
+          link.attr("title", "https:" + title);
+        }
       }
 
       if (href.includes("link.zhihu.com/?target=")) {
@@ -2746,6 +2793,26 @@ export class CommentsUtils {
         } catch (e) {
           // 如果解析失败，保留原始链接
         }
+      }
+
+      // 处理知乎内部链接，添加VSCode打开选项
+      const isZhihuInternalLink = CommentsUtils.isZhihuInternalLink(href);
+      if (isZhihuInternalLink) {
+        // 保持原有链接可以在浏览器中打开
+        link.attr("href", href);
+        link.attr("target", "_blank");
+        link.attr("title", `${href} (在浏览器中打开)`);
+
+        // 在原有链接后添加VSCode打开选项
+        const vscodeOption = $(
+          `<span class="zhihu-link-vscode" onclick="openWebView('${href}');" title="${href} (在 VSCode 中查看)">📖 在 VSCode 中查看</span>`
+        );
+
+        // 将VSCode选项添加到链接后面
+        link.after(vscodeOption);
+
+        // 添加标记表示已处理
+        link.addClass("zhihu-internal-processed");
       }
     });
 
