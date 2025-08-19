@@ -13,7 +13,7 @@ export class MetaComponent implements Component {
    * 构造函数
    * @param answer 回答数据
    * @param contentType 内容类型
-   * @param webviewItem WebView项（用于文章投票）
+   * @param webviewItem WebView项（用于文章投票和页码跳转）
    */
   constructor(
     answer: AnswerItem,

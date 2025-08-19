@@ -54,7 +54,7 @@ html.grayscale-mode {
 h1, h2, h3, h4, h5, h6 {
   color: var(--vscode-editor-foreground);
   margin-top: 24px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   font-weight: 600;
   line-height: 1.25;
 }

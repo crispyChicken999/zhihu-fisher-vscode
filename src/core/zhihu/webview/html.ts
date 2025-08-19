@@ -150,7 +150,7 @@ export class HtmlRenderer {
       currentAnswer?.url || webview.url || "",
       renderOptions,
       currentAnswer,
-       webview.sourceType
+      webview.sourceType
     );
     const stylePanelComponent = new StylePanelComponent(renderOptions);
     const commentsComponent = CommentsManager.createCommentsContainerComponent(

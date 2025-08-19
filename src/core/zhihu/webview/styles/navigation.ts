@@ -96,18 +96,34 @@ export const navigationCss = `
   opacity: 0.7;
 }
 
+/* 回答跳转选择器样式 */
+.answer-jump-select {
+  background-color: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border);
+  border-radius: 4px;
+  padding: 0;
+  font-size: 0.9em;
+  outline: none;
+  cursor: pointer;
+  margin: 0 3px;
+}
+
+.answer-jump-select:hover {
+  background-color: var(--vscode-dropdown-background);
+  border-color: var(--vscode-focusBorder);
+}
+
+.answer-jump-select:focus {
+  border-color: var(--vscode-focusBorder);
+  box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+}
+
 /* 自适应调整 */
 @media (max-width: 600px) {
   .navigation-buttons {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .nav-info {
-    width: 100%;
-    justify-content: center;
-    margin-top: 10px;
-    flex-wrap: wrap;
   }
 }
 `;

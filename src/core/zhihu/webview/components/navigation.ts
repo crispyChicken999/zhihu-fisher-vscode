@@ -14,11 +14,19 @@ export class NavigationComponent implements Component {
    * @param webview Webview项
    * @param article 文章信息
    */
-  constructor(webview: WebViewItem, article: ArticleInfo, contentType?: "question" | "article") {
+  constructor(
+    webview: WebViewItem,
+    article: ArticleInfo,
+    contentType?: "question" | "article"
+  ) {
     this.webview = webview;
     this.article = article;
     // 优先使用传入的contentType，如果没有传入则根据文章数量判断
-    this.contentType = contentType || ((article.totalAnswerCount === 1 && article.answerList.length === 1) ? "article" : "question");
+    this.contentType =
+      contentType ||
+      (article.totalAnswerCount === 1 && article.answerList.length === 1
+        ? "article"
+        : "question");
   }
 
   /**
@@ -38,8 +46,34 @@ export class NavigationComponent implements Component {
     // 添加导航状态信息显示
     let navInfoHtml = "";
 
+    // 生成页码跳转选择器
+    const generatePageJumpSelector = () => {
+      const currentIndex = this.article.currentAnswerIndex;
+      const loadedCount = this.article.loadedAnswerCount || 1;
+
+      // 如果只有一个回答，显示普通文本
+      if (loadedCount <= 1) {
+        return `当前第 ${currentIndex + 1} 个回答`;
+      }
+
+      // 生成选项
+      let options = "";
+      for (let i = 0; i < loadedCount; i++) {
+        const selected = i === currentIndex ? "selected" : "";
+        options += `<option value="${i}" ${selected}>${i + 1}</option>`;
+      }
+
+      return `
+        当前第
+        <select onchange="jumpToAnswer(this.value)" class="answer-jump-select" title="跳转到指定回答（仅限已加载的回答）">
+          ${options}
+        </select>
+        个回答
+      `;
+    };
+
     // 显示当前回答索引、已加载回答数和总回答数，分别显示
-    let currentIndexText = `当前第 ${this.article.currentAnswerIndex + 1} 个回答`;
+    let currentIndexText = generatePageJumpSelector();
     let loadedText = `已加载 ${this.article.loadedAnswerCount || 1} 个回答`;
     let totalText =
       this.article.totalAnswerCount && this.article.totalAnswerCount > 0
@@ -96,7 +130,8 @@ export class NavigationComponent implements Component {
           </button>
           ${paginatorHtml}
           <button class="next" onclick="loadNextAnswer()" ${
-            this.article.currentAnswerIndex + 1 === this.article.loadedAnswerCount
+            this.article.currentAnswerIndex + 1 ===
+            this.article.loadedAnswerCount
               ? "disabled"
               : ""
           }>
@@ -118,10 +153,7 @@ export class NavigationComponent implements Component {
    * @param totalPages 总页数
    * @returns 分页器的HTML字符串
    */
-  private buildPaginatorHtml(
-    currentPage: number,
-    totalPages: number
-  ): string {
+  private buildPaginatorHtml(currentPage: number, totalPages: number): string {
     if (totalPages <= 1) {
       return "";
     }
