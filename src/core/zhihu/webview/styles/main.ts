@@ -12,6 +12,7 @@ body {
   line-height: 1.6;
   color: var(--vscode-foreground);
   background-color: var(--vscode-editor-background);
+  scroll-behavior: smooth;
 }
 
 body.immersive-mode {
@@ -96,6 +97,7 @@ pre {
   padding: 16px;
   border-radius: 3px;
   overflow: auto;
+  scroll-behavior: smooth;
   position: relative;
 }
 

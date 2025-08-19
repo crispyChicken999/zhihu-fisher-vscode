@@ -263,7 +263,7 @@ export class StylePanelComponent implements Component {
                   </div>
                 </div>
 
-                <div id="disguise-types-container" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 10px;">
+                <div id="disguise-types-container" style="max-height: 50vh; overflow-y: auto; border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 10px;">
                   <!-- 文件类型选择项将在这里动态生成 -->
                 </div>
 

@@ -1554,6 +1554,7 @@ function showDonateModal() {
         padding-top: 20px;
         text-align: center;
         overflow: auto;
+        scroll-behavior: smooth;
       }
 
       .donate-modal-body p {

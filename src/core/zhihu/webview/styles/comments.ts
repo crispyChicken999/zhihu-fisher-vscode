@@ -86,6 +86,7 @@ export const commentsCss = `
   flex-direction: column;
   gap: 15px;
   overflow-y: auto;
+  scroll-behavior: smooth;
   max-height: 70vh;
   padding-right: 10px;
 }
@@ -415,11 +416,13 @@ export const commentsCss = `
 .zhihu-comments-modal-parent-comment .zhihu-comment-content {
   max-height: 20vh;
   overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .zhihu-comments-modal-child-comments {
   padding: 12px;
   overflow-y: auto;
+  scroll-behavior: smooth;
   max-height: 65vh;
   display: flex;
   flex-direction: column;

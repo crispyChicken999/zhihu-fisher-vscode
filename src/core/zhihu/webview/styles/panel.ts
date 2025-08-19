@@ -94,6 +94,7 @@ export const panelCss = `
   min-height: 300px;
   max-height: 70vh;
   overflow-y: auto;
+  scroll-behavior: smooth;
   padding: 0 10px 0px 20px;
 }
 

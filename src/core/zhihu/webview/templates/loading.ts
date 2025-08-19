@@ -35,6 +35,7 @@ export const loadingTemplate = `
       max-height: 90vh;
       justify-content: center;
       overflow: auto;
+      scroll-behavior: smooth;
       padding: 0 20px;
       width: 100%;
       text-align: center;
@@ -75,6 +76,7 @@ export const loadingTemplate = `
       max-width: 100%;
       max-height: 200px;
       overflow: auto;
+      scroll-behavior: smooth;
       margin: 15px 0;
       color: var(--vscode-descriptionForeground);
       line-height: 1.5;
@@ -157,6 +159,7 @@ export const loadingTemplate = `
       max-width: 100%;
       max-height: 300px;
       overflow: auto;
+      scroll-behavior: smooth;
       font-size: 14px;
     }
     .divider {
@@ -231,6 +234,7 @@ export const loadingTemplate = `
     .modal-body {
       padding: 6px 16px;
       overflow-y: auto;
+      scroll-behavior: smooth;
       max-height: calc(90vh - 160px);
       line-height: 1.6;
     }

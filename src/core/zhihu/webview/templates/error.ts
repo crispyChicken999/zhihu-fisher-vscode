@@ -35,6 +35,7 @@ export const errorTemplate = `
       max-height: 90vh;
       justify-content: center;
       overflow: auto;
+      scroll-behavior: smooth;
       padding-right: 20px;
       width: 100%;
       text-align: center;
