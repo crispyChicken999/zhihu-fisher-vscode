@@ -22,7 +22,7 @@ export const toolbarCss = `
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
   border: none;
-  padding: 6px 8px;
+  padding: 5px;
   border-radius: 2px;
   cursor: pointer;
   margin-right: 0;
@@ -246,13 +246,13 @@ body.immersive-mode .immersive-button {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   border: 1px solid var(--vscode-panel-border);
   border-radius: 6px;
   margin-bottom: 6px;
   background: var(--vscode-editor-background);
   transition: all 0.2s ease;
-  cursor: move;
+  cursor: pointer;
 }
 
 .toolbar-config-item:hover .drag-handle {

@@ -5,7 +5,7 @@ export const articleCss = `
 /* 文章元数据样式 */
 .article-meta {
   color: var(--vscode-descriptionForeground);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-size: 0.9em;
 }
 
@@ -63,9 +63,10 @@ export const articleCss = `
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-right: 4px;
-  padding: 6px 10px;
-  border-radius: 2px;
+  margin-right: 6px;
+  padding: 4px 8px;
+  font-size: 0.9em;
+  border-radius: 3px;
   background-color: var(--vscode-editor-inactiveSelectionBackground);
   color: var(--vscode-descriptionForeground);
 }

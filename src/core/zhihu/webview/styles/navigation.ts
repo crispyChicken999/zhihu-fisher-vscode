@@ -10,8 +10,8 @@ export const navigationCss = `
 }
 
 .page-button {
-  min-width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   background-color: var(--vscode-button-secondaryBackground);
   color: var(--vscode-button-secondaryForeground);
   border: none;
@@ -57,7 +57,8 @@ export const navigationCss = `
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
   border: none;
-  padding: 0 8px;
+  padding: 0 6px;
+  height: 26px;
   border-radius: 2px;
   cursor: pointer;
   margin: 0;
@@ -66,6 +67,12 @@ export const navigationCss = `
   justify-content: center;
   flex-shrink: 0;
   flex-wrap: nowrap;
+}
+
+.navigation-buttons .prev:hover,
+.navigation-buttons .next:hover {
+  background-color: var(--vscode-button-hoverBackground);
+  color: var(--vscode-button-hoverForeground);
 }
 
 .navigation-buttons .prev:disabled,

@@ -247,7 +247,7 @@ export class StylePanelComponent implements Component {
               </div>
 
               <!-- 伪装文件类型选择 -->
-              <div style="margin-top: 15px;" id="disguise-types-section" ${this.enableDisguise ? '' : 'style="display: none;"'}>
+              <div style="margin-top: 10px;" id="disguise-types-section" ${this.enableDisguise ? '' : 'style="display: none;"'}>
                 <label style="display: block; margin-bottom: 10px; font-weight: 500;">
                   自定义伪装文件类型
                   <span style="color: #666; font-size: 12px; margin-left: 8px;">
@@ -334,7 +334,7 @@ export class StylePanelComponent implements Component {
                 </div>
               </div>
 
-              <div id="toolbar-config-container" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 10px;">
+              <div id="toolbar-config-container" style="max-height: 50vh; overflow-y: auto; border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 10px;">
                 <!-- 工具栏按钮配置将在这里动态生成 -->
               </div>
 

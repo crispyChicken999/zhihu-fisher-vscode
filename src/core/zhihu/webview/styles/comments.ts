@@ -41,8 +41,8 @@ export const commentsCss = `
   color: var(--vscode-button-foreground);
   border: none;
   border-radius: 2px;
-  padding: 5px 8px;
-  font-size: 14px;
+  padding: 3.5px 7px;
+  font-size: 13px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -84,7 +84,7 @@ export const commentsCss = `
 .zhihu-comments-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
   overflow-y: auto;
   scroll-behavior: smooth;
   max-height: 70vh;
@@ -295,14 +295,14 @@ export const commentsCss = `
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-secondaryForeground);
   border: none;
-  padding: 6px;
+  padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 2px;
 }
-
+x
 .zhihu-comment-pagination button svg {
   height: 100%;
 }
@@ -373,7 +373,7 @@ export const commentsCss = `
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 1);
+  box-shadow: 0 4px 20px var(--vscode-scrollbar-shadow);
   border: 1px solid var(--vscode-panel-border);
 }
 
@@ -426,7 +426,7 @@ export const commentsCss = `
   max-height: 65vh;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   background-color: var(--vscode-editor-background);
 }
 

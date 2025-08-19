@@ -6,7 +6,7 @@ export const authorCss = `
 .author-info {
   display: flex;
   align-items: center;
-  margin: 15px 0;
+  margin: 10px 0;
   padding: 10px;
   border-radius: 4px;
   background-color: var(--vscode-editor-inactiveSelectionBackground);
@@ -40,7 +40,6 @@ export const authorCss = `
 
 .author-name {
   font-weight: 600;
-  margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -54,6 +53,7 @@ export const authorCss = `
 
 .author-bio {
   font-size: 0.9em;
+  margin-top: 4px;
   color: var(--vscode-descriptionForeground);
 }
 

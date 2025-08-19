@@ -103,7 +103,7 @@ export const panelCss = `
 }
 
 .style-option-divider {
-  margin: 15px 0;
+  margin: 10px 0;
   border-bottom: 1px dashed var(--vscode-panel-border);
 }
 
