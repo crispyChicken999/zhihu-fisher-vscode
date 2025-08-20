@@ -25,6 +25,7 @@ export const articleCss = `
 
 .article-content p {
   margin: 10px 0;
+  word-break: break-word;
 }
 
 .article-content.hide-media img, .article-content.hide-media video {
