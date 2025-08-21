@@ -208,10 +208,10 @@ export function registerCollectionCommands(
       const confirm = await vscode.window.showWarningMessage(
         `确定要取消收藏 "${collectionItem.title}" 吗？`,
         { modal: true },
-        "取消"
+        "确定"
       );
 
-      if (confirm !== "取消") {
+      if (confirm !== "确定") {
         return;
       }
 

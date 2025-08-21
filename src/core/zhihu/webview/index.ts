@@ -2171,11 +2171,11 @@ export class WebviewManager {
     try {
       // 导入DisguiseManager
       const { DisguiseManager } = await import("../../utils/disguise-manager.js");
-      
+
       // 临时更新配置以进行预览
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
       const originalTypes = config.get<string[]>("selectedDisguiseTypes", []);
-      
+
       // 临时设置选择的类型
       await config.update(
         "selectedDisguiseTypes",
