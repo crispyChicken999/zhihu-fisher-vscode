@@ -464,8 +464,8 @@ function setupKeyboardNavigation() {
 
     // W键 - 上一篇文章/问题
     if (event.key === 'w' || event.key === 'W') {
-      // inner-link类型不响应上下篇切换快捷键
-      if (sourceType === 'inner-link') {
+      // inner-link类型不响应上下篇切换快捷键，或者是Ctrl、Meta、Shift、Alt键被按下
+      if (sourceType === 'inner-link' || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
         return;
       }
       loadPreviousArticle();
@@ -474,8 +474,8 @@ function setupKeyboardNavigation() {
 
     // S键 - 下一篇文章/问题
     if (event.key === 's' || event.key === 'S') {
-      // inner-link类型不响应上下篇切换快捷键
-      if (sourceType === 'inner-link') {
+      // inner-link类型不响应上下篇切换快捷键，或者是Ctrl、Meta、Shift、Alt键被按下
+      if (sourceType === 'inner-link' || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
         return;
       }
       loadNextArticle();
