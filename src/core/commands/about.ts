@@ -108,6 +108,20 @@ export function registerAboutCommands(): vscode.Disposable[] {
   );
   commands.push(showGuideCommand);
 
+  // 查看更新日志命令
+  const showChangeLogCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.showChangeLog",
+    async () => {
+      const changeLogUrl =
+        "https://github.com/crispyChicken999/zhihu-fisher-vscode/blob/main/CHANGELOG.md";
+      vscode.env.openExternal(vscode.Uri.parse(changeLogUrl));
+      vscode.window.showInformationMessage(
+        "已打开更新日志页面，查看最新功能和改进！"
+      );
+    }
+  );
+  commands.push(showChangeLogCommand);
+
   // 注册重启扩展命令
   const restartExtensionCommand = vscode.commands.registerCommand(
     "zhihu-fisher.restartExtension",

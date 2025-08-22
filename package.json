@@ -242,6 +242,11 @@
         "command": "zhihu-fisher.showDisguiseCache",
         "title": "查看伪装缓存状态",
         "icon": "$(info)"
+      },
+      {
+        "command": "zhihu-fisher.showChangeLog",
+        "title": "更新日志",
+        "icon": "$(history)"
       }
     ],
     "viewsContainers": {
@@ -363,17 +368,17 @@
           "group": "config@4"
         },
         {
-          "command": "zhihu-fisher.restartExtension",
+          "command": "zhihu-fisher.toggleDebugMode",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "troubleshoot@1"
         },
         {
-          "command": "zhihu-fisher.showTroubleshootingGuide",
+          "command": "zhihu-fisher.restartExtension",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "troubleshoot@2"
         },
         {
-          "command": "zhihu-fisher.toggleDebugMode",
+          "command": "zhihu-fisher.showTroubleshootingGuide",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "troubleshoot@3"
         },
@@ -398,9 +403,14 @@
           "group": "zhelp@1"
         },
         {
-          "command": "zhihu-fisher.showAbout",
+          "command": "zhihu-fisher.showChangeLog",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "zhelp@2"
+        },
+        {
+          "command": "zhihu-fisher.showAbout",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "group": "zhelp@3"
         }
       ],
       "zhihu-fisher.mediaDisplayMenu": [
