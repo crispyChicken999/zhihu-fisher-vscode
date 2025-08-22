@@ -384,13 +384,12 @@ export class sidebarSearchListDataProvider
               return null;
             }
 
-            // 提取问题URL和标题
-            const urlMeta = questionMeta.querySelector('meta[itemprop="url"]');
+            // 提取问题标题
             const titleMeta = questionMeta.querySelector(
               'meta[itemprop="name"]'
             );
 
-            if (!urlMeta || !titleMeta) {
+            if (!titleMeta) {
               return null;
             }
 
@@ -398,23 +397,56 @@ export class sidebarSearchListDataProvider
             const imgElement = item.querySelector("img");
             const imgUrl = imgElement?.getAttribute("src") || "";
 
-            const url = (urlMeta as HTMLMetaElement).content || "";
             const title = (titleMeta as HTMLMetaElement).content || "";
-            
-            // 提取问题ID和可能的回答ID作为contentToken
-            const questionId = url.split("/").pop() || "";
-            let contentToken = questionId; // 默认使用问题ID
 
-            // 检查是否有具体的回答链接
-            const answerLink = item.querySelector('a[href*="/answer/"]');
+            // 优先使用<a>标签的href作为URL，因为它指向具体的回答
+            const answerLink =
+              item.querySelector('a[href*="/answer/"]') ||
+              item.querySelector('a[href*="/question/"]');
+            let url = "";
+            let contentToken = "";
+
             if (answerLink) {
-              const answerUrl = answerLink.getAttribute("href") || "";
-              const answerIdMatch = answerUrl.match(/\/answer\/(\d+)/);
+              // 使用<a>标签的href，它指向具体的回答
+              const href = answerLink.getAttribute("href") || "";
+              url = href.startsWith("http")
+                ? href
+                : href.startsWith("//")
+                ? `https:${href}`
+                : `https://www.zhihu.com${href}`;
+
+              // 提取回答ID或问题ID作为contentToken
+              const answerIdMatch = url.match(/\/answer\/(\d+)/);
               if (answerIdMatch) {
                 contentToken = answerIdMatch[1]; // 使用回答ID作为contentToken
+              } else {
+                // 如果没有回答ID，提取问题ID
+                const questionIdMatch = url.match(/\/question\/(\d+)/);
+                if (questionIdMatch) {
+                  contentToken = questionIdMatch[1];
+                }
+              }
+            } else {
+              // 如果没有找到<a>标签，回退到使用meta标签的URL
+              const urlMeta = questionMeta.querySelector(
+                'meta[itemprop="url"]'
+              );
+              if (urlMeta) {
+                url = (urlMeta as HTMLMetaElement).content || "";
+                const questionId = url.split("/").pop() || "";
+                contentToken = questionId;
               }
             }
 
+            if (!url) {
+              return null;
+            }
+
+            // 从URL中提取问题ID用于构建唯一ID
+            const questionIdMatch = url.match(/\/question\/(\d+)/);
+            const questionId = questionIdMatch
+              ? questionIdMatch[1]
+              : contentToken;
             const id = `search-question-${questionId}-${index}`;
 
             // 提取回答内容摘要
@@ -435,6 +467,7 @@ export class sidebarSearchListDataProvider
               excerpt,
               type: "question" as const,
               contentToken,
+              answerUrl: answerLink ? url: undefined, // 使用同一个URL作为回答链接
             };
           } catch (error) {
             console.error(`解析问题回答项时出错:`, error);
@@ -696,10 +729,11 @@ export class sidebarSearchListDataProvider
       const contentType = item.type === "article" ? "article" : "answer";
 
       // 使用工具类中的分页收藏夹选择器
-      const selectedCollectionId = await CollectionPickerUtils.showCollectionPicker(
-        item.contentToken,
-        contentType
-      );
+      const selectedCollectionId =
+        await CollectionPickerUtils.showCollectionPicker(
+          item.contentToken,
+          contentType
+        );
 
       if (!selectedCollectionId) {
         // 用户取消了选择
@@ -716,18 +750,22 @@ export class sidebarSearchListDataProvider
       );
 
       if (success) {
-        vscode.window.showInformationMessage(
-          `成功收藏${contentType === "article" ? "文章" : "回答"}！`,
-          "查看收藏夹"
-        ).then((selection) => {
-          if (selection === "查看收藏夹") {
-            // 跳转到收藏夹视图
-            vscode.commands.executeCommand("zhihu-fisher.refreshCollections");
-          }
-        });
+        vscode.window
+          .showInformationMessage(
+            `成功收藏${contentType === "article" ? "文章" : "回答"}！`,
+            "查看收藏夹"
+          )
+          .then((selection) => {
+            if (selection === "查看收藏夹") {
+              // 跳转到收藏夹视图
+              vscode.commands.executeCommand("zhihu-fisher.refreshCollections");
+            }
+          });
       } else {
         vscode.window.showErrorMessage(
-          `收藏${contentType === "article" ? "文章" : "回答"}失败，可能是该收藏夹已有相同内容，可以换个收藏夹试试。`
+          `收藏${
+            contentType === "article" ? "文章" : "回答"
+          }失败，可能是该收藏夹已有相同内容，可以换个收藏夹试试。`
         );
       }
     } catch (error) {
