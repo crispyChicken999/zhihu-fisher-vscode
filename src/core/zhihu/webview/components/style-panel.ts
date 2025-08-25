@@ -217,6 +217,37 @@ export class StylePanelComponent implements Component {
           <div class="style-tab-content" id="enhancement-tab" style="display: none;">
             <div class="style-option">
               <label style="display: block; margin-bottom: 10px;">
+                灰色模式
+                <span style="color: #666; font-size: 12px; margin-left: 8px;">
+                  (降低页面色彩，减少视觉干扰)
+                </span>
+              </label>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input
+                    type="checkbox"
+                    id="grayscale-toggle"
+                    ${this.enableGrayscale ? "checked" : ""}
+                    onchange="toggleGrayscaleMode(this.checked)"
+                    style="transform: scale(1.2);"
+                  >
+                  <span style="font-weight: 500;">启用灰色模式</span>
+                </label>
+              </div>
+              <div style="font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; padding: 8px 12px; background: var(--vscode-textBlockQuote-background); border: 1px solid var(--vscode-textBlockQuote-border); border-radius: 4px;">
+                <div style="margin-bottom: 4px;">
+                  <strong style="color: var(--vscode-editor-foreground);">功能说明：</strong>将页面所有内容转为灰色显示，降低色彩干扰，防刺眼
+                </div>
+                <div>
+                  <strong style="color: var(--vscode-editor-foreground);">使用场景：</strong>统一颜色显示，更好地摸鱼，降低被老板/同事发现的风险😂
+                </div>
+              </div>
+            </div>
+
+            <div class="style-option-divider"></div>
+
+            <div class="style-option">
+              <label style="display: block; margin-bottom: 10px;">
                 智能伪装功能
                 <span style="color: #666; font-size: 12px; margin-left: 8px;">
                   (防老板/同事发现摸鱼)
@@ -277,37 +308,6 @@ export class StylePanelComponent implements Component {
                   <button class="button" onclick="previewDisguise()" style="flex: 1; font-size: 12px;">
                     预览效果
                   </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="style-option-divider"></div>
-
-            <div class="style-option">
-              <label style="display: block; margin-bottom: 10px;">
-                灰色模式
-                <span style="color: #666; font-size: 12px; margin-left: 8px;">
-                  (降低页面色彩，减少视觉干扰)
-                </span>
-              </label>
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                  <input
-                    type="checkbox"
-                    id="grayscale-toggle"
-                    ${this.enableGrayscale ? "checked" : ""}
-                    onchange="toggleGrayscaleMode(this.checked)"
-                    style="transform: scale(1.2);"
-                  >
-                  <span style="font-weight: 500;">启用灰色模式</span>
-                </label>
-              </div>
-              <div style="font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; padding: 8px 12px; background: var(--vscode-textBlockQuote-background); border: 1px solid var(--vscode-textBlockQuote-border); border-radius: 4px;">
-                <div style="margin-bottom: 4px;">
-                  <strong style="color: var(--vscode-editor-foreground);">功能说明：</strong>将页面所有内容转为灰色显示，降低色彩干扰，防刺眼
-                </div>
-                <div>
-                  <strong style="color: var(--vscode-editor-foreground);">使用场景：</strong>统一颜色显示，更好地摸鱼，降低被老板/同事发现的风险😂
                 </div>
               </div>
             </div>
