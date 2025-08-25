@@ -2384,7 +2384,9 @@ export class CommentsUtils {
    * @returns 是否为知乎内部链接
    */
   public static isZhihuInternalLink(href: string): boolean {
-    if (!href) return false;
+    if (!href) {
+      return false;
+    }
 
     try {
       const url = new URL(href);

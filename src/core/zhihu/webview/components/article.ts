@@ -24,7 +24,9 @@ export class ArticleContentComponent implements Component {
    * @returns 是否为知乎内部链接
    */
   private isZhihuInternalLink(href: string): boolean {
-    if (!href) return false;
+    if (!href) {
+      return false;
+    }
 
     try {
       const url = new URL(href);
