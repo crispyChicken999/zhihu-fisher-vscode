@@ -111,6 +111,12 @@ window.addEventListener('message', event => {
       if (typeof initializeFancyBox === 'function') {
         initializeFancyBox();
       }
+
+      // focus，以便响应键盘上下箭头来滚动
+      const commentsList = commentsContainer.querySelector('.zhihu-comments-list');
+      if (commentsList) {
+        commentsList.focus();
+      }
     }, 100);
   }
 
@@ -123,6 +129,12 @@ window.addEventListener('message', event => {
     setTimeout(() => {
       if (typeof initializeFancyBox === 'function') {
         initializeFancyBox();
+      }
+
+      // zhihu-comments-modal-child-comments focus
+      const childCommentsList = document.querySelector('.zhihu-comments-modal-child-comments');
+      if (childCommentsList) {
+        childCommentsList.focus();
       }
     }, 100);
   }
@@ -392,6 +404,13 @@ function hanldeCommentsToggle() {
     } else {
       // 如果评论区不在可视范围内，则滚动到评论区
       commentsContainer.scrollIntoView({ behavior: 'smooth' });
+      // focus，以便响应键盘上下箭头来滚动
+      setTimeout(() => {
+        const commentsList = commentsContainer.querySelector('.zhihu-comments-list');
+        if (commentsList) {
+          commentsList.focus();
+        }
+      }, 1000);
     }
   }
 }
@@ -1450,6 +1469,12 @@ function closeCommentsModal() {
   const modal = document.querySelector('.zhihu-comments-modal');
   if (modal) {
     modal.remove();
+  }
+
+  // .zhihu-comments-list focus
+  const commentsList = document.querySelector('.zhihu-comments-list');
+  if (commentsList) {
+    commentsList.focus();
   }
 }
 

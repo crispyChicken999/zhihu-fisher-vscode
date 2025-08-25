@@ -95,6 +95,11 @@ export const commentsCss = `
   padding-right: 10px;
 }
 
+.zhihu-comments-list:focus,
+.zhihu-comments-list:focus-visible {
+  outline: none;
+}
+
 /* 单个评论样式 - 使用与文章相同的背景 */
 .zhihu-comment {
   padding: 12px;
@@ -432,6 +437,11 @@ x
   flex-direction: column;
   gap: 10px;
   background-color: var(--vscode-editor-background);
+}
+
+.zhihu-comments-modal-child-comments:focus,
+.zhihu-comments-modal-child-comments:focus-visible {
+  outline: none;
 }
 
 .zhihu-modal-pagination {
