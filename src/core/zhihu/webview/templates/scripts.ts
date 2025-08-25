@@ -537,6 +537,11 @@ function setupKeyboardNavigation() {
 
     // 按 B 键浏览器打开链接
     if (event.key === 'b') {
+      // 如果ctrl、alt、meta也被按下，则不响应
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+
       const openButton = document.querySelector('.open-button');
       if (openButton) {
         openButton.click();
