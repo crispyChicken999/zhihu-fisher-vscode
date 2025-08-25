@@ -1464,7 +1464,7 @@ export class WebviewManager {
         console.log(
           `加载了 ${
             afterLoadCount - beforeLoadCount
-          } 新个回答，达到每批 ${limitPerBatch} 个回答的限制， 总共已加载${
+          } 个新回答，达到每批 ${limitPerBatch} 个回答的限制， 总共已加载${
             webviewItemUpdated.article.loadedAnswerCount
           }，停止加载更多`
         );
