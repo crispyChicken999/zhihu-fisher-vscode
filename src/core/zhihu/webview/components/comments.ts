@@ -2138,7 +2138,7 @@ export class CommentsManager {
             <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
               ${error}
             </div>
-            <button class="zhihu-load-comments-btn" onclick="loadComments('${answerId}')">
+            <button class="zhihu-reload-comments-btn" onclick="loadComments('${answerId}')">
               重新加载
             </button>
           </div>
