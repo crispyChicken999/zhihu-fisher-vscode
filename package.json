@@ -13,6 +13,19 @@
   },
   "icon": "./icon.png",
   "publisher": "CrispyChicken",
+  "keywords": [
+    "zhihu",
+    "fisher",
+    "知乎",
+    "摸鱼",
+    "推荐",
+    "热榜",
+    "搜索",
+    "收藏夹",
+    "评论区",
+    "沉浸模式",
+    "智能伪装"
+  ],
   "categories": [
     "Other"
   ],
