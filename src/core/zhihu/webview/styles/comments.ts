@@ -102,8 +102,8 @@ export const commentsCss = `
 
 /* 单个评论样式 - 使用与文章相同的背景 */
 .zhihu-comment {
-  padding: 12px;
-  border-radius: 6px;
+  padding: 10px;
+  border-radius: 4px;
   transition: background-color 0.2s;
   border: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);

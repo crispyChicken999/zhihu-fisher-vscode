@@ -386,8 +386,8 @@ export class TreeItem extends vscode.TreeItem {
       markdownTooltip.appendMarkdown("\n ___ \n\n");
 
       if (listItem.excerpt) {
-        const excerptPreview = listItem.excerpt;
-        markdownTooltip.appendMarkdown(`\n ${excerptPreview} \n\n`);
+        const excerpt = listItem.excerpt.replaceAll('~','-');
+        markdownTooltip.appendMarkdown(`\n ${excerpt} \n\n`);
       }
 
       // 根据显示模式和缩放比例计算图片宽度
@@ -429,7 +429,8 @@ export class TreeItem extends vscode.TreeItem {
       simpleTooltip.appendMarkdown("\n ___ \n\n");
 
       if (listItem.excerpt) {
-        simpleTooltip.appendMarkdown(listItem.excerpt);
+        const excerpt = listItem.excerpt.replaceAll('~','-');
+        simpleTooltip.appendMarkdown(excerpt);
       }
       this.tooltip = simpleTooltip;
     }

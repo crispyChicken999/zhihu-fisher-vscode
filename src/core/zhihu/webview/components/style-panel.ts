@@ -188,20 +188,20 @@ export class StylePanelComponent implements Component {
               </div>
             </div>
 
-            <div class="style-option-help-text-large">
-              <div class="style-option-help-margin-8">
-                <strong class="style-option-help-strong">功能说明</strong>
+            <details class="style-option-help-details">
+              <summary class="style-option-help-summary">功能说明</summary>
+              <div class="style-option-help-content">
+                <div class="style-option-help-margin-4">
+                  <strong class="style-option-help-strong">正常显示：</strong>图片和视频以原始大小显示
+                </div>
+                <div class="style-option-help-margin-4">
+                  <strong class="style-option-help-strong">迷你模式：</strong>将所有多媒体内容缩小显示，减少干扰
+                </div>
+                <div>
+                  <strong class="style-option-help-strong">全部隐藏：</strong>完全隐藏图片和视频，专注文字内容
+                </div>
               </div>
-              <div class="style-option-help-margin-4">
-                <strong class="style-option-help-strong">正常显示：</strong>图片和视频以原始大小显示
-              </div>
-              <div class="style-option-help-margin-4">
-                <strong class="style-option-help-strong">迷你模式：</strong>将所有多媒体内容缩小显示，减少干扰
-              </div>
-              <div>
-                <strong class="style-option-help-strong">全部隐藏：</strong>完全隐藏图片和视频，专注文字内容
-              </div>
-            </div>
+            </details>
           </div>
 
           <!-- 功能增强Tab -->
@@ -210,9 +210,10 @@ export class StylePanelComponent implements Component {
               <label class="style-option-label-inline">
                 灰色模式
                 <span class="style-option-color-description">
-                  (降低页面色彩，减少视觉干扰)
+                  (防刺眼，摸鱼更加隐蔽)
                 </span>
               </label>
+
               <div class="style-option-flex style-option-label-inline">
                 <label class="style-option-flex style-option-gap-8 style-option-cursor-pointer">
                   <input
@@ -225,14 +226,18 @@ export class StylePanelComponent implements Component {
                   <span class="style-option-font-weight">启用灰色模式</span>
                 </label>
               </div>
-              <div class="style-option-help-text">
-                <div class="style-option-help-margin-4">
-                  <strong class="style-option-help-strong">功能说明：</strong>将页面所有内容转为灰色显示，降低色彩干扰，防刺眼
+
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">功能说明：</strong>将页面所有内容转为灰色显示，降低色彩干扰，防刺眼
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong">使用场景：</strong>统一颜色显示，更好地摸鱼，降低被老板/同事发现的风险😂
+                  </div>
                 </div>
-                <div>
-                  <strong class="style-option-help-strong">使用场景：</strong>统一颜色显示，更好地摸鱼，降低被老板/同事发现的风险😂
-                </div>
-              </div>
+              </details>
             </div>
 
             <div class="style-option-divider"></div>
@@ -241,9 +246,10 @@ export class StylePanelComponent implements Component {
               <label class="style-option-label-inline">
                 智能伪装功能
                 <span class="style-option-color-description">
-                  (防老板/同事发现摸鱼)
+                  (避免被老板or同事发现摸鱼)
                 </span>
               </label>
+
               <div class="style-option-flex style-option-label-inline">
                 <label class="style-option-flex style-option-gap-8 style-option-cursor-pointer">
                   <input
@@ -256,27 +262,36 @@ export class StylePanelComponent implements Component {
                   <span class="style-option-font-weight">启用智能伪装</span>
                 </label>
               </div>
-              <div class="style-option-help-text">
-                <div class="style-option-help-margin-4">
-                  <strong class="style-option-help-strong">功能说明：</strong>当页面失去焦点时，自动将标题和图标伪装成代码文件
-                </div>
-                <div class="style-option-help-margin-4">
-                  <strong class="style-option-help-strong">使用场景：</strong>工作时间浏览内容，避免被老板/同事发现摸鱼 (～￣▽￣)～
-                </div>
-                <div>
-                  更多设置请在 <strong class="style-option-help-strong-link">设置 → 扩展 → 知乎摸鱼</strong> 中调整，或在侧边栏菜单中快速切换
-                </div>
-              </div>
 
-              <!-- 伪装文件类型选择 -->
-              <div class="style-option-section" id="disguise-types-section" ${this.enableDisguise ? '' : 'style="display: none;"'}>
-                <label class="style-option-label-inline style-option-font-weight">
-                  自定义伪装文件类型
-                  <span class="style-option-color-description">
-                    (选择希望伪装成的文件类型)
-                  </span>
-                </label>
-                <div class="style-option-help-text-with-margin">
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">功能说明：</strong>当页面失去焦点时，自动将标题和图标伪装成代码文件
+                  </div>
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">使用场景：</strong>工作时间浏览内容，避免被老板/同事发现摸鱼 (～￣▽￣)～
+                  </div>
+                  <div>
+                    更多设置请在 <strong class="style-option-help-strong-link">设置 → 扩展 → 知乎摸鱼</strong> 中调整，或在侧边栏菜单中快速切换
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="style-option-divider" ${this.enableDisguise ? '' : 'style="display: none;"'}></div>
+
+            <!-- 伪装文件类型选择 -->
+            <div class="style-option-section" id="disguise-types-section" ${this.enableDisguise ? '' : 'style="display: none;"'}>
+              <label class="style-option-label-inline style-option-font-weight">
+                自定义伪装文件类型
+                <span class="style-option-color-description">
+                  (选择希望伪装成的文件类型)
+                </span>
+              </label>
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">使用说明</summary>
+                <div class="style-option-help-content">
                   <div class="style-option-help-margin-4">
                     <strong class="style-option-help-strong">使用说明：</strong>勾选想要的文件类型，未勾选则使用全部类型随机伪装
                   </div>
@@ -284,22 +299,22 @@ export class StylePanelComponent implements Component {
                     <strong class="style-option-help-strong-link">提示：</strong>可以根据你的职业选择相关的文件类型，比如前端工程师选择 JS/HTML/CSS 等
                   </div>
                 </div>
+              </details>
 
-                <div id="disguise-types-container" class="style-option-container">
-                  <!-- 文件类型选择项将在这里动态生成 -->
-                </div>
+              <div id="disguise-types-container" class="style-option-container">
+                <!-- 文件类型选择项将在这里动态生成 -->
+              </div>
 
-                <div class="style-option-button-group">
-                  <button class="button style-option-button" onclick="selectAllDisguiseTypes()">
-                    全选
-                  </button>
-                  <button class="button style-option-button" onclick="clearAllDisguiseTypes()">
-                    全不选
-                  </button>
-                  <button class="button style-option-button" onclick="previewDisguise()">
-                    预览效果
-                  </button>
-                </div>
+              <div class="style-option-button-group">
+                <button class="button style-option-button" onclick="selectAllDisguiseTypes()">
+                  全选
+                </button>
+                <button class="button style-option-button" onclick="clearAllDisguiseTypes()">
+                  全不选
+                </button>
+                <button class="button style-option-button" onclick="previewDisguise()">
+                  预览效果
+                </button>
               </div>
             </div>
           </div>
@@ -313,17 +328,20 @@ export class StylePanelComponent implements Component {
                   (自定义显示哪些按钮及其顺序)
                 </span>
               </label>
-              <div class="style-option-help-text-with-margin">
-                <div class="style-option-help-margin-4">
-                  <strong class="style-option-help-strong">功能说明：</strong>可以自定义显示哪些工具栏按钮，以及调整它们的显示顺序
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">功能说明：</strong>可以自定义显示哪些工具栏按钮，以及调整它们的显示顺序
+                  </div>
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">使用方法：</strong>勾选要显示的按钮，拖拽按钮项调整顺序，设置会自动保存
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong-link">提示：</strong>按钮按顺序号排列，彩色标签表示功能分类，在沉浸模式下可悬停按钮点击 × 快速隐藏
+                  </div>
                 </div>
-                <div class="style-option-help-margin-4">
-                  <strong class="style-option-help-strong">使用方法：</strong>勾选要显示的按钮，拖拽按钮项调整顺序，设置会自动保存
-                </div>
-                <div>
-                  <strong class="style-option-help-strong-link">提示：</strong>按钮按顺序号排列，彩色标签表示功能分类，在沉浸模式下可悬停按钮点击 × 快速隐藏
-                </div>
-              </div>
+              </details>
 
               <div id="toolbar-config-container" class="style-option-container">
                 <!-- 工具栏按钮配置将在这里动态生成 -->
@@ -349,17 +367,20 @@ export class StylePanelComponent implements Component {
                   (自定义按钮的快捷键)
                 </span>
               </label>
-              <div class="style-option-help-text-with-margin">
-                <div class="style-option-help-margin-4">
-                  <strong class="style-option-help-strong">功能说明：</strong>可以为每个按钮自定义快捷键，设置后将显示在按钮的提示信息中
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">功能说明：</strong>可以为每个按钮自定义快捷键，设置后将显示在按钮的提示信息中
+                  </div>
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">使用方法：</strong>点击快捷键输入框，按下想要设置的键组合，设置会自动保存
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong-link">提示：</strong>支持 Ctrl、Alt、Shift 等修饰键，但请避免与系统快捷键冲突。清空快捷键后将使用默认值
+                  </div>
                 </div>
-                <div class="style-option-help-margin-4">
-                  <strong class="style-option-help-strong">使用方法：</strong>点击快捷键输入框，按下想要设置的键组合，设置会自动保存
-                </div>
-                <div>
-                  <strong class="style-option-help-strong-link">提示：</strong>支持 Ctrl、Alt、Shift 等修饰键，但请避免与系统快捷键冲突。清空快捷键后将使用默认值
-                </div>
-              </div>
+              </details>
 
               <div id="shortcuts-config-container" class="style-option-container">
                 <!-- 快捷键配置将在这里动态生成 -->

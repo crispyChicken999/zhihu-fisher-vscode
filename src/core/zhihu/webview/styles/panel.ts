@@ -344,6 +344,80 @@ export const panelCss = `
   margin-bottom: 8px;
 }
 
+/* Details/Summary 折叠样式 */
+.style-option-help-details {
+  margin: 10px 0;
+  border: 1px solid var(--vscode-checkbox-background);
+  border-radius: 4px;
+  background: var(--vscode-textBlockQuote-background);
+  overflow: hidden;
+}
+
+.style-option-help-details[open] .style-option-help-summary {
+  background: var(--vscode-checkbox-background);
+}
+
+.style-option-help-summary {
+  padding: 4px 12px;
+  cursor: pointer;
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+  position: relative;
+}
+
+.style-option-help-summary:hover {
+  background: var(--vscode-checkbox-background);
+  color: var(--vscode-button-foreground);
+}
+
+.style-option-help-summary::-webkit-details-marker {
+  display: none;
+}
+
+.style-option-help-summary::before {
+  content: '▶';
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  transition: transform 0.2s ease;
+  margin-right: 4px;
+}
+
+.style-option-help-details[open] .style-option-help-summary::before {
+  transform: rotate(90deg);
+}
+
+.style-option-help-content {
+  padding: 12px;
+  background: var(--vscode-textBlockQuote-background);
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  line-height: 1.4;
+  border-top: 1px solid var(--vscode-checkbox-background);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
 .style-option-section {
   margin-top: 10px;
 }
@@ -438,7 +512,7 @@ export const panelCss = `
 .shortcut-input {
   flex: 1;
   padding: 4px 8px;
-  border: 1px solid var(--vscode-input-border);
+  border: 1px solid transparent;
   border-radius: 3px;
   background: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
@@ -450,13 +524,18 @@ export const panelCss = `
 .shortcut-input-single {
   width: 120px;
   padding: 4px 8px;
-  border: 1px solid var(--vscode-input-border);
+  border: 1px solid transparent;
   border-radius: 3px;
   background: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
   text-align: center;
   cursor: pointer;
   font-size: 12px;
+}
+
+.shortcut-input:hover,
+.shortcut-input-single:hover {
+  border-color: var(--vscode-focusBorder);
 }
 
 .shortcut-remove-btn {
@@ -487,6 +566,13 @@ export const panelCss = `
   border-radius: 3px;
   cursor: pointer;
   font-size: 10px;
+}
+
+.shortcut-remove-btn:hover,
+.shortcut-add-btn:hover,
+.shortcut-clear-btn:hover {
+  background: var(--vscode-button-hoverBackground);
+  color: var(--vscode-button-foreground);
 }
 
 .global-shortcuts-section {

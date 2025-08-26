@@ -837,7 +837,10 @@ function setupStylePanel() {
       resetDisguiseTypesSelection();
 
       // 重置快捷键
-      resetShortcutConfig();
+      resetShortcutConfig(false); // 不显示提示
+
+      // 重置immersive-mode
+      document.body.classList.remove('immersive-mode');
 
       // 清空localStorage中的缓存
       localStorage.clear();
@@ -2483,12 +2486,12 @@ function cancelShortcutCapture() {
   // 恢复输入框状态
   capturingInput.value = capturingInput.getAttribute('data-original-value') || '';
   capturingInput.style.background = 'var(--vscode-input-background)';
-  capturingInput.style.borderColor = 'var(--vscode-input-border)';
+  capturingInput.style.borderColor = 'transparent';
 
   // 移除监听
   document.removeEventListener('keydown', captureShortcut, true);
   capturingInput.removeEventListener('blur', cancelShortcutCapture);
-  
+
   capturingShortcut = null;
   capturingIndex = 0;
   capturingInput = null;
@@ -2659,7 +2662,7 @@ function captureShortcut(event) {
     // 恢复输入框状态
     capturingInput.value = capturingInput.getAttribute('data-original-value') || '';
     capturingInput.style.background = 'var(--vscode-input-background)';
-    capturingInput.style.borderColor = 'var(--vscode-input-border)';
+    capturingInput.style.borderColor = 'transparent';
 
     // 移除监听
     document.removeEventListener('keydown', captureShortcut, true);
@@ -2705,7 +2708,7 @@ function captureShortcut(event) {
   if (capturingInput) {
     capturingInput.value = shortcut;
     capturingInput.style.background = 'var(--vscode-input-background)';
-    capturingInput.style.borderColor = 'var(--vscode-input-border)';
+    capturingInput.style.borderColor = 'transparent';
   }
 
   // 立即更新工具提示，使新快捷键生效
@@ -2747,10 +2750,12 @@ function clearButtonShortcut(buttonId) {
 /**
  * 重置快捷键配置
  */
-function resetShortcutConfig() {
+function resetShortcutConfig(showTips = true) {
   const defaultConfig = getDefaultShortcutConfig();
   saveShortcutConfig(defaultConfig);
   renderShortcutConfig();
+
+  if (!showTips) return;
 
   vscode.postMessage({
     command: 'showNotification',
