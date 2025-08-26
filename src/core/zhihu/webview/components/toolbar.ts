@@ -140,10 +140,10 @@ export class ToolbarComponent implements Component {
       },
       {
         id: "style",
-        name: "外观设置",
+        name: "设置",
         category: "function",
         icon: '<path fill="currentColor" d="m8.3.7l7.875 7.875q.575.575.575 1.425t-.575 1.425l-4.75 4.75q-.575.575-1.425.575t-1.425-.575l-4.75-4.75Q3.25 10.85 3.25 10t.575-1.425L8.575 3.8l-1.7-1.7q-.3-.3-.288-.7T6.9.7q.3-.275.7-.287T8.3.7M10 5.225L5.225 10h9.55zM19 17q-.825 0-1.412-.587T17 15q0-.525.313-1.125T18 12.75q.225-.3.475-.625T19 11.5q.275.3.525.625t.475.625q.375.525.688 1.125T21 15q0 .825-.587 1.413T19 17M4 24q-.825 0-1.412-.587T2 22t.588-1.412T4 20h16q.825 0 1.413.588T22 22t-.587 1.413T20 24z"/>',
-        tooltip: "外观设置(。)",
+        tooltip: "设置(。)",
         onclick: "toggleStylePanel()",
         visible: true,
         order: 6,
@@ -397,7 +397,7 @@ export class ToolbarComponent implements Component {
     // 添加关闭按钮（只在沉浸模式的可展开工具栏中显示）
     const closeButton = isExpandable
       ? `
-      <span class="button-close" onclick="hideToolbarButton('${button.id}', event)" tooltip="隐藏此按钮(可在外观设置中启用，键盘按。打开)" placement="top-right">
+      <span class="button-close" onclick="hideToolbarButton('${button.id}', event)" tooltip="隐藏此按钮" placement="top-right">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
           <path fill="currentColor" d="m6 6l12 12M6 18L18 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
         </svg>

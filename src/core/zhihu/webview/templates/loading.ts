@@ -430,7 +430,7 @@ export const loadingTemplate = `
       };
 
       // 从localStorage加载样式设置
-      const savedStyles = JSON.parse(localStorage.getItem('savedStyles')) || defaultStyles;
+      const savedStyles = JSON.parse(localStorage.getItem('zhihu-fisher-text-styles')) || defaultStyles;
 
       if (savedStyles) {
         // 应用样式到loading页面

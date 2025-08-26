@@ -52,6 +52,11 @@ document.addEventListener("DOMContentLoaded", function() {
     initializeToolbarConfigFromLocalStorage();
   }, 100);
 
+  // 初始化快捷键配置
+  setTimeout(() => {
+    updateTooltipsWithShortcuts();
+  }, 150);
+
   // 渲染数学公式
   setTimeout(() => {
     renderMathJax();
@@ -451,6 +456,19 @@ function setupKeyboardNavigation() {
       return;
     }
 
+    // 如果打开了 style-panel 并且 className 里面有 visible
+    const stylePanel = document.getElementById('style-panel');
+    // 如果在快捷键设置界面，不响应快捷键
+    const shortcutsTab = document.querySelector('[data-tab="shortcuts"]');
+    if (shortcutsTab && shortcutsTab.classList.contains('active') && stylePanel && stylePanel.classList.contains('visible')) {
+      return;
+    }
+
+    // 首先检查自定义快捷键
+    if (checkCustomShortcut(event)) {
+      return; // 如果匹配了自定义快捷键，就不再执行默认的快捷键逻辑
+    }
+
     // 左←箭头 - 上一个回答
     if (event.key === 'ArrowLeft') {
       loadPreviousAnswer();
@@ -535,9 +553,7 @@ function setupKeyboardNavigation() {
 
     // 按 C 键复制链接
     if (event.key === 'c') {
-      const copyButton = isImmersiveMode ?
-        document.querySelector('.immersive-button.copy-button') :
-        document.querySelector('.copy-button');
+      const copyButton = document.querySelector('.copy-button');
 
       // 如果ctrl也被按下，则不响应复制
       if (event.ctrlKey || event.metaKey) {
@@ -602,7 +618,7 @@ function setupStylePanel() {
   };
 
   // 从localStorage加载样式设置
-  const savedStyles = JSON.parse(localStorage.getItem('savedStyles')) || defaultStyles;
+  const savedStyles = JSON.parse(localStorage.getItem('zhihu-fisher-text-styles')) || defaultStyles;
 
   if (savedStyles) {
     // 更新页面的样式
@@ -628,7 +644,7 @@ function setupStylePanel() {
       contentColor: document.querySelector('#content-color').value,
       textAlign: document.querySelector('.article-content').style.textAlign
     };
-    localStorage.setItem('savedStyles', JSON.stringify(styles));
+    localStorage.setItem('zhihu-fisher-text-styles', JSON.stringify(styles));
   }
 
   // 字体大小滑块
@@ -811,7 +827,7 @@ function setupStylePanel() {
       }
 
       // 更新localStorage
-      localStorage.removeItem('savedStyles');
+      localStorage.removeItem('zhihu-fisher-text-styles');
 
       // 重置工具栏设置
       resetToolbarConfig();
@@ -819,6 +835,12 @@ function setupStylePanel() {
 
       // 重置伪装类型选择
       resetDisguiseTypesSelection();
+
+      // 重置快捷键
+      resetShortcutConfig();
+
+      // 清空localStorage中的缓存
+      localStorage.clear();
     });
   }
 
@@ -1081,6 +1103,11 @@ function copyLink(button, url, isImmersiveMode = false) {
   setTimeout(() => {
     button.innerHTML = originalText;
   }, 3000);
+
+  vscode.postMessage({
+    command: 'showNotification',
+    message: '链接已复制到剪贴板'
+  });
 }
 
 /**
@@ -1150,38 +1177,53 @@ function switchStyleTab(tabName) {
   // 隐藏所有Tab内容
   const tabContents = document.querySelectorAll('.style-tab-content');
   tabContents.forEach(content => {
-    content.style.display = 'none';
+    content.classList.remove('active');
   });
 
   // 移除所有Tab按钮的active状态
   const tabButtons = document.querySelectorAll('.style-tab-button');
   tabButtons.forEach(button => {
     button.classList.remove('active');
-    button.style.borderBottomColor = 'transparent';
-    button.style.color = 'var(--vscode-foreground)';
   });
 
   // 显示选中的Tab内容
   const selectedTab = document.getElementById(tabName + '-tab');
   if (selectedTab) {
-    selectedTab.style.display = 'block';
+    selectedTab.classList.add('active');
   }
 
   // 激活选中的Tab按钮
-  const selectedButton = document.querySelector(\`[data-tab="\${tabName}"]\`);
+  const selectedButton = document.querySelector('[data-tab="' + tabName + '"]');
   if (selectedButton) {
     selectedButton.classList.add('active');
-    selectedButton.style.borderBottomColor = 'var(--vscode-textLink-foreground)';
-    selectedButton.style.color = 'var(--vscode-textLink-foreground)';
+  }
+
+  // 根据不同的Tab执行特定的初始化逻辑
+  if (tabName === 'toolbar') {
+    renderToolbarConfig();
+  } else if (tabName === 'shortcuts') {
+    renderShortcutConfig();
+  } else if (tabName === 'enhancement') {
+    // 如果需要特殊处理enhancement tab，在这里添加
+  }
+
+  // .style-panel-content 滚动到顶部
+  const panelContent = document.querySelector('.style-panel-content');
+  if (panelContent) {
+    panelContent.scrollTop = 0;
   }
 }
 
 /**
  * 切换样式面板显示
  */
-function toggleStylePanel() {
+function toggleStylePanel(tab) {
   const panel = document.getElementById('style-panel');
   const mask = document.querySelector('.style-panel-mask');
+
+  if (tab) {
+    switchStyleTab(tab);
+  }
 
   if (panel && mask) {
     const isVisible = panel.classList.contains('visible');
@@ -1823,7 +1865,7 @@ function getDefaultToolbarConfig() {
     { id: 'favorite', name: '收藏', category: 'function', visible: true, order: 3, },
     { id: 'open', name: '在浏览器中打开', category: 'tools', visible: true, order: 4, },
     { id: 'copy', name: '复制链接', category: 'tools', visible: true, order: 5, },
-    { id: 'style', name: '外观设置', category: 'function', visible: true, order: 6, },
+    { id: 'style', name: '设置', category: 'function', visible: true, order: 6, },
     { id: 'feedback', name: '问题反馈', category: 'tools', visible: true, order: 7, },
     { id: 'donate', name: '赞赏开发者', category: 'tools', visible: true, order: 8, },
     { id: 'immersive', name: '沉浸模式', category: 'function', visible: true, order: 9, },
@@ -2169,5 +2211,749 @@ function updateButtonOrder(draggedId, targetId) {
 
   saveToolbarConfig(config);
   renderToolbarConfig();
+}
+
+/**
+ * 获取快捷键配置
+ */
+function getShortcutConfig() {
+  try {
+    const saved = localStorage.getItem('zhihu-fisher-shortcut-config');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error('读取快捷键配置失败:', error);
+  }
+
+  // 返回默认配置
+  return getDefaultShortcutConfig();
+}
+
+/**
+ * 保存快捷键配置
+ */
+function saveShortcutConfig(config) {
+  try {
+    localStorage.setItem('zhihu-fisher-shortcut-config', JSON.stringify(config));
+
+    // 更新tooltip显示
+    updateTooltipsWithShortcuts();
+  } catch (error) {
+    console.error('保存快捷键配置失败:', error);
+  }
+}
+
+/**
+ * 获取默认快捷键配置
+ */
+function getDefaultShortcutConfig() {
+  return {
+    'copy': ['C'],
+    'open': ['B'],
+    'favorite': ['F'],
+    'style': ['.'],
+    'comments': [','],
+    'immersive': ['X'],
+    'prev-article': ['W', 'Ctrl+↑'],
+    'next-article': ['S', 'Ctrl+↓'],
+    'prev-answer': ['A', '←'],
+    'next-answer': ['D', '→'],
+    'media-toggle': ['/'],
+    'back-top': ['V'],
+    'toolbar-toggle': ['T']
+  };
+}
+
+/**
+ * 渲染快捷键配置界面
+ */
+function renderShortcutConfig() {
+  const container = document.getElementById('shortcuts-config-container');
+  if (!container) return;
+
+  const toolbarConfig = getToolbarConfig();
+  const shortcutConfig = getShortcutConfig();
+
+  // 按钮类别颜色
+  const categoryColors = {
+    'info': '#ffa726',
+    'navigation': '#26a69a',
+    'tools': '#2196f3',
+    'function': '#f44336',
+  };
+
+  const categoryNames = {
+    'info': '信息',
+    'navigation': '导航',
+    'tools': '工具',
+    'function': '功能',
+  };
+
+  let html = '<div class="shortcut-buttons-list">';
+
+  // 只显示可见的按钮
+  toolbarConfig
+    .filter(button => !['author', 'meta', 'feedback', 'donate'].includes(button.id)) // 排除不支持快捷键的按钮
+    .sort((a, b) => a.order - b.order)
+    .forEach(button => {
+      const shortcuts = shortcutConfig[button.id] || [];
+      const shortcutsArray = Array.isArray(shortcuts) ? shortcuts : (shortcuts ? [shortcuts] : []);
+      const shortcutDisplay = shortcutsArray.join(' | ');
+
+      html += \`
+        <div class="shortcut-config-item" data-button-id="\${button.id}">
+          <div class="shortcut-config-item-content">
+            <span class="shortcut-config-item-title">\${button.name}</span>
+            <span class="category-tag" style="background: \${categoryColors[button.category]};">
+              \${categoryNames[button.category]}
+            </span>
+          </div>
+          <div class="shortcut-config-controls">
+            <div class="shortcut-inputs-container">
+              \${shortcutsArray.map((shortcut, index) => \`
+                <div class="shortcut-input-row">
+                  <input
+                    type="text"
+                    id="shortcut-\${button.id}-\${index}"
+                    value="\${shortcut}"
+                    placeholder="点击设置快捷键"
+                    title="点击设置快捷键"
+                    readonly
+                    onclick="startShortcutCapture('\${button.id}', \${index})"
+                    class="shortcut-input"
+                  >
+                  <button
+                    onclick="removeShortcut('\${button.id}', \${index})"
+                    title="删除此快捷键"
+                    class="shortcut-remove-btn"
+                  >
+                    ✕
+                  </button>
+                </div>
+              \`).join('')}
+              \${shortcutsArray.length === 0 ? \`
+                <div class="shortcut-input-row">
+                  <input
+                    type="text"
+                    id="shortcut-\${button.id}-0"
+                    value=""
+                    placeholder="点击设置快捷键"
+                    title="点击设置快捷键"
+                    readonly
+                    onclick="startShortcutCapture('\${button.id}', 0)"
+                    class="shortcut-input"
+                  >
+                </div>
+              \` : ''}
+            </div>
+            <button
+              onclick="addShortcut('\${button.id}')"
+              title="添加快捷键"
+              class="shortcut-add-btn"
+            >
+              +
+            </button>
+            <button
+              onclick="clearButtonShortcut('\${button.id}')"
+              title="清除所有快捷键"
+              class="shortcut-clear-btn"
+            >
+              清空
+            </button>
+          </div>
+        </div>
+      \`;
+    });
+
+  html += '</div>';
+
+  // 添加全局快捷键设置
+  html += \`
+    <div class="global-shortcuts-section">
+      <h4 class="global-shortcuts-title">全局快捷键</h4>
+      <div class="global-shortcuts-desc">
+        这些快捷键无需按钮即可使用
+      </div>
+
+      <div class="shortcut-config-item">
+        <div class="global-shortcut-name">
+          <span class="global-shortcut-name-text">媒体显示切换</span>
+        </div>
+        <div class="shortcut-config-controls">
+          <input
+            type="text"
+            id="shortcut-media-toggle"
+            value="\${shortcutConfig['media-toggle'] ? shortcutConfig['media-toggle'] : ''}"
+            placeholder="点击设置快捷键"
+            title="点击设置快捷键"
+            readonly
+            onclick="startShortcutCapture('media-toggle')"
+            class="shortcut-input-single"
+          >
+          <button
+            onclick="clearButtonShortcut('media-toggle')"
+            title="清除快捷键"
+            class="shortcut-clear-btn"
+            style="display: \${shortcutConfig['media-toggle'] ? 'block' : 'none'};"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div class="shortcut-config-item">
+        <div class="global-shortcut-name">
+          <span class="global-shortcut-name-text">回到顶部</span>
+        </div>
+        <div class="shortcut-config-controls">
+          <input
+            type="text"
+            id="shortcut-back-top"
+            value="\${shortcutConfig['back-top'] ? shortcutConfig['back-top'] : ''}"
+            placeholder="点击设置快捷键"
+            title="点击设置快捷键"
+            readonly
+            onclick="startShortcutCapture('back-top')"
+            class="shortcut-input-single"
+          >
+          <button
+            onclick="clearButtonShortcut('back-top')"
+            title="清除快捷键"
+            class="shortcut-clear-btn"
+            style="display: \${shortcutConfig['back-top'] ? 'block' : 'none'};"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+  \`;
+
+  container.innerHTML = html;
+}
+
+/**
+ * 开始快捷键捕获
+ */
+let capturingShortcut = null;
+let capturingIndex = 0;
+let capturingInput = null;
+
+function startShortcutCapture(buttonId, index = 0) {
+  let inputId;
+  if (buttonId === 'media-toggle') {
+    inputId = 'shortcut-media-toggle';
+  } else if (buttonId === 'back-top') {
+    inputId = 'shortcut-back-top';
+  } else {
+    inputId = \`shortcut-\${buttonId}-\${index}\`;
+  }
+
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  capturingShortcut = buttonId;
+  capturingIndex = index;
+  capturingInput = input;
+
+  // 保存原始值，用于取消时恢复
+  input.setAttribute('data-original-value', input.value);
+
+  input.value = '按下快捷键...';
+  input.style.background = 'var(--vscode-inputValidation-infoBackground)';
+  input.style.borderColor = 'var(--vscode-inputValidation-infoBorder)';
+
+  // 获取输入框焦点，这样失去焦点时能够捕获到
+  input.focus();
+
+  // 添加键盘监听
+  document.addEventListener('keydown', captureShortcut, true);
+
+  // 添加失去焦点监听，如果点击其他地方取消设置
+  input.addEventListener('blur', cancelShortcutCapture, { once: true });
+}
+
+/**
+ * 取消快捷键捕获
+ */
+function cancelShortcutCapture() {
+  if (!capturingShortcut || !capturingInput) return;
+
+  // 恢复输入框状态
+  capturingInput.value = capturingInput.getAttribute('data-original-value') || '';
+  capturingInput.style.background = 'var(--vscode-input-background)';
+  capturingInput.style.borderColor = 'var(--vscode-input-border)';
+
+  // 移除监听
+  document.removeEventListener('keydown', captureShortcut, true);
+  capturingInput.removeEventListener('blur', cancelShortcutCapture);
+  
+  capturingShortcut = null;
+  capturingIndex = 0;
+  capturingInput = null;
+
+  vscode.postMessage({
+    command: 'showNotification',
+    message: '已取消快捷键设置'
+  });
+}
+
+/**
+ * 添加快捷键
+ */
+function addShortcut(buttonId) {
+  const shortcutConfig = getShortcutConfig();
+  const shortcuts = shortcutConfig[buttonId] || [];
+  const shortcutsArray = Array.isArray(shortcuts) ? shortcuts : (shortcuts ? [shortcuts] : []);
+
+  // 添加空的快捷键
+  shortcutsArray.push('');
+
+  saveShortcutConfig({
+    ...shortcutConfig,
+    [buttonId]: shortcutsArray
+  });
+
+  renderShortcutConfig();
+}
+
+/**
+ * 删除快捷键
+ */
+function removeShortcut(buttonId, index) {
+  const shortcutConfig = getShortcutConfig();
+  const shortcuts = shortcutConfig[buttonId] || [];
+  const shortcutsArray = Array.isArray(shortcuts) ? shortcuts : (shortcuts ? [shortcuts] : []);
+
+  if (shortcutsArray.length > index) {
+    shortcutsArray.splice(index, 1);
+
+    saveShortcutConfig({
+      ...shortcutConfig,
+      [buttonId]: shortcutsArray
+    });
+
+    renderShortcutConfig();
+    updateTooltipsWithShortcuts();
+  }
+}
+
+/**
+ * 检查快捷键是否与其他按钮冲突
+ */
+function findShortcutConflict(shortcut, currentButtonId) {
+  const config = getShortcutConfig();
+  const toolbarConfig = getToolbarConfig();
+
+  // 创建按钮名称映射
+  const buttonNameMap = {
+    'media-toggle': '媒体显示切换',
+    'back-top': '回到顶部',
+    'toolbar-toggle': '工具栏切换',
+    ...toolbarConfig.reduce((map, button) => {
+      map[button.id] = button.name;
+      return map;
+    }, {})
+  };
+
+  // 检查所有已配置的快捷键
+  for (const [buttonId, shortcuts] of Object.entries(config)) {
+    // 跳过当前正在设置的按钮
+    if (buttonId === currentButtonId) continue;
+
+    if (shortcuts && Array.isArray(shortcuts) && shortcuts.includes(shortcut)) {
+      return buttonNameMap[buttonId] || buttonId;
+    } else if (shortcuts && typeof shortcuts === 'string' && shortcuts === shortcut) {
+      return buttonNameMap[buttonId] || buttonId;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 捕获快捷键
+ */
+function captureShortcut(event) {
+  if (!capturingShortcut) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  // 检查是否按下 ESC 键取消设置
+  if (event.key === 'Escape') {
+    cancelShortcutCapture();
+    return;
+  }
+
+  // 忽略单独的修饰键
+  if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) {
+    return;
+  }
+
+  // 构建快捷键字符串，使用 event.code 来区分小键盘
+  let shortcut = '';
+  if (event.ctrlKey) shortcut += 'Ctrl+';
+  if (event.altKey) shortcut += 'Alt+';
+  if (event.shiftKey) shortcut += 'Shift+';
+  if (event.metaKey) shortcut += 'Meta+';
+
+  // 优先使用 event.code 来区分主键盘和小键盘
+  let key = event.code;
+
+  // 处理特殊键
+  if (event.key === ' ') {
+    key = 'Space';
+  } else if (key.startsWith('Digit')) {
+    // 主键盘数字键：Digit0-9 -> 0-9
+    key = key.replace('Digit', '');
+  } else if (key.startsWith('Numpad')) {
+    // 小键盘：保持 Numpad 前缀
+    // NumpadEnter, Numpad0-9, NumpadAdd, etc.
+  } else if (key.startsWith('Key')) {
+    // 字母键：KeyA -> A
+    key = key.replace('Key', '');
+  } else if (key === 'Slash') {
+    key = '/';
+  } else if (key === 'Period') {
+    key = '.';
+  } else if (key === 'Comma') {
+    key = ',';
+  } else if (key === 'Semicolon') {
+    key = ';';
+  } else if (key === 'Quote') {
+    key = "'";
+  } else if (key === 'Backquote') {
+    key = String.fromCharCode(96); // backtick
+  } else if (key === 'Minus') {
+    key = '-';
+  } else if (key === 'Equal') {
+    key = '=';
+  } else if (key === 'BracketLeft') {
+    key = '[';
+  } else if (key === 'BracketRight') {
+    key = ']';
+  } else if (key === 'Backslash') {
+    key = \`\\\\\`;
+  } else if (key === 'ArrowUp') {
+    key = '↑';
+  } else if (key === 'ArrowDown') {
+    key = '↓';
+  } else if (key === 'ArrowLeft') {
+    key = '←';
+  } else if (key === 'ArrowRight') {
+    key = '→';
+  } else {
+    // 对于其他键，使用 event.key 但转为大写
+    key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+  }
+
+  shortcut += key;
+
+  // 检查快捷键是否已被其他按钮使用
+  const config = getShortcutConfig();
+  const conflictButton = findShortcutConflict(shortcut, capturingShortcut);
+
+  if (conflictButton) {
+    // 恢复输入框状态
+    capturingInput.value = capturingInput.getAttribute('data-original-value') || '';
+    capturingInput.style.background = 'var(--vscode-input-background)';
+    capturingInput.style.borderColor = 'var(--vscode-input-border)';
+
+    // 移除监听
+    document.removeEventListener('keydown', captureShortcut, true);
+    capturingInput.removeEventListener('blur', cancelShortcutCapture);
+    capturingShortcut = null;
+    capturingIndex = 0;
+    capturingInput = null;
+
+    const map = {
+      'media-toggle': '媒体显示切换',
+      'back-top': '回到顶部',
+      'toolbar-toggle': '收起/展开工具栏',
+    }
+    const conflictButtonName = map[conflictButton] || conflictButton;
+
+    // 显示冲突提示
+    vscode.postMessage({
+      command: 'showNotification',
+      message: \`快捷键 "\${shortcut}" 已被 "\${conflictButtonName}" 按钮使用，请选择其他快捷键\`,
+      type: 'warning'
+    });
+
+    return;
+  }
+
+  // 获取当前配置
+  const shortcuts = config[capturingShortcut] || [];
+  const shortcutsArray = Array.isArray(shortcuts) ? shortcuts : (shortcuts ? [shortcuts] : []);
+
+  // 更新指定索引的快捷键
+  if (capturingIndex < shortcutsArray.length) {
+    shortcutsArray[capturingIndex] = shortcut;
+  } else {
+    // 如果索引超出范围，添加到末尾
+    shortcutsArray.push(shortcut);
+  }
+
+  // 保存配置
+  config[capturingShortcut] = shortcutsArray;
+  saveShortcutConfig(config);
+
+  // 更新输入框显示
+  if (capturingInput) {
+    capturingInput.value = shortcut;
+    capturingInput.style.background = 'var(--vscode-input-background)';
+    capturingInput.style.borderColor = 'var(--vscode-input-border)';
+  }
+
+  // 立即更新工具提示，使新快捷键生效
+  updateTooltipsWithShortcuts();
+
+  // 移除监听
+  document.removeEventListener('keydown', captureShortcut, true);
+  if (capturingInput) {
+    capturingInput.removeEventListener('blur', cancelShortcutCapture);
+  }
+  capturingShortcut = null;
+  capturingIndex = 0;
+  capturingInput = null;
+
+  vscode.postMessage({
+    command: 'showNotification',
+    message: \`快捷键已设置: \${shortcut}\`
+  });
+}
+
+/**
+ * 清除按钮快捷键
+ */
+function clearButtonShortcut(buttonId) {
+  const config = getShortcutConfig();
+  delete config[buttonId];
+  saveShortcutConfig(config);
+
+  // 重新渲染
+  renderShortcutConfig();
+  updateTooltipsWithShortcuts();
+
+  vscode.postMessage({
+    command: 'showNotification',
+    message: '快捷键已清除'
+  });
+}
+
+/**
+ * 重置快捷键配置
+ */
+function resetShortcutConfig() {
+  const defaultConfig = getDefaultShortcutConfig();
+  saveShortcutConfig(defaultConfig);
+  renderShortcutConfig();
+
+  vscode.postMessage({
+    command: 'showNotification',
+    message: '快捷键已重置为默认配置'
+  });
+}
+
+/**
+ * 清空所有快捷键
+ */
+function clearAllShortcuts() {
+  saveShortcutConfig({});
+  renderShortcutConfig();
+
+  vscode.postMessage({
+    command: 'showNotification',
+    message: '所有快捷键已清空，将使用默认快捷键'
+  });
+}
+
+/**
+ * 更新所有tooltip显示自定义快捷键
+ */
+function updateTooltipsWithShortcuts() {
+  const shortcutConfig = getShortcutConfig();
+  const toolbarConfig = getToolbarConfig();
+
+  // 默认快捷键映射
+  const defaultShortcuts = {
+    'copy': ['C'],
+    'open': ['B'],
+    'favorite': ['F'],
+    'style': ['。'],
+    'comments': ['，'],
+    'immersive': ['X'],
+    'prev-article': ['Ctrl+↑', 'W'],
+    'next-article': ['Ctrl+↓', 'S'],
+    'prev-answer': ['←', 'A'],
+    'next-answer': ['→', 'D']
+  };
+
+  toolbarConfig.forEach(function(button) {
+    // 添加安全检查，确保按钮有必要属性
+    if (!button || !button.id) {
+      return;
+    }
+
+    // 跳过 author, meta, feedback, donate 按钮
+    if (['author', 'meta', 'feedback', 'donate'].includes(button.id)) {
+      return;
+    }
+
+    // 查找对应的按钮元素
+    const buttonElements = document.querySelectorAll('.' + button.id + '-button');
+    buttonElements.forEach(function(element) {
+      let tooltip = button.tooltip || button.name || button.id || '';
+
+      // 移除原有的快捷键信息（通过正则匹配括号内容）
+      tooltip = tooltip.replace(/\\([^)]*\\)$/, '').trim();
+
+      // 决定使用自定义快捷键还是默认快捷键
+      const customShortcuts = shortcutConfig[button.id];
+      const defaultShortcuts_button = defaultShortcuts[button.id];
+
+      let finalShortcuts = [];
+      if (customShortcuts && Array.isArray(customShortcuts) && customShortcuts.length > 0) {
+        finalShortcuts = customShortcuts.filter(s => s && s.trim());
+      } else if (customShortcuts && typeof customShortcuts === 'string' && customShortcuts.trim()) {
+        finalShortcuts = [customShortcuts.trim()];
+      } else if (defaultShortcuts_button) {
+        finalShortcuts = defaultShortcuts_button;
+      }
+
+      // 添加快捷键信息
+      if (finalShortcuts.length > 0) {
+        tooltip += '(' + finalShortcuts.join(' | ') + ')';
+      }
+
+      element.setAttribute('tooltip', tooltip);
+    });
+  });
+
+  // 处理全局快捷键
+  const mediaToggleShortcuts = shortcutConfig['media-toggle'];
+  const backTopShortcuts = shortcutConfig['back-top'];
+
+  // 更新回到顶部按钮的tooltip
+  const backTopButton = document.getElementById('scroll-to-top');
+  if (backTopButton) {
+    let tooltip = '回到顶部';
+    if (backTopShortcuts && Array.isArray(backTopShortcuts) && backTopShortcuts.length > 0) {
+      tooltip += '(' + backTopShortcuts.join(' | ') + ')';
+    } else if (backTopShortcuts && typeof backTopShortcuts === 'string') {
+      tooltip += '(' + backTopShortcuts + ')';
+    } else {
+      tooltip += '(V)';
+    }
+    backTopButton.setAttribute('tooltip', tooltip);
+  }
+}
+
+/**
+ * 检查按键是否匹配自定义快捷键
+ */
+function checkCustomShortcut(event) {
+  // 如果正在捕获快捷键，不响应任何快捷键
+  if (capturingShortcut) {
+    console.log(capturingShortcut);
+    return false;
+  }
+
+  const shortcutConfig = getShortcutConfig();
+
+  // 构建当前按键的快捷键字符串
+  let currentShortcut = '';
+  if (event.ctrlKey) currentShortcut += 'Ctrl+';
+  if (event.altKey) currentShortcut += 'Alt+';
+  if (event.shiftKey) currentShortcut += 'Shift+';
+  if (event.metaKey) currentShortcut += 'Meta+';
+
+  // 使用 event.code 来区分小键盘
+  let key = event.code;
+
+  if (event.key === ' ') {
+    key = 'Space';
+  } else if (key.startsWith('Numpad')) {
+    // 小键盘：保持 Numpad 前缀
+    // NumpadEnter, Numpad0-9, NumpadAdd, etc.
+  } else if (key.startsWith('Digit')) {
+    key = key.replace('Digit', '');
+  } else if (key.startsWith('Key')) {
+    key = key.replace('Key', '');
+  } else if (key === 'Slash') {
+    key = '/';
+  } else if (key === 'Period') {
+    key = '.';
+  } else if (key === 'Comma') {
+    key = ',';
+  } else if (key === 'Semicolon') {
+    key = ';';
+  } else if (key === 'Quote') {
+    key = "'";
+  } else if (key === 'Backquote') {
+    key = String.fromCharCode(96);
+  } else if (key === 'Minus') {
+    key = '-';
+  } else if (key === 'Equal') {
+    key = '=';
+  } else if (key === 'BracketLeft') {
+    key = '[';
+  } else if (key === 'BracketRight') {
+    key = ']';
+  } else if (key === 'Backslash') {
+    key = \`\\\\\`;
+  } else if (key === 'ArrowUp') {
+    key = '↑';
+  } else if (key === 'ArrowDown') {
+    key = '↓';
+  } else if (key === 'ArrowLeft') {
+    key = '←';
+  } else if (key === 'ArrowRight') {
+    key = '→';
+  } else {
+    // 对于其他键，使用 event.key 但转为大写
+    key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+  }
+
+  currentShortcut += key;
+
+  // 查找匹配的按钮
+  for (const [buttonId, shortcuts] of Object.entries(shortcutConfig)) {
+    if (shortcuts && Array.isArray(shortcuts) && shortcuts.includes(currentShortcut)) {
+      event.preventDefault();
+
+      if (buttonId === 'media-toggle') {
+        // 媒体显示切换
+        toggleMediaDisplay();
+      } else if (buttonId === 'back-top') {
+        // 回到顶部
+        backTop();
+      } else if (buttonId === 'toolbar-toggle') {
+        // 工具栏切换
+        if (isImmersiveMode && typeof toggleFixedToolbar === 'function') {
+          toggleFixedToolbar();
+        }
+      } else if (buttonId === 'copy') {
+        // 复制按钮
+        const copyButton = document.querySelector('.copy-button');
+        if (copyButton) {
+          copyButton.click();
+        }
+      } else {
+        // 对于所有其他按钮，直接点击按钮
+        const buttonElement = document.querySelector('.' + buttonId + '-button');
+        if (buttonElement) {
+          buttonElement.click();
+        }
+      }
+
+      return true; // 表示找到了匹配的快捷键
+    }
+  }
+
+  return false; // 没有找到匹配的快捷键
 }
 `;
