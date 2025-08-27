@@ -195,7 +195,7 @@ body.immersive-mode .immersive-button {
 }
 
 .toolbar-expandable.expanded {
-  max-height: 555px;
+  max-height: 600px;
   opacity: 1;
   pointer-events: auto;
   display: flex;

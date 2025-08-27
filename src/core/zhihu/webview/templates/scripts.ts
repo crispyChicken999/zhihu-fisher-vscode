@@ -37,15 +37,11 @@ document.addEventListener("DOMContentLoaded", function() {
   setupKeyboardNavigation();
   setupStylePanel();
   setupBackTopButton();
-  // 先初始化沉浸模式状态，再设置工具栏配置
   setupImmersiveMode();
   setupFixedToolbar();
   setupImageFancyBox();
   setupGrayscaleMode();
   setupToolbarConfig();
-
-  // 立即应用localStorage中的工具栏配置（需要在沉浸模式状态设置好后）
-  applyToolbarConfigFromLocalStorage();
 
   // 初始化工具栏配置（需要在沉浸模式状态设置好后）
   setTimeout(() => {
@@ -95,17 +91,8 @@ document.addEventListener("DOMContentLoaded", function() {
 window.addEventListener('message', event => {
   const message = event.data;
 
-  // 处理获取工具栏配置的请求
-  if (message.command === 'getToolbarConfig') {
-    const config = getToolbarConfigFromLocalStorage();
-    vscode.postMessage({
-      command: 'toolbarConfigResponse',
-      config: config
-    });
-  }
-
   // 处理更新评论的消息
-  else if (message.command === 'updateComments') {
+  if (message.command === 'updateComments') {
     const commentsContainer = document.querySelector('.comments-container');
     commentsContainer.innerHTML = message.html;
     // 滚动到评论区
@@ -281,14 +268,36 @@ function setupGrayscaleMode() {
  * 切换灰色模式
  */
 function toggleGrayscaleMode(enabled) {
-  if (enabled) {
-    document.querySelector('html').classList.add('grayscale-mode');
-  } else {
-    document.querySelector('html').classList.remove('grayscale-mode');
-  }
+  if (enabled !== undefined) {
+    // 如果传入了参数，使用参数值
+    if (enabled) {
+      document.querySelector('html').classList.add('grayscale-mode');
+    } else {
+      document.querySelector('html').classList.remove('grayscale-mode');
+    }
 
-  // 保存状态到localStorage
-  localStorage.setItem('zhihu-fisher-grayscale-mode', enabled);
+    // 保存状态到localStorage
+    localStorage.setItem('zhihu-fisher-grayscale-mode', enabled);
+  } else {
+    // 如果没有传入参数，切换当前状态
+    const currentEnabled = document.querySelector('html').classList.contains('grayscale-mode');
+    const newEnabled = !currentEnabled;
+
+    if (newEnabled) {
+      document.querySelector('html').classList.add('grayscale-mode');
+    } else {
+      document.querySelector('html').classList.remove('grayscale-mode');
+    }
+
+    // 保存状态到localStorage
+    localStorage.setItem('zhihu-fisher-grayscale-mode', newEnabled);
+
+    // 同步设置面板中的复选框状态
+    const grayscaleToggle = document.getElementById('grayscale-toggle');
+    if (grayscaleToggle) {
+      grayscaleToggle.checked = newEnabled;
+    }
+  }
 }
 
 /**
@@ -599,6 +608,17 @@ function setupKeyboardNavigation() {
     // 按 T 键切换工具栏展开/收起状态（仅在沉浸模式下有效）
     if (event.key === 't' && isImmersiveMode) {
       toggleFixedToolbar();
+    }
+
+    // 按 G 键切换灰色模式
+    if (event.key === 'g' || event.key === 'G') {
+      // 如果ctrl、alt、meta也被按下，则不响应
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+
+      event.preventDefault();
+      toggleGrayscaleMode();
     }
   });
 }
@@ -997,7 +1017,7 @@ function updateMediaDisplayClass(mode) {
       content.classList.add('mini-media');
       meta.classList.add('mini-media');
     }
-    
+
     // 重新初始化FancyBox，因为显示模式可能会影响图片的可见性
     setTimeout(function() {
       if (typeof initializeFancyBox === 'function') {
@@ -1148,10 +1168,10 @@ function copyCode(button) {
 function showUncomfortableImage(maskOverlay) {
   const container = maskOverlay.closest('.uncomfortable-image-container');
   if (!container) return;
-  
+
   const maskDiv = container.querySelector('.image-mask');
   const realImage = container.querySelector('.real-image');
-  
+
   if (maskDiv && realImage) {
     // 隐藏遮挡层
     maskDiv.style.display = 'none';
@@ -1700,49 +1720,6 @@ function loadArticleComments(articleId, direction) {
 // ========================== 工具栏配置相关功能 ==========================
 
 /**
- * 从localStorage获取工具栏配置（用于VS Code扩展获取）
- */
-function getToolbarConfigFromLocalStorage() {
-  try {
-    const savedConfig = localStorage.getItem('zhihu-fisher-toolbar-config');
-    if (savedConfig) {
-      return JSON.parse(savedConfig);
-    }
-    // 如果没有保存的配置，返回默认配置
-    return getDefaultToolbarConfig();
-  } catch (error) {
-    console.warn('获取工具栏配置失败:', error);
-    return getDefaultToolbarConfig();
-  }
-}
-
-/**
- * 立即应用localStorage中的工具栏配置（在DOM加载完成后立即执行）
- */
-function applyToolbarConfigFromLocalStorage() {
-  try {
-    const savedConfig = localStorage.getItem('zhihu-fisher-toolbar-config');
-    if (savedConfig) {
-      const userConfig = JSON.parse(savedConfig);
-      // 立即应用配置，避免页面跳变
-      applyToolbarConfig(userConfig);
-
-      // 发送配置到VS Code扩展（如果需要）
-      vscode.postMessage({
-        command: 'toolbarConfigResponse',
-        config: userConfig
-      });
-    } else {
-      // 如果没有用户配置，使用默认配置检查容器显示状态
-      const defaultConfig = getDefaultToolbarConfig();
-      updateToolbarContainerVisibility(defaultConfig);
-    }
-  } catch (error) {
-    console.warn('应用工具栏配置失败:', error);
-  }
-}
-
-/**
  * 设置工具栏配置
  */
 function setupToolbarConfig() {
@@ -1758,6 +1735,18 @@ function initializeToolbarConfigFromLocalStorage() {
     const savedConfig = localStorage.getItem('zhihu-fisher-toolbar-config');
     if (savedConfig) {
       const userConfig = JSON.parse(savedConfig);
+
+      // 如果之前保存的配置，缺少默认配置中的按钮，则补全，先看看有哪些按钮是缺失的，然后放到旧配置的后面，order顺延
+      const defaultConfig = getDefaultToolbarConfig();
+      const missingButtons = defaultConfig.filter(defBtn => !userConfig.some(oldBtn => oldBtn.id === defBtn.id));
+      const maxOrder = userConfig.reduce((max, btn) => Math.max(max, btn.order), 0);
+      missingButtons.forEach((btn, index) => {
+        btn.order = maxOrder + index + 1;
+        userConfig.push(btn);
+      });
+
+      localStorage.setItem('zhihu-fisher-toolbar-config', JSON.stringify(userConfig));
+
       // 直接应用配置到当前页面
       applyToolbarConfig(userConfig);
       // 同时更新配置面板显示
@@ -1869,14 +1858,15 @@ function getDefaultToolbarConfig() {
     { id: 'open', name: '在浏览器中打开', category: 'tools', visible: true, order: 4, },
     { id: 'copy', name: '复制链接', category: 'tools', visible: true, order: 5, },
     { id: 'style', name: '设置', category: 'function', visible: true, order: 6, },
-    { id: 'feedback', name: '问题反馈', category: 'tools', visible: true, order: 7, },
-    { id: 'donate', name: '赞赏开发者', category: 'tools', visible: true, order: 8, },
-    { id: 'immersive', name: '沉浸模式', category: 'function', visible: true, order: 9, },
-    { id: 'comments', name: '查看评论', category: 'function', visible: true, order: 10, },
-    { id: 'prev-article', name: '上一篇内容', category: 'navigation', visible: true, order: 11, },
-    { id: 'next-article', name: '下一篇内容', category: 'navigation', visible: true, order: 12, },
-    { id: 'prev-answer', name: '上一个回答', category: 'navigation', visible: true, order: 13, },
-    { id: 'next-answer', name: '下一个回答', category: 'navigation', visible: true, order: 14, },
+    { id: 'grayscale', name: '灰色模式', category: 'function', visible: true, order: 7, },
+    { id: 'feedback', name: '问题反馈', category: 'tools', visible: true, order: 8, },
+    { id: 'donate', name: '赞赏开发者', category: 'tools', visible: true, order: 9, },
+    { id: 'immersive', name: '沉浸模式', category: 'function', visible: true, order: 10, },
+    { id: 'comments', name: '查看评论', category: 'function', visible: true, order: 11, },
+    { id: 'prev-article', name: '上一篇内容', category: 'navigation', visible: true, order: 12, },
+    { id: 'next-article', name: '下一篇内容', category: 'navigation', visible: true, order: 13, },
+    { id: 'prev-answer', name: '上一个回答', category: 'navigation', visible: true, order: 14, },
+    { id: 'next-answer', name: '下一个回答', category: 'navigation', visible: true, order: 15, },
   ];
 }
 
@@ -1903,7 +1893,7 @@ function applyToolbarConfig(config) {
     if (expandableToolbar) {
       updateToolbarButtons(expandableToolbar, config, true);
     }
-    
+
     // 检查并更新工具栏容器的显示状态
     updateToolbarContainerVisibility(config);
   } catch (error) {
@@ -1987,6 +1977,7 @@ function getButtonIdFromClass(className) {
     'open-button': 'open',
     'copy-button': 'copy',
     'style-button': 'style',
+    'grayscale-button': 'grayscale',
     'feedback-button': 'feedback',
     'donate-button': 'donate',
     'immersive-button': 'immersive',
@@ -2264,7 +2255,8 @@ function getDefaultShortcutConfig() {
     'next-answer': ['D', '→'],
     'media-toggle': ['/'],
     'back-top': ['V'],
-    'toolbar-toggle': ['T']
+    'toolbar-toggle': ['T'],
+    'grayscale': ['G']
   };
 }
 
@@ -2347,6 +2339,13 @@ function renderShortcutConfig() {
                     onclick="startShortcutCapture('\${button.id}', 0)"
                     class="shortcut-input"
                   >
+                  <button
+                    onclick="removeShortcut('\${button.id}', 0)"
+                    title="删除此快捷键"
+                    class="shortcut-remove-btn"
+                  >
+                    ✕
+                  </button>
                 </div>
               \` : ''}
             </div>
@@ -2527,14 +2526,14 @@ function addShortcut(buttonId) {
 function removeShortcut(buttonId, index) {
   const shortcutConfig = getShortcutConfig();
   const shortcuts = shortcutConfig[buttonId] || [];
-  const shortcutsArray = Array.isArray(shortcuts) ? shortcuts : (shortcuts ? [shortcuts] : []);
+  const shortcutsArray = Array.isArray(shortcuts) ? shortcuts : (shortcuts ? [shortcuts] : ['']);
 
   if (shortcutsArray.length > index) {
     shortcutsArray.splice(index, 1);
 
     saveShortcutConfig({
       ...shortcutConfig,
-      [buttonId]: shortcutsArray
+      [buttonId]: shortcutsArray.length > 0 ? shortcutsArray : ['']
     });
 
     renderShortcutConfig();
@@ -2545,7 +2544,7 @@ function removeShortcut(buttonId, index) {
 /**
  * 检查快捷键是否与其他按钮冲突
  */
-function findShortcutConflict(shortcut, currentButtonId) {
+function findShortcutConflict(shortcut, currentButtonId, currentIndex = -1) {
   const config = getShortcutConfig();
   const toolbarConfig = getToolbarConfig();
 
@@ -2562,9 +2561,22 @@ function findShortcutConflict(shortcut, currentButtonId) {
 
   // 检查所有已配置的快捷键
   for (const [buttonId, shortcuts] of Object.entries(config)) {
-    // 跳过当前正在设置的按钮
-    if (buttonId === currentButtonId) continue;
+    if (buttonId === currentButtonId) {
+      // 对于当前按钮，检查是否与其他快捷键位置冲突
+      if (shortcuts && Array.isArray(shortcuts) && currentIndex >= 0) {
+        const conflictIndex = shortcuts.findIndex((key, index) =>
+          key === shortcut && index !== currentIndex && key !== ''
+        );
+        if (conflictIndex !== -1) {
+          return (buttonNameMap[buttonId] || buttonId) + ' (第' + (conflictIndex + 1) + '个快捷键)';
+        }
+      } else if (shortcuts && typeof shortcuts === 'string' && shortcuts === shortcut && currentIndex !== 0) {
+        return (buttonNameMap[buttonId] || buttonId) + ' (第1个快捷键)';
+      }
+      continue; // 跳过其他检查，因为同一按钮内部冲突已检查完毕
+    }
 
+    // 检查与其他按钮的冲突
     if (shortcuts && Array.isArray(shortcuts) && shortcuts.includes(shortcut)) {
       return buttonNameMap[buttonId] || buttonId;
     } else if (shortcuts && typeof shortcuts === 'string' && shortcuts === shortcut) {
@@ -2656,7 +2668,7 @@ function captureShortcut(event) {
 
   // 检查快捷键是否已被其他按钮使用
   const config = getShortcutConfig();
-  const conflictButton = findShortcutConflict(shortcut, capturingShortcut);
+  const conflictButton = findShortcutConflict(shortcut, capturingShortcut, capturingIndex);
 
   if (conflictButton) {
     // 恢复输入框状态
@@ -2734,7 +2746,7 @@ function captureShortcut(event) {
  */
 function clearButtonShortcut(buttonId) {
   const config = getShortcutConfig();
-  delete config[buttonId];
+  config[buttonId] = [''];
   saveShortcutConfig(config);
 
   // 重新渲染

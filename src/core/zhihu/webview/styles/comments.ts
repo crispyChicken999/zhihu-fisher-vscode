@@ -390,7 +390,7 @@ x
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
 }
@@ -417,7 +417,7 @@ x
 }
 
 .zhihu-comments-modal-parent-comment {
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
 }
@@ -429,7 +429,7 @@ x
 }
 
 .zhihu-comments-modal-child-comments {
-  padding: 12px;
+  padding: 10px;
   overflow-y: auto;
   scroll-behavior: smooth;
   max-height: 65vh;
@@ -445,7 +445,7 @@ x
 }
 
 .zhihu-modal-pagination {
-  padding: 12px;
+  padding: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;

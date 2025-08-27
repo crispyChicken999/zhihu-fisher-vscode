@@ -149,6 +149,16 @@ export class ToolbarComponent implements Component {
         order: 6,
       },
       {
+        id: "grayscale",
+        name: "灰色模式",
+        category: "function",
+        icon: '<path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8V20z"/>',
+        tooltip: "切换灰色模式(G)",
+        onclick: "toggleGrayscaleMode()",
+        visible: true,
+        order: 7,
+      },
+      {
         id: "feedback",
         name: "问题反馈",
         category: "tools",
@@ -158,7 +168,7 @@ export class ToolbarComponent implements Component {
         onclick:
           "openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')",
         visible: true,
-        order: 7,
+        order: 8,
       },
       {
         id: "donate",
@@ -170,7 +180,7 @@ export class ToolbarComponent implements Component {
         placement: "left-top",
         onclick: "showDonateModal()",
         visible: true,
-        order: 8,
+        order: 9,
       },
       {
         id: "immersive",
@@ -180,7 +190,7 @@ export class ToolbarComponent implements Component {
         tooltip: "退出沉浸模式(X)",
         onclick: "toggleImmersiveMode()",
         visible: true,
-        order: 9,
+        order: 10,
       },
       {
         id: "comments",
@@ -190,7 +200,7 @@ export class ToolbarComponent implements Component {
         tooltip: "查看评论(，)",
         onclick: "hanldeCommentsToggle()",
         visible: true,
-        order: 10,
+        order: 11,
       },
       {
         id: "prev-article",
@@ -200,7 +210,7 @@ export class ToolbarComponent implements Component {
         tooltip: "上一篇内容(Ctrl+↑ | W)",
         onclick: "loadPreviousArticle()",
         visible: true,
-        order: 11,
+        order: 12,
       },
       {
         id: "next-article",
@@ -210,7 +220,7 @@ export class ToolbarComponent implements Component {
         tooltip: "下一篇内容(Ctrl+↓ | S)",
         onclick: "loadNextArticle()",
         visible: true,
-        order: 12,
+        order: 13,
       },
     ];
 
@@ -225,7 +235,7 @@ export class ToolbarComponent implements Component {
           tooltip: "上一个回答(← | A)",
           onclick: "loadPreviousAnswer()",
           visible: true,
-          order: 13,
+          order: 14,
         },
         {
           id: "next-answer",
@@ -235,7 +245,7 @@ export class ToolbarComponent implements Component {
           tooltip: "下一个回答(→ | D)",
           onclick: "loadNextAnswer()",
           visible: true,
-          order: 14,
+          order: 15,
         }
       );
     }
@@ -461,6 +471,12 @@ export class ToolbarComponent implements Component {
         <button class="button" onclick="toggleStylePanel()" tooltip="外观设置(。)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="m8.3.7l7.875 7.875q.575.575.575 1.425t-.575 1.425l-4.75 4.75q-.575.575-1.425.575t-1.425-.575l-4.75-4.75Q3.25 10.85 3.25 10t.575-1.425L8.575 3.8l-1.7-1.7q-.3-.3-.288-.7T6.9.7q.3-.275.7-.287T8.3.7M10 5.225L5.225 10h9.55zM19 17q-.825 0-1.412-.587T17 15q0-.525.313-1.125T18 12.75q.225-.3.475-.625T19 11.5q.275.3.525.625t.475.625q.375.525.688 1.125T21 15q0 .825-.587 1.413T19 17M4 24q-.825 0-1.412-.587T2 22t.588-1.412T4 20h16q.825 0 1.413.588T22 22t-.587 1.413T20 24z"/>
+          </svg>
+        </button>
+
+        <button class="button grayscale-button" onclick="toggleGrayscaleMode()" tooltip="切换灰色模式(G)" placement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8V20z"/>
           </svg>
         </button>
 

@@ -32,7 +32,7 @@ export class StylePanelComponent implements Component {
 
       <div class="style-panel" id="style-panel">
         <div class="style-panel-header">
-          <h3 style="margin:10px 0; font-weight: bold;">设置</h3>
+          <span>设置</span>
           <button class="style-panel-header-close" onclick="toggleStylePanel()">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
               <!-- Icon from Iconoir by Luca Burgio -->
@@ -377,7 +377,9 @@ export class StylePanelComponent implements Component {
                     <strong class="style-option-help-strong">使用方法：</strong>点击快捷键输入框，按下想要设置的键组合，设置会自动保存
                   </div>
                   <div>
-                    <strong class="style-option-help-strong-link">提示：</strong>支持 Ctrl、Alt、Shift 等修饰键，但请避免与系统快捷键冲突。清空快捷键后将使用默认值
+                    <strong class="style-option-help-strong-link">提示：</strong>支持 Ctrl、Alt、Shift 等修饰键，但请避免与系统快捷键冲突。
+                    <br/>
+                    清空快捷键后将使用默认值，并且该页面下快捷键不生效避免误触。
                   </div>
                 </div>
               </details>

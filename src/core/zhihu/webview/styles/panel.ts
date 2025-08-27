@@ -7,7 +7,7 @@ export const panelCss = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 15px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
@@ -17,7 +17,7 @@ export const panelCss = `
   color: var(--vscode-foreground);
   font-size: 12px;
   cursor: pointer;
-  padding: 2px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,7 +94,7 @@ export const panelCss = `
   max-height: 70vh;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 0 15px;
+  padding: 0px 15px;
 }
 
 .style-option {
@@ -182,6 +182,10 @@ export const panelCss = `
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.style-tab-button:focus-visible {
+  outline: none;
 }
 
 .style-tab-button:hover {
@@ -394,7 +398,7 @@ export const panelCss = `
 }
 
 .style-option-help-content {
-  padding: 12px;
+  padding: 10px;
   background: var(--vscode-textBlockQuote-background);
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
@@ -433,7 +437,7 @@ export const panelCss = `
 .style-option-button-group {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin: 10px 0;
 }
 
 .style-option-button {
@@ -459,8 +463,8 @@ export const panelCss = `
   gap: 12px;
   padding: 8px 12px;
   border: 1px solid var(--vscode-panel-border);
-  border-radius: 6px;
-  margin-bottom: 6px;
+  border-radius: 4px;
+  margin-bottom: 10px;
   background: var(--vscode-editor-background);
   transition: all 0.2s ease;
 }
@@ -581,6 +585,10 @@ export const panelCss = `
   border-top: 1px solid var(--vscode-panel-border);
 }
 
+.global-shortcuts-section .shortcut-config-item:last-of-type {
+  margin-bottom: 0;
+}
+
 .global-shortcuts-title {
   margin: 0 0 10px 0;
   font-size: 13px;
@@ -601,6 +609,4 @@ export const panelCss = `
   font-size: 13px;
   font-weight: 500;
 }
-
-
 `;
