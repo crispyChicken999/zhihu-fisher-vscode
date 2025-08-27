@@ -10,7 +10,7 @@ import { ArticleContentComponent } from "./components/article";
 import { StylePanelComponent } from "./components/style-panel";
 // 导入模板文件
 import { articleTemplate } from "./templates/article";
-import { scriptsTemplate } from "./templates/scripts";
+import { scriptsTemplate } from "./templates/scripts/index";
 import { loadingTemplate } from "./templates/loading";
 import { cookieTipsTemplate } from "./templates/cookieTips";
 import { errorTemplate } from "./templates/error";
