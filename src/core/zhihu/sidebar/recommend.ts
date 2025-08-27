@@ -300,9 +300,9 @@ export class sidebarRecommendListDataProvider
             ? `${
                 (excerptElement as HTMLMetaElement).textContent
                   ? (excerptElement as HTMLMetaElement).textContent
-                  : "没找到摘要🤔"
+                  : "🐟无摘要🐟"
               }`
-            : "没找到摘要🤔";
+            : "🐟无摘要🐟";
 
           // 检查是否已存在
           if (items.some((item) => item.id === id)) {

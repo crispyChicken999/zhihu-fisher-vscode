@@ -225,7 +225,7 @@ export class sidebarHotListDataProvider
             const excerpt = `${
               $(element).find(".HotItem-excerpt").text().trim()
                 ? $(element).find(".HotItem-excerpt").text().trim()
-                : "没找到摘要🤔"
+                : "🐟无摘要🐟"
             }`;
             const hotValue = $(element).find(".HotItem-metrics").text().trim();
             let imgUrl = $(element).find(".HotItem-img img").attr("src") || "";

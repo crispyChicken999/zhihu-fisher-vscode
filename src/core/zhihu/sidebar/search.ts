@@ -455,9 +455,9 @@ export class sidebarSearchListDataProvider
               ? `${
                   contentElement.textContent
                     ? contentElement.textContent
-                    : "没找到摘要🤔"
+                    : "🐟无摘要🐟"
                 }`
-              : "没找到摘要🤔";
+              : "🐟无摘要🐟";
 
             return {
               id,
