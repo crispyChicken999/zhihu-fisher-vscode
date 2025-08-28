@@ -9,6 +9,21 @@ export const articleCss = `
   font-size: 0.9em;
 }
 
+.article-meta-footer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tips {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
 .article-meta.hide-media .author-avatar {
   display: none;
 }
@@ -65,7 +80,7 @@ export const articleCss = `
   flex-wrap: wrap;
   gap: 8px;
   margin-right: 6px;
-  padding: 4px 8px;
+  padding: 5px 8px;
   font-size: min(1em, 12px);
   border-radius: 2px;
   background-color: var(--vscode-editor-inactiveSelectionBackground);

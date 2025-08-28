@@ -52,7 +52,7 @@ export const authorCss = `
 }
 
 .author-bio {
-  font-size: 0.9em;
+  font-size: 1em;
   margin-top: 4px;
   color: var(--vscode-descriptionForeground);
 }

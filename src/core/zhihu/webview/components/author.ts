@@ -72,7 +72,7 @@ export class AuthorComponent implements Component {
           ? `<a href="${authorUrl}" class="author-link">${this.escapeHtml(
               authorName
             )}</a>`
-          : this.escapeHtml(authorName)
+          : this.escapeHtml(authorName) || '神秘人'
       }
       <span>|</span>
       <div class="author-fans" title="粉丝数 ${authorFollowersCount}">
