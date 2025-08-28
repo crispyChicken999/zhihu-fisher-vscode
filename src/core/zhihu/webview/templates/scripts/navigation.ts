@@ -96,51 +96,131 @@ function updateNavInfo(loadedCount, totalCount, isLoading, currentIndex) {
     }
   }
 
-  // 获取所有的nav-info元素（可能有多个）
-  const navInfoElements = document.querySelectorAll('.nav-info');
+  // 确保 currentIndex 在有效范围内
+  const validCurrentIndex = Math.min(Math.max(currentIndex, 0), loadedCount - 1);
 
-  navInfoElements.forEach(navInfo => {
-    // 1. 更新该 navInfo 内部的页面跳转选择器
-    const answerJumpSelect = navInfo.querySelector('.answer-jump-select');
-    if (answerJumpSelect && loadedCount > 1) {
-      // 确保 currentIndex 在有效范围内
-      const validCurrentIndex = Math.min(Math.max(currentIndex, 0), loadedCount - 1);
+  // 获取所有导航容器（可能有多个）
+  const navigationElements = document.querySelectorAll('.navigation');
 
-      // 清空现有选项
-      answerJumpSelect.innerHTML = '';
-
-      // 重新生成选项
-      for (let i = 0; i < loadedCount; i++) {
-        const option = document.createElement('option');
-        option.value = i.toString();
-        option.textContent = (i + 1).toString();
-
-        // 设置选中状态
-        if (i === validCurrentIndex) {
-          option.selected = true;
+  navigationElements.forEach(navigation => {
+    // 1. 更新导航按钮区域
+    const navigationButtons = navigation.querySelector('.navigation-buttons');
+    if (navigationButtons) {
+      // 生成分页器HTML
+      const generatePaginatorHtml = (currentPage, totalPages) => {
+        if (totalPages <= 1) {
+          return "";
         }
 
-        answerJumpSelect.appendChild(option);
-      }
-    }
-  
-    // 2. 更新"已加载 X 个回答"文本
-    const loadedText = navInfo.querySelector('.loaded-text');
-    if (loadedText) {
-      loadedText.textContent = \`已加载 \${loadedCount} 个回答\`;
+        let paginatorHtml = '<div class="paginator">';
+
+        // 如果总页数小于等于7，直接显示所有页码
+        if (totalPages <= 7) {
+          for (let i = 1; i <= totalPages; i++) {
+            const isActive = i === currentPage;
+            paginatorHtml += \`<button class="page-button \${isActive ? "active-page" : ""}" \${
+              isActive ? "disabled" : \`onclick="jumpToAnswer(\${i - 1})"\`
+            }>\${i}</button>\`;
+          }
+        } else {
+          // 复杂的分页逻辑
+          const pageNumbers = [];
+
+          // 始终显示第一页
+          pageNumbers.push(1);
+
+          // 计算中间部分的页码
+          if (currentPage <= 4) {
+            // 当前页靠近开始
+            for (let i = 2; i <= 5; i++) {
+              pageNumbers.push(i);
+            }
+            pageNumbers.push("ellipsis");
+          } else if (currentPage >= totalPages - 3) {
+            // 当前页靠近结束
+            pageNumbers.push("ellipsis");
+            for (let i = totalPages - 4; i <= totalPages - 1; i++) {
+              pageNumbers.push(i);
+            }
+          } else {
+            // 当前页在中间
+            pageNumbers.push("ellipsis");
+            pageNumbers.push(currentPage - 1);
+            pageNumbers.push(currentPage);
+            pageNumbers.push(currentPage + 1);
+            pageNumbers.push("ellipsis");
+          }
+
+          // 始终显示最后一页
+          pageNumbers.push(totalPages);
+
+          // 生成页码按钮
+          for (const item of pageNumbers) {
+            if (item === "ellipsis") {
+              paginatorHtml += '<span class="page-ellipsis">...</span>';
+            } else {
+              const isActive = item === currentPage;
+              paginatorHtml += \`<button class="page-button \${
+                isActive ? "active-page" : ""
+              }" \${
+                isActive ? "disabled" : \`onclick="jumpToAnswer(\${item - 1})"\`
+              }>\${item}</button>\`;
+            }
+          }
+        }
+
+        paginatorHtml += "</div>";
+        return paginatorHtml;
+      };
+
+      // 重新生成整个导航按钮区域的HTML
+      const currentPage = validCurrentIndex + 1;
+      const totalPages = loadedCount;
+      const paginatorHtml = generatePaginatorHtml(currentPage, totalPages);
+
+      navigationButtons.innerHTML = \`
+        <button class="prev" onclick="loadPreviousAnswer()" \${validCurrentIndex === 0 ? "disabled" : ""}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">
+            <!-- Icon from OOUI by OOUI Team - https://github.com/wikimedia/oojs-ui/blob/master/LICENSE-MIT -->
+            <path fill="currentColor" d="m4 10l9 9l1.4-1.5L7 10l7.4-7.5L13 1z"/>
+          </svg>
+          <span>上一个</span>
+        </button>
+        \${paginatorHtml}
+        <button class="next" onclick="loadNextAnswer()" \${validCurrentIndex + 1 === loadedCount ? "disabled" : ""}>
+          <span>下一个</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">
+            <!-- Icon from OOUI by OOUI Team - https://github.com/wikimedia/oojs-ui/blob/master/LICENSE-MIT -->
+            <path fill="currentColor" d="M7 1L5.6 2.5L13 10l-7.4 7.5L7 19l9-9z"/>
+          </svg>
+        </button>
+      \`;
     }
 
-    // 3. 处理加载图标
-    const loadedInfo = navInfo.querySelector('.loaded-info');
-    if (loadedInfo) {
-      let loadingIcon = loadedInfo.querySelector('.loading-icon');
+    // 2. 更新导航信息区域
+    const navInfo = navigation.querySelector('.nav-info');
+    if (navInfo) {
+      // 生成页码跳转选择器
+      const generatePageJumpSelector = () => {
+        // 生成选项
+        let options = "";
+        for (let i = 0; i < loadedCount; i++) {
+          const selected = i === validCurrentIndex ? "selected" : "";
+          options += \`<option value="\${i}" \${selected}>\${i + 1}</option>\`;
+        }
 
-      if (isLoading) {
-        // 如果正在加载但没有图标，添加图标
-        if (!loadingIcon) {
-          const iconSpan = document.createElement('span');
-          iconSpan.className = 'loading-icon';
-          iconSpan.innerHTML = \`
+        return \`
+          当前第
+          <select onchange="jumpToAnswer(this.value)" class="answer-jump-select" title="跳转到指定回答（仅限已加载的回答）">
+            \${options}
+          </select>
+          个回答
+        \`;
+      };
+
+      // 生成加载图标
+      const loadingIcon = isLoading
+        ? \`<span class="loading-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
               <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
                 <path stroke-dasharray="16" stroke-dashoffset="16" d="M12 3c4.97 0 9 4.03 9 9">
@@ -152,21 +232,22 @@ function updateNavInfo(loadedCount, totalCount, isLoading, currentIndex) {
                 </path>
               </g>
             </svg>
-          \`;
-          loadedInfo.appendChild(iconSpan);
-        }
-      } else {
-        // 如果不在加载但有图标，移除图标
-        if (loadingIcon) {
-          loadingIcon.remove();
-        }
-      }
-    }
+          </span>\`
+        : "";
 
-    // 4. 更新"共 X 个回答"文本
-    const totalCountElement = navInfo.querySelector('.total-count');
-    if (totalCountElement && totalCount > 0) {
-      totalCountElement.textContent = \`共 \${totalCount} 个回答\`;
+      // 重新生成整个nav-info区域的HTML
+      const currentIndexText = generatePageJumpSelector();
+      const totalText = totalCount > 0 ? \`共 \${totalCount} 个回答\` : "";
+
+      navInfo.innerHTML = \`
+        <span class="current-answer-info">\${currentIndexText}</span>
+        <span class="separator">|</span>
+        <div class="loaded-info">
+          <span class="loaded-text">已加载 \${loadedCount} 个回答</span>
+          \${loadingIcon}
+        </div>
+        \${totalText ? \`<span class="separator">| </span><span class="total-count">\${totalText}</span>\` : ""}
+      \`;
     }
   });
 }

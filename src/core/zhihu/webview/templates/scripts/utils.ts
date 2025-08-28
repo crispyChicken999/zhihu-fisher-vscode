@@ -137,10 +137,10 @@ function showDonateModal() {
         display: flex;
         align-items: center;
         justify-content: center;
-        animation: fadeIn 0.3s ease-out;
+        animation: fadeScaleIn 0.3s ease-out;
       }
 
-      @keyframes fadeIn {
+      @keyframes fadeScaleIn {
         from { opacity: 0; transform: scale(0.9); }
         to { opacity: 1; transform: scale(1); }
       }
