@@ -628,12 +628,28 @@ function updateTooltipsWithShortcuts() {
       const defaultShortcuts_button = defaultShortcuts[button.id];
 
       let finalShortcuts = [];
-      if (customShortcuts && Array.isArray(customShortcuts) && customShortcuts.length > 0) {
-        finalShortcuts = customShortcuts.filter(s => s && s.trim());
-      } else if (customShortcuts && typeof customShortcuts === 'string' && customShortcuts.trim()) {
-        finalShortcuts = [customShortcuts.trim()];
-      } else if (defaultShortcuts_button) {
-        finalShortcuts = defaultShortcuts_button;
+
+      // 检查用户是否有有效的自定义快捷键设置
+      const hasValidCustomShortcuts = customShortcuts &&
+        ((Array.isArray(customShortcuts) && customShortcuts.some(s => s && s.trim())) ||
+        (typeof customShortcuts === 'string' && customShortcuts.trim()));
+
+      if (hasValidCustomShortcuts) {
+        // 使用自定义快捷键
+        if (Array.isArray(customShortcuts)) {
+          finalShortcuts = customShortcuts.filter(s => s && s.trim());
+        } else {
+          finalShortcuts = [customShortcuts.trim()];
+        }
+      } else {
+        // 只有当用户完全没有设置或设置为空时，才使用默认快捷键
+        const shouldUseDefault = !customShortcuts ||
+          (Array.isArray(customShortcuts) && customShortcuts.length === 0) ||
+          (Array.isArray(customShortcuts) && customShortcuts.every(key => !key || key.trim() === ''));
+
+        if (shouldUseDefault && defaultShortcuts_button) {
+          finalShortcuts = defaultShortcuts_button;
+        }
       }
 
       // 添加快捷键信息
@@ -653,13 +669,33 @@ function updateTooltipsWithShortcuts() {
   const backTopButton = document.getElementById('scroll-to-top');
   if (backTopButton) {
     let tooltip = '回到顶部';
-    if (backTopShortcuts && Array.isArray(backTopShortcuts) && backTopShortcuts.length > 0) {
-      tooltip += '(' + backTopShortcuts.join(' | ') + ')';
-    } else if (backTopShortcuts && typeof backTopShortcuts === 'string') {
-      tooltip += '(' + backTopShortcuts + ')';
+
+    // 检查是否有有效的自定义快捷键
+    const hasValidBackTopShortcuts = backTopShortcuts &&
+        ((Array.isArray(backTopShortcuts) && backTopShortcuts.some(s => s && s.trim())) ||
+        (typeof backTopShortcuts === 'string' && backTopShortcuts.trim()));
+
+    if (hasValidBackTopShortcuts) {
+      // 使用自定义快捷键
+      if (Array.isArray(backTopShortcuts)) {
+        const validShortcuts = backTopShortcuts.filter(s => s && s.trim());
+        if (validShortcuts.length > 0) {
+          tooltip += '(' + validShortcuts.join(' | ') + ')';
+        }
+      } else {
+        tooltip += '(' + backTopShortcuts + ')';
+      }
     } else {
-      tooltip += '(V)';
+      // 只有当用户完全没有设置或设置为空时，才使用默认快捷键
+      const shouldUseDefault = !backTopShortcuts ||
+        (Array.isArray(backTopShortcuts) && backTopShortcuts.length === 0) ||
+        (Array.isArray(backTopShortcuts) && backTopShortcuts.every(key => !key || key.trim() === ''));
+
+      if (shouldUseDefault) {
+        tooltip += '(V)'; // 默认快捷键
+      }
     }
+
     backTopButton.setAttribute('tooltip', tooltip);
   }
 }
@@ -763,6 +799,29 @@ function checkCustomShortcut(event) {
       }
 
       return true; // 表示找到了匹配的快捷键
+    }
+  }
+
+  // 这里还有一种情况是，比如下一个回答默认有两个快捷键：D 和 右箭头
+  // 用户自定义时只设置了 D，那么按右箭头时不应该触发，只有当下一个回答的快捷键被清空时，才走默认快捷键
+  // 检查是否应该使用默认快捷键
+  const defaultShortcuts = getDefaultShortcutConfig();
+
+  for (const [buttonId, defaultKeys] of Object.entries(defaultShortcuts)) {
+    // 检查当前按键是否匹配某个按钮的默认快捷键
+    if (defaultKeys && Array.isArray(defaultKeys) && defaultKeys.includes(currentShortcut)) {
+      // 获取用户的自定义配置
+      const userShortcuts = shortcutConfig[buttonId];
+
+      // 只有当用户完全没有设置（undefined）或者设置为空数组时，才使用默认快捷键
+      const shouldUseDefault = !userShortcuts ||
+        (Array.isArray(userShortcuts) && userShortcuts.length === 0) ||
+        (Array.isArray(userShortcuts) && userShortcuts.every(key => !key || key.trim() === ''));
+
+      // 如果用户设置了快捷键，则阻止使用默认快捷键
+      if (!shouldUseDefault) {
+        return true;
+      }
     }
   }
 

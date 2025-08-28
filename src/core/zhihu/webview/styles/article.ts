@@ -24,7 +24,7 @@ export const articleCss = `
 }
 
 .article-content p {
-  margin: 10px 0;
+  margin: 1em 0;
   word-break: break-word;
 }
 
@@ -38,7 +38,7 @@ export const articleCss = `
 
 .article-content.mini-media video {
   /* 缩放比例现在通过JavaScript动态设置 */
-  margin: 10px 0;
+  margin: 1em 0;
 }
 
 .article-content img.formula {
@@ -66,8 +66,8 @@ export const articleCss = `
   gap: 8px;
   margin-right: 6px;
   padding: 4px 8px;
-  font-size: 0.9em;
-  border-radius: 3px;
+  font-size: min(1em, 12px);
+  border-radius: 2px;
   background-color: var(--vscode-editor-inactiveSelectionBackground);
   color: var(--vscode-descriptionForeground);
 }
@@ -115,8 +115,6 @@ export const articleCss = `
 }
 
 .vote-button svg {
-  width: 16px;
-  height: 16px;
   opacity: 0.8;
 }
 
@@ -190,7 +188,6 @@ export const articleCss = `
   color: var(--vscode-descriptionForeground);
   display: flex;
   gap: 5px;
-  overflow-x: auto;
 }
 
 .meta-item.time .update-time {

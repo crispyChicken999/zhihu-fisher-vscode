@@ -51,11 +51,6 @@ export class NavigationComponent implements Component {
       const currentIndex = this.article.currentAnswerIndex;
       const loadedCount = this.article.loadedAnswerCount || 1;
 
-      // 如果只有一个回答，显示普通文本
-      if (loadedCount <= 1) {
-        return `当前第 ${currentIndex + 1} 个回答`;
-      }
-
       // 生成选项
       let options = "";
       for (let i = 0; i < loadedCount; i++) {
@@ -74,7 +69,6 @@ export class NavigationComponent implements Component {
 
     // 显示当前回答索引、已加载回答数和总回答数，分别显示
     let currentIndexText = generatePageJumpSelector();
-    let loadedText = `已加载 ${this.article.loadedAnswerCount || 1} 个回答`;
     let totalText =
       this.article.totalAnswerCount && this.article.totalAnswerCount > 0
         ? `共 ${this.article.totalAnswerCount} 个回答`
@@ -82,7 +76,7 @@ export class NavigationComponent implements Component {
 
     // 如果正在加载更多，添加指示器
     let loadingIcon = this.webview.batchConfig.isLoadingBatch
-      ? `<div style="display: inline-flex; justify-content: center; align-items: center; height: 100%">
+      ? `<span class="loading-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
             <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
               <path stroke-dasharray="16" stroke-dashoffset="16" d="M12 3c4.97 0 9 4.03 9 9">
@@ -94,18 +88,21 @@ export class NavigationComponent implements Component {
               </path>
             </g>
           </svg>
-        </div>
+        </span>
       `
       : "";
 
     navInfoHtml = `
       <div class="nav-info">
-        <span>${currentIndexText}</span>
+        <span class="current-answer-info">${currentIndexText}</span>
         <span class="separator">|</span>
-        <div style="display: inline-flex; align-items: center; gap:5px">${loadedText}${loadingIcon}</div>
+        <div class="loaded-info">
+          <span class="loaded-text">已加载 ${this.article.loadedAnswerCount || 1} 个回答</span>
+          ${loadingIcon}
+        </div>
         ${
           totalText
-            ? `<span class="separator">| </span><span>${totalText}</span>`
+            ? `<span class="separator">| </span><span class="total-count">共 ${this.article.totalAnswerCount} 个回答</span>`
             : ""
         }
       </div>
@@ -122,7 +119,7 @@ export class NavigationComponent implements Component {
           <button class="prev" onclick="loadPreviousAnswer()"
           ${this.article.currentAnswerIndex === 0 ? "disabled" : ""}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 20 20">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">
               <!-- Icon from OOUI by OOUI Team - https://github.com/wikimedia/oojs-ui/blob/master/LICENSE-MIT -->
               <path fill="currentColor" d="m4 10l9 9l1.4-1.5L7 10l7.4-7.5L13 1z"/>
             </svg>
@@ -136,7 +133,7 @@ export class NavigationComponent implements Component {
               : ""
           }>
             <span>下一个</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 20 20">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">
               <!-- Icon from OOUI by OOUI Team - https://github.com/wikimedia/oojs-ui/blob/master/LICENSE-MIT -->
               <path fill="currentColor" d="M7 1L5.6 2.5L13 10l-7.4 7.5L7 19l9-9z"/>
             </svg>

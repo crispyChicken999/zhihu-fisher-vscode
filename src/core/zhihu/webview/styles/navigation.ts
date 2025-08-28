@@ -7,6 +7,7 @@ export const navigationCss = `
   display: flex;
   align-items: center;
   gap: 5px;
+  line-height: 0;
 }
 
 .page-button {
@@ -84,11 +85,10 @@ export const navigationCss = `
 
 .nav-info {
   color: var(--vscode-descriptionForeground);
-  font-size: 0.9em;
+  font-size: min(0.9em, 12px);
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-  padding: 4px 0;
 }
 
 .nav-info > * {
@@ -124,6 +124,32 @@ export const navigationCss = `
 .answer-jump-select:focus {
   border-color: var(--vscode-focusBorder);
   box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+}
+
+/* 导航信息各部分样式 */
+.current-answer-info {
+  /* 当前回答信息区域 */
+}
+
+.loaded-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.loaded-text {
+  /* 已加载回答数文本 */
+}
+
+.loading-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.total-count {
+  /* 总回答数文本 */
 }
 
 /* 自适应调整 */

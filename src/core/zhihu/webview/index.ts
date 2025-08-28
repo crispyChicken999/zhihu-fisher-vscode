@@ -71,28 +71,16 @@ export class WebviewManager {
     // 获取短标题
     const shortTitle = this.getShortTitle(item.title);
 
-    // 根据内容类型设置不同的面板类型和标题
-    const panelType =
-      item.type === "article" ? "zhihuArticle" : "zhihuQuestion";
-    let loadingTitle;
-    if (isSpecificAnswer) {
-      loadingTitle = "加载回答中";
-    } else if (item.type === "article") {
-      loadingTitle = "加载文章中";
-    } else {
-      loadingTitle = "加载问题中";
-    }
-
     // 创建并配置WebView面板
     const panel = vscode.window.createWebviewPanel(
-      panelType,
+      'zhihu-fisher-content-viewer', // 使用固定的panel类型，避免localstorage失效
       shortTitle,
       vscode.ViewColumn.Active, // 修改为在当前编辑组显示
       {
         enableScripts: true,
         retainContextWhenHidden: true,
         localResourceRoots: [
-          vscode.Uri.joinPath(Store.context!.extensionUri, "resources")
+          vscode.Uri.joinPath(Store.context!.extensionUri, "resources"),
         ],
       }
     );
@@ -209,6 +197,28 @@ export class WebviewManager {
       HtmlRenderer.getArticleHtml(webviewId);
   }
 
+  /**
+   * 更新导航信息
+   * 通过 postMessage 部分更新DOM，不用 updateWebview 全刷，体验更好
+   */
+  private static updateNavInfoViaMessage(
+    webviewId: string,
+    isLoading: boolean = false
+  ): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    // 发送消息更新导航信息
+    webviewItem.webviewPanel.webview.postMessage({
+      command: "updateNavInfo",
+      loadedCount: webviewItem.article.loadedAnswerCount,
+      totalCount: webviewItem.article.totalAnswerCount,
+      isLoading: isLoading,
+    });
+  }
+
   /** 从URL中爬取数据 */
   private static async crawlingURLData(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
@@ -290,9 +300,12 @@ export class WebviewManager {
             // 将预加载的回答放在第一位
             webviewItem.article.answerList.push(preloadedAnswerItem);
             webviewItem.article.loadedAnswerCount = 1;
+            webviewItem.article.totalAnswerCount = 1;
 
             // 更新WebView显示特定回答
             this.updateWebview(webviewId);
+
+            webviewItem.isLoaded = true; // 关键步骤，标记为已加载
             console.log(`成功预加载特定回答: ${preloadedAnswer.id}`);
           } else {
             // 如果没有获取到内容，显示错误页面
@@ -320,6 +333,7 @@ export class WebviewManager {
             );
 
             webviewItem.isLoading = false;
+            webviewItem.isLoaded = true;
             return;
           }
         } catch (error) {
@@ -399,7 +413,9 @@ export class WebviewManager {
       webviewItem.batchConfig.beforeLoadCount =
         webviewItem.batchConfig.afterLoadCount =
           webviewItem.article.answerList.length;
-      await this.parseAllAnswers(webviewId, page); // 解析页面中的全部回答
+
+      // 解析页面中的全部回答
+      await this.parseAllAnswers(webviewId, page);
 
       // 检查是否爬取到了任何回答
       const webviewItemAfterParsing = Store.webviewMap.get(webviewId);
@@ -433,6 +449,13 @@ export class WebviewManager {
 
         webviewItemAfterParsing.isLoading = false;
         return;
+      }
+
+      if (!webviewItem.isLoaded) {
+        this.updateWebview(webviewId); // 更新WebView内容
+        webviewItem.isLoaded = true;
+      } else {
+        this.updateNavInfoViaMessage(webviewId, true); // 通过消息更新导航信息
       }
 
       await this.loadMoreAnswers(webviewId, page); // 加载更多回答
@@ -1081,7 +1104,7 @@ export class WebviewManager {
 
     try {
       webviewItem.article.isLoading = true;
-      this.updateWebview(webviewId); // 更新WebView内容
+      this.updateNavInfoViaMessage(webviewId, true); // 通过消息更新导航信息
 
       console.log("开始解析回答列表...");
 
@@ -1358,7 +1381,8 @@ export class WebviewManager {
         webviewItem.article.answerList.length >=
         webviewItem.article.totalAnswerCount;
 
-      this.updateWebview(webviewId); // 更新WebView内容
+      // this.updateWebview(webviewId); // 更新WebView内容
+      this.updateNavInfoViaMessage(webviewId, false); // 发送导航信息更新（加载完成）
     } catch (error) {
       console.error("解析内容时出错:", error);
       throw new Error("解析内容时出错:" + error);
@@ -1386,11 +1410,14 @@ export class WebviewManager {
       return;
     }
 
+    // 发送加载中状态
+    this.updateNavInfoViaMessage(webviewId, true);
+
     if (webviewItem.article.loadComplete) {
       console.log("全部回答已加载完成，停止加载更多。");
       webviewItem.article.isLoading = false; // 设置为加载完成
       webviewItem.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
-      this.updateWebview(webviewId); // 更新WebView内容
+      this.updateNavInfoViaMessage(webviewId, false); // 发送加载完成状态
       return;
     }
 
@@ -1426,7 +1453,7 @@ export class WebviewManager {
         // 更新已加载的回答数量，因为有时候页面中显示的回答总数和页面回答的实际数量不匹配，如果滚动到底部，数量不一致则以实际数量为准
         webviewItem.article.totalAnswerCount =
           webviewItem.article.loadedAnswerCount;
-        this.updateWebview(webviewId); // 更新WebView内容
+        this.updateNavInfoViaMessage(webviewId, false); // 发送加载完成状态
         return;
       } else {
         console.log(
@@ -1455,6 +1482,9 @@ export class WebviewManager {
         return;
       }
 
+      // 解析后发送导航信息更新（仍在加载中）
+      this.updateNavInfoViaMessage(webviewId, true);
+
       const beforeLoadCount = webviewItemUpdated.batchConfig.beforeLoadCount; // 加载前的回答数量
       const afterLoadCount = webviewItemUpdated.batchConfig.afterLoadCount; // 加载后的回答数量
       const limitPerBatch = webviewItemUpdated.batchConfig.limitPerBatch; // 每批加载的回答数量
@@ -1472,7 +1502,7 @@ export class WebviewManager {
 
         // 更新WebView前再次检查页面是否存在
         if (Store.webviewMap.has(webviewId)) {
-          this.updateWebview(webviewId); // 更新WebView内容
+          this.updateNavInfoViaMessage(webviewId, false); // 发送加载完成状态
         } else {
           console.log("页面已关闭，取消更新WebView");
         }
@@ -1504,6 +1534,7 @@ export class WebviewManager {
       const currentWebviewItem = Store.webviewMap.get(webviewId);
       if (currentWebviewItem) {
         currentWebviewItem.batchConfig.isLoadingBatch = false;
+        this.updateNavInfoViaMessage(webviewId, false); // 发送加载完成状态
         console.log("发生错误，中断加载过程");
       } else {
         console.log("页面已关闭，忽略加载错误");
@@ -1543,9 +1574,6 @@ export class WebviewManager {
       newMode,
       vscode.ConfigurationTarget.Global
     );
-
-    // 重新加载文章内容（不触发网络请求，仅重新处理已获取的内容）
-    this.updateWebview(webviewId);
   }
 
   /** 设置媒体显示模式 */
@@ -1564,7 +1592,6 @@ export class WebviewManager {
       mode,
       vscode.ConfigurationTarget.Global
     );
-    this.updateWebview(webviewId);
   }
 
   /** 设置Mini模式下图片缩放比例 */
@@ -1867,9 +1894,7 @@ export class WebviewManager {
     DisguiseManager.clearAllDisguiseCache();
   }
 
-  /**
-   * 处理收藏内容请求
-   */
+  /** 处理收藏内容请求 */
   private static async handleFavoriteContent(
     contentToken: string,
     contentType: "article" | "answer"
@@ -2144,7 +2169,9 @@ export class WebviewManager {
    * 处理更新选择的伪装类型
    * @param selectedTypes 用户选择的伪装类型数组
    */
-  private static async handleUpdateSelectedDisguiseTypes(selectedTypes: string[]): Promise<void> {
+  private static async handleUpdateSelectedDisguiseTypes(
+    selectedTypes: string[]
+  ): Promise<void> {
     try {
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
       await config.update(
@@ -2153,7 +2180,11 @@ export class WebviewManager {
         vscode.ConfigurationTarget.Global
       );
 
-      console.log(`伪装类型已更新: ${selectedTypes.length > 0 ? selectedTypes.join(", ") : "使用全部类型"}`);
+      console.log(
+        `伪装类型已更新: ${
+          selectedTypes.length > 0 ? selectedTypes.join(", ") : "使用全部类型"
+        }`
+      );
     } catch (error) {
       console.error("更新伪装类型时出错:", error);
       vscode.window.showErrorMessage(
@@ -2167,10 +2198,15 @@ export class WebviewManager {
    * @param webviewId WebView的ID
    * @param selectedTypes 选择的伪装类型
    */
-  private static async handlePreviewDisguise(webviewId: string, selectedTypes: string[]): Promise<void> {
+  private static async handlePreviewDisguise(
+    webviewId: string,
+    selectedTypes: string[]
+  ): Promise<void> {
     try {
       // 导入DisguiseManager
-      const { DisguiseManager } = await import("../../utils/disguise-manager.js");
+      const { DisguiseManager } = await import(
+        "../../utils/disguise-manager.js"
+      );
 
       // 临时更新配置以进行预览
       const config = vscode.workspace.getConfiguration("zhihu-fisher");

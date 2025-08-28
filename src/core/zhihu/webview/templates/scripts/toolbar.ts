@@ -346,7 +346,7 @@ function hideToolbarButton(buttonId, event) {
     // 显示提示信息
     vscode.postMessage({
       command: 'showNotification',
-      message: \`已隐藏"\${button.name}"按钮，可在样式设置面板中重新启用\`
+      message: \`已隐藏"\${button.name}"按钮，可在设置面板中重新启用\`
     });
   }
 }

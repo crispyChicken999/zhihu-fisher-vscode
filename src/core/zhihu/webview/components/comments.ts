@@ -430,9 +430,9 @@ export class CommentsComponent implements Component {
     return `
       <div class="zhihu-comments-container" data-answer-id="${this.answerId}">
         <div class="zhihu-comments-header">
-          <h3>全部评论 (${this.paging.totals})</h3>
+          <span style="font-weight: 700;">全部评论 (${this.paging.totals})</span>
           <div class="zhihu-comments-tips">
-            <span>键盘</span>
+            <span>默认键盘</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                 <path fill="currentColor" d="m10 17l2-4H9V7h6v6l-2 4zM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 2v14h14V5z"/>
               </svg>
@@ -457,7 +457,7 @@ export class CommentsComponent implements Component {
         <div class="zhihu-comments-header">
           <h3>全部评论 (${this.paging.totals})</h3>
           <div class="zhihu-comments-tips">
-            <span>键盘</span>
+            <span>默认键盘</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                 <path fill="currentColor" d="m10 17l2-4H9V7h6v6l-2 4zM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 2v14h14V5z"/>
               </svg>
@@ -658,7 +658,6 @@ export class CommentsComponent implements Component {
                     border-radius: 2px;
                     border: 1px solid #D3D3D3;
                     font-size: 1em;
-                    margin-left: 0px;
                     display: inline-block;
                     height: 1em;
                     line-height: 1em;
@@ -2355,7 +2354,7 @@ export class CommentsManager {
     } else {
       // 如果是收起状态，显示展开按钮
       commentsHtml = `
-        <button class="zhihu-expand-comments-btn" onclick="toggleCommentStatus('${answerId}')" data-answer-id="${answerId}">
+        <button class="zhihu-expand-comments-btn" onclick="toggleCommentStatus('${answerId}')" data-answer-id="${answerId}" tooltip="按(，)展开/收起评论" placement="right">
           展开评论 (${currentAnswer.commentPaging?.totals || 0})
         </button>
       `;

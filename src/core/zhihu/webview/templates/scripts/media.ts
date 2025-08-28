@@ -132,19 +132,39 @@ function backTop() {
 function updateMediaDisplayClass(mode) {
   const content = document.querySelector('.article-content');
   const meta = document.querySelector('.article-meta');
+  const comments = document.querySelector('.comments-container');
+  const commentsModal = document.querySelector('.comments-modal-container');
 
   if (content && meta) {
     // 移除所有模式类
     content.classList.remove('hide-media', 'mini-media');
     meta.classList.remove('hide-media', 'mini-media');
+    if (comments) {
+      comments.classList.remove('hide-media', 'mini-media');
+    }
+    if (commentsModal) {
+      commentsModal.classList.remove('hide-media', 'mini-media');
+    }
 
     // 添加当前模式类
     if (mode === 'none') {
       content.classList.add('hide-media');
       meta.classList.add('hide-media');
+      if (comments) {
+        comments.classList.add('hide-media');
+      }
+      if (commentsModal) {
+        commentsModal.classList.add('hide-media');
+      }
     } else if (mode === 'mini') {
       content.classList.add('mini-media');
       meta.classList.add('mini-media');
+      if (comments) {
+        comments.classList.add('mini-media');
+      }
+      if (commentsModal) {
+        commentsModal.classList.add('mini-media');
+      }
     }
 
     // 重新初始化FancyBox，因为显示模式可能会影响图片的可见性
@@ -161,6 +181,8 @@ function updateMediaDisplayClass(mode) {
  * @param {number} scale 缩放比例 (1-100)
  */
 function updateMiniMediaScale(scale) {
+  currentMiniMediaScale = scale;
+
   // 动态创建或更新样式
   let styleElement = document.getElementById('mini-media-scale-style');
   if (!styleElement) {
@@ -202,11 +224,20 @@ function toggleMediaDisplay() {
   // 更新DOM
   updateMediaDisplayClass(currentMediaMode);
 
-  // 更新单选框
-  const radio = document.querySelector(\`input[name="media-display"][value="\${currentMediaMode}"]\`);
-  if (radio) {
-    radio.checked = true;
+  // 更新media-display-select的值
+  const select = document.getElementById('media-display-select');
+  if (select) {
+    select.value = currentMediaMode;
   }
+
+  // 更新mini-scale-option的显示状态
+  const miniScaleOption = document.getElementById('mini-scale-option');
+  if (miniScaleOption) {
+    miniScaleOption.style.display = currentMediaMode === 'mini' ? 'block' : 'none';
+  }
+
+  // 更新mini缩放比例设置显示
+  updateMiniMediaScale(currentMiniMediaScale);
 
   // 保存设置
   vscode.postMessage({ command: "toggleMedia" });
@@ -255,10 +286,10 @@ function changeMediaMode(mode) {
     miniScaleOption.style.display = mode === 'mini' ? 'block' : 'none';
   }
 
-  // 更新单选框
-  const radio = document.querySelector(\`input[name="media-display"][value="\${currentMediaMode}"]\`);
-  if (radio) {
-    radio.checked = true;
+  // 更新media-display-select的值
+  const select = document.getElementById('media-display-select');
+  if (select) {
+    select.value = currentMediaMode;
   }
 
   // 保存设置
@@ -286,5 +317,16 @@ function changeMiniMediaScale(scale) {
 
   // 保存设置
   vscode.postMessage({ command: "setMiniMediaScale", scale: scaleValue });
+}
+
+/* 更新Mini模式下图片缩放比例显示值 */
+function updateMiniMediaScaleInputSpanValue(scale) {
+  const scaleValue = parseInt(scale);
+
+  // 更新显示值
+  const scaleValueElement = document.getElementById('mini-media-scale-value');
+  if (scaleValueElement) {
+    scaleValueElement.textContent = scaleValue + '%';
+  }
 }
 `;

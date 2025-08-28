@@ -130,6 +130,11 @@ window.addEventListener('message', event => {
       }
     }, 100);
   }
+
+  // 处理更新导航信息的消息
+  else if (message.command === 'updateNavInfo') {
+    updateNavInfo(message.data);
+  }
 });
 
 /**

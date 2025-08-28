@@ -2,11 +2,6 @@
  * 样式面板和设置脚本
  */
 export const styleScript = `
-/**
- * 设置样式面板
- */
-function setupStylePanel() {
-  // 样式面板相关功能的初始化
   // 默认样式
   const defaultStyles = {
     fontSize: '13px',
@@ -16,6 +11,12 @@ function setupStylePanel() {
     contentColor: getComputedStyle(document.body).getPropertyValue('--vscode-foreground').trim(),
     textAlign: 'left'
   };
+
+/**
+ * 设置样式面板
+ */
+function setupStylePanel() {
+  // 样式面板相关功能的初始化
 
   // 从localStorage加载样式设置
   const savedStyles = JSON.parse(localStorage.getItem('zhihu-fisher-text-styles')) || defaultStyles;
@@ -131,10 +132,33 @@ function setupStylePanel() {
         document.querySelector('.comments-container').style.color = color;
         document.querySelector('.comments-modal-container').style.color = color;
         updateLocalStorage();
+
+        // 更新预设按钮的选中状态
+        const presetButtons = document.querySelectorAll('.color-preset-btn');
+        presetButtons.forEach(btn => {
+          if (btn.dataset.color === color) {
+            btn.classList.add('selected');
+          } else {
+            btn.classList.remove('selected');
+          }
+        });
       });
 
       colorInput.value = savedStyles.contentColor || defaultStyles.contentColor;
       colorValue.textContent = savedStyles.contentColor || defaultStyles.contentColor;
+
+      // 初始化预设按钮的选中状态
+      setTimeout(() => {
+        const currentColor = colorInput.value;
+        const presetButtons = document.querySelectorAll('.color-preset-btn');
+        presetButtons.forEach(btn => {
+          if (btn.dataset.color === currentColor) {
+            btn.classList.add('selected');
+          } else {
+            btn.classList.remove('selected');
+          }
+        });
+      }, 100);
     }
   }
 
@@ -219,6 +243,16 @@ function setupStylePanel() {
         if (colorInput && colorValue) {
           colorInput.value = defaultStyles.contentColor;
           colorValue.textContent = defaultStyles.contentColor;
+
+          // 重置预设按钮的选中状态
+          const presetButtons = document.querySelectorAll('.color-preset-btn');
+          presetButtons.forEach(btn => {
+            if (btn.dataset.color === defaultStyles.contentColor) {
+              btn.classList.add('selected');
+            } else {
+              btn.classList.remove('selected');
+            }
+          });
         }
       }
 
@@ -294,6 +328,47 @@ function switchStyleTab(tabName) {
   const panelContent = document.querySelector('.style-panel-content');
   if (panelContent) {
     panelContent.scrollTop = 0;
+  }
+}
+
+/**
+ * 选择预设颜色
+ * @param {string} color - 颜色值
+ */
+function selectPresetColor(color) {
+  const colorInput = document.getElementById('content-color');
+  const colorValue = document.getElementById('content-color-value');
+
+  if (colorInput && colorValue) {
+    // 更新颜色选择器的值
+    colorInput.value = color;
+    colorValue.textContent = color;
+
+    // 应用颜色到页面元素
+    const header = document.querySelector('header');
+    const articleContent = document.querySelector('.article-content');
+    const commentsContainer = document.querySelector('.comments-container');
+    const commentsModal = document.querySelector('.comments-modal-container');
+
+    if (header) header.style.color = color;
+    if (articleContent) articleContent.style.color = color;
+    if (commentsContainer) commentsContainer.style.color = color;
+    if (commentsModal) commentsModal.style.color = color;
+
+    // 更新本地存储
+    const savedStyles = JSON.parse(localStorage.getItem('zhihu-fisher-text-styles')) || defaultStyles;
+    savedStyles.contentColor = color;
+    localStorage.setItem('zhihu-fisher-text-styles', JSON.stringify(savedStyles));
+
+    // 更新预设按钮的选中状态
+    const presetButtons = document.querySelectorAll('.color-preset-btn');
+    presetButtons.forEach(btn => {
+      if (btn.dataset.color === color) {
+        btn.classList.add('selected');
+      } else {
+        btn.classList.remove('selected');
+      }
+    });
   }
 }
 
@@ -384,29 +459,29 @@ function initializeDisguiseTypesSelector() {
   const selectedTypes = getSelectedDisguiseTypes();
 
   // 生成HTML
-  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">';
+  let html = '<div class="disguise-type-grid">';
 
   Object.entries(fileTypes).forEach(([iconFile, info]) => {
     const isChecked = selectedTypes.includes(iconFile);
     html += \`
-      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border: 1px solid var(--vscode-panel-border); border-radius: 4px; background: var(--vscode-editor-background); \${isChecked ? 'border-color: var(--vscode-textLink-foreground);' : ''}">
+      <label class="disguise-type-item \${isChecked ? 'selected' : ''}">
         <input
           type="checkbox"
           value="\${iconFile}"
           \${isChecked ? 'checked' : ''}
           onchange="updateDisguiseTypeSelection()"
-          style="transform: scale(1.1);"
+          class="disguise-type-checkbox"
         >
         <img
           src="\${resourcesBasePath}/fake/\${iconFile}"
-          style="width: 16px; height: 16px; margin-right: 4px;"
+          class="disguise-type-icon"
           alt=""
         >
-        <div style="flex: 1; min-width: 0;">
-          <div style="font-weight: 500; color: var(--vscode-editor-foreground); margin-bottom: 2px;">
+        <div class="disguise-type-content">
+          <div class="disguise-type-name">
             \${info.name}
           </div>
-          <div style="font-size: 11px; color: var(--vscode-descriptionForeground); font-family: monospace;">
+          <div class="disguise-type-preview">
             示例: \${info.preview}
           </div>
         </div>
@@ -455,11 +530,9 @@ function updateDisguiseTypeSelection() {
     const label = cb.closest('label');
     if (label) {
       if (cb.checked) {
-        label.style.borderColor = 'var(--vscode-textLink-foreground)';
-        label.style.background = 'var(--vscode-textBlockQuote-background)';
+        label.classList.add('selected');
       } else {
-        label.style.borderColor = 'var(--vscode-panel-border)';
-        label.style.background = 'var(--vscode-editor-background)';
+        label.classList.remove('selected');
       }
     }
   });

@@ -12,12 +12,6 @@ export const toolbarCss = `
   gap: 10px;
 }
 
-.toolbar-left, .toolbar-right {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
 .button {
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
@@ -26,7 +20,7 @@ export const toolbarCss = `
   border-radius: 2px;
   cursor: pointer;
   margin-right: 0;
-  font-size: 12px;
+  font-size: 1em;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -123,12 +117,11 @@ body.immersive-mode .article-content + .answer-meta {
   display: flex !important;
   justify-content: center;
   padding: 0;
-  margin: 10px 0;
+  margin: min(0.9em, 10px) 0;
   background: none;
   border-radius: 0px;
   max-width: fit-content;
-  font-size: 0.9em;
-  gap: 10px;
+  gap: min(1em, 12px);
 }
 
 /* 沉浸模式下的 meta-item 样式优化 */
@@ -142,8 +135,6 @@ body.immersive-mode .answer-meta .meta-item {
 body.immersive-mode .answer-meta .vote-buttons svg,
 body.immersive-mode .answer-meta .meta-item svg {
   opacity: 1;
-  width: 15px;
-  height: 15px;
   filter: grayscale(100%);
 }
 

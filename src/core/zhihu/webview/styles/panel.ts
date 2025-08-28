@@ -1,8 +1,8 @@
 /**
- * 样式设置面板相关样式
+ * 设置面板相关样式
  */
 export const panelCss = `
-/* 样式设置面板 */
+/* 设置面板 */
 .style-panel-header {
   display: flex;
   justify-content: space-between;
@@ -43,6 +43,64 @@ export const panelCss = `
   cursor: pointer;
 }
 
+/* 颜色预设样式 */
+.color-presets-container {
+  margin-top: 8px;
+}
+
+.color-presets-label {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.color-preset-btn {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--vscode-dropdown-border);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.color-preset-btn:hover {
+  transform: scale(1.1);
+  border-color: var(--vscode-textLink-foreground);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-preset-btn:active {
+  transform: scale(0.95);
+}
+
+.color-preset-btn::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.color-preset-btn.selected::after {
+  opacity: 1;
+}
+
 .style-panel {
   position: fixed;
   top: 50%;
@@ -70,23 +128,6 @@ export const panelCss = `
   background-color: var(--vscode-dropdown-background);
   color: var(--vscode-dropdown-foreground);
   border: 1px solid var(--vscode-dropdown-border);
-}
-
-.style-panel-tips {
-  font-size: 12px;
-  color: var(--vscode-descriptionForeground);
-  margin: 10px;
-  padding: 5px 0;
-  display: flex;
-  gap: 5px;
-  justify-content: center;
-  background: var(--vscode-activityBar-background);
-  border-radius: 4px;
-  align-items: center;
-}
-
-.style-panel-tips-wrapper {
-  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 .style-panel-content {
@@ -155,6 +196,62 @@ export const panelCss = `
   padding: 2px 6px;
   border-radius: 3px;
   margin-left: auto;
+}
+
+/* 伪装文件类型选择项样式 */
+.disguise-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.disguise-type-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  background: var(--vscode-editor-background);
+  transition: all 0.2s ease;
+}
+
+.disguise-type-item:hover {
+  background: var(--vscode-list-hoverBackground) !important;
+  border-color: var(--vscode-textLink-foreground) !important;
+}
+
+.disguise-type-item.selected {
+  border-color: var(--vscode-textLink-foreground);
+  background: var(--vscode-textBlockQuote-background);
+}
+
+.disguise-type-checkbox {
+  transform: scale(1.1);
+}
+
+.disguise-type-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+
+.disguise-type-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.disguise-type-name {
+  font-weight: 500;
+  color: var(--vscode-editor-foreground);
+  margin-bottom: 2px;
+}
+
+.disguise-type-preview {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-family: monospace;
 }
 
 /* Tab页样式 */

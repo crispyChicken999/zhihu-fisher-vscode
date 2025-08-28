@@ -30,7 +30,7 @@ export const commentsCss = `
   justify-content: center;
   align-items: center;
   gap: 5px;
-  font-size: 14px;
+  font-size: 1em;
   color: var(--vscode-descriptionForeground);
   background-color: var(--vscode-editor-background);
 }
@@ -88,11 +88,11 @@ export const commentsCss = `
 .zhihu-comments-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1em;
   overflow-y: auto;
   scroll-behavior: smooth;
   max-height: 70vh;
-  padding-right: 10px;
+  padding-right: 10px;.
 }
 
 .zhihu-comments-list:focus,
@@ -102,8 +102,8 @@ export const commentsCss = `
 
 /* 单个评论样式 - 使用与文章相同的背景 */
 .zhihu-comment {
-  padding: 10px;
-  border-radius: 4px;
+  padding: 1em;
+  border-radius: max(0.33em, 4px);
   transition: background-color 0.2s;
   border: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
@@ -120,15 +120,14 @@ export const commentsCss = `
 
 .zhihu-comment:hover {
   border-color: var(--vscode-commandCenter-activeBorder);
-  box-shadow: inset 0px 0px 10px 0px var(--vscode-commandCenter-activeBorder);
+  box-shadow: inset 0px 0px 1em 0px var(--vscode-commandCenter-activeBorder);
 }
 
 /* 评论头部：头像和作者信息 */
 .zhihu-comment-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 0.67em;
 }
 
 .zhihu-comment-avatar {
@@ -137,14 +136,22 @@ export const commentsCss = `
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  margin-right: 0.67em;
 }
 
 .zhihu-comment-author {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
   max-width: 100%;
+}
+
+.comments-container .zhihu-comment-author {
+  max-width: calc(100% - 2.5em - 0.67em);
+}
+
+.comments-container.mini-media .zhihu-comment-author {
+  max-width: calc(100% - 2em - 0.67em);
 }
 
 .zhihu-comment-author-name {
@@ -175,11 +182,12 @@ export const commentsCss = `
   text-overflow: ellipsis;
   flex: 1;
   align-self: flex-end;
+  margin-left: 0.67em;
 }
 
 /* 评论内容样式 */
 .zhihu-comment-content {
-  margin-bottom: 8px;
+  margin-bottom: 0.67em;
   overflow-wrap: break-word;
   word-break: break-all;
 }
@@ -225,7 +233,7 @@ export const commentsCss = `
 .zhihu-comment-footer {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.5em;
   font-size: 0.9em;
   opacity: 0.8;
 }
@@ -238,20 +246,20 @@ export const commentsCss = `
 
 /* 子评论容器 */
 .zhihu-child-comments {
-  margin-top: 10px;
-  margin-left: 10px;
+  margin-top: 1em;
+  margin-left: 1em;
   border-left: 2px solid var(--vscode-panel-border);
-  padding-left: 15px;
+  padding-left: 1.5em;
 }
 
 /* 子评论样式 */
 .zhihu-child-comment {
-  padding-bottom: 10px;
+  padding-bottom: 1em;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 .zhihu-child-comment:not(:first-of-type) {
-  padding: 10px 0;
+  padding: 1em 0;
 }
 
 .zhihu-child-comment:last-child {
@@ -263,8 +271,7 @@ export const commentsCss = `
 .zhihu-child-comment-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 0.5em;
 }
 
 .zhihu-child-comment-avatar {
@@ -272,6 +279,7 @@ export const commentsCss = `
   height: 1.5em;
   border-radius: 50%;
   object-fit: cover;
+  margin-right: 0.67em;
 }
 
 .zhihu-child-comment-author-name {
@@ -279,7 +287,7 @@ export const commentsCss = `
 }
 
 .zhihu-child-comment-content {
-  margin-bottom: 6px;
+  margin-bottom: 0.5em;
   line-height: 1.4;
 }
 
@@ -305,13 +313,13 @@ export const commentsCss = `
   color: var(--vscode-button-secondaryForeground);
   border: none;
   padding: 4px 6px;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 2px;
 }
-x
+
 .zhihu-comment-pagination button svg {
   height: 100%;
 }
@@ -337,7 +345,7 @@ x
   background: transparent;
   color: var(--vscode-textLink-foreground);
   border: none;
-  padding: 5px 0 0 0;
+  padding: 0.67em 0 0 0;
   cursor: pointer;
   font-size: 1em;
 }
@@ -417,7 +425,7 @@ x
 }
 
 .zhihu-comments-modal-parent-comment {
-  padding: 10px;
+  padding: 1em;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
 }
@@ -429,13 +437,13 @@ x
 }
 
 .zhihu-comments-modal-child-comments {
-  padding: 10px;
+  padding: 1em;
   overflow-y: auto;
   scroll-behavior: smooth;
   max-height: 65vh;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1em;
   background-color: var(--vscode-editor-background);
 }
 
@@ -628,13 +636,12 @@ x
 .zhihu-reply-chain {
   display: flex;
   align-items: center;
-  gap: 6px;
 }
 
 .reply-arrow {
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
-  margin: 0 2px;
+  margin: 0 4px;
 }
 
 .zhihu-reply-to-avatar {
@@ -643,6 +650,7 @@ x
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  margin-right: 0.67em;
 }
 
 /* 回复链中的作者名称样式 */

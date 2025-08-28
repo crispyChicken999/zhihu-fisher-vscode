@@ -6,8 +6,8 @@ export const authorCss = `
 .author-info {
   display: flex;
   align-items: center;
-  margin: 10px 0;
-  padding: 10px;
+  margin: 1em 0;
+  padding: min(1em, 10px);
   border-radius: 4px;
   background-color: var(--vscode-editor-inactiveSelectionBackground);
   box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px,

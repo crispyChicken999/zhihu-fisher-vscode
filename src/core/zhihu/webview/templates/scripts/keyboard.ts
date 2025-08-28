@@ -72,6 +72,11 @@ function setupKeyboardNavigation() {
       if (sourceType === 'inner-link') {
         return;
       }
+
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
       loadPreviousArticle();
     }
 
@@ -81,26 +86,51 @@ function setupKeyboardNavigation() {
       if (sourceType === 'inner-link') {
         return;
       }
+
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
       loadNextArticle();
     }
 
     // A - 上一个回答
     if (event.key.toLowerCase() === 'a') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       loadPreviousAnswer();
     }
 
     // D - 下一个回答
     if (event.key.toLowerCase() === 'd') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       loadNextAnswer();
     }
 
     // X - 切换沉浸模式
     if (event.key.toLowerCase() === 'x') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       toggleImmersiveMode();
     }
 
     // C - 复制文章链接
     if (event.key.toLowerCase() === 'c') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       const copyButton = document.querySelector('.copy-button');
       if (copyButton) {
         copyButton.click();
@@ -109,6 +139,11 @@ function setupKeyboardNavigation() {
 
     // B - 在浏览器中打开
     if (event.key.toLowerCase() === 'b') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       const openButton = document.querySelector('.open-button');
       if (openButton) {
         openButton.click();
@@ -117,6 +152,11 @@ function setupKeyboardNavigation() {
 
     // F - 收藏文章
     if (event.key.toLowerCase() === 'f') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       const favoriteButton = document.querySelector('.favorite-button');
       if (favoriteButton) {
         favoriteButton.click();
@@ -125,32 +165,62 @@ function setupKeyboardNavigation() {
 
     // 句号 . - 切换样式面板
     if (event.key === '.') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       toggleStylePanel();
     }
 
     // 逗号 , - 加载评论或滚动到评论区
     if (event.key === ',') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       hanldeCommentsToggle();
     }
 
-    // G - 切换灰度模式
+    // G - 切换灰色模式
     if (event.key.toLowerCase() === 'g') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       toggleGrayscaleMode();
     }
 
     // / - 切换媒体显示模式
     if (event.key === '/') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       toggleMediaDisplay();
     }
 
     // V - 回到顶部
     if (event.key.toLowerCase() === 'v') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
       backTop();
     }
 
     // T - 工具栏展开/收起（仅在沉浸模式下有效）
     if (event.key.toLowerCase() === 't') {
       if (isImmersiveMode) {
+        // Ctrl、Meta、Shift、Alt键被按下时不响应
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+          return;
+        }
+
         toggleFixedToolbar();
       }
     }

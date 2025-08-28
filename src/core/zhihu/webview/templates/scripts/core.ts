@@ -44,9 +44,9 @@ document.addEventListener("DOMContentLoaded", function() {
   setupToolbarConfig();
 
   // 初始化工具栏配置（需要在沉浸模式状态设置好后）
-  setTimeout(() => {
+  // setTimeout(() => {
     initializeToolbarConfigFromLocalStorage();
-  }, 100);
+  // }, 100);
 
   // 初始化快捷键配置
   setTimeout(() => {
@@ -129,6 +129,11 @@ window.addEventListener('message', event => {
         childCommentsList.focus();
       }
     }, 100);
+  }
+
+  // 处理更新导航信息的消息
+  else if (message.command === 'updateNavInfo') {
+    updateNavInfo(message.loadedCount, message.totalCount, message.isLoading);
   }
 });
 

@@ -171,11 +171,11 @@ export class ArticleContentComponent implements Component {
 
     // 处理图片元素
     $("img").each(function () {
-      // 无媒体模式时直接移除
-      if (mediaDisplayMode === "none") {
-        $(this).remove();
-        return;
-      }
+      // // 无媒体模式时直接移除
+      // if (mediaDisplayMode === "none") {
+      //   $(this).remove();
+      //   return;
+      // }
 
       // 处理图片源地址
       const actualSrc = $(this).attr("data-actualsrc");
@@ -407,8 +407,11 @@ export class ArticleContentComponent implements Component {
     // FeeConsultCard去除（咨询卡片，谁要咨询啊无语）
     $(".FeeConsultCard").remove();
 
-    // RichText-ADLinkCardContainer 去除（广告，走开啊）
+    // .RichText-ADLinkCardContainer 去除（广告，走开啊）
     $(".RichText-ADLinkCardContainer").remove();
+
+    // .RichText-MCNLinkCardContainer 去除（自媒体推广，烦死了）
+    $(".RichText-MCNLinkCardContainer").remove();
 
     return $.html();
   }

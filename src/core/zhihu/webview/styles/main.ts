@@ -15,6 +15,12 @@ body {
   scroll-behavior: smooth;
 }
 
+/* 当样式面板可见时，隐藏body的滚动条防止滚动 */
+body:has(.style-panel.visible),
+body:has(.zhihu-comments-modal-overlay) {
+  overflow: hidden;
+}
+
 body.immersive-mode {
   padding: 0 50px 0 20px;
 }
@@ -55,7 +61,7 @@ html.grayscale-mode {
 h1, h2, h3, h4, h5, h6 {
   color: var(--vscode-editor-foreground);
   margin-top: 24px;
-  margin-bottom: 10px;
+  margin-bottom: min(15px, 1em);
   font-weight: 600;
   line-height: 1.25;
 }
@@ -107,6 +113,10 @@ pre code {
   border-radius: 0;
 }
 
+figcaption {
+  text-align: center;
+}
+
 img {
   max-width: 100%;
   height: auto;
@@ -120,7 +130,7 @@ blockquote {
 }
 
 hr {
-  height: 0.25em;
+  height: 2px;
   padding: 0;
   margin: 12px 0;
   background-color: var(--vscode-panel-border);

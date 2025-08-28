@@ -1,7 +1,7 @@
 import { Component, RenderOptions } from "./base";
 
 /**
- * 样式设置面板组件
+ * 设置面板组件
  */
 export class StylePanelComponent implements Component {
   private mediaDisplayMode: string = "normal";
@@ -23,8 +23,8 @@ export class StylePanelComponent implements Component {
   }
 
   /**
-   * 渲染样式设置面板
-   * @returns 样式设置面板HTML
+   * 渲染设置面板
+   * @returns 设置面板HTML
    */
   public render(): string {
     return `
@@ -127,6 +127,25 @@ export class StylePanelComponent implements Component {
                 >
                 <span class="color-value" id="content-color-value">#000000</span>
               </div>
+              
+              <!-- 常用颜色快选 -->
+              <div class="color-presets-container">
+                <label class="color-presets-label">常用颜色:</label>
+                <div class="color-presets">
+                  <button class="color-preset-btn" data-color="#000000" title="黑色" style="background-color: #000000" onclick="selectPresetColor('#000000')"></button>
+                  <button class="color-preset-btn" data-color="#333333" title="深灰" style="background-color: #333333" onclick="selectPresetColor('#333333')"></button>
+                  <button class="color-preset-btn" data-color="#666666" title="中灰" style="background-color: #666666" onclick="selectPresetColor('#666666')"></button>
+                  <button class="color-preset-btn" data-color="#999999" title="浅灰" style="background-color: #999999" onclick="selectPresetColor('#999999')"></button>
+                  <button class="color-preset-btn" data-color="#1890ff" title="蓝色" style="background-color: #1890ff" onclick="selectPresetColor('#1890ff')"></button>
+                  <button class="color-preset-btn" data-color="#52c41a" title="绿色" style="background-color: #52c41a" onclick="selectPresetColor('#52c41a')"></button>
+                  <button class="color-preset-btn" data-color="#fa8c16" title="橙色" style="background-color: #fa8c16" onclick="selectPresetColor('#fa8c16')"></button>
+                  <button class="color-preset-btn" data-color="#f5222d" title="红色" style="background-color: #f5222d" onclick="selectPresetColor('#f5222d')"></button>
+                  <button class="color-preset-btn" data-color="#722ed1" title="紫色" style="background-color: #722ed1" onclick="selectPresetColor('#722ed1')"></button>
+                  <button class="color-preset-btn" data-color="#eb2f96" title="粉色" style="background-color: #eb2f96" onclick="selectPresetColor('#eb2f96')"></button>
+                  <button class="color-preset-btn" data-color="#13c2c2" title="青色" style="background-color: #13c2c2" onclick="selectPresetColor('#13c2c2')"></button>
+                  <button class="color-preset-btn" data-color="#a0d911" title="黄绿" style="background-color: #a0d911" onclick="selectPresetColor('#a0d911')"></button>
+                </div>
+              </div>
             </div>
 
             <div class="style-option">
@@ -181,7 +200,7 @@ export class StylePanelComponent implements Component {
               <div class="style-option-flex">
                 <input type="range" id="mini-media-scale-slider" min="1" max="100" value="${
                   this.miniMediaScale
-                }" oninput="changeMiniMediaScale(this.value)" class="style-option-flex-1">
+                }" onchange="changeMiniMediaScale(this.value)" oninput="updateMiniMediaScaleInputSpanValue(this.value)" class="style-option-flex-1">
                 <span id="mini-media-scale-value" class="style-option-width-40">${
                   this.miniMediaScale
                 }%</span>
