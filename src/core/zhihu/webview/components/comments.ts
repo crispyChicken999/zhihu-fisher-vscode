@@ -2454,9 +2454,9 @@ export class CommentsUtils {
       // 检查是否是知乎图片链接
       if (href && href.includes("pic") && href.includes(".zhimg.com")) {
         // 无媒体模式时只显示链接
-        if (mediaDisplayMode === "none") {
-          return;
-        }
+        // if (mediaDisplayMode === "none") {
+        //   return;
+        // }
 
         // 计算图片显示尺寸
         const originalWidth = parseInt(dataWidth || "100");
@@ -2524,10 +2524,10 @@ export class CommentsUtils {
       // 检查是否是知乎动图链接
       if (href && href.includes("pic") && href.includes(".zhimg.com")) {
         // 无媒体模式时移除动图链接
-        if (mediaDisplayMode === "none") {
-          link.remove();
-          return;
-        }
+        // if (mediaDisplayMode === "none") {
+        //   link.remove();
+        //   return;
+        // }
 
         // 计算动图显示尺寸
         const originalWidth = parseInt(dataWidth || "200");
@@ -2599,13 +2599,13 @@ export class CommentsUtils {
       // 检查是否是知乎表情包链接
       if (href && href.includes("pic") && href.includes(".zhimg.com")) {
         // 无媒体模式时只显示文本，不显示图片
-        if (mediaDisplayMode === "none") {
-          const textSpan = $(
-            `<span class="comment-sticker-text"">${stickerText}</span>`
-          );
-          link.replaceWith(textSpan);
-          return;
-        }
+        // if (mediaDisplayMode === "none") {
+        //   const textSpan = $(
+        //     `<span class="comment-sticker-text"">${stickerText}</span>`
+        //   );
+        //   link.replaceWith(textSpan);
+        //   return;
+        // }
 
         // 表情包通常尺寸较小，设置默认尺寸
         let originalWidth = parseInt(dataWidth || "0");
@@ -2693,9 +2693,9 @@ export class CommentsUtils {
         // 检查是否是知乎图片链接
         if (href.includes("pic") && href.includes(".zhimg.com")) {
           // 无媒体模式时只保留文本
-          if (mediaDisplayMode === "none") {
-            return;
-          }
+          // if (mediaDisplayMode === "none") {
+          //   return;
+          // }
 
           // 确保图片URL是完整的HTTPS地址
           let imageUrl = href;
@@ -2838,9 +2838,9 @@ export class CommentsUtils {
     mediaDisplayMode: string
   ): string {
     // 无图模式时不处理，保持原文
-    if (mediaDisplayMode === "none") {
-      return content;
-    }
+    // if (mediaDisplayMode === "none") {
+    //   return content;
+    // }
 
     // 使用静态的表情包映射，避免重复创建
     const emojiMap = CommentsUtils.getEmojiMap();

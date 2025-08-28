@@ -201,6 +201,11 @@ export const commentsCss = `
 
 /* 媒体模式应用到评论内容 */
 .comments-container.hide-media img,
+.comments-container.hide-media video,
+.comments-container.hide-media .comment-gif-container
+.comments-container.hide-media .comment-sticker-container,
+.comments-container.hide-media .comment-text-emoji,
+.comments-modal-container.hide-media video,
 .comments-modal-container.hide-media img {
   display: none !important;
 }
@@ -521,7 +526,8 @@ export const commentsCss = `
 /* 动图容器样式 */
 .comment-gif-container {
   position: relative;
-  display: inline-block;
+  display: flex;
+  width: fit-content;
   margin: 8px 0;
 }
 
