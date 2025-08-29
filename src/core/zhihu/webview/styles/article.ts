@@ -37,13 +37,10 @@ export const articleCss = `
 .article-content {
   margin: 10px 0;
 }
-
+.article-content video,
 .article-content img {
   border-radius: 4px;
 }
-
-.article-content video {
-
 
 .article-content p {
   margin: 1em 0;
