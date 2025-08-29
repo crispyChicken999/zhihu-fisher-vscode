@@ -89,6 +89,7 @@ export const navigationCss = `
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
+  padding: 4px 0;
 }
 
 .nav-info > * {

@@ -82,6 +82,10 @@ h3 {
   font-size: 1.25em;
 }
 
+h4 {
+  font-size: 1.1em;
+}
+
 a {
   color: var(--vscode-textLink-foreground);
   text-decoration: none;

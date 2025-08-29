@@ -60,7 +60,7 @@ export const articleTemplate = `
   </head>
   <body>
     <header>
-      <h3>\${TITLE}</h3>
+      <h4>\${TITLE}</h4>
       <div class="article-meta \${MEDIA_MODE_CLASS}">
         \${AUTHOR_COMPONENT}
         <div class="article-meta-footer">
