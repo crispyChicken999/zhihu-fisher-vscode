@@ -589,6 +589,7 @@ export class WebviewManager {
             );
             webviewItem.article.title = realTitle;
             webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+            this.updateWebview(webviewId); // 更新WebView内容
           }
         } catch (error) {
           console.error("提取专栏文章标题失败:", error);
@@ -1127,6 +1128,7 @@ export class WebviewManager {
             );
             webviewItem.article.title = realTitle;
             webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+            this.updateWebview(webviewId); // 更新WebView内容
           }
         } catch (error) {
           console.error("提取页面标题失败:", error);

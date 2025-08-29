@@ -40,6 +40,12 @@ export const articleCss = `
 .article-content video,
 .article-content img {
   border-radius: 4px;
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+  transition: transform 0.3s ease;
+}
+
+.article-content img:not(.formula):hover {
+  transform: translateY(-2px);
 }
 
 .article-content p {
