@@ -175,5 +175,44 @@ export function registerMediaCommands(): vscode.Disposable[] {
   );
   commands.push(showFullImageCommand);
 
+  // 注册设置迷你模式缩放比例命令
+  const setMiniMediaScaleCommand = vscode.commands.registerCommand(
+    "zhihu-fisher.setMiniMediaScale",
+    async () => {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const currentScale = config.get<number>("miniMediaScale", 50);
+
+      // 显示输入框让用户输入缩放比例
+      const scaleInput = await vscode.window.showInputBox({
+        title: "设置迷你模式图片缩放比例",
+        prompt: "请输入缩放比例 (1-100)",
+        value: currentScale.toString(),
+        validateInput: (value: string) => {
+          const num = parseInt(value);
+          if (isNaN(num)) {
+            return "请输入有效的数字";
+          }
+          if (num < 1 || num > 100) {
+            return "缩放比例必须在 1-100 之间";
+          }
+          return undefined;
+        }
+      });
+
+      if (scaleInput !== undefined) {
+        const newScale = parseInt(scaleInput);
+        await config.update(
+          "miniMediaScale", 
+          newScale, 
+          vscode.ConfigurationTarget.Global
+        );
+        vscode.window.showInformationMessage(
+          `已设置迷你模式图片缩放比例为 ${newScale}%，重新打开文章来查看效果。`
+        );
+      }
+    }
+  );
+  commands.push(setMiniMediaScaleCommand);
+
   return commands;
 }
