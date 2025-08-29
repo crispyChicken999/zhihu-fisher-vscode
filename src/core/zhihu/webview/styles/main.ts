@@ -115,6 +115,7 @@ pre code {
 
 figcaption {
   text-align: center;
+  margin-top: 0.67em;
 }
 
 img {

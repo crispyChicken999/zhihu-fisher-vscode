@@ -202,7 +202,7 @@ export const commentsCss = `
 /* 媒体模式应用到评论内容 */
 .comments-container.hide-media img,
 .comments-container.hide-media video,
-.comments-container.hide-media .comment-gif-container
+.comments-container.hide-media .comment-gif-container,
 .comments-container.hide-media .comment-sticker-container,
 .comments-container.hide-media .comment-text-emoji,
 .comments-modal-container.hide-media video,
@@ -577,6 +577,8 @@ export const commentsCss = `
 }
 
 .comment-sticker {
+  width: 64px;
+  height: 64px;
   border-radius: 4px;
   object-fit: contain;
   cursor: pointer;
@@ -592,6 +594,85 @@ export const commentsCss = `
 /* 适配暗色主题 */
 .vscode-dark .comment-sticker:hover {
   opacity: 1;
+}
+
+/* 文本表情样式 */
+.comment-text-emoji {
+  width: 1.5em;
+  height: 1.5em;
+  display: inline;
+  object-fit: contain;
+  vertical-align: text-bottom;
+}
+
+/* 图片容器样式 */
+.comment-image-container {
+  margin: 8px 0;
+  position: relative;
+  display: inline-block;
+}
+
+.comment-image {
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.comment-gif {
+  width: 120px;
+  height: 80px;
+  cursor: pointer;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.gif-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+/* Mini媒体模式下的表情样式 */
+.comments-container.mini-media .comment-sticker,
+.comments-modal-container.mini-media .comment-sticker {
+  width: 51px !important;  /* 64px * 0.8 */
+  height: 51px !important;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.comments-container.mini-media .comment-text-emoji,
+.comments-modal-container.mini-media .comment-text-emoji {
+  width: 1.2em !important;
+  height: 1.2em !important;
+}
+
+.comments-container.mini-media .comment-image,
+.comments-modal-container.mini-media .comment-image {
+  width: 50px !important;  /* 100px * 0.5 */
+  height: 50px !important;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.comments-container.mini-media .comment-gif,
+.comments-modal-container.mini-media .comment-gif {
+  width: 84px !important;  /* 120px * 0.7 */
+  height: 56px !important;  /* 80px * 0.7 */
+  min-width: 30px;
+  min-height: 20px;
+}
+
+.comments-container.mini-media .comment-gif-container,
+.comments-modal-container.mini-media .comment-gif-container {
+  display: inline-block !important;
 }
 
 /* 评论标签样式 */
@@ -647,7 +728,7 @@ export const commentsCss = `
 .reply-arrow {
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
-  margin: 0 4px;
+  margin: 0 0.67em;
 }
 
 .zhihu-reply-to-avatar {

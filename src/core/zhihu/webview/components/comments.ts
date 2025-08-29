@@ -2458,28 +2458,9 @@ export class CommentsUtils {
         //   return;
         // }
 
-        // 计算图片显示尺寸
+        // 获取原始尺寸信息
         const originalWidth = parseInt(dataWidth || "100");
         const originalHeight = parseInt(dataHeight || "100");
-
-        let displayWidth = 100;
-        let displayHeight = 100;
-
-        // 保持宽高比，但限制最大尺寸
-        const aspectRatio = originalWidth / originalHeight;
-        if (aspectRatio > 1) {
-          // 横向图片
-          displayHeight = Math.round(displayWidth / aspectRatio);
-        } else {
-          // 纵向图片
-          displayWidth = Math.round(displayHeight * aspectRatio);
-        }
-
-        // 小图模式缩放，但保证最小尺寸
-        if (mediaDisplayMode === "mini") {
-          displayWidth = Math.max(Math.round(displayWidth * 0.5), 20);
-          displayHeight = Math.max(Math.round(displayHeight * 0.5), 20);
-        }
 
         // 确保图片URL是完整的HTTPS地址
         let imageUrl = href;
@@ -2489,14 +2470,13 @@ export class CommentsUtils {
           imageUrl = "https://" + imageUrl;
         }
 
-        // 创建新的图片元素，直接在img上使用FancyBox
+        // 创建新的图片元素，样式完全由CSS控制
         const imageContainer = $(`
-          <div class="comment-image-container" style="margin: 8px 0;">
+          <div class="comment-image-container">
             <img
               src="${imageUrl}"
               alt="评论图片"
               class="comment-image"
-              style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: cover;"
               data-original-width="${originalWidth}"
               data-original-height="${originalHeight}"
               data-fancybox="comment-gallery"
@@ -2529,28 +2509,9 @@ export class CommentsUtils {
         //   return;
         // }
 
-        // 计算动图显示尺寸
+        // 获取原始尺寸信息
         const originalWidth = parseInt(dataWidth || "200");
         const originalHeight = parseInt(dataHeight || "120");
-
-        let displayWidth = Math.min(originalWidth, 200);
-        let displayHeight = Math.min(originalHeight, 120);
-
-        // 保持宽高比
-        const aspectRatio = originalWidth / originalHeight;
-        if (aspectRatio > 1) {
-          // 横向动图
-          displayHeight = Math.round(displayWidth / aspectRatio);
-        } else {
-          // 纵向动图
-          displayWidth = Math.round(displayHeight * aspectRatio);
-        }
-
-        // 小图模式缩放，但保证最小尺寸
-        if (mediaDisplayMode === "mini") {
-          displayWidth = Math.max(Math.round(displayWidth * 0.7), 30);
-          displayHeight = Math.max(Math.round(displayHeight * 0.7), 20);
-        }
 
         // 确保动图URL是完整的HTTPS地址
         let gifUrl = href;
@@ -2560,14 +2521,13 @@ export class CommentsUtils {
           gifUrl = "https://" + gifUrl;
         }
 
-        // 创建新的动图元素
+        // 创建新的动图元素，样式完全由CSS控制
         const gifContainer = $(`
-          <div class="comment-gif-container" style="margin: 8px 0;">
+          <div class="comment-gif-container">
             <img
               src="${gifUrl}"
               alt="评论动图"
               class="comment-gif"
-              style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: cover;"
               data-original-width="${originalWidth}"
               data-original-height="${originalHeight}"
               data-fancybox="comment-gallery"
@@ -2577,7 +2537,7 @@ export class CommentsUtils {
               loading="lazy"
               title="点击查看大图"
             />
-            <div class="gif-indicator" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">GIF</div>
+            <div class="gif-indicator">GIF</div>
           </div>
         `);
 
@@ -2598,16 +2558,15 @@ export class CommentsUtils {
 
       // 检查是否是知乎表情包链接
       if (href && href.includes("pic") && href.includes(".zhimg.com")) {
-        // 无媒体模式时只显示文本，不显示图片
-        // if (mediaDisplayMode === "none") {
-        //   const textSpan = $(
-        //     `<span class="comment-sticker-text"">${stickerText}</span>`
-        //   );
-        //   link.replaceWith(textSpan);
-        //   return;
-        // }
+        // 确保表情包URL是完整的HTTPS地址
+        let stickerUrl = href;
+        if (stickerUrl.startsWith("//")) {
+          stickerUrl = "https:" + stickerUrl;
+        } else if (!stickerUrl.startsWith("http")) {
+          stickerUrl = "https://" + stickerUrl;
+        }
 
-        // 表情包通常尺寸较小，设置默认尺寸
+        // 获取原始尺寸信息，用于data属性
         let originalWidth = parseInt(dataWidth || "0");
         let originalHeight = parseInt(dataHeight || "0");
 
@@ -2617,48 +2576,13 @@ export class CommentsUtils {
           originalHeight = 64;
         }
 
-        let displayWidth = Math.min(originalWidth, 64);
-        let displayHeight = Math.min(originalHeight, 64);
-
-        // 保持宽高比
-        if (originalWidth > 0 && originalHeight > 0) {
-          const aspectRatio = originalWidth / originalHeight;
-          if (aspectRatio > 1) {
-            // 横向表情包
-            displayHeight = Math.round(displayWidth / aspectRatio);
-          } else {
-            // 纵向表情包
-            displayWidth = Math.round(displayHeight * aspectRatio);
-          }
-        }
-
-        // 小图模式缩放
-        if (mediaDisplayMode === "mini") {
-          displayWidth = Math.max(Math.round(displayWidth * 0.8), 24);
-          displayHeight = Math.max(Math.round(displayHeight * 0.8), 24);
-        }
-
-        // 确保表情包URL是完整的HTTPS地址
-        let stickerUrl = href;
-        if (stickerUrl.startsWith("//")) {
-          stickerUrl = "https:" + stickerUrl;
-        } else if (!stickerUrl.startsWith("http")) {
-          stickerUrl = "https://" + stickerUrl;
-        }
-
-        // 创建新的表情包元素
+        // 创建新的表情包元素，样式完全由CSS控制
         const stickerContainer = $(`
-          <span class="comment-sticker-container" style="
-            display: inline-block;
-            margin: 0 2px;
-            vertical-align: middle;
-            position: relative;
-          ">
+          <span class="comment-sticker-container">
             <img
               src="${stickerUrl}"
               alt="${stickerText}"
               class="comment-sticker"
-              style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: contain;"
               data-original-width="${originalWidth}"
               data-original-height="${originalHeight}"
               data-sticker-id="${stickerId || ""}"
@@ -2706,43 +2630,30 @@ export class CommentsUtils {
           }
 
           // 根据链接文本类型决定显示样式
-          let displayWidth, displayHeight, elementClass, indicator;
+          let elementClass, indicator;
 
           if (linkText === "[动图]") {
             // 动图样式
-            displayWidth = 120;
-            displayHeight = 80;
             elementClass = "comment-gif";
             indicator =
-              '<div class="gif-indicator" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">GIF</div>';
+              '<div class="gif-indicator">GIF</div>';
           } else if (linkText.match(/^\[.*\]$/) && linkText !== "[图片]") {
             // 表情包样式
-            displayWidth = 48;
-            displayHeight = 48;
             elementClass = "comment-sticker";
             indicator = "";
           } else {
             // 普通图片样式
-            displayWidth = 100;
-            displayHeight = 100;
             elementClass = "comment-image";
             indicator = "";
           }
 
-          // 小图模式缩放
-          if (mediaDisplayMode === "mini") {
-            displayWidth = Math.max(Math.round(displayWidth * 0.7), 24);
-            displayHeight = Math.max(Math.round(displayHeight * 0.7), 24);
-          }
-
-          // 创建图片元素
+          // 创建图片元素，样式完全由CSS控制
           const imageContainer = $(`
-            <div class="comment-image-container" style="margin: 8px 0; position: relative; display: inline-block;">
+            <div class="comment-image-container">
               <img
                 src="${imageUrl}"
                 alt="${linkText}"
                 class="${elementClass}"
-                style="width: ${displayWidth}px; height: ${displayHeight}px; cursor: pointer; border-radius: 4px; object-fit: cover;"
                 data-fancybox="comment-gallery"
                 data-caption="${linkText}"
                 data-src="${imageUrl}"
@@ -2819,10 +2730,7 @@ export class CommentsUtils {
 
     // 处理文本形式的表情包（如 [doge]、[感谢] 等）
     let htmlContent = $.html();
-    htmlContent = CommentsUtils.processTextEmojis(
-      htmlContent,
-      mediaDisplayMode
-    );
+    htmlContent = CommentsUtils.processTextEmojis(htmlContent);
 
     return htmlContent;
   }
@@ -2830,18 +2738,9 @@ export class CommentsUtils {
   /**
    * 处理文本形式的表情包
    * @param content HTML内容
-   * @param mediaDisplayMode 媒体显示模式
    * @returns 处理后的内容
    */
-  private static processTextEmojis(
-    content: string,
-    mediaDisplayMode: string
-  ): string {
-    // 无图模式时不处理，保持原文
-    // if (mediaDisplayMode === "none") {
-    //   return content;
-    // }
-
+  private static processTextEmojis(content: string): string {
     // 使用静态的表情包映射，避免重复创建
     const emojiMap = CommentsUtils.getEmojiMap();
 
@@ -2853,20 +2752,11 @@ export class CommentsUtils {
 
       // 如果找到对应的表情包图片
       if (emojiUrl) {
-        // 根据媒体显示模式设置尺寸
-        let size: number;
-        if (mediaDisplayMode === "mini") {
-          size = 1.2;
-        } else {
-          size = 1.5;
-        }
-
         return `
           <img src="${emojiUrl}"
             alt="${match}"
             title="${match}"
             class="comment-text-emoji"
-            style="width: ${size}em; height: ${size}em; display: inline; object-fit: contain; vertical-align: text-bottom;"
             referrerpolicy="no-referrer"
             loading="lazy" />
         `;

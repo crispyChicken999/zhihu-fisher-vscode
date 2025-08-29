@@ -2,6 +2,14 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.3.5] - 2025-09-02
+
+### Features
+
+### Bug Fixes
+
+- 修复了评论区在toggleMediaMode时，图片展示方式异常的问题，确保切换时图片、动图、表情包、emoji等能够正确渲染。
+
 ## [0.3.4] - 2025-08-28
 
 ### Features

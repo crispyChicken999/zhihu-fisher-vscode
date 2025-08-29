@@ -38,6 +38,13 @@ export const articleCss = `
   margin: 10px 0;
 }
 
+.article-content img {
+  border-radius: 4px;
+}
+
+.article-content video {
+
+
 .article-content p {
   margin: 1em 0;
   word-break: break-word;
@@ -228,13 +235,13 @@ p.ztext-empty-paragraph {
 .RichText-LinkCardContainer a {
   width: fit-content;
   margin: 10px auto;
-  padding: 8px 15px;
-  border-radius: 8px;
+  padding: 5px 10px;
+  border-radius: 4px;
   max-width: 500px;
   background: var(--vscode-textPreformat-background);
   color: var(--vscode-textLink-activeForeground);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
   word-break: break-all;
 }
 
@@ -248,6 +255,8 @@ p.ztext-empty-paragraph {
 .RichText-LinkCardContainer a:hover {
   transform: translateY(-2px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background-color: var(--vscode-button-secondaryHoverBackground);
+  color: var(--vscode-textLink-activeForeground);
 }
 
 h1, h2, h3, h4, h5, h6 {
