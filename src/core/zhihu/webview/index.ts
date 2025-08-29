@@ -2134,7 +2134,7 @@ export class WebviewManager {
               id: id,
               url: `https://www.zhihu.com/question/${id}`,
               title: `知乎回答 ${answerMatch[1]}`,
-              excerpt: "点击查看完整内容",
+              excerpt: "正在加载回答中，请稍后~",
               type: type,
               answerUrl: url, // 保存特定回答的URL
             };
