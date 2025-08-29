@@ -152,6 +152,11 @@
         "icon": "$(zoom-in)"
       },
       {
+        "command": "zhihu-fisher.setAnswersPerBatch",
+        "title": "设置回答预加载数量",
+        "icon": "$(list-ordered)"
+      },
+      {
         "command": "zhihu-fisher.configureBrowser",
         "title": "配置浏览器",
         "icon": "$(browser)"
@@ -384,6 +389,11 @@
           "command": "zhihu-fisher.clearCollectionCache",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "config@4"
+        },
+        {
+          "command": "zhihu-fisher.setAnswersPerBatch",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "group": "config@5"
         },
         {
           "command": "zhihu-fisher.toggleDebugMode",
@@ -714,6 +724,13 @@
           "default": false,
           "description": "启用调试模式。开启后，浏览器将以可见模式运行，方便调试和排查问题。修改此设置需要重启扩展才能生效。",
           "scope": "application"
+        },
+        "zhihu-fisher.answersPerBatch": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 50,
+          "default": 10,
+          "description": "每批预加载的回答数量。只有达到该数量才会停止加载更多(5-50)。数值越小加载越快，小于10可能不生效。不建议修改的太大，因为可能会触发知乎的反爬虫机制，会导致Cookie提前失效！"
         }
       }
     }
