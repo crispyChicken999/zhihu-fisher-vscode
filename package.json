@@ -122,11 +122,6 @@
         "icon": "$(key)"
       },
       {
-        "command": "zhihu-fisher.clearCookie",
-        "title": "清除Cookie",
-        "icon": "$(trash)"
-      },
-      {
         "command": "zhihu-fisher.clearCollectionCache",
         "title": "清理收藏夹缓存",
         "icon": "$(clear-all)"
@@ -381,19 +376,14 @@
           "group": "config@2"
         },
         {
-          "command": "zhihu-fisher.clearCookie",
+          "command": "zhihu-fisher.clearCollectionCache",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "config@3"
         },
         {
-          "command": "zhihu-fisher.clearCollectionCache",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
-          "group": "config@4"
-        },
-        {
           "command": "zhihu-fisher.setAnswersPerBatch",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
-          "group": "config@5"
+          "group": "config@4"
         },
         {
           "command": "zhihu-fisher.toggleDebugMode",
@@ -646,7 +636,7 @@
           {
             "id": "smart-disguise",
             "title": "第七步：智能伪装模式",
-            "description": "🎭 页面失焦时自动伪装成代码文件，默认已启用。\n\n[切换智能伪装](command:zhihu-fisher.toggleDisguise)",
+            "description": "🎭 **智能伪装功能**：页面失焦时自动伪装成真实的代码编辑界面！\n\n✨ **功能特色：**\n• 🔄 **动态伪装** - 随机生成32种编程语言的真实代码\n• 🎯 **完美伪装** - 标题、图标、界面一键全伪装\n• 🔧 **智能切换** - 失焦自动开启，获焦自动关闭\n• 🎨 **语法高亮** - VSCode原生语法高亮效果\n\n支持：JavaScript、TypeScript、Python、Java、C++、C#、Rust、Swift、Vue、React等32种文件类型！\n\n[切换智能伪装](command:zhihu-fisher.toggleDisguise)",
             "media": {
               "markdown": "walkthrough/smart-disguise.md"
             },
@@ -709,12 +699,7 @@
         "zhihu-fisher.enableDisguise": {
           "type": "boolean",
           "default": true,
-          "description": "启用智能伪装功能。当 WebView 失去焦点时，自动将标题和图标伪装成代码文件，更好地摸鱼，避免被老板/同事发现(～￣▽￣)～。"
-        },
-        "zhihu-fisher.enableFullDisguise": {
-          "type": "boolean",
-          "default": false,
-          "description": "启用完整界面伪装功能。开启后，当WebView失去焦点时，不仅会伪装标题和图标，还会将整个界面伪装成VSCode代码编辑界面，提供更强的隐蔽性。⚠️ 此功能可能影响性能，建议根据需要开启。"
+          "description": "启用智能伪装功能。当 WebView 失去焦点时，自动将标题、图标和整个界面伪装成真实的代码编辑界面，支持32种编程语言的动态代码生成，完美融入开发环境，让摸鱼更加隐蔽 (～￣▽￣)～。"
         },
         "zhihu-fisher.selectedDisguiseTypes": {
           "type": "array",
@@ -735,7 +720,7 @@
           "minimum": 5,
           "maximum": 50,
           "default": 10,
-          "description": "每批预加载的回答数量。只有达到该数量才会停止加载更多(5-50)。数值越小加载越快，小于10可能不生效。不建议修改的太大，因为可能会触发知乎的反爬虫机制，会导致Cookie提前失效！"
+          "description": "每批预加载的回答数量。只有达到该数量才会停止加载更多(限制范围5-50)。数值越小加载越快，小于10可能不生效。不建议修改的太大，因为会触发知乎的反爬虫机制，可能会导致Cookie提前失效！"
         }
       }
     }

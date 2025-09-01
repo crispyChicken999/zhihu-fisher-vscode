@@ -3,16 +3,6 @@ import { Store } from "../stores";
 import { CodeGenerator } from "./code-generator";
 
 /**
- * 伪装选项
- */
-export interface DisguiseOptions {
-  /** 只伪装图标和标题 */
-  iconAndTitleOnly?: boolean;
-  /** 完全伪装（包括界面） */
-  fullDisguise?: boolean;
-}
-
-/**
  * 伪装管理器 - 用于在WebView失去焦点时随机生成合理的文件名、图标和代码界面组合
  */
 export class DisguiseManager {
@@ -370,14 +360,9 @@ export class DisguiseManager {
   /**
    * 生成伪装代码界面HTML
    * @param webviewId WebView的唯一标识
-   * @param options 伪装选项
    * @returns 伪装代码界面的HTML字符串
    */
-  public static generateDisguiseCodeInterface(webviewId: string, options: DisguiseOptions = {}): string {
-    if (options.iconAndTitleOnly) {
-      return ""; // 只伪装图标和标题，不需要界面
-    }
-
+  public static generateDisguiseCodeInterface(webviewId: string): string {
     const disguiseInfo = this.getRandomDisguise(webviewId);
     const fileName = disguiseInfo.title;
 

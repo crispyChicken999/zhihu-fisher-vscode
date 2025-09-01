@@ -208,24 +208,15 @@ export class HtmlRenderer {
         )
         .toString() || "";
 
-    // 获取伪装配置
-    const disguiseOptions = {
-      iconAndTitleOnly: !config.get<boolean>("enableFullDisguise", false),
-      fullDisguise: config.get<boolean>("enableFullDisguise", false),
-    };
-
     // 生成伪装界面HTML（如果启用）
     const disguiseInterfaceHtml =
-      enableDisguise && disguiseOptions.fullDisguise
-        ? DisguiseManager.generateDisguiseCodeInterface(
-            webviewId,
-            disguiseOptions
-          )
+      enableDisguise
+        ? DisguiseManager.generateDisguiseCodeInterface(webviewId)
         : "";
 
     // 生成伪装界面控制脚本（如果启用）
     const disguiseControlScript =
-      enableDisguise && disguiseOptions.fullDisguise
+      enableDisguise
         ? `
           // 伪装界面控制
           (function() {

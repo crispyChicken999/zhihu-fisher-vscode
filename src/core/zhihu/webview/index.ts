@@ -96,7 +96,6 @@ export class WebviewManager {
       // 获取伪装配置
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
       const enableDisguise = config.get<boolean>("enableDisguise", false);
-      const enableFullDisguise = config.get<boolean>("enableFullDisguise", false);
 
       if (e.webviewPanel.active) {
         // 激活时恢复原始标题和图标
@@ -111,8 +110,8 @@ export class WebviewManager {
           "icon.svg"
         );
 
-        // 如果启用了全接口伪装，隐藏伪装界面
-        if (enableDisguise && enableFullDisguise) {
+        // 如果启用了伪装功能，隐藏伪装界面
+        if (enableDisguise) {
           DisguiseManager.hideDisguiseInterface(panel);
         }
       } else {
@@ -128,8 +127,8 @@ export class WebviewManager {
         panel.title = disguise.title;
         panel.iconPath = disguise.iconPath;
 
-        // 如果启用了全接口伪装，显示伪装界面
-        if (enableDisguise && enableFullDisguise) {
+        // 如果启用了伪装功能，显示伪装界面
+        if (enableDisguise) {
           DisguiseManager.showDisguiseInterface(panel);
         }
       }
