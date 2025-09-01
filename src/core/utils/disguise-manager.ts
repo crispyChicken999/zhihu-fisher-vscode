@@ -402,7 +402,7 @@ export class DisguiseManager {
    */
   private static buildCodeInterfaceHTML(codeLines: string[]): string {
     const html = `
-      <div id="disguise-code-interface" class="disguise-code-interface">
+      <div id="disguise-code-interface" class="disguise-code-interface" style="display: none;">
         <!-- Main content area -->
         <div class="disguise-main-content">
           <!-- Line numbers area -->
