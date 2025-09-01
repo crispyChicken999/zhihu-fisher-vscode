@@ -221,17 +221,90 @@ export class HtmlRenderer {
           // 伪装界面控制
           (function() {
             const disguiseElement = document.getElementById('disguise-code-interface');
+            let welcomeMessageElement = null;
+
+            // 创建欢迎消息元素
+            function createWelcomeMessage() {
+              if (!welcomeMessageElement) {
+                welcomeMessageElement = document.createElement('div');
+                welcomeMessageElement.className = 'fisher-welcome-message';
+                welcomeMessageElement.textContent = '欢迎回到 🐟 Fisher 🐟';
+                document.body.appendChild(welcomeMessageElement);
+              }
+            }
+
+            // 显示欢迎消息
+            function showWelcomeMessage() {
+              createWelcomeMessage();
+              // 延迟显示以确保DOM已渲染
+              setTimeout(() => {
+                welcomeMessageElement.classList.add('show');
+              }, 100);
+
+              // 1秒后自动隐藏
+              setTimeout(() => {
+                hideWelcomeMessage();
+              }, 1000);
+            }
+
+            // 隐藏欢迎消息
+            function hideWelcomeMessage() {
+              if (welcomeMessageElement) {
+                welcomeMessageElement.classList.remove('show');
+                welcomeMessageElement.classList.add('hide');
+                // 动画完成后移除元素
+                setTimeout(() => {
+                  if (welcomeMessageElement && welcomeMessageElement.parentNode) {
+                    welcomeMessageElement.parentNode.removeChild(welcomeMessageElement);
+                    welcomeMessageElement = null;
+                  }
+                }, 300); // 匹配伪装界面的隐藏动画时间
+              }
+            }
 
             // 监听来自扩展的消息
             window.addEventListener('message', function(event) {
               const message = event.data;
 
               if (message.command === 'showDisguise' && disguiseElement) {
+                // 清理所有可能的状态类，确保动画正常
+                disguiseElement.classList.remove('show', 'hiding');
+                // 先设置为透明状态
+                disguiseElement.style.opacity = '0';
                 disguiseElement.style.display = 'block';
+
+                // 使用双重 requestAnimationFrame 确保状态完全重置
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    // 移除内联样式，让CSS类接管
+                    disguiseElement.style.opacity = '';
+                    disguiseElement.classList.add('show');
+                  });
+                });
                 document.body.classList.add('disguise-active');
               } else if (message.command === 'hideDisguise' && disguiseElement) {
-                disguiseElement.style.display = 'none';
-                document.body.classList.remove('disguise-active');
+                // 新的时序：先显示欢迎消息，保持伪装界面
+                showWelcomeMessage();
+
+                // 等待1秒后同时隐藏伪装界面和欢迎消息
+                setTimeout(() => {
+                  // 同时开始隐藏动画
+                  if (disguiseElement) {
+                    disguiseElement.classList.remove('show');
+                    disguiseElement.classList.add('hiding');
+                  }
+
+                  hideWelcomeMessage();
+
+                  // 动画完成后隐藏伪装元素
+                  setTimeout(() => {
+                    if (disguiseElement) {
+                      disguiseElement.style.display = 'none';
+                      disguiseElement.classList.remove('hiding');
+                      document.body.classList.remove('disguise-active');
+                    }
+                  }, 300); // 与CSS动画时间匹配
+                }, 1000); // 等待1秒
               }
             });
           })();

@@ -16,6 +16,50 @@ export const disguiseCss = `
   font-size: var(--vscode-editor-font-size, 14px);
   color: var(--vscode-editor-foreground);
   overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+/* 显示状态 */
+.disguise-code-interface.show {
+  opacity: 1;
+}
+
+/* 隐藏动画状态 */
+.disguise-code-interface.hiding {
+  opacity: 0;
+}
+
+/* Fisher 欢迎消息 */
+.fisher-welcome-message {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--vscode-notifications-background);
+  color: var(--vscode-notifications-foreground);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: normal;
+  font-family: var(--vscode-font-family);
+  border: 1px solid var(--vscode-notifications-border);
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+  z-index: 10001;
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.fisher-welcome-message.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.fisher-welcome-message.hide {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
 }
 
 /* 当伪装界面可见时，隐藏body滚动条 */

@@ -403,14 +403,14 @@ export class DisguiseManager {
   private static buildCodeInterfaceHTML(codeLines: string[]): string {
     const html = `
       <div id="disguise-code-interface" class="disguise-code-interface">
-        <!-- 主体内容区域 -->
+        <!-- Main content area -->
         <div class="disguise-main-content">
-          <!-- 行号区域 -->
+          <!-- Line numbers area -->
           <div id="disguise-line-numbers" class="disguise-line-numbers">
             ${this.generateLineNumbers(codeLines.length)}
           </div>
 
-          <!-- 代码内容区域 -->
+          <!-- Code content area -->
           <div class="disguise-code-content vscode-tokens-styles">
             ${this.generateCodeHTML(codeLines)}
           </div>
