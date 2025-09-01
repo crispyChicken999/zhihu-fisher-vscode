@@ -286,7 +286,7 @@ export class StylePanelComponent implements Component {
                 <summary class="style-option-help-summary">功能说明</summary>
                 <div class="style-option-help-content">
                   <div class="style-option-help-margin-4">
-                    <strong class="style-option-help-strong">功能说明：</strong>当页面失去焦点时，自动将标题和图标伪装成代码文件
+                    <strong class="style-option-help-strong">功能说明：</strong>当切换到其他页面时，自动将 <b>图标、标题和界面</b> 伪装成代码文件
                   </div>
                   <div class="style-option-help-margin-4">
                     <strong class="style-option-help-strong">使用场景：</strong>工作时间浏览内容，避免被老板/同事发现摸鱼 (～￣▽￣)～

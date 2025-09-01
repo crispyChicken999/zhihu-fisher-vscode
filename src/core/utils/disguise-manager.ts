@@ -382,62 +382,15 @@ export class DisguiseManager {
    * @returns 语言类型
    */
   private static getLanguageFromExtension(extension: string): string {
-    const languageMap: { [key: string]: string } = {
-      '.js': 'file_type_js.svg',
-      '.mjs': 'file_type_js.svg',
-      '.ts': 'file_type_typescript.svg',
-      '.d.ts': 'file_type_typescriptdef.svg',
-      '.py': 'file_type_python.svg',
-      '.pyw': 'file_type_python.svg',
-      '.java': 'file_type_java.svg',
-      '.cs': 'file_type_csharp.svg',
-      '.cpp': 'file_type_cpp.svg',
-      '.cc': 'file_type_cpp.svg',
-      '.cxx': 'file_type_cpp.svg',
-      '.h': 'file_type_cheader.svg',
-      '.hpp': 'file_type_cppheader.svg',
-      '.hxx': 'file_type_cppheader.svg',
-      '.h++': 'file_type_cppheader.svg',
-      '.css': 'file_type_css.svg',
-      '.scss': 'file_type_scss.svg',
-      '.less': 'file_type_less.svg',
-      '.html': 'file_type_html.svg',
-      '.htm': 'file_type_html.svg',
-      '.php': 'file_type_php3.svg',
-      '.rb': 'file_type_ruby.svg',
-      '.rbw': 'file_type_ruby.svg',
-      '.rs': 'file_type_rust.svg',
-      '.swift': 'file_type_swift.svg',
-      '.vue': 'file_type_vue.svg',
-      '.json': 'file_type_json.svg',
-      '.xml': 'file_type_xml.svg',
-      '.xsd': 'file_type_xml.svg',
-      '.xsl': 'file_type_xsl.svg',
-      '.yaml': 'file_type_light_yaml.svg',
-      '.yml': 'file_type_light_yaml.svg',
-      '.md': 'file_type_markdown.svg',
-      '.markdown': 'file_type_markdown.svg',
-      '.tex': 'file_type_light_tex.svg',
-      '.latex': 'file_type_light_tex.svg',
-      '.sql': 'file_type_sql.svg',
-      '.ps1': 'file_type_powershell.svg',
-      '.psm1': 'file_type_powershell.svg',
-      '.psd1': 'file_type_powershell.svg',
-      '.lua': 'file_type_lua.svg',
-      '.r': 'file_type_r.svg',
-      '.R': 'file_type_r.svg',
-      '.rmd': 'file_type_r.svg',
-      '.ini': 'file_type_ini.svg',
-      '.cfg': 'file_type_ini.svg',
-      '.conf': 'file_type_ini.svg',
-      '.log': 'file_type_log.svg',
-      '.txt': 'file_type_log.svg',
-      '.gitignore': 'file_type_git.svg',
-      '.gitattributes': 'file_type_git.svg',
-      '.gitmodules': 'file_type_git.svg'
-    };
+    // 遍历FILE_TYPE_MAP，查找包含该扩展名的文件类型
+    for (const [fileType, info] of Object.entries(this.FILE_TYPE_MAP)) {
+      if (info.extensions.includes(extension)) {
+        return fileType;
+      }
+    }
 
-    return languageMap[extension] || 'file_type_js.svg';
+    // 如果没有找到匹配的扩展名，返回默认的JavaScript类型
+    return 'file_type_js.svg';
   }
 
   /**
@@ -465,23 +418,25 @@ export class DisguiseManager {
       </div>`;
 
     return html;
-  }  /**
-   * 生成行号HTML
+  }
+
+  /**
+   * 生成行号HTML - 使用JavaScript动态计算换行
    */
   private static generateLineNumbers(lineCount: number): string {
     let html = '';
     for (let i = 1; i <= lineCount; i++) {
-      html += `<div class="disguise-line-number">${i}</div>`;
+      html += `<div class="disguise-line-number" data-line="${i}">${i}</div>`;
     }
     return html;
   }
 
   /**
-   * 生成代码HTML（直接使用CodeGenerator生成的高亮HTML）
+   * 生成代码HTML - 添加行号对应关系
    */
   private static generateCodeHTML(codeLines: string[]): string {
     return codeLines.map((line, index) =>
-      `<div class="disguise-code-line">${line || '&nbsp;'}</div>`
+      `<div class="disguise-code-line" data-line="${index + 1}">${line || '&nbsp;'}</div>`
     ).join('');
   }
 

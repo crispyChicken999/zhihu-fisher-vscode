@@ -201,7 +201,7 @@ export const panelCss = `
 /* 伪装文件类型选择项样式 */
 .disguise-type-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 8px;
 }
 
@@ -601,7 +601,6 @@ export const panelCss = `
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 150px;
 }
 
 .shortcut-input-row {
@@ -620,6 +619,7 @@ export const panelCss = `
   text-align: center;
   cursor: pointer;
   font-size: 12px;
+  max-width: 100px;
 }
 
 .shortcut-input-single {
@@ -636,7 +636,7 @@ export const panelCss = `
 
 .shortcut-input:hover,
 .shortcut-input-single:hover {
-  border-color: var(--vscode-focusBorder);
+  border-color: var(--vscode-focusBorder) !important;
 }
 
 .shortcut-remove-btn {

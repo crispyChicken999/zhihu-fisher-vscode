@@ -25,13 +25,94 @@ body.disguise-active {
   overflow: hidden !important;
 }
 
-/* 主体内容区域 */
+/* 主体内容区域 - 使用CSS Grid布局 */
 .disguise-main-content {
-  display: flex;
-  height: calc(100% - 36px);
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  height: calc(100%);
+  overflow: auto;
+  scroll-behavior: smooth;
+  position: relative;
+  background-color: var(--vscode-editor-background);
 }
 
-/* 行号区域 */
+/* 行号区域 - 使用grid布局确保与代码行对齐 */
+.disguise-line-numbers {
+  grid-column: 1;
+  background-color: var(--vscode-editor-background);
+  padding: 8px 4px 8px 8px;
+  font-size: 13px;
+  color: var(--vscode-editorLineNumber-foreground);
+  text-align: right;
+  line-height: 19px;
+  user-select: none;
+  position: relative;
+  border-right: 1px solid var(--vscode-panel-border);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 代码内容区域 */
+.disguise-code-content {
+  grid-column: 2;
+  padding: 8px 16px;
+  line-height: 19px;
+  font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+  font-size: var(--vscode-editor-font-size, 14px);
+  background-color: var(--vscode-editor-background);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 代码行容器样式 - 使用CSS Grid实现行号与代码的对齐 */
+.disguise-code-line-container {
+  display: contents; /* 让子元素直接参与父级grid布局 */
+}
+
+/* 代码行样式 */
+.disguise-code-line {
+  line-height: 19px;
+  min-height: 19px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* 使用CSS计数器和伪元素实现换行时的空行号 */
+}
+
+/* 行号样式 */
+.disguise-line-number {
+  display: flex;
+  align-items: flex-start;
+  height: auto;
+  min-height: 19px;
+  line-height: 19px;
+  padding-top: 0;
+}
+
+/* 纯CSS解决方案：为换行的代码创建对应的空行号空间 */
+.disguise-code-line {
+  /* 当内容换行时，创建相应的视觉空间 */
+  position: relative;
+}
+
+/* 使用CSS grid创建完美的行号对齐 */
+.disguise-main-content {
+  /* 重新定义以支持动态行高 */
+  display: block;
+  height: calc(100%);
+  overflow: auto;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.disguise-line-numbers,
+.disguise-code-content {
+  float: left;
+}
+
 .disguise-line-numbers {
   width: 50px;
   background-color: var(--vscode-editor-background);
@@ -42,31 +123,47 @@ body.disguise-active {
   text-align: right;
   line-height: 19px;
   user-select: none;
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
-/* 代码内容区域 */
 .disguise-code-content {
-  flex: 1;
-  overflow: auto;
+  width: calc(100% - 50px);
   padding: 8px 16px;
   line-height: 19px;
   font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
   font-size: var(--vscode-editor-font-size, 14px);
   background-color: var(--vscode-editor-background);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  box-sizing: border-box;
 }
 
-/* 代码行样式 */
-.disguise-code-line {
-  line-height: 19px;
-  min-height: 19px;
+/* 清除浮动 */
+.disguise-main-content::after {
+  content: "";
+  display: table;
+  clear: both;
 }
-
-/* 行号样式 */
 .disguise-line-number {
   display: block;
   height: 19px;
   line-height: 19px;
+  min-height: 19px;
+  position: relative;
+}
+
+/* 当行号对应换行代码时的空行号样式 */
+.disguise-line-number.wrapped-line {
+  color: transparent;
+}
+
+/* 代码行换行后的行号占位 */
+.disguise-line-number.line-continuation::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 19px;
 }
 
 /* VSCode 代码高亮伪装样式 */
