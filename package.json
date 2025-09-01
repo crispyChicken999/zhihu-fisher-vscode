@@ -188,7 +188,7 @@
       },
       {
         "command": "zhihu-fisher.restartExtension",
-        "title": "重新启动扩展",
+        "title": "重启扩展",
         "icon": "$(refresh)"
       },
       {
