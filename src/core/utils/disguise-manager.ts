@@ -1,8 +1,19 @@
 import * as vscode from "vscode";
 import { Store } from "../stores";
+import { CodeGenerator } from "./code-generator";
 
 /**
- * 伪装管理器 - 用于在WebView失去焦点时随机生成合理的文件名和图标组合
+ * 伪装选项
+ */
+export interface DisguiseOptions {
+  /** 只伪装图标和标题 */
+  iconAndTitleOnly?: boolean;
+  /** 完全伪装（包括界面） */
+  fullDisguise?: boolean;
+}
+
+/**
+ * 伪装管理器 - 用于在WebView失去焦点时随机生成合理的文件名、图标和代码界面组合
  */
 export class DisguiseManager {
   /** 文件类型映射表 */
@@ -283,7 +294,7 @@ export class DisguiseManager {
    * @returns 伪装信息或默认信息
    */
   public static getDisguiseOrDefault(
-    webviewId: string, 
+    webviewId: string,
     defaultTitle: string = "代码文件"
   ): { title: string; iconPath: vscode.Uri } {
     if (!this.isDisguiseEnabled()) {
@@ -339,36 +350,6 @@ export class DisguiseManager {
   }
 
   /**
-   * 获取文件类型的显示名称
-   * @param iconFile 图标文件名
-   * @returns 显示名称
-   */
-  public static getFileTypeDisplayName(iconFile: string): string {
-    const displayNames: { [key: string]: string } = {
-      "file_type_cheader.svg": "C 头文件",
-      "file_type_cpp.svg": "C++ 源文件",
-      "file_type_cppheader.svg": "C++ 头文件",
-      "file_type_csharp.svg": "C# 源文件",
-      "file_type_css.svg": "CSS 样式文件",
-      "file_type_git.svg": "Git 配置文件",
-      "file_type_html.svg": "HTML 网页文件",
-      "file_type_java.svg": "Java 源文件",
-      "file_type_js.svg": "JavaScript 源文件",
-      "file_type_json.svg": "JSON 配置文件",
-      "file_type_less.svg": "Less 样式文件",
-      "file_type_php3.svg": "PHP 源文件",
-      "file_type_powershell.svg": "PowerShell 脚本",
-      "file_type_scss.svg": "Sass 样式文件",
-      "file_type_typescript.svg": "TypeScript 源文件",
-      "file_type_typescriptdef.svg": "TypeScript 声明文件",
-      "file_type_vue.svg": "Vue 组件文件",
-      "file_type_xml.svg": "XML 配置文件"
-    };
-
-    return displayNames[iconFile] || iconFile.replace("file_type_", "").replace(".svg", "");
-  }
-
-  /**
    * 获取用户当前选择的伪装类型
    * @returns 用户选择的文件类型数组
    */
@@ -384,5 +365,159 @@ export class DisguiseManager {
   public static async updateSelectedDisguiseTypes(selectedTypes: string[]): Promise<void> {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     await config.update("selectedDisguiseTypes", selectedTypes, vscode.ConfigurationTarget.Global);
+  }
+
+  /**
+   * 生成伪装代码界面HTML
+   * @param webviewId WebView的唯一标识
+   * @param options 伪装选项
+   * @returns 伪装代码界面的HTML字符串
+   */
+  public static generateDisguiseCodeInterface(webviewId: string, options: DisguiseOptions = {}): string {
+    if (options.iconAndTitleOnly) {
+      return ""; // 只伪装图标和标题，不需要界面
+    }
+
+    const disguiseInfo = this.getRandomDisguise(webviewId);
+    const fileName = disguiseInfo.title;
+
+    // 根据文件扩展名确定语言类型
+    const extension = fileName.substring(fileName.lastIndexOf('.'));
+    let language = this.getLanguageFromExtension(extension);
+
+    // 使用CodeGenerator生成代码
+    const codeLines = CodeGenerator.generateCode(language, 100);
+
+    return this.buildCodeInterfaceHTML(codeLines);
+  }
+
+  /**
+   * 根据文件扩展名获取语言类型
+   * @param extension 文件扩展名
+   * @returns 语言类型
+   */
+  private static getLanguageFromExtension(extension: string): string {
+    const languageMap: { [key: string]: string } = {
+      '.js': 'file_type_js.svg',
+      '.mjs': 'file_type_js.svg',
+      '.ts': 'file_type_typescript.svg',
+      '.d.ts': 'file_type_typescriptdef.svg',
+      '.py': 'file_type_python.svg',
+      '.pyw': 'file_type_python.svg',
+      '.java': 'file_type_java.svg',
+      '.cs': 'file_type_csharp.svg',
+      '.cpp': 'file_type_cpp.svg',
+      '.cc': 'file_type_cpp.svg',
+      '.cxx': 'file_type_cpp.svg',
+      '.h': 'file_type_cheader.svg',
+      '.hpp': 'file_type_cppheader.svg',
+      '.hxx': 'file_type_cppheader.svg',
+      '.h++': 'file_type_cppheader.svg',
+      '.css': 'file_type_css.svg',
+      '.scss': 'file_type_scss.svg',
+      '.less': 'file_type_less.svg',
+      '.html': 'file_type_html.svg',
+      '.htm': 'file_type_html.svg',
+      '.php': 'file_type_php3.svg',
+      '.rb': 'file_type_ruby.svg',
+      '.rbw': 'file_type_ruby.svg',
+      '.rs': 'file_type_rust.svg',
+      '.swift': 'file_type_swift.svg',
+      '.vue': 'file_type_vue.svg',
+      '.json': 'file_type_json.svg',
+      '.xml': 'file_type_xml.svg',
+      '.xsd': 'file_type_xml.svg',
+      '.xsl': 'file_type_xsl.svg',
+      '.yaml': 'file_type_light_yaml.svg',
+      '.yml': 'file_type_light_yaml.svg',
+      '.md': 'file_type_markdown.svg',
+      '.markdown': 'file_type_markdown.svg',
+      '.tex': 'file_type_light_tex.svg',
+      '.latex': 'file_type_light_tex.svg',
+      '.sql': 'file_type_sql.svg',
+      '.ps1': 'file_type_powershell.svg',
+      '.psm1': 'file_type_powershell.svg',
+      '.psd1': 'file_type_powershell.svg',
+      '.lua': 'file_type_lua.svg',
+      '.r': 'file_type_r.svg',
+      '.R': 'file_type_r.svg',
+      '.rmd': 'file_type_r.svg',
+      '.ini': 'file_type_ini.svg',
+      '.cfg': 'file_type_ini.svg',
+      '.conf': 'file_type_ini.svg',
+      '.log': 'file_type_log.svg',
+      '.txt': 'file_type_log.svg',
+      '.gitignore': 'file_type_git.svg',
+      '.gitattributes': 'file_type_git.svg',
+      '.gitmodules': 'file_type_git.svg'
+    };
+
+    return languageMap[extension] || 'file_type_js.svg';
+  }
+
+  /**
+   * 构建代码界面HTML
+   * @param fileName 文件名
+   * @param language 语言类型
+   * @param codeLines 代码行数组
+   * @returns HTML字符串
+   */
+  private static buildCodeInterfaceHTML(codeLines: string[]): string {
+    const html = `
+      <div id="disguise-code-interface" class="disguise-code-interface">
+        <!-- 主体内容区域 -->
+        <div class="disguise-main-content">
+          <!-- 行号区域 -->
+          <div id="disguise-line-numbers" class="disguise-line-numbers">
+            ${this.generateLineNumbers(codeLines.length)}
+          </div>
+
+          <!-- 代码内容区域 -->
+          <div class="disguise-code-content vscode-tokens-styles">
+            ${this.generateCodeHTML(codeLines)}
+          </div>
+        </div>
+      </div>`;
+
+    return html;
+  }  /**
+   * 生成行号HTML
+   */
+  private static generateLineNumbers(lineCount: number): string {
+    let html = '';
+    for (let i = 1; i <= lineCount; i++) {
+      html += `<div class="disguise-line-number">${i}</div>`;
+    }
+    return html;
+  }
+
+  /**
+   * 生成代码HTML（直接使用CodeGenerator生成的高亮HTML）
+   */
+  private static generateCodeHTML(codeLines: string[]): string {
+    return codeLines.map((line, index) =>
+      `<div class="disguise-code-line">${line || '&nbsp;'}</div>`
+    ).join('');
+  }
+
+
+  /**
+   * 显示伪装代码界面
+   * @param webviewPanel VSCode webview面板
+   */
+  public static showDisguiseInterface(webviewPanel: any): void {
+    webviewPanel.webview.postMessage({
+      command: 'showDisguise'
+    });
+  }
+
+  /**
+   * 隐藏伪装代码界面
+   * @param webviewPanel VSCode webview面板
+   */
+  public static hideDisguiseInterface(webviewPanel: any): void {
+    webviewPanel.webview.postMessage({
+      command: 'hideDisguise'
+    });
   }
 }

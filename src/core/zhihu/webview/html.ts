@@ -8,13 +8,17 @@ import { ToolbarComponent } from "./components/toolbar";
 import { NavigationComponent } from "./components/navigation";
 import { ArticleContentComponent } from "./components/article";
 import { StylePanelComponent } from "./components/style-panel";
+import { DisguiseManager } from "../../utils/disguise-manager";
 // 导入模板文件
 import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts/index";
 import { loadingTemplate } from "./templates/loading";
 import { cookieTipsTemplate } from "./templates/cookieTips";
 import { errorTemplate } from "./templates/error";
-import { articleKeyboardTips, questionKeyboardTips } from "./templates/keyboardTips";
+import {
+  articleKeyboardTips,
+  questionKeyboardTips,
+} from "./templates/keyboardTips";
 // 导入样式文件
 import { mainCss } from "./styles/main";
 import { panelCss } from "./styles/panel";
@@ -25,6 +29,7 @@ import { toolbarCss } from "./styles/toolbar";
 import { commentsCss } from "./styles/comments";
 import { navigationCss } from "./styles/navigation";
 import { componentsCss } from "./styles/components";
+import { disguiseCss } from "./styles/disguise";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -54,9 +59,12 @@ export class HtmlRenderer {
    * @param imgUrl 可选的缩略图URL
    * @returns 加载中的HTML字符串
    */
-  public static getLoadingHtml(title: string, excerpt: string, imgUrl?: string): string {
-    const excerptText =
-      excerpt || "🐟无摘要🐟";
+  public static getLoadingHtml(
+    title: string,
+    excerpt: string,
+    imgUrl?: string
+  ): string {
+    const excerptText = excerpt || "🐟无摘要🐟";
 
     // 获取媒体显示模式配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
@@ -95,19 +103,23 @@ export class HtmlRenderer {
     reasons: string[],
     actions?: string
   ): string {
-    const reasonsHtml = reasons.map(reason => `<li>${this.escapeHtml(reason)}</li>`).join('');
+    const reasonsHtml = reasons
+      .map((reason) => `<li>${this.escapeHtml(reason)}</li>`)
+      .join("");
     const defaultActions = `
       <button class="action-button" onclick="reloadPage()">重新加载</button>
-      <button class="action-button secondary" onclick="openInBrowser('${this.escapeHtml(sourceUrl)}')">🌐 浏览器打开</button>
+      <button class="action-button secondary" onclick="openInBrowser('${this.escapeHtml(
+        sourceUrl
+      )}')">🌐 浏览器打开</button>
       <button class="action-button secondary" onclick="setCookie()">更新Cookie</button>
     `;
 
     return errorTemplate
-      .replace('${ERROR_TITLE}', this.escapeHtml(title))
-      .replace('${ERROR_DESCRIPTION}', this.escapeHtml(description))
-      .replace('${SOURCE_URL}', this.escapeHtml(sourceUrl))
-      .replace('${ERROR_REASONS}', reasonsHtml)
-      .replace('${ERROR_ACTIONS}', actions || defaultActions);
+      .replace("${ERROR_TITLE}", this.escapeHtml(title))
+      .replace("${ERROR_DESCRIPTION}", this.escapeHtml(description))
+      .replace("${SOURCE_URL}", this.escapeHtml(sourceUrl))
+      .replace("${ERROR_REASONS}", reasonsHtml)
+      .replace("${ERROR_ACTIONS}", actions || defaultActions);
   }
 
   /**
@@ -122,26 +134,45 @@ export class HtmlRenderer {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
     const miniMediaScale = config.get<number>("miniMediaScale", 50);
-    const enableDisguise = config.get<boolean>('enableDisguise', true);
-    const selectedDisguiseTypes = config.get<string[]>('selectedDisguiseTypes', []);
+    const enableDisguise = config.get<boolean>("enableDisguise", true);
+    const selectedDisguiseTypes = config.get<string[]>(
+      "selectedDisguiseTypes",
+      []
+    );
 
     // 当前回答
-    const currentAnswer = article.answerList[article.currentAnswerIndex];    if (!currentAnswer) {
+    const currentAnswer = article.answerList[article.currentAnswerIndex];
+    if (!currentAnswer) {
       return this.getLoadingHtml(article.title, article.excerpt || "", "");
     }
 
     // 构建页面组件
-    const renderOptions = { mediaDisplayMode, miniMediaScale, enableDisguise, selectedDisguiseTypes };
+    const renderOptions = {
+      mediaDisplayMode,
+      miniMediaScale,
+      enableDisguise,
+      selectedDisguiseTypes,
+    };
 
     // 判断内容类型：通过URL判断专栏文章
-    const contentType = webview.url.includes('zhuanlan.zhihu.com') ? "article" : "question";
+    const contentType = webview.url.includes("zhuanlan.zhihu.com")
+      ? "article"
+      : "question";
 
     const authorComponent = new AuthorComponent(
       currentAnswer?.author,
       renderOptions
     );
-    const navigationComponent = new NavigationComponent(webview, article, contentType);
-    const metaComponent = new MetaComponent(currentAnswer, contentType, webview);
+    const navigationComponent = new NavigationComponent(
+      webview,
+      article,
+      contentType
+    );
+    const metaComponent = new MetaComponent(
+      currentAnswer,
+      contentType,
+      webview
+    );
     const contentComponent = new ArticleContentComponent(
       currentAnswer?.content,
       renderOptions
@@ -170,9 +201,51 @@ export class HtmlRenderer {
 
     // 生成JavaScript代码
     const webviewItem = Store.webviewMap.get(webviewId);
-    const resourcesUri = webviewItem?.webviewPanel.webview.asWebviewUri(
-      vscode.Uri.joinPath(Store.context!.extensionUri, "resources")
-    ).toString() || "";
+    const resourcesUri =
+      webviewItem?.webviewPanel.webview
+        .asWebviewUri(
+          vscode.Uri.joinPath(Store.context!.extensionUri, "resources")
+        )
+        .toString() || "";
+
+    // 获取伪装配置
+    const disguiseOptions = {
+      iconAndTitleOnly: !config.get<boolean>("enableFullDisguise", false),
+      fullDisguise: config.get<boolean>("enableFullDisguise", false),
+    };
+
+    // 生成伪装界面HTML（如果启用）
+    const disguiseInterfaceHtml =
+      enableDisguise && disguiseOptions.fullDisguise
+        ? DisguiseManager.generateDisguiseCodeInterface(
+            webviewId,
+            disguiseOptions
+          )
+        : "";
+
+    // 生成伪装界面控制脚本（如果启用）
+    const disguiseControlScript =
+      enableDisguise && disguiseOptions.fullDisguise
+        ? `
+          // 伪装界面控制
+          (function() {
+            const disguiseElement = document.getElementById('disguise-code-interface');
+
+            // 监听来自扩展的消息
+            window.addEventListener('message', function(event) {
+              const message = event.data;
+
+              if (message.command === 'showDisguise' && disguiseElement) {
+                disguiseElement.style.display = 'block';
+                document.body.classList.add('disguise-active');
+              } else if (message.command === 'hideDisguise' && disguiseElement) {
+                disguiseElement.style.display = 'none';
+                document.body.classList.remove('disguise-active');
+              }
+            });
+          })();
+        `
+        : "";
 
     const scriptContent = scriptsTemplate
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
@@ -187,7 +260,9 @@ export class HtmlRenderer {
       .replace("${RESOURCES_BASE_PATH}", resourcesUri);
 
     // 判断是否为文章类型，生成对应的键盘提示
-    const isArticle = webview.url.includes('zhuanlan.zhihu.com/p/') || webview.url.includes('/p/');
+    const isArticle =
+      webview.url.includes("zhuanlan.zhihu.com/p/") ||
+      webview.url.includes("/p/");
     const keyboardTips = isArticle ? articleKeyboardTips : questionKeyboardTips;
 
     // 填充模板
@@ -202,6 +277,7 @@ export class HtmlRenderer {
       .replace("${TOOLBAR_CSS}", toolbarCss)
       .replace("${MEDIA_CSS}", mediaCss)
       .replace("${PANEL_CSS}", panelCss)
+      .replace("${DISGUISE_CSS}", disguiseCss)
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replaceAll("${META_COMPONENT}", metaComponent.render())
@@ -212,6 +288,8 @@ export class HtmlRenderer {
       .replace("${SOURCE_URL}", currentAnswer?.url || webview.url || "")
       .replace("${KEYBOARD_TIPS}", keyboardTips)
       .replace(/\${MEDIA_MODE_CLASS}/g, mediaModeClass)
+      .replace("${DISGUISE_INTERFACE}", disguiseInterfaceHtml)
+      .replace("${DISGUISE_SCRIPT}", disguiseControlScript)
       .replace("${SCRIPTS}", scriptContent);
   }
 }

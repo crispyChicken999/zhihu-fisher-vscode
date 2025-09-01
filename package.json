@@ -711,6 +711,11 @@
           "default": true,
           "description": "启用智能伪装功能。当 WebView 失去焦点时，自动将标题和图标伪装成代码文件，更好地摸鱼，避免被老板/同事发现(～￣▽￣)～。"
         },
+        "zhihu-fisher.enableFullDisguise": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用完整界面伪装功能。开启后，当WebView失去焦点时，不仅会伪装标题和图标，还会将整个界面伪装成VSCode代码编辑界面，提供更强的隐蔽性。⚠️ 此功能可能影响性能，建议根据需要开启。"
+        },
         "zhihu-fisher.selectedDisguiseTypes": {
           "type": "array",
           "items": {

@@ -93,8 +93,12 @@ export class WebviewManager {
 
     // 当面板失去焦点的时候，使用智能伪装系统
     panel.onDidChangeViewState((e) => {
+      // 获取伪装配置
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const enableDisguise = config.get<boolean>("enableDisguise", false);
+      const enableFullDisguise = config.get<boolean>("enableFullDisguise", false);
+
       if (e.webviewPanel.active) {
-        // 获取当前的webviewID对应是否正在加载中
         // 激活时恢复原始标题和图标
         const currentWebviewItem = Store.webviewMap.get(webviewId);
         const currentTitle = currentWebviewItem
@@ -106,6 +110,11 @@ export class WebviewManager {
           "resources",
           "icon.svg"
         );
+
+        // 如果启用了全接口伪装，隐藏伪装界面
+        if (enableDisguise && enableFullDisguise) {
+          DisguiseManager.hideDisguiseInterface(panel);
+        }
       } else {
         // 失去焦点时使用智能伪装（支持配置开关）
         const currentWebviewItem = Store.webviewMap.get(webviewId);
@@ -118,6 +127,11 @@ export class WebviewManager {
         );
         panel.title = disguise.title;
         panel.iconPath = disguise.iconPath;
+
+        // 如果启用了全接口伪装，显示伪装界面
+        if (enableDisguise && enableFullDisguise) {
+          DisguiseManager.showDisguiseInterface(panel);
+        }
       }
     });
 

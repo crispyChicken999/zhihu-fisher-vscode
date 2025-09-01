@@ -56,9 +56,13 @@ export const articleTemplate = `
       \${MEDIA_CSS}
       \${PANEL_CSS}
       \${COMMENTS_CSS}
+      \${DISGUISE_CSS}
     </style>
   </head>
   <body>
+    <!-- 伪装界面 -->
+    \${DISGUISE_INTERFACE}
+
     <header>
       <h4>\${TITLE}</h4>
       <div class="article-meta \${MEDIA_MODE_CLASS}">
@@ -92,6 +96,7 @@ export const articleTemplate = `
 
     <script>
       \${SCRIPTS}
+      \${DISGUISE_SCRIPT}
     </script>
   </body>
 </html>
