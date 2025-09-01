@@ -152,12 +152,4 @@ export const navigationCss = `
 .total-count {
   /* 总回答数文本 */
 }
-
-/* 自适应调整 */
-@media (max-width: 600px) {
-  .navigation-buttons {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
 `;
