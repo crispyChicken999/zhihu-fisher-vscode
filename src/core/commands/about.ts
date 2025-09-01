@@ -1,6 +1,8 @@
-import * as vscode from 'vscode';
-import { WebviewManager } from '../zhihu/webview';
-import { aboutTemplate } from '../zhihu/webview/templates/about';
+import * as vscode from "vscode";
+import { Store } from "../stores";
+import { WebviewManager } from "../zhihu/webview";
+import { aboutTemplate } from "../zhihu/webview/templates/about";
+import { donateTemplate } from "../zhihu/webview/templates/donate";
 
 /**
  * 注册关于和帮助相关命令
@@ -39,39 +41,22 @@ export function registerAboutCommands(): vscode.Disposable[] {
   const buyMeCoffeeCommand = vscode.commands.registerCommand(
     "zhihu-fisher.buyMeCoffee",
     async () => {
-      const alipayUrl =
-        "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg";
-
-      const title = "☕ 请开发者喝杯咖啡吧 ☕";
-      const message =
-        "如果您觉得知乎摸鱼插件对您有帮助，欢迎请开发者喝杯咖啡！\n\n" +
-        "您的支持是我们继续开发和改进的动力！\n\n" +
-        "💝 感谢您的支持~💝";
-
-      const alipayAction = "微信打赏";
-      const starAction = "GitHub上点颗星";
-
-      const selection = await vscode.window.showInformationMessage(
-        title,
+      const panel = vscode.window.createWebviewPanel(
+        "zhihuFisherDonate",
+        "☕ 请开发者喝杯咖啡~ ☕",
+        vscode.ViewColumn.One,
         {
-          modal: true,
-          detail: message,
-        },
-        alipayAction,
-        starAction
+          enableScripts: true,
+          retainContextWhenHidden: true,
+        }
       );
 
-      switch (selection) {
-        case alipayAction:
-          vscode.env.openExternal(vscode.Uri.parse(alipayUrl));
-          vscode.window.showInformationMessage(
-            "谢谢您的支持！已打开微信赞赏码~"
-          );
-          break;
-        case starAction:
-          await vscode.commands.executeCommand("zhihu-fisher.starOnGitHub");
-          break;
-      }
+      panel.webview.html = donateTemplate;
+      panel.iconPath = vscode.Uri.joinPath(
+        Store.context!.extensionUri,
+        "resources",
+        "icon.svg"
+      );
     }
   );
   commands.push(buyMeCoffeeCommand);
