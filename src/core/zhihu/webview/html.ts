@@ -262,11 +262,33 @@ export class HtmlRenderer {
               }
             }
 
+            // 存储待执行的定时器ID，用于实现打断功能
+            let welcomeMessageTimer = null;
+            let hideDisguiseTimer = null;
+            let hideElementTimer = null;
+
             // 监听来自扩展的消息
             window.addEventListener('message', function(event) {
               const message = event.data;
 
               if (message.command === 'showDisguise' && disguiseElement) {
+                // 打断功能：清除所有待执行的hideDisguise相关定时器
+                if (welcomeMessageTimer) {
+                  clearTimeout(welcomeMessageTimer);
+                  welcomeMessageTimer = null;
+                }
+                if (hideDisguiseTimer) {
+                  clearTimeout(hideDisguiseTimer);
+                  hideDisguiseTimer = null;
+                }
+                if (hideElementTimer) {
+                  clearTimeout(hideElementTimer);
+                  hideElementTimer = null;
+                }
+
+                // 如果当前有欢迎消息在显示，立即隐藏它
+                hideWelcomeMessage();
+
                 // 清理所有可能的状态类，确保动画正常
                 disguiseElement.classList.remove('show', 'hiding');
                 // 先设置为透明状态
@@ -283,11 +305,13 @@ export class HtmlRenderer {
                 });
                 document.body.classList.add('disguise-active');
               } else if (message.command === 'hideDisguise' && disguiseElement) {
+                // 打断功能：如果之前有showDisguise正在执行，不需要特别处理，直接开始hideDisguise流程
+                
                 // 新的时序：先显示欢迎消息，保持伪装界面
                 showWelcomeMessage();
 
                 // 等待1秒后同时隐藏伪装界面和欢迎消息
-                setTimeout(() => {
+                welcomeMessageTimer = setTimeout(() => {
                   // 同时开始隐藏动画
                   if (disguiseElement) {
                     disguiseElement.classList.remove('show');
@@ -297,13 +321,15 @@ export class HtmlRenderer {
                   hideWelcomeMessage();
 
                   // 动画完成后隐藏伪装元素
-                  setTimeout(() => {
+                  hideElementTimer = setTimeout(() => {
                     if (disguiseElement) {
                       disguiseElement.style.display = 'none';
                       disguiseElement.classList.remove('hiding');
                       document.body.classList.remove('disguise-active');
                     }
+                    hideElementTimer = null; // 清除定时器引用
                   }, 300); // 与CSS动画时间匹配
+                  welcomeMessageTimer = null; // 清除定时器引用
                 }, 1000); // 等待1秒
               }
             });
