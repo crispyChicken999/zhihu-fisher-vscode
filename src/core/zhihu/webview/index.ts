@@ -110,10 +110,7 @@ export class WebviewManager {
           "icon.svg"
         );
 
-        // 如果启用了伪装功能，隐藏伪装界面
-        if (enableDisguise) {
-          DisguiseManager.hideDisguiseInterface(panel);
-        }
+        DisguiseManager.hideDisguiseInterface(panel);
       } else {
         // 失去焦点时使用智能伪装（支持配置开关）
         const currentWebviewItem = Store.webviewMap.get(webviewId);
