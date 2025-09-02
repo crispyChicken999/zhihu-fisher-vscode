@@ -306,7 +306,7 @@ export class HtmlRenderer {
                 document.body.classList.add('disguise-active');
               } else if (message.command === 'hideDisguise' && disguiseElement) {
                 // 打断功能：如果之前有showDisguise正在执行，不需要特别处理，直接开始hideDisguise流程
-                
+
                 // 新的时序：先显示欢迎消息，保持伪装界面
                 showWelcomeMessage();
 
