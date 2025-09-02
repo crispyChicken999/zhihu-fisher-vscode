@@ -119,8 +119,8 @@ export function registerAboutCommands(): vscode.Disposable[] {
 
       if (selection === "确认重启") {
         try {
-          // 关闭已经打开的webview
-          WebviewManager.closeAllWebviews();
+          // 关闭已经打开的webview（确保异步处理）
+          await WebviewManager.closeAllWebviews();
 
           await vscode.commands.executeCommand(
             "workbench.action.restartExtensionHost"

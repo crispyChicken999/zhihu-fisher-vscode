@@ -90,7 +90,12 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // 清理资源或执行其他必要的操作
-export function deactivate() {
-  console.log("🐟知乎摸鱼🐟 已停用！");
-  ZhihuService.cleanup(); // 清理知乎服务资源
+export async function deactivate() {
+  console.log("🐟知乎摸鱼🐟 开始停用...");
+  try {
+    await ZhihuService.cleanup(); // 清理知乎服务资源
+    console.log("🐟知乎摸鱼🐟 已成功停用！");
+  } catch (error) {
+    console.error("🐟知乎摸鱼🐟 停用时出错:", error);
+  }
 }
