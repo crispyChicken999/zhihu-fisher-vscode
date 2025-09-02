@@ -403,6 +403,12 @@ export class ArticleContentComponent implements Component {
       const link = $(el);
       let href = link.attr("href") || "";
 
+      // tag type_a 去除，装饰 a 标签来的
+      if (!href) {
+        link.remove();
+        return;
+      }
+
       // 处理相对协议的URL（以//开头的链接），补全为https://
       if (href.startsWith("//")) {
         href = "https:" + href;
