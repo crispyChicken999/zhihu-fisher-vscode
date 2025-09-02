@@ -255,6 +255,9 @@ export class StylePanelComponent implements Component {
                   <div>
                     <strong class="style-option-help-strong">使用场景：</strong>统一颜色显示，更好地摸鱼，降低被老板/同事发现的风险😂
                   </div>
+                  <div>
+                    <strong class="style-option-help-strong">提示：</strong>伪装的代码界面和设置面板，不受灰色模式影响
+                  </div>
                 </div>
               </details>
             </div>
