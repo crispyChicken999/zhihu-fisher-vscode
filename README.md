@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.3.6-green.svg)
+![Version](https://img.shields.io/badge/Version-0.3.7-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
 
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、图片/视频展示方式、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索、收藏夹等功能。
@@ -147,11 +147,6 @@
 - ~~支持小图模式，比如想要摸鱼，但是也想偷偷看图片~~ **(v0.1.3 已实现)**
 - ~~支持设置文章的各种样式，比如字体大小、颜色等~~ **(v0.1.3 已实现)**
 - ~~支持加载回答的评论等。~~ **(v0.1.4 已实现)**
-- ~~智能伪装模式支持在blur时自动隐藏，避免被发现~~ **(v0.3.7 已实现)**
-- ~~智能伪装模式打断功能，在动画过程中能够实现中断，避免状态错乱~~ **(v0.3.7 已实现)**
-- ~~智能伪装模式下滚动条闪烁的问题修复一下（其实就是body overflow hidden，在showDisguise和hideDisguise的时候会变化导致页面跳动）~~ **(v0.3.7 已修复)**
-- ~~重启插件的时候记得dispose已经打开的webview哦，webviewMap记得item.panel.dispose()~~ **(v0.3.7 已修复)**
-
 
 🤗 更多功能，欢迎许愿 🎉~
 
