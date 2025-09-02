@@ -56,6 +56,52 @@ export class ArticleContentComponent implements Component {
   }
 
   /**
+   * 检测是否为盐选付费内容
+   * @param $ Cheerio实例
+   * @returns 是否为盐选内容
+   */
+  private isPaidContent($: cheerio.CheerioAPI): boolean {
+    const isPaid = $('.zhihu-fisher-content-is-paid-needed').length > 0;
+    return  isPaid;
+  }
+
+  /**
+   * 生成版权警告HTML
+   * @returns 版权警告HTML字符串
+   */
+  private generateCopyrightWarning(): string {
+    return `
+      <div class="copyright-warning">
+        <div class="copyright-warning-header">
+          <svg class="copyright-warning-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <h3 class="copyright-warning-title">版权保护提醒</h3>
+        </div>
+
+        <div class="copyright-warning-content">
+          <p><strong>本内容为知乎盐选付费专栏</strong></p>
+          <p>• 内容受版权保护，仅供个人学习使用</p>
+          <p>• 完整内容需要在知乎平台付费购买</p>
+          <p>• 请尊重原作者和平台的知识产权</p>
+        </div>
+
+        <div class="copyright-warning-highlight">
+          <p>
+            <strong>获取完整内容：</strong>
+            请前往 <a href="https://www.zhihu.com/xen/market/vip-privileges" target="_blank">知乎盐选</a> 购买盐选会员或单独购买该专栏
+          </p>
+        </div>
+
+        <div class="copyright-warning-footer">
+          <p><strong>隐私声明：</strong>本插件仅将浏览器中已展示的内容搬运至VSCode中展示，不会上传、收集、存储或分析任何付费内容、用户数据或隐私信息，不会用于任何营利行为。</p>
+          <p><strong>免责声明：</strong>插件不会绕过知乎的反爬机制，不会恶意破坏或影响原网站正常使用。知乎对盐选付费内容采用字体反爬技术，可能导致部分文字在插件中显示异常，盐选会员建议直接前往知乎官网查看，按键盘（B）浏览器打开。</p>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * 渲染文章内容
    * @returns 处理后的HTML内容
    */
@@ -68,6 +114,17 @@ export class ArticleContentComponent implements Component {
 
     // 使用Cheerio处理HTML内容
     const $ = cheerio.load(this.content);
+
+    // 检测是否为盐选付费内容
+    const isPaid = this.isPaidContent($);
+    let copyrightWarning = '';
+
+    if (isPaid) {
+      copyrightWarning = this.generateCopyrightWarning();
+
+      // 移除原始的付费相关元素以避免重复显示
+      $('.zhihu-fisher-content-is-paid-needed').remove();
+    }
 
     const mediaDisplayMode = this.options.mediaDisplayMode || "normal";
 
@@ -413,6 +470,12 @@ export class ArticleContentComponent implements Component {
     // .RichText-MCNLinkCardContainer 去除（自媒体推广，烦死了）
     $(".RichText-MCNLinkCardContainer").remove();
 
-    return $.html();
+    // 如果是盐选内容，在内容前添加版权警告
+    const finalHtml = $.html();
+    if (isPaid && copyrightWarning) {
+      return copyrightWarning + finalHtml;
+    }
+
+    return finalHtml;
   }
 }

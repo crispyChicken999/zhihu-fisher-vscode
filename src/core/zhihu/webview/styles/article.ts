@@ -318,4 +318,138 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1.02);
   transition: transform 0.3s ease;
 }
+
+/* 版权警告样式 */
+.copyright-warning {
+  background: var(--vscode-inputValidation-warningBackground, #fffbe6);
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #d4c5a9);
+  border-left: 4px solid var(--vscode-list-warningForeground, #bf8803);
+  color: var(--vscode-editor-foreground, #333333);
+  padding: 12px;
+  margin: 12px 0;
+  border-radius: 4px;
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: var(--vscode-font-size, 13px);
+  line-height: 1.4;
+}
+
+.copyright-warning-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+
+.copyright-warning-icon {
+  color: var(--vscode-list-warningForeground, #bf8803);
+  flex-shrink: 0;
+}
+
+.copyright-warning-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-editor-foreground, #333333);
+}
+
+.copyright-warning-content {
+  margin-bottom: 8px;
+}
+
+.copyright-warning-content p {
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.copyright-warning-highlight {
+  background: var(--vscode-editor-selectionHighlightBackground, rgba(173, 214, 255, 0.15));
+  padding: 6px 8px;
+  border-radius: 3px;
+  margin: 8px 0;
+  border-left: 2px solid var(--vscode-textLink-foreground, #0066cc);
+}
+
+.copyright-warning-highlight p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.copyright-warning-highlight a {
+  color: var(--vscode-textLink-foreground, #0066cc);
+  text-decoration: none;
+}
+
+.copyright-warning-highlight a:hover {
+  text-decoration: underline;
+}
+
+.copyright-warning-footer {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground, #6c6c6c);
+  border-top: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+  padding-top: 6px;
+  margin-top: 8px;
+}
+
+.copyright-warning-footer p {
+  margin: 0;
+  line-height: 1.3;
+}
+
+.copyright-warning-footer p + p {
+  margin-top: 3px;
+}
+
+/* 暗色主题版权警告样式兜底 */
+body.vscode-dark .copyright-warning {
+  background: var(--vscode-inputValidation-warningBackground, #2d2a1e);
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #5a5a37);
+  border-left: 4px solid var(--vscode-list-warningForeground, #ffcc00);
+  color: var(--vscode-editor-foreground, #cccccc);
+}
+
+body.vscode-dark .copyright-warning-icon {
+  color: var(--vscode-list-warningForeground, #ffcc00);
+}
+
+body.vscode-dark .copyright-warning-title {
+  color: var(--vscode-editor-foreground, #cccccc);
+}
+
+body.vscode-dark .copyright-warning-highlight {
+  background: var(--vscode-editor-selectionHighlightBackground, rgba(173, 214, 255, 0.08));
+  border-left-color: var(--vscode-textLink-foreground, #4daafc);
+}
+
+body.vscode-dark .copyright-warning-highlight a {
+  color: var(--vscode-textLink-foreground, #4daafc);
+}
+
+body.vscode-dark .copyright-warning-footer {
+  color: var(--vscode-descriptionForeground, #999999);
+  border-top: 1px solid var(--vscode-panel-border, rgba(255, 255, 255, 0.15));
+}
+
+/* 高对比度主题兜底 */
+body.vscode-high-contrast .copyright-warning {
+  background: var(--vscode-editor-background, #000000);
+  border: 2px solid var(--vscode-focusBorder, #00ff00);
+  border-left: 4px solid var(--vscode-focusBorder, #00ff00);
+  color: var(--vscode-editor-foreground, #ffffff);
+}
+
+body.vscode-high-contrast .copyright-warning-icon,
+body.vscode-high-contrast .copyright-warning-title {
+  color: var(--vscode-focusBorder, #00ff00);
+}
+
+body.vscode-high-contrast .copyright-warning-highlight {
+  background: transparent;
+  border: 1px solid var(--vscode-focusBorder, #00ff00);
+  border-left: 2px solid var(--vscode-focusBorder, #00ff00);
+}
+
+body.vscode-high-contrast .copyright-warning-highlight a {
+  color: var(--vscode-textLink-foreground, #0099ff);
+}
 `;

@@ -286,9 +286,9 @@ export class WebviewManager {
                 id: preloadedAnswer.authorUrl?.split("/").pop() || "",
                 name: preloadedAnswer.authorName,
                 url: preloadedAnswer.authorUrl,
-                signature: "",
+                signature: preloadedAnswer.authorHeadline || "",
                 avatar: preloadedAnswer.authorAvatar,
-                followersCount: 0,
+                followersCount: preloadedAnswer.authorFollowerCount || 0,
               },
               likeCount: preloadedAnswer.voteCount || 0,
               commentCount: preloadedAnswer.commentCount || 0,
@@ -547,9 +547,6 @@ export class WebviewManager {
         return;
       }
 
-      // 隐藏状态栏加载提示
-      this.hideStatusBarItem(webviewId);
-
       // 解析文章内容
       await this.parseArticleContent(webviewId, page);
 
@@ -565,11 +562,11 @@ export class WebviewManager {
         webviewItem.isLoading = false;
       }
 
-      // 隐藏状态栏加载提示
-      this.hideStatusBarItem(webviewId);
-
       console.error("加载文章内容时出错:", error);
       throw new Error("加载文章内容时出错:" + error);
+    } finally {
+      // 隐藏状态栏加载提示
+      this.hideStatusBarItem(webviewId);
     }
   }
 
@@ -620,22 +617,38 @@ export class WebviewManager {
 
         // 获取作者信息
         const authorElement = document.querySelector(".AuthorInfo-name a");
+
+        // 作者名称
         const authorName = authorElement
           ? authorElement.textContent?.trim() || "未知作者"
           : "未知作者";
+
+        // 作者主页链接
         const authorUrl = authorElement
           ? (authorElement as HTMLAnchorElement).href
           : "";
 
+        // 作者头像
         const authorAvatar = document.querySelector(".AuthorInfo-avatar");
         const authorAvatarUrl = authorAvatar
           ? (authorAvatar as HTMLImageElement).src
           : "";
 
+        // 作者签名（简介）
         const authorSignature = document.querySelector(".AuthorInfo-badgeText");
         const authorHeadline = authorSignature
           ? authorSignature.textContent?.trim() || ""
           : "";
+
+        // 作者粉丝数 .NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue
+        const authorFollowerElement = document.querySelector(
+          ".NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue"
+        );
+        let authorFollowerCount = 0;
+        if (authorFollowerElement) {
+          const followerText = authorFollowerElement.getAttribute("title") || "0";
+          authorFollowerCount = parseInt(followerText) || 0;
+        }
 
         // 获取发布时间
         const timeElement = document.querySelector(".ContentItem-time");
@@ -700,10 +713,11 @@ export class WebviewManager {
         return {
           content,
           author: {
-            name: authorName,
             url: authorUrl,
+            name: authorName,
             avatar: authorAvatarUrl,
             signature: authorHeadline,
+            authorFollowerCount,
           },
           publishTime,
           likeCount,
@@ -727,9 +741,9 @@ export class WebviewManager {
           id: "article-author",
           url: articleData.author.url,
           name: articleData.author.name,
-          signature: articleData.author.signature,
           avatar: articleData.author.avatar,
-          followersCount: 0,
+          signature: articleData.author.signature,
+          followersCount: articleData.author.authorFollowerCount,
         },
         likeCount: articleData.likeCount,
         commentCount: articleData.commentCount,
@@ -1226,8 +1240,14 @@ export class WebviewManager {
               ".RichContent .RichContent-inner"
             );
 
+            // .KfeCollection-AnswerTopCard-Container 这个是盐选的标识，如果发现了则加到答案内容里
+            const isPaidAnswer =
+              document.querySelector(
+                ".KfeCollection-AnswerTopCard-Container"
+              ) !== null;
+
             // 获取内容的HTML字符串
-            const contentHtml = contentElement?.innerHTML || "";
+            const contentHtml = isPaidAnswer ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' + contentElement?.innerHTML : contentElement?.innerHTML || "";
 
             // 检测用户的投票状态
             let voteStatus: "up" | "down" | "neutral" = "neutral";

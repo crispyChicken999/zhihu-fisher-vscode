@@ -182,11 +182,35 @@ export class WebViewUtils {
               ?.querySelector("meta[itemprop='url']")
               ?.getAttribute("content") || "";
 
+          // 作者签名 AuthorInfo-badgeText
+          const authorSignatureElement = authorElement?.querySelector(
+            ".AuthorInfo-badgeText"
+          );
+          const authorHeadline = authorSignatureElement
+            ? authorSignatureElement.textContent?.trim() || ""
+            : "";
+
+          // 作者的关注数量 <meta itemprop="zhihu:followerCount" content="787">
+          const authorFollowerElement = document.querySelector(
+            "meta[itemprop='zhihu:followerCount']"
+          );
+          let authorFollowerCount = 0;
+          if (authorFollowerElement) {
+            const followerText = authorFollowerElement.getAttribute("content") || "0";
+            authorFollowerCount = parseInt(followerText.replace(/,/g, "")) || 0;
+          }
+
+          // .KfeCollection-AnswerTopCard-Container 这个是盐选的标识，如果发现了则加到答案内容里
+          const isPaidAnswer =
+            document.querySelector(
+              ".KfeCollection-AnswerTopCard-Container"
+            ) !== null;
+
           // 提取回答内容
           const contentElement = answerElement.querySelector(
-            ".RichContent .RichText"
+            ".RichContent .RichContent-inner"
           );
-          const content = contentElement?.innerHTML || "";
+          const content = isPaidAnswer ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' + contentElement?.innerHTML : contentElement?.innerHTML || "";
 
           // 提取点赞数
           const voteElement = answerElement.querySelector(".VoteButton");
@@ -271,6 +295,8 @@ export class WebViewUtils {
             authorName,
             authorAvatar,
             authorUrl,
+            authorHeadline,
+            authorFollowerCount,
             content,
             voteCount,
             commentCount,
