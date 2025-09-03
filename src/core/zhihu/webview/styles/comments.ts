@@ -205,6 +205,7 @@ export const commentsCss = `
 .comments-container.hide-media .comment-gif-container,
 .comments-container.hide-media .comment-sticker-container,
 .comments-container.hide-media .comment-text-emoji,
+.comments-container.hide-media .comment-image-container,
 .comments-modal-container.hide-media video,
 .comments-modal-container.hide-media img {
   display: none !important;
