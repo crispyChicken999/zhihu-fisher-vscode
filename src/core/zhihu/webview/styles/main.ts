@@ -26,7 +26,7 @@ body.immersive-mode {
 }
 
 /* 灰色模式样式 - 只对知乎内容生效，不影响伪装界面和其他UI元素 */
-html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not(.style-panel-mask):not(.fisher-welcome-message) {
+html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not(.style-panel-mask):not(.fisher-welcome-message):not(.comments-modal-container) {
   filter: grayscale(100%);
 }
 
@@ -41,14 +41,8 @@ html.grayscale-mode .style-panel-mask {
   filter: none !important;
 }
 
-/* 确保评论弹窗在灰色模式下保持正常颜色 */
-html.grayscale-mode .comments-modal-container,
-html.grayscale-mode .zhihu-comments-modal,
-html.grayscale-mode .zhihu-comments-modal-overlay {
-  filter: none !important;
-}
-html.grayscale-mode .comments-modal-container > * {
-  filter: grayscale(100%) !important;
+html.grayscale-mode .zhihu-comments-modal-content {
+  filter: grayscale(100%);
 }
 
 /* 确保欢迎消息在灰色模式下保持正常颜色 */
