@@ -390,9 +390,9 @@ export const commentsCss = `
   background-color: var(--vscode-editor-background);
   border-radius: 8px;
   width: 100%;
-  margin: 10px 50px 5px 10px;
+  margin: 5px 50px 5px 10px;
   max-width: 600px;
-  max-height: 97vh;
+  max-height: 96vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
