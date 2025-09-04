@@ -496,11 +496,6 @@ export const commentsCss = `
   fill: var(--vscode-button-secondaryForeground);
 }
 
-/* 评论图片样式 */
-.comment-image-container {
-  margin: 8px 0;
-}
-
 .comment-image {
   border-radius: 4px;
   object-fit: cover;
@@ -610,7 +605,7 @@ export const commentsCss = `
 .comment-image-container {
   margin: 8px 0;
   position: relative;
-  display: inline-block;
+  display: block;
 }
 
 .comment-image {
