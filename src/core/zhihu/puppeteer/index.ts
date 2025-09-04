@@ -167,7 +167,7 @@ export class PuppeteerManager {
                 "--disable-setuid-sandbox",
                 "--window-size=1000,700",
               ],
-              protocolTimeout: 60000, // 设置协议超时时间为60秒
+              protocolTimeout: 240000, // 设置协议超时时间为240秒 / 4分钟
             });
             await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒钟
             // console.log("浏览器实例创建成功！")
