@@ -105,6 +105,10 @@ body.immersive-mode .related-questions-section {
   display: none !important;
 }
 
+body.immersive-mode .nav-info {
+  padding: 0;
+}
+
 /* 正常模式下：隐藏第二个 answer-meta（文章内容后的） */
 body:not(.immersive-mode) .article-content + .answer-meta {
 }

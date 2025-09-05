@@ -111,10 +111,10 @@ export const navigationCss = `
   border: 1px solid var(--vscode-dropdown-border);
   border-radius: 4px;
   padding: 0;
-  font-size: 0.9em;
+  font-size: 0.8em;
   outline: none;
   cursor: pointer;
-  margin: 0 3px;
+  margin: 0 4px;
 }
 
 .answer-jump-select:hover {

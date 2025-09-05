@@ -163,7 +163,7 @@ export const relatedQuestionsCss = `
 
 .question-actions {
   display: flex;
-  gap: 8px;
+  gap: 1em;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
