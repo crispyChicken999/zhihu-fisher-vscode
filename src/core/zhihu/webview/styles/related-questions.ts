@@ -81,7 +81,7 @@ export const relatedQuestionsCss = `
 
 .related-questions-modal-header h3 {
   margin: 0;
-  font-size: max(1.25em, 16px);
+  font-size: min(1.25em, 16px);
   font-weight: 700;
   color: var(--vscode-foreground);
 }
