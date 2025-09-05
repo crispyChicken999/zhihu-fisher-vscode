@@ -74,6 +74,18 @@ function openWebView(url) {
 }
 
 /**
+ * 在VSCode中打开知乎链接（别名，用于相关问题等场景）
+ * @param {string} url 知乎链接URL
+ */
+function openInVSCode(url) {
+  event.preventDefault(); // 阻止默认点击行为
+  vscode.postMessage({
+    command: 'openZhihuLink',
+    url: url
+  });
+}
+
+/**
  * 更新导航信息
  * @param {number} loadedCount 已加载回答数
  * @param {number} totalCount 总回答数

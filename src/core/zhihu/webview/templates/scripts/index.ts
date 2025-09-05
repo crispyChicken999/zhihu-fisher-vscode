@@ -7,6 +7,7 @@ import { mediaScript } from './media';
 import { navigationScript } from './navigation';
 import { modesScript } from './modes';
 import { commentsScript } from './comments';
+import { relatedQuestionsScript } from './related-questions';
 import { utilsScript } from './utils';
 import { keyboardScript } from './keyboard';
 import { styleScript } from './style';
@@ -26,6 +27,8 @@ ${navigationScript}
 ${modesScript}
 
 ${commentsScript}
+
+${relatedQuestionsScript}
 
 ${utilsScript}
 

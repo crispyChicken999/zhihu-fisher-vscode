@@ -100,7 +100,8 @@ body.immersive-mode .toolbar,
 body.immersive-mode .zhihu-load-comments-btn,
 body.immersive-mode .zhihu-expand-comments-btn,
 body.immersive-mode .zhihu-comments-tips,
-body.immersive-mode .navigation .navigation-buttons {
+body.immersive-mode .navigation .navigation-buttons,
+body.immersive-mode .related-questions-section {
   display: none !important;
 }
 
@@ -302,6 +303,7 @@ body.immersive-mode .article-content {
 
 body.immersive-mode .comments-container {
   margin: 0 auto;
+  display: block;
 }
 
 

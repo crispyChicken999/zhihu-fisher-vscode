@@ -8,7 +8,9 @@ import { ToolbarComponent } from "./components/toolbar";
 import { NavigationComponent } from "./components/navigation";
 import { ArticleContentComponent } from "./components/article";
 import { StylePanelComponent } from "./components/style-panel";
+import { RelatedQuestionsComponent } from "./components/related-questions";
 import { DisguiseManager } from "../../utils/disguise-manager";
+import { disguiseScript } from "./templates/scripts/disguise";
 // 导入模板文件
 import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts/index";
@@ -30,6 +32,7 @@ import { commentsCss } from "./styles/comments";
 import { navigationCss } from "./styles/navigation";
 import { componentsCss } from "./styles/components";
 import { disguiseCss } from "./styles/disguise";
+import { relatedQuestionsCss } from "./styles/related-questions";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -168,10 +171,17 @@ export class HtmlRenderer {
       article,
       contentType
     );
+
+    // 创建沉浸模式的相关问题图标（用于meta组件）
+    const relatedQuestionsIcon = new RelatedQuestionsComponent(
+      article.relatedQuestions || []
+    );
+
     const metaComponent = new MetaComponent(
       currentAnswer,
       contentType,
-      webview
+      webview,
+      relatedQuestionsIcon.render()
     );
     const contentComponent = new ArticleContentComponent(
       currentAnswer?.content,
@@ -209,133 +219,12 @@ export class HtmlRenderer {
         .toString() || "";
 
     // 生成伪装界面HTML（如果启用）
-    const disguiseInterfaceHtml =
-      enableDisguise
-        ? DisguiseManager.generateDisguiseCodeInterface(webviewId)
-        : "";
+    const disguiseInterfaceHtml = enableDisguise
+      ? DisguiseManager.generateDisguiseCodeInterface(webviewId)
+      : "";
 
     // 生成伪装界面控制脚本（如果启用）
-    const disguiseControlScript =
-      enableDisguise
-        ? `
-          // 伪装界面控制
-          (function() {
-            const disguiseElement = document.getElementById('disguise-code-interface');
-            let welcomeMessageElement = null;
-
-            // 创建欢迎消息元素
-            function createWelcomeMessage() {
-              if (!welcomeMessageElement) {
-                welcomeMessageElement = document.createElement('div');
-                welcomeMessageElement.className = 'fisher-welcome-message';
-                welcomeMessageElement.textContent = '欢迎回到 🐟 Fisher 🐟';
-                document.body.appendChild(welcomeMessageElement);
-              }
-            }
-
-            // 显示欢迎消息
-            function showWelcomeMessage() {
-              createWelcomeMessage();
-              // 延迟显示以确保DOM已渲染
-              setTimeout(() => {
-                welcomeMessageElement.classList.add('show');
-              }, 100);
-
-              // 1秒后自动隐藏
-              setTimeout(() => {
-                hideWelcomeMessage();
-              }, 1000);
-            }
-
-            // 隐藏欢迎消息
-            function hideWelcomeMessage() {
-              if (welcomeMessageElement) {
-                welcomeMessageElement.classList.remove('show');
-                welcomeMessageElement.classList.add('hide');
-                // 动画完成后移除元素
-                setTimeout(() => {
-                  if (welcomeMessageElement && welcomeMessageElement.parentNode) {
-                    welcomeMessageElement.parentNode.removeChild(welcomeMessageElement);
-                    welcomeMessageElement = null;
-                  }
-                }, 300); // 匹配伪装界面的隐藏动画时间
-              }
-            }
-
-            // 存储待执行的定时器ID，用于实现打断功能
-            let welcomeMessageTimer = null;
-            let hideDisguiseTimer = null;
-            let hideElementTimer = null;
-
-            // 监听来自扩展的消息
-            window.addEventListener('message', function(event) {
-              const message = event.data;
-
-              if (message.command === 'showDisguise' && disguiseElement) {
-                // 打断功能：清除所有待执行的hideDisguise相关定时器
-                if (welcomeMessageTimer) {
-                  clearTimeout(welcomeMessageTimer);
-                  welcomeMessageTimer = null;
-                }
-                if (hideDisguiseTimer) {
-                  clearTimeout(hideDisguiseTimer);
-                  hideDisguiseTimer = null;
-                }
-                if (hideElementTimer) {
-                  clearTimeout(hideElementTimer);
-                  hideElementTimer = null;
-                }
-
-                // 如果当前有欢迎消息在显示，立即隐藏它
-                hideWelcomeMessage();
-
-                // 清理所有可能的状态类，确保动画正常
-                disguiseElement.classList.remove('show', 'hiding');
-                // 先设置为透明状态
-                disguiseElement.style.opacity = '0';
-                disguiseElement.style.display = 'block';
-
-                // 使用双重 requestAnimationFrame 确保状态完全重置
-                requestAnimationFrame(() => {
-                  requestAnimationFrame(() => {
-                    // 移除内联样式，让CSS类接管
-                    disguiseElement.style.opacity = '';
-                    disguiseElement.classList.add('show');
-                  });
-                });
-                document.body.classList.add('disguise-active');
-              } else if (message.command === 'hideDisguise' && disguiseElement) {
-                // 打断功能：如果之前有showDisguise正在执行，不需要特别处理，直接开始hideDisguise流程
-
-                // 新的时序：先显示欢迎消息，保持伪装界面
-                showWelcomeMessage();
-
-                // 等待1秒后同时隐藏伪装界面和欢迎消息
-                welcomeMessageTimer = setTimeout(() => {
-                  // 同时开始隐藏动画
-                  if (disguiseElement) {
-                    disguiseElement.classList.remove('show');
-                    disguiseElement.classList.add('hiding');
-                  }
-
-                  hideWelcomeMessage();
-
-                  // 动画完成后隐藏伪装元素
-                  hideElementTimer = setTimeout(() => {
-                    if (disguiseElement) {
-                      disguiseElement.style.display = 'none';
-                      disguiseElement.classList.remove('hiding');
-                      document.body.classList.remove('disguise-active');
-                    }
-                    hideElementTimer = null; // 清除定时器引用
-                  }, 300); // 与CSS动画时间匹配
-                  welcomeMessageTimer = null; // 清除定时器引用
-                }, 1000); // 等待1秒
-              }
-            });
-          })();
-        `
-        : "";
+    const disguiseControlScript = enableDisguise ? disguiseScript : "";
 
     const scriptContent = scriptsTemplate
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
@@ -347,7 +236,11 @@ export class HtmlRenderer {
       )
       .replace("${ARTICLE_ID}", webview.id || "")
       .replace("${SOURCE_TYPE}", webview.sourceType)
-      .replace("${RESOURCES_BASE_PATH}", resourcesUri);
+      .replace("${RESOURCES_BASE_PATH}", resourcesUri)
+      .replace(
+        "${RELATED_QUESTIONS_DATA}",
+        JSON.stringify(article.relatedQuestions || [])
+      );
 
     // 判断是否为文章类型，生成对应的键盘提示
     const isArticle =
@@ -368,6 +261,7 @@ export class HtmlRenderer {
       .replace("${MEDIA_CSS}", mediaCss)
       .replace("${PANEL_CSS}", panelCss)
       .replace("${DISGUISE_CSS}", disguiseCss)
+      .replace("${RELATED_QUESTIONS_CSS}", relatedQuestionsCss)
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replaceAll("${META_COMPONENT}", metaComponent.render())

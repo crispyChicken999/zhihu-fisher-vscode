@@ -57,6 +57,7 @@ export const articleTemplate = `
       \${PANEL_CSS}
       \${COMMENTS_CSS}
       \${DISGUISE_CSS}
+      \${RELATED_QUESTIONS_CSS}
     </style>
   </head>
   <body>

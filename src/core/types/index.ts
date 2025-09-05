@@ -167,6 +167,22 @@ export interface ArticleInfo {
   likeCount?: number;
   /** 是否正在处理投票请求 */
   isVoting?: boolean;
+  /** 相关问题列表 */
+  relatedQuestions?: RelatedQuestion[];
+}
+
+/** 相关问题数据结构 */
+export interface RelatedQuestion {
+  /** 问题ID */
+  id: string;
+  /** 问题标题 */
+  title: string;
+  /** 问题URL */
+  url: string;
+  /** 回答数量 */
+  answerCount: number;
+  /** 关注数量 */
+  followerCount: number;
 }
 
 /** 回答数据结构 */

@@ -10,6 +10,7 @@ import { CommentsManager } from "./components/comments";
 import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 import { WebViewUtils, CollectionPickerUtils } from "../../utils";
 import { DisguiseManager } from "../../utils/disguise-manager";
+import { RelatedQuestionsManager } from "./components/related-questions";
 
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
@@ -73,7 +74,7 @@ export class WebviewManager {
 
     // 创建并配置WebView面板
     const panel = vscode.window.createWebviewPanel(
-      'zhihu-fisher-content-viewer', // 使用固定的panel类型，避免localstorage失效
+      "zhihu-fisher-content-viewer", // 使用固定的panel类型，避免localstorage失效
       shortTitle,
       vscode.ViewColumn.Active, // 修改为在当前编辑组显示
       {
@@ -272,6 +273,7 @@ export class WebviewManager {
         );
         try {
           const preloadedAnswer = await WebViewUtils.fetchSpecificAnswerContent(
+            webviewId,
             webviewItem.article.specificAnswerUrl
           );
           if (preloadedAnswer) {
@@ -461,6 +463,14 @@ export class WebviewManager {
         return;
       }
 
+      // 解析相关问题
+      try {
+        console.log("开始解析相关问题...");
+        await RelatedQuestionsManager.parseRelatedQuestions(webviewId, page);
+      } catch (error) {
+        console.error("解析相关问题失败:", error);
+      }
+
       if (!webviewItem.isLoaded) {
         this.updateWebview(webviewId); // 更新WebView内容
         webviewItem.isLoaded = true;
@@ -643,7 +653,8 @@ export class WebviewManager {
         );
         let authorFollowerCount = 0;
         if (authorFollowerElement) {
-          const followerText = authorFollowerElement.getAttribute("title") || "0";
+          const followerText =
+            authorFollowerElement.getAttribute("title") || "0";
           authorFollowerCount = parseInt(followerText) || 0;
         }
 
@@ -1244,7 +1255,10 @@ export class WebviewManager {
               ) !== null;
 
             // 获取内容的HTML字符串
-            const contentHtml = isPaidAnswer ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' + contentElement?.innerHTML : contentElement?.innerHTML || "";
+            const contentHtml = isPaidAnswer
+              ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' +
+                contentElement?.innerHTML
+              : contentElement?.innerHTML || "";
 
             // 检测用户的投票状态
             let voteStatus: "up" | "down" | "neutral" = "neutral";
@@ -1412,6 +1426,10 @@ export class WebviewManager {
       webviewItem.article.loadComplete =
         webviewItem.article.answerList.length >=
         webviewItem.article.totalAnswerCount;
+
+      if (webviewItem.article.relatedQuestions?.length === 0) {
+        RelatedQuestionsManager.parseRelatedQuestions(webviewId, page); // 解析相关推荐
+      }
 
       // this.updateWebview(webviewId); // 更新WebView内容
       this.updateNavInfoViaMessage(webviewId, false); // 发送导航信息更新（加载完成）

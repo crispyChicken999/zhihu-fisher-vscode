@@ -1,4 +1,5 @@
-import { PuppeteerManager } from "../zhihu/puppeteer/index.js";
+import { PuppeteerManager } from "../zhihu/puppeteer/index";
+import { RelatedQuestionsManager } from "../zhihu/webview/components/related-questions";
 
 /**
  * WebView 工具类
@@ -115,6 +116,7 @@ export class WebViewUtils {
    * @returns 解析后的回答对象，如果失败返回null
    */
   public static async fetchSpecificAnswerContent(
+    webviewId: string,
     answerUrl: string
   ): Promise<any | null> {
     try {
@@ -305,6 +307,9 @@ export class WebViewUtils {
             voteStatus, // 添加投票状态
           };
         });
+
+        // 解析相关推荐
+        await RelatedQuestionsManager.parseRelatedQuestions(webviewId, page);
 
         if (answerData && answerData.id) {
           console.log(
