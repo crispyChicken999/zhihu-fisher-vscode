@@ -128,6 +128,9 @@ export class ArticleContentComponent implements Component {
 
     const mediaDisplayMode = this.options.mediaDisplayMode || "normal";
 
+    // 删除自定义样式，style标签，避免和我们内部的样式冲突
+    $("style").remove();
+
     // 删除GifPlayer元素
     $(".GifPlayer").remove();
 
