@@ -109,12 +109,15 @@ export const componentsCss = `
   cursor: pointer;
   font-size: 1em;
   font-weight: 500;
-  margin: 3px 0 0 5px;
-  padding: 2px 6px;
-  border-radius: 3px;
+  margin: 3px 5px 0;
+  padding: 2px 4px;
+  border-radius: 4px;
   background-color: var(--vscode-button-secondaryBackground);
   border: 1px solid var(--vscode-button-secondaryBorder, transparent);
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .zhihu-link-vscode:hover {

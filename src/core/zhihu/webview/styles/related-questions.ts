@@ -93,7 +93,7 @@ export const relatedQuestionsCss = `
   line-height: 1;
   color: var(--vscode-foreground);
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 0px 4px;
   border-radius: 4px;
   transition: background-color 0.2s;
 }
@@ -163,7 +163,7 @@ export const relatedQuestionsCss = `
 
 .question-actions {
   display: flex;
-  gap: 1em;
+  gap: 0.75em;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
