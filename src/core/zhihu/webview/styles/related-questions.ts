@@ -74,7 +74,7 @@ export const relatedQuestionsCss = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5em 1em;
+  padding: 0.75em 1em;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
 }

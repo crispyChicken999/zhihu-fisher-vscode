@@ -2713,11 +2713,11 @@ export class CommentsUtils {
         // 保持原有链接可以在浏览器中打开
         link.attr("href", href);
         link.attr("target", "_blank");
-        link.attr("title", `${href} (在浏览器中打开)`);
+        link.attr("title", `${href} &#010(在浏览器中打开)`);
 
         // 在原有链接后添加VSCode打开选项
         const vscodeOption = $(
-          `<span class="zhihu-link-vscode" onclick="openWebView('${href}');" title="${href} (在 VSCode 中查看)"><svg width="min(1em, 12px)" height="min(1em, 12px)" viewBox="0 0 24 24"><path fill="currentColor" d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zM18.5 16.5L13 12l5.5-4.5v9z"></path></svg></span>`
+          `<span class="zhihu-link-vscode" onclick="openWebView('${href}');" title="${href} &#010(在 VSCode 中查看)"><svg width="min(1em, 12px)" height="min(1em, 12px)" viewBox="0 0 24 24"><path fill="currentColor" d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zM18.5 16.5L13 12l5.5-4.5v9z"></path></svg></span>`
         );
 
         // 将VSCode选项添加到链接后面
