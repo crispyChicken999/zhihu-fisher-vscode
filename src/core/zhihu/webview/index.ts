@@ -1185,6 +1185,11 @@ export class WebviewManager {
               ".ContentItem.AnswerItem"
             );
 
+            // 跳过无效的回答元素，例如占位符，或者回答元素不存在
+            if (!answerElement || element.classList.contains("PlaceHolder")) {
+              return;
+            }
+
             // 获取问题ID
             const questionId = location.href.split("/").pop() as string;
 
