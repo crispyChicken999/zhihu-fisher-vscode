@@ -58,6 +58,9 @@ document.addEventListener("DOMContentLoaded", function() {
     renderMathJax();
   }, 200);
 
+  // 设置ESC键监听，支持关闭子评论弹窗
+  setupEscKeyListener();
+
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
 
@@ -146,5 +149,23 @@ function renderMathJax() {
       console.warn('MathJax 渲染失败:', err);
     });
   }
+}
+
+/**
+ * 设置ESC键监听，用于关闭子评论弹窗
+ */
+function setupEscKeyListener() {
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      // 检查是否有子评论弹窗打开
+      const modal = document.querySelector('.zhihu-comments-modal');
+      if (modal) {
+        // 调用关闭子评论弹窗的函数
+        if (typeof closeCommentsModal === 'function') {
+          closeCommentsModal();
+        }
+      }
+    }
+  });
 }
 `;
