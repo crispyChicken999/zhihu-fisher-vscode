@@ -6,11 +6,13 @@ import { AuthorComponent } from "./components/author";
 import { CommentsManager } from "./components/comments";
 import { ToolbarComponent } from "./components/toolbar";
 import { NavigationComponent } from "./components/navigation";
+import { disguiseScript } from "./templates/scripts/disguise";
 import { ArticleContentComponent } from "./components/article";
 import { StylePanelComponent } from "./components/style-panel";
-import { RelatedQuestionsComponent } from "./components/related-questions";
 import { DisguiseManager } from "../../utils/disguise-manager";
-import { disguiseScript } from "./templates/scripts/disguise";
+import { QuestionDetailComponent } from "./components/question-detail";
+import { RelatedQuestionsComponent } from "./components/related-questions";
+
 // 导入模板文件
 import { articleTemplate } from "./templates/article";
 import { scriptsTemplate } from "./templates/scripts/index";
@@ -21,6 +23,7 @@ import {
   articleKeyboardTips,
   questionKeyboardTips,
 } from "./templates/keyboardTips";
+
 // 导入样式文件
 import { mainCss } from "./styles/main";
 import { panelCss } from "./styles/panel";
@@ -29,9 +32,10 @@ import { authorCss } from "./styles/author";
 import { articleCss } from "./styles/article";
 import { toolbarCss } from "./styles/toolbar";
 import { commentsCss } from "./styles/comments";
+import { disguiseCss } from "./styles/disguise";
 import { navigationCss } from "./styles/navigation";
 import { componentsCss } from "./styles/components";
-import { disguiseCss } from "./styles/disguise";
+import { questionDetailCss } from "./styles/question-detail";
 import { relatedQuestionsCss } from "./styles/related-questions";
 
 /**
@@ -177,6 +181,13 @@ export class HtmlRenderer {
       article.relatedQuestions || []
     );
 
+    // 创建问题详情组件
+    const questionDetailComponent = new QuestionDetailComponent(
+      article.questionDetail || "",
+      contentType,
+      renderOptions
+    );
+
     const metaComponent = new MetaComponent(
       currentAnswer,
       contentType,
@@ -262,6 +273,7 @@ export class HtmlRenderer {
       .replace("${PANEL_CSS}", panelCss)
       .replace("${DISGUISE_CSS}", disguiseCss)
       .replace("${RELATED_QUESTIONS_CSS}", relatedQuestionsCss)
+      .replace("${QUESTION_DETAIL_CSS}", questionDetailCss)
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replaceAll("${META_COMPONENT}", metaComponent.render())
@@ -269,6 +281,8 @@ export class HtmlRenderer {
       .replace("${COMMENTS_COMPONENT}", commentsComponent.render())
       .replace("${TOOLBAR_COMPONENT}", toolbarComponent.render())
       .replace("${STYLE_PANEL_COMPONENT}", stylePanelComponent.render())
+      .replace("${QUESTION_DETAIL_COMPONENT_ICON}", questionDetailComponent.render())
+      .replace("${QUESTION_DETAIL_COMPONENT_MODAL}", questionDetailComponent.renderModal())
       .replace("${SOURCE_URL}", currentAnswer?.url || webview.url || "")
       .replace("${KEYBOARD_TIPS}", keyboardTips)
       .replace(/\${MEDIA_MODE_CLASS}/g, mediaModeClass)

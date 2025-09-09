@@ -38,8 +38,12 @@ function setupImageFancyBox() {
 function initializeFancyBox() {
   try {
     // 为文章内容中的图片添加fancybox属性
-    const images = document.querySelectorAll('.article-content img:not(.formula):not(.fancybox-processed)');
-    images.forEach(function(img) {
+    const contentImags = document.querySelectorAll('.article-content img:not(.formula):not(.fancybox-processed)');
+    // question-detail-content
+    const detailImages = document.querySelectorAll('.question-detail-content img:not(.formula):not(.fancybox-processed)');
+
+    const allImages = [...contentImags, ...detailImages];
+    allImages.forEach(function(img) {
       // 跳过公式图片
       if (img.classList.contains('formula')) {
         return;
@@ -134,6 +138,7 @@ function updateMediaDisplayClass(mode) {
   const meta = document.querySelector('.article-meta');
   const comments = document.querySelector('.comments-container');
   const commentsModal = document.querySelector('.comments-modal-container');
+  const questionDetail = document.querySelector('.question-detail-content');
 
   if (content && meta) {
     // 移除所有模式类
@@ -144,6 +149,9 @@ function updateMediaDisplayClass(mode) {
     }
     if (commentsModal) {
       commentsModal.classList.remove('hide-media', 'mini-media');
+    }
+    if (questionDetail) {
+      questionDetail.classList.remove('hide-media', 'mini-media');
     }
 
     // 添加当前模式类
@@ -156,6 +164,9 @@ function updateMediaDisplayClass(mode) {
       if (commentsModal) {
         commentsModal.classList.add('hide-media');
       }
+      if (questionDetail) {
+        questionDetail.classList.add('hide-media');
+      }
     } else if (mode === 'mini') {
       content.classList.add('mini-media');
       meta.classList.add('mini-media');
@@ -164,6 +175,9 @@ function updateMediaDisplayClass(mode) {
       }
       if (commentsModal) {
         commentsModal.classList.add('mini-media');
+      }
+      if (questionDetail) {
+        questionDetail.classList.add('mini-media');
       }
     }
 
@@ -192,11 +206,13 @@ function updateMiniMediaScale(scale) {
   }
 
   styleElement.textContent = \`
-    .article-content.mini-media img:not(.formula) {
+    .article-content.mini-media img:not(.formula),
+    .question-detail-content.mini-media img:not(.formula) {
       width: calc(\${scale}%) !important;
       height: auto !important;
     }
-    .article-content.mini-media video {
+    .article-content.mini-media video,
+    .question-detail-content.mini-media video {
       width: calc(\${scale}%) !important;
       min-width: 20% !important;
       height: auto !important;

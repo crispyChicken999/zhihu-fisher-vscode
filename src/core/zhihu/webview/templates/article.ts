@@ -58,6 +58,7 @@ export const articleTemplate = `
       \${COMMENTS_CSS}
       \${DISGUISE_CSS}
       \${RELATED_QUESTIONS_CSS}
+      \${QUESTION_DETAIL_CSS}
     </style>
   </head>
   <body>
@@ -65,7 +66,7 @@ export const articleTemplate = `
     \${DISGUISE_INTERFACE}
 
     <header>
-      <h4>\${TITLE}</h4>
+      <h4>\${TITLE}\${QUESTION_DETAIL_COMPONENT_ICON}</h4>
       <div class="article-meta \${MEDIA_MODE_CLASS}">
         \${AUTHOR_COMPONENT}
         <div class="article-meta-footer">
@@ -92,6 +93,8 @@ export const articleTemplate = `
     \${NAVIGATION_COMPONENT}
 
     \${TOOLBAR_COMPONENT}
+
+    \${QUESTION_DETAIL_COMPONENT_MODAL}
 
     \${STYLE_PANEL_COMPONENT}
 

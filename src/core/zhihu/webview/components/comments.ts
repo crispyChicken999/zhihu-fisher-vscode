@@ -1166,7 +1166,7 @@ export class ChildCommentsModalComponent implements Component {
         <div class="zhihu-comments-modal-content">
           <div class="zhihu-comments-modal-header">
             <h3>全部回复 (${this.paging.totals})</h3>
-            <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
+            <button class="zhihu-comments-modal-close" title="点击关闭（ESC）" onclick="closeCommentsModal()">×</button>
           </div>
 
           <div class="zhihu-comments-modal-parent-comment">
@@ -1272,7 +1272,7 @@ export class CommentsManager {
         <div class="zhihu-comments-modal-content">
           <div class="zhihu-comments-modal-header">
             <h3>子评论</h3>
-            <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
+            <button class="zhihu-comments-modal-close" title="点击关闭（ESC）" onclick="closeCommentsModal()">×</button>
           </div>
           <div class="zhihu-comments-closed-notice">
             <div class="closed-icon">
@@ -2273,7 +2273,7 @@ export class CommentsManager {
             <div class="zhihu-comments-modal-content">
               <div class="zhihu-comments-modal-header">
                 <h3>加载失败</h3>
-                <button class="zhihu-comments-modal-close" onclick="closeCommentsModal()">×</button>
+                <button class="zhihu-comments-modal-close" title="点击关闭（ESC）" onclick="closeCommentsModal()">×</button>
               </div>
               <div style="text-align: center; padding: 40px; color: var(--vscode-errorForeground);">
                 加载子评论失败: ${error}

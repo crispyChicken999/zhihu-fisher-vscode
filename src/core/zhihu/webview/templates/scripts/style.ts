@@ -28,6 +28,7 @@ function setupStylePanel() {
     document.body.style.maxWidth = savedStyles.maxWidth;
     document.body.style.fontFamily = savedStyles.fontFamily;
     document.querySelector('header').style.color = savedStyles.contentColor;
+    document.querySelector('.question-detail-content').style.color = savedStyles.contentColor;
     document.querySelector('.article-content').style.color = savedStyles.contentColor;
     document.querySelector('.comments-container').style.color = savedStyles.contentColor;
     document.querySelector('.comments-modal-container').style.color = savedStyles.contentColor;
@@ -131,6 +132,7 @@ function setupStylePanel() {
         document.querySelector('.article-content').style.color = color;
         document.querySelector('.comments-container').style.color = color;
         document.querySelector('.comments-modal-container').style.color = color;
+        document.querySelector('.question-detail-content').style.color = color;
         updateLocalStorage();
 
         // 更新预设按钮的选中状态
@@ -349,11 +351,13 @@ function selectPresetColor(color) {
     const articleContent = document.querySelector('.article-content');
     const commentsContainer = document.querySelector('.comments-container');
     const commentsModal = document.querySelector('.comments-modal-container');
+    const questionDetail = document.querySelector('.question-detail-content');
 
     if (header) header.style.color = color;
     if (articleContent) articleContent.style.color = color;
     if (commentsContainer) commentsContainer.style.color = color;
     if (commentsModal) commentsModal.style.color = color;
+    if (questionDetail) questionDetail.style.color = color;
 
     // 更新本地存储
     const savedStyles = JSON.parse(localStorage.getItem('zhihu-fisher-text-styles')) || defaultStyles;

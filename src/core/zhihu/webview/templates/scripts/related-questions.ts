@@ -128,7 +128,7 @@ function createRelatedQuestionsModal() {
           <div class="question-actions">
             <button class="action-btn" onclick="openPage('\${question.url}')" title="在浏览器中打开">
               <svg width="min(1em, 12px)" height="min(1em, 12px)" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM19 19H5V5h7V3H5c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2v-7h-2v7z"/>
+                <path fill="currentColor" d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2zM14 3v2h3.59l-9.83 9.83l1.41 1.41L19 6.41V10h2V3z"/>
               </svg>
               浏览器
             </button>

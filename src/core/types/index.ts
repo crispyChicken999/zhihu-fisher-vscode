@@ -139,6 +139,8 @@ export interface ArticleInfo {
   title: string;
   /** 问题的简介 */
   excerpt: string;
+  /** 问题的详细介绍内容（展开后的完整内容） */
+  questionDetail?: string;
   /** 问题的回答列表 */
   answerList: AnswerItem[];
   /** 已加载的回答数量 */

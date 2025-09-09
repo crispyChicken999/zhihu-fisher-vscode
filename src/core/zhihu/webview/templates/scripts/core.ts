@@ -138,6 +138,23 @@ window.addEventListener('message', event => {
   else if (message.command === 'updateNavInfo') {
     updateNavInfo(message.loadedCount, message.totalCount, message.isLoading);
   }
+
+  // 处理更新问题详情的消息
+  else if (message.command === 'updateQuestionDetail') {
+    const questionDetailContent = document.getElementById('questionDetailContent');
+    if (questionDetailContent && message.data && message.data.questionDetail) {
+      questionDetailContent.innerHTML = message.data.questionDetail;
+
+      // 重新初始化FancyBox，让问题详情中的图片支持点击放大
+      setTimeout(() => {
+        if (typeof initializeFancyBox === 'function') {
+          initializeFancyBox();
+        }
+      }, 100);
+
+      console.log('问题详情内容已更新');
+    }
+  }
 });
 
 /**

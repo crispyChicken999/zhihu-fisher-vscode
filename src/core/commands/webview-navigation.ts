@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { Store } from "../stores";
 import { WebviewManager } from "../zhihu/webview";
 import { CommentsUtils } from "../zhihu/webview/components/comments";
 
@@ -12,6 +13,11 @@ export function registerWebviewNavigationCommands(): vscode.Disposable[] {
   const openZhihuUrlCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openZhihuUrl",
     async () => {
+      if( Store.Zhihu.recommend.isLoading) {
+        vscode.window.showWarningMessage("当前正在加载推荐内容，请稍后再试...");
+        return;
+      }
+
       const inputBox = await vscode.window.showInputBox({
         title: "浏览知乎链接",
         prompt: "请输入知乎文章或问题的URL地址",

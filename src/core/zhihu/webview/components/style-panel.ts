@@ -127,7 +127,7 @@ export class StylePanelComponent implements Component {
                 >
                 <span class="color-value" id="content-color-value">#000000</span>
               </div>
-              
+
               <!-- 常用颜色快选 -->
               <div class="color-presets-container">
                 <label class="color-presets-label">常用颜色:</label>

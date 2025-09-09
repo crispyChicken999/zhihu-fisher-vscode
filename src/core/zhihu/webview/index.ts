@@ -409,6 +409,14 @@ export class WebviewManager {
       // 隐藏状态栏加载提示
       this.hideStatusBarItem(webviewId);
 
+      // 处理问题详情内容（检查并点击"显示全部"按钮）
+      try {
+        console.log("开始处理问题详情...");
+        await this.parseQuestionDetail(webviewId, page);
+      } catch (error) {
+        console.error("解析问题详情失败:", error);
+      }
+
       // 全部回答的总数量
       const totalAnswerCount = await page.evaluate(() => {
         const answerElements = document.querySelector(
@@ -2300,6 +2308,90 @@ export class WebviewManager {
       vscode.window.showErrorMessage(
         `预览失败: ${error instanceof Error ? error.message : String(error)}`
       );
+    }
+  }
+
+  /**
+   * 解析问题详情内容（点击"显示全部"按钮获取完整内容）
+   * @param webviewId WebView的ID
+   * @param page Puppeteer页面实例
+   */
+  private static async parseQuestionDetail(
+    webviewId: string,
+    page: Puppeteer.Page
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 检查是否存在"显示全部"按钮并点击
+      const expandButtonExists = await page.evaluate(() => {
+        const expandButton = document.querySelector(
+          '.QuestionRichText-more'
+        ) as HTMLButtonElement;
+
+        if (expandButton && expandButton.textContent?.includes('显示全部')) {
+          expandButton.click();
+          return true;
+        }
+        return false;
+      });
+
+      if (expandButtonExists) {
+        console.log('找到"显示全部"按钮，已点击展开');
+        // 等待内容加载
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        console.log('未找到"显示全部"按钮，使用当前显示的内容');
+      }
+
+      // 提取问题详情内容
+      const questionDetail = await page.evaluate(() => {
+        // 优先查找展开后的完整内容
+        const expandedContent = document.querySelector(
+          '.QuestionRichText .RichText.ztext'
+        );
+
+        if (expandedContent) {
+          return expandedContent.innerHTML;
+        }
+
+        // 如果没有展开内容，使用收缩状态的内容
+        const collapsedContent = document.querySelector(
+          '.QuestionRichText--collapsed span[itemprop="text"]'
+        );
+
+        if (collapsedContent) {
+          return collapsedContent.innerHTML;
+        }
+
+        // 最后尝试获取任何问题描述内容
+        const anyContent = document.querySelector(
+          '.QuestionRichText span[itemprop="text"]'
+        );
+
+        return anyContent ? anyContent.innerHTML : '';
+      });
+
+      if (questionDetail) {
+        webviewItem.article.questionDetail = questionDetail;
+        console.log('成功提取问题详情内容');
+
+        // 通过 postMessage 更新前端的问题详情内容
+        webviewItem.webviewPanel.webview.postMessage({
+          command: 'updateQuestionDetail',
+          data: {
+            questionDetail: questionDetail
+          }
+        });
+      } else {
+        console.log('未找到问题详情内容');
+      }
+
+    } catch (error) {
+      console.error("解析问题详情时出错:", error);
     }
   }
 }

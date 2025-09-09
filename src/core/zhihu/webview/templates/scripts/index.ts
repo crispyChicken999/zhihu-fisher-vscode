@@ -13,6 +13,7 @@ import { keyboardScript } from './keyboard';
 import { styleScript } from './style';
 import { toolbarScript } from './toolbar';
 import { shortcutsScript } from './shortcuts';
+import { questionDetailScript } from './question-detail';
 
 /**
  * 完整的脚本模板 - 拼接所有功能模块
@@ -39,4 +40,6 @@ ${styleScript}
 ${toolbarScript}
 
 ${shortcutsScript}
+
+${questionDetailScript}
 `;

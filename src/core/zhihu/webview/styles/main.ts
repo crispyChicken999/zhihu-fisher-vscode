@@ -26,7 +26,7 @@ body.immersive-mode {
 }
 
 /* 灰色模式样式 - 只对知乎内容生效，不影响伪装界面和其他UI元素 */
-html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not(.style-panel-mask):not(.fisher-welcome-message):not(.comments-modal-container):not(.related-questions-modal) {
+html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not(.style-panel-mask):not(.fisher-welcome-message):not(.comments-modal-container):not(.related-questions-modal):not(.question-detail-modal) {
   filter: grayscale(100%);
 }
 
