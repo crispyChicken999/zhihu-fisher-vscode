@@ -64,6 +64,15 @@ export class QuestionDetailComponent implements Component {
         $(elem).empty().text(dataText);
       });
 
+      // p标签如果里面没有内容，删除该p标签
+      $('p').each((_, elem) => {
+        const dataText = $(elem).text().trim();
+        if (!dataText) {
+          $(elem).remove();
+        }
+      });
+
+      // 最终输出
       processedContent = $.html();
     }
 
@@ -82,7 +91,7 @@ export class QuestionDetailComponent implements Component {
         <div class="question-detail-modal-content">
           <div class="question-detail-modal-header">
             <h3>问题简介（描述）</h3>
-            <button class="question-detail-close" id="questionDetailClose">×</button>
+            <button class="question-detail-close" title="点击关闭（ESC）" id="questionDetailClose">×</button>
           </div>
           <div class="question-detail-modal-body">
             <div class="question-detail-content ${mediaModeClass}" id="questionDetailContent">

@@ -182,11 +182,12 @@ export const relatedQuestionsCss = `
   cursor: pointer;
   white-space: nowrap;
   height: 28px;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .action-btn:hover {
   border-color: var(--vscode-commandCenter-activeBorder);
+  transform: translateY(-2px);
 }
 
 .action-btn svg {
