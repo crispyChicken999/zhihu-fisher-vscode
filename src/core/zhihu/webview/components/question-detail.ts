@@ -49,11 +49,16 @@ export class QuestionDetailComponent implements Component {
     }
 
     // 处理问题详情内容
-    let processedContent = '<p style="color: var(--vscode-descriptionForeground); text-align: center; padding: 1em;">该问题暂无简介（描述）</p>';
+    let processedContent =
+      '<p style="color: var(--vscode-descriptionForeground); text-align: center; padding: 1em;">该问题暂无简介（描述）</p>';
 
     if (this.questionDetail && this.questionDetail.trim()) {
       // 使用 ContentProcessor 处理问题详情内容，不包含高级功能
-      processedContent = ContentProcessor.processContent(this.questionDetail, this.options, false);
+      processedContent = ContentProcessor.processContent(
+        this.questionDetail,
+        this.options,
+        false
+      );
 
       // 使用 cheerio 进一步处理内容，移除不必要的元素
       const $ = cheerio.load(processedContent);
@@ -65,7 +70,7 @@ export class QuestionDetailComponent implements Component {
       });
 
       // p标签如果里面没有内容，删除该p标签
-      $('p').each((_, elem) => {
+      $("p").each((_, elem) => {
         const dataText = $(elem).text().trim();
         if (!dataText) {
           $(elem).remove();
@@ -107,6 +112,6 @@ export class QuestionDetailComponent implements Component {
    * 渲染完整组件（按钮 + 弹窗）
    */
   public render(): string {
-    return this.renderButton()
+    return this.renderButton();
   }
 }
