@@ -13,7 +13,7 @@ export const questionDetailCss = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease;
     vertical-align: text-bottom;
   }
 
