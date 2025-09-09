@@ -75,7 +75,8 @@
 - Mac 用户：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
 - Linux 用户：`/usr/bin/google-chrome` 或 `/snap/bin/chromium`？ 第一个路径是可以的，第二个的话不清楚
 
-##### 2.2.1 Windows 获取本地 Chrome 浏览器路径的方法
+<details>
+<summary>2.2.1 Windows 获取本地 Chrome 浏览器路径的方法</summary>
 
 1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"
 2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径
@@ -84,20 +85,28 @@
 - 如果还是不清楚，可以参照下图：
   ![获取本地浏览器路径的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425154308398-1262720236.png)
 
-##### 2.2.2 Mac 获取本地 Chrome 浏览器路径的方法
+</details>
+
+<details>
+<summary>2.2.2 Mac 获取本地 Chrome 浏览器路径的方法</summary>
 
 1. 打开终端（Terminal），输入以下命令：`ls /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
 3. 如果没有安装，可以在终端中输入以下命令进行安装：`brew install --cask google-chrome`
 4. 安装完成后，重新运行第一步的命令即可（如果找不到请百度，因为手头没有 Mac 电脑，无法测试）
 
-##### 2.2.3 Linux 获取本地 Chrome 浏览器路径的方法
+</details>
+
+<details>
+<summary>2.2.3 Linux 获取本地 Chrome 浏览器路径的方法</summary>
 
 1. 打开终端，输入以下命令：`which google-chrome` 或 `which chromium-browser`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
 3. 如果没有安装，可以在终端中输入以下命令进行安装：`sudo apt install google-chrome-stable` 或 `sudo apt install chromium-browser`
 4. 安装完成后，重新运行第一步的命令即可
 5. 如果还是不清楚，可以百度一下，因为手头没有 Linux 电脑，无法测试 🤔
+
+</details>
 
 #### 2.3 安装浏览器
 
@@ -125,15 +134,15 @@
 
 代码全开源，不信的话可以翻翻源码，或者私聊我，我带你看个够～
 
-#### 免责声明
+### 4. 开始使用
+
+加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
+
+## 声明
 
 **隐私保护：** 本插件仅将浏览器中已展示的内容搬运至VSCode中展示，不会上传、收集、存储或分析任何用户数据或隐私信息，所有数据仅在本地处理，不会用于任何营利行为。
 
 **技术说明：** 插件不会绕过知乎的反爬机制，不会恶意破坏或影响原网站正常使用。知乎对部分内容采用反爬技术，可能导致显示异常，建议直接前往知乎官网查看完整内容。
-
-### 4. 开始使用
-
-加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
 
 ## 💥 更新日志 💥
 
