@@ -2,7 +2,7 @@
 name: Feature Request
 about: "我要提建议/许愿\U0001F913☝"
 title: "[Features]"
-labels: ''
+labels: 'feature'
 assignees: ''
 
 ---
