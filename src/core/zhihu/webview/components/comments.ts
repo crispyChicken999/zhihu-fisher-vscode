@@ -2713,7 +2713,7 @@ export class CommentsUtils {
         // 保持原有链接可以在浏览器中打开
         link.attr("href", href);
         link.attr("target", "_blank");
-        link.attr("title", `${href} &#010(在浏览器中打开)`);
+        link.attr("title", `${href} 【在浏览器中打开】`);
 
         // 在原有链接后添加VSCode打开选项
         const vscodeOption = $(
