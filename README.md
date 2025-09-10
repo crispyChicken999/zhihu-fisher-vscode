@@ -71,9 +71,14 @@
 
 本地浏览器地址类似：（谷歌浏览器的安装路径，其实默认就是下面的路径，但是实际安装不一定是默认的路径，就需要你指定一下）
 
-- Windows 用户：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
-- Mac 用户：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
-- Linux 用户：`/usr/bin/google-chrome` 或 `/snap/bin/chromium`？ 第一个路径是可以的，第二个的话不清楚
+<details>
+<summary>💻 各系统默认浏览器路径</summary>
+
+- **Windows 用户**：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
+- **Mac 用户**：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
+- **Linux 用户**：`/usr/bin/google-chrome` 或 `/snap/bin/chromium` （第一个路径是推荐的）
+
+</details>
 
 <details>
 <summary>2.2.1 Windows 获取本地 Chrome 浏览器路径的方法</summary>
@@ -112,9 +117,14 @@
 
 如果你选择了安装，那么这个浏览器安装完成后会在：
 
-- Windows 用户：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`
-- Mac 用户：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`
-- Linux 用户：`/home/[用户名]/.cache/puppeteer/chrome/linux-x64-135.0.7049.84/chrome-linux-x64/chrome`
+<details>
+<summary>📦 Puppeteer 安装的浏览器路径</summary>
+
+- **Windows 用户**：`C:\Users\[用户名]\.cache\puppeteer\chrome\win64-135.0.7049.84\chrome-win64\chrome.exe`
+- **Mac 用户**：`/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome`
+- **Linux 用户**：`/home/[用户名]/.cache/puppeteer/chrome/linux-x64-135.0.7049.84/chrome-linux-x64/chrome`
+
+</details>
 
 ### 3. 配置 Cookie
 
@@ -122,9 +132,14 @@
 
 #### 3.1 Cookie 获取方式
 
-- 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可
-- 如果还是不清楚，可以参照下图：
-  ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
+在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可
+
+<details>
+<summary>🍪 Cookie 获取示例图</summary>
+
+![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
+
+</details>
 
 #### 3.2 Cookie 说明
 
@@ -138,17 +153,14 @@
 
 加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
 
-## 声明
-
-**隐私保护：** 本插件仅将浏览器中已展示的内容搬运至VSCode中展示，不会上传、收集、存储或分析任何用户数据或隐私信息，所有数据仅在本地处理，不会用于任何营利行为。
-
-**技术说明：** 插件不会绕过知乎的反爬机制，不会恶意破坏或影响原网站正常使用。知乎对部分内容采用反爬技术，可能导致显示异常，建议直接前往知乎官网查看完整内容。
-
 ## 💥 更新日志 💥
 
 查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
 
 ## 📝 TODO 📝
+
+<details>
+<summary>✅ 已完成的功能</summary>
 
 - ~~重构代码，简化流程~~ **(v0.0.6 已重构)**
 - ~~增加更多功能，比如搜索、收藏等~~ **(v0.0.8 已实现搜索功能，v0.2.2 已实现收藏功能)**
@@ -159,9 +171,14 @@
 - ~~支持设置文章的各种样式，比如字体大小、颜色等~~ **(v0.1.3 已实现)**
 - ~~支持加载回答的评论等。~~ **(v0.1.4 已实现)**
 
+</details>
+
 🤗 更多功能，欢迎许愿 🎉~
 
 ## 🐞 已知问题 🐞
+
+<details>
+<summary>✅ 已修复的问题</summary>
 
 1.  ~~**推荐列表可能加载不出来**~~ **(v0.3.0 已优化，在设置 Cookie 时去除了 BEC 参数，但是最好知乎首页也切换到推荐列表后，再拿 Cookie，预防一手)**
     - ~~可能跟 Cookie 中 BEC 参数有关，那么需要你前往知乎首页，点击推荐切换到推荐列表，然后刷新页面，获取新的 Cookie，粘贴到 VSCode 中即可。~~
@@ -170,11 +187,20 @@
     - ~~就比如打开了子评论的弹窗正看着，然后又加载了一批回答，那么页面就会回到初始状态（对应的就是子评论弹窗被关闭，页面回到顶部）。~~
     - ~~这个问题是因为直接将整个 HTML 文档替换来更新状态导致的。代码是用 TS 写的没用主流框架，暂时也没动力改了，凑合着用吧。~~
     - ~~其实应该通过 postMessage 的方式去通知文档哪里需要更新，而不是整个文档重新生成然后替换~~
-3.  为啥要等推荐列表加载出来才能查看内容呢？
+
+</details>
+
+<details>
+<summary>⚠️ 当前已知限制</summary>
+
+3.  **为啥要等推荐列表加载出来才能查看内容呢？**
     - 如果在推荐加载过程中，你查看了内容，Puppeteer 就会打开一个新标签页获取内容。
     - 那么对应知乎首页的标签页失去焦点，我们在后台尝试滚动加载更多会失效，所以需要等推荐列表加载完成后再查看内容。
     - 我是想着不管你机制怎么变，我都是模拟人在访问，那么就算慢点也无妨，毕竟也能够加载出来 😂
-4.  因为新版接口有防爬机制，所以用的是无限制的旧版接口，那么有时候可能会看到重复的评论，这个我也没招，毕竟是接口返回回来的。哎凑合着看吧哈哈...
+4.  **评论可能出现重复**
+    - 因为新版接口有防爬机制，所以用的是无限制的旧版接口，那么有时候可能会看到重复的评论，这个我也没招，毕竟是接口返回回来的。哎凑合着看吧哈哈...
+
+</details>
 
 ---
 
@@ -189,6 +215,69 @@
 ## 📬 反馈问题 📬
 
 - 在[GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)中提交问题，我看到会尽快回复和修复。
+
+## 🌟 开源项目 & 免责声明 🌟
+
+### 🎉 代码已开源！ 🎉
+
+本项目现已完全开源！欢迎各位有志之士一同参与开发和完善：
+
+- 🤝 **欢迎贡献代码** - 提交 Pull Request
+- 🐛 **报告问题** - 在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中反馈 Bug
+- 💡 **功能建议** - 提出新功能想法和改进建议
+- 📖 **完善文档** - 帮助改进文档和使用说明
+- ⭐ **Star 支持** - 给项目点个 Star，让更多人发现
+
+### ⚠️ 免责声明 ⚠️
+
+**本插件仅供学习和研究目的使用，请勿用于任何商业用途。**
+
+**隐私保护：** 本插件仅将浏览器中已展示的内容搬运至 VSCode 中展示，不会上传、收集、存储或分析任何用户数据或隐私信息，所有数据仅在本地处理，不会用于任何营利行为。
+
+**技术说明：** 插件不会绕过知乎的反爬机制，不会恶意破坏或影响原网站正常使用。知乎对部分内容采用反爬技术，可能导致显示异常，建议直接前往知乎官网查看完整内容。
+
+- ✅ **允许**：个人学习、技术研究、代码交流
+- ❌ **禁止**：商业使用、大规模数据采集、违反知乎服务条款的行为
+- ❌ **禁止**：用于任何可能损害知乎平台或用户利益的活动
+
+**使用须知：**
+
+- 遵守知乎的用户协议和服务条款
+- 合理使用，避免给知乎服务器造成过大负担
+- 尊重原创作者的版权和知识产权
+
+**请合理使用，文明摸鱼！** 🐟
+
+## 🤝 参与贡献 🤝
+
+我们欢迎所有形式的贡献！无论您是新手还是专家，都可以为项目做出贡献：
+
+### 贡献方式：
+
+1. **Fork** 本仓库到您的 GitHub 账户
+2. **Clone** 到本地：`git clone https://github.com/crispyChicken999/zhihu-fisher-vscode.git`
+3. **创建分支**：`git checkout -b feature/your-feature-name`
+4. **提交更改**：`git commit -am 'Add some feature'`
+5. **推送分支**：`git push origin feature/your-feature-name`
+6. **提交 Pull Request**
+
+### 开发环境：
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发模式
+npm run watch
+
+# 按 F5 开始调试
+```
+
+感谢每一位贡献者！🙏
+
+## 📄 开源协议 📄
+
+本项目采用 [MIT 协议](./LICENSE) 开源，您可以自由使用、修改和分发。
 
 ## 💖 欢迎赞赏 💖
 
