@@ -51,19 +51,20 @@
 
 ### 1. 安装插件
 
-安装后在 VSCode 侧边栏中找到 📖 图标
+- 安装后在 VSCode 侧边栏中找到 📖 图标
 
 ### 2. 配置浏览器
 
-按照指示配置插件使用的 Chrome 浏览器，配置完成后重启 VSCode 以应用规则。
-
-> 因为用到这个 Puppeteer 这个库，其原理就是在后台模拟打开知乎，模拟人在浏览，没配置浏览器的话，就没法在后台加载页面了 😥。
+- 按照指示配置插件使用的 Chrome 浏览器，配置完成后重启 VSCode 以应用规则。
+- 因为用到这个 Puppeteer 这个库，其原理就是在后台打开知乎，模拟人在浏览，然后把内容搬运到 VSCode 中进行展示。
+- 如果没配置浏览器的话，就没法在后台加载页面了。
 
 #### 2.1 配置方式
 
 插件提供两种配置方式：`使用本地浏览器（推荐）` 和 `安装浏览器` 。
 
-#### 2.2 使用本地浏览器
+<details>
+<summary>使用本地浏览器</summary>
 
 你可以选择安装，也可以使用本地已经安装的谷歌浏览器，侧边栏有入口可以设置，或者`Ctrl/Commend`+`,`打开设置，搜索框输入`zhihu`，找到`Custom Chrome Path`，输入本地浏览器的路径即可。
 
@@ -81,7 +82,7 @@
 </details>
 
 <details>
-<summary>2.2.1 Windows 获取本地 Chrome 浏览器路径的方法</summary>
+<summary>Windows 获取本地 Chrome 浏览器路径的方法</summary>
 
 1. 在桌面上找到 Chrome 浏览器的快捷方式，右键点击，选择"属性"
 2. 在"快捷方式"选项卡中，找到"目标"字段，复制该路径
@@ -93,7 +94,7 @@
 </details>
 
 <details>
-<summary>2.2.2 Mac 获取本地 Chrome 浏览器路径的方法</summary>
+<summary>Mac 获取本地 Chrome 浏览器路径的方法</summary>
 
 1. 打开终端（Terminal），输入以下命令：`ls /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
@@ -103,7 +104,7 @@
 </details>
 
 <details>
-<summary>2.2.3 Linux 获取本地 Chrome 浏览器路径的方法</summary>
+<summary>Linux 获取本地 Chrome 浏览器路径的方法</summary>
 
 1. 打开终端，输入以下命令：`which google-chrome` 或 `which chromium-browser`
 2. 如果显示了路径，则说明 Chrome 浏览器已安装在该位置
@@ -112,8 +113,10 @@
 5. 如果还是不清楚，可以百度一下，因为手头没有 Linux 电脑，无法测试 🤔
 
 </details>
+</details>
 
-#### 2.3 安装浏览器
+<details>
+<summary>安装浏览器</summary>
 
 如果你选择了安装，那么这个浏览器安装完成后会在：
 
@@ -125,29 +128,36 @@
 - **Linux 用户**：`/home/[用户名]/.cache/puppeteer/chrome/linux-x64-135.0.7049.84/chrome-linux-x64/chrome`
 
 </details>
+</details>
 
 ### 3. 配置 Cookie
 
 输入知乎的 Cookie，然后就会自动加载推荐及热榜内容
 
-#### 3.1 Cookie 获取方式
+<details>
+<summary>Cookie 获取方式</summary>
 
 在知乎网页端登录后，按 F12 打开开发者工具，切换到"网络"选项卡，选择一个请求，找到请求头中的`Cookie`字段，复制其值，粘贴到 VSCode 中输入框即可
 
+</details>
+
 <details>
-<summary>🍪 Cookie 获取示例图</summary>
+<summary>Cookie 获取示例图</summary>
 
 ![获取Cookie的方式](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp)
 
 </details>
 
-#### 3.2 Cookie 说明
+<details>
+<summary>Cookie 说明</summary>
 
 **简单说就是：Cookie 就存在你电脑里，插件不会偷偷上传，要来也没用 😂**
 
 你的 Cookie 就躺在 VSCode 的配置文件里，哪都不会去。插件只是用它来帮你刷刷知乎，看看推荐和热榜，别的啥都不干。你随时想删就删，想换就换，完全由你做主。
 
 代码全开源，不信的话可以翻翻源码，或者私聊我，我带你看个够～
+
+</details>
 
 ### 4. 开始使用
 
@@ -160,7 +170,7 @@
 ## 📝 TODO 📝
 
 <details>
-<summary>✅ 已完成的功能</summary>
+<summary>目前已完成的功能</summary>
 
 - ~~重构代码，简化流程~~ **(v0.0.6 已重构)**
 - ~~增加更多功能，比如搜索、收藏等~~ **(v0.0.8 已实现搜索功能，v0.2.2 已实现收藏功能)**
@@ -178,7 +188,7 @@
 ## 🐞 已知问题 🐞
 
 <details>
-<summary>✅ 已修复的问题</summary>
+<summary>已修复的问题</summary>
 
 1.  ~~**推荐列表可能加载不出来**~~ **(v0.3.0 已优化，在设置 Cookie 时去除了 BEC 参数，但是最好知乎首页也切换到推荐列表后，再拿 Cookie，预防一手)**
     - ~~可能跟 Cookie 中 BEC 参数有关，那么需要你前往知乎首页，点击推荐切换到推荐列表，然后刷新页面，获取新的 Cookie，粘贴到 VSCode 中即可。~~
@@ -191,7 +201,7 @@
 </details>
 
 <details>
-<summary>⚠️ 当前已知限制</summary>
+<summary>当前已知限制</summary>
 
 3.  **为啥要等推荐列表加载出来才能查看内容呢？**
     - 如果在推荐加载过程中，你查看了内容，Puppeteer 就会打开一个新标签页获取内容。
@@ -222,11 +232,11 @@
 
 本项目现已完全开源！欢迎各位有志之士一同参与开发和完善：
 
-- 🤝 **欢迎贡献代码** - 提交 Pull Request
-- 🐛 **报告问题** - 在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中反馈 Bug
-- 💡 **功能建议** - 提出新功能想法和改进建议
-- 📖 **完善文档** - 帮助改进文档和使用说明
-- ⭐ **Star 支持** - 给项目点个 Star，让更多人发现
+- **欢迎贡献代码** - 提交 Pull Request
+- **报告问题** - 在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中反馈 Bug
+- **功能建议** - 提出新功能想法和改进建议
+- **完善文档** - 帮助改进文档和使用说明
+- **Star 支持** - 给项目点个 Star，让更多人发现
 
 ### ⚠️ 免责声明 ⚠️
 
@@ -236,9 +246,9 @@
 
 **技术说明：** 插件不会绕过知乎的反爬机制，不会恶意破坏或影响原网站正常使用。知乎对部分内容采用反爬技术，可能导致显示异常，建议直接前往知乎官网查看完整内容。
 
-- ✅ **允许**：个人学习、技术研究、代码交流
-- ❌ **禁止**：商业使用、大规模数据采集、违反知乎服务条款的行为
-- ❌ **禁止**：用于任何可能损害知乎平台或用户利益的活动
+- **允许**：个人学习、技术研究、代码交流
+- **禁止**：商业使用、大规模数据采集、违反知乎服务条款的行为
+- **禁止**：用于任何可能损害知乎平台或用户利益的活动
 
 **使用须知：**
 
