@@ -1,4 +1,3 @@
-import * as cheerio from "cheerio";
 import { Component, RenderOptions } from "./base";
 import { ContentProcessor } from "./content-processor";
 
