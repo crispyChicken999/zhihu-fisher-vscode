@@ -128,8 +128,43 @@ export class ContentProcessor {
     // 移除目录标识，因为没用到目录 .Catalog
     $(".Catalog").remove();
 
-    // 删除GifPlayer元素
-    $(".GifPlayer").remove();
+    // 处理GifPlayer组件，将jpg改为gif并删除播放图标
+    $(".GifPlayer").each(function () {
+      const gifPlayer = $(this);
+      const img = gifPlayer.find("img.ztext-gif");
+
+      if (img.length > 0) {
+        // 获取原始src
+        let src = img.attr("src");
+        let dataThumbnail = img.attr("data-thumbnail");
+
+        // 将.jpg改为.gif
+        if (src && src.includes(".jpg")) {
+          src = src.replace(/\.jpg(\?.*)?$/, ".gif$1");
+          img.attr("src", src);
+        }
+
+        if (dataThumbnail && dataThumbnail.includes(".jpg")) {
+          dataThumbnail = dataThumbnail.replace(/\.jpg(\?.*)?$/, ".gif$1");
+          img.attr("data-thumbnail", dataThumbnail);
+        }
+
+        // 删除播放图标
+        gifPlayer.find(".GifPlayer-icon").remove();
+
+        // 设置图片样式和属性
+        img.attr("referrerpolicy", "no-referrer");
+        img.css("cursor", "default");
+
+        // 根据媒体显示模式设置缩放
+        if (mediaDisplayMode === "mini") {
+          img.css("width", "calc(50%)");
+        }
+
+        // 设置父容器居中
+        gifPlayer.css("text-align", "center");
+      }
+    });
 
     // 如果是svg并且里面有个circle和path元素，则认为是加载视频的按钮，应该去掉这个svg
     $("svg").each(function () {
