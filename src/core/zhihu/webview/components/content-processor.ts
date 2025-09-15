@@ -97,8 +97,8 @@ export class ContentProcessor {
    * @returns 处理后的HTML内容
    */
   public static processContent(
-    content: string, 
-    options: RenderOptions, 
+    content: string,
+    options: RenderOptions,
     includeAdvancedFeatures: boolean = true
   ): string {
     if (!content) {
