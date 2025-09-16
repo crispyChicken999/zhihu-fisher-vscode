@@ -33,6 +33,10 @@ VSCode顶部-帮助-切换开发人员工具(Toggle DevTools)，提供BUG相关�
 
 **环境 (Environment)**
 请填写所处的环境信息，以便排查：
- - 操作系统 (OS): 
- - VSCode版本 (VSCode): 
+ - 操作系统 (OS):
+ - VSCode版本 (VSCode):
  - 摸鱼插件版本 (Version):
+ - 谷歌浏览器版本 (Chrome):
+
+
+> 提示：请尽量提供详细的信息，以便我们能更快地定位和解决问题，谢谢您的配合！
