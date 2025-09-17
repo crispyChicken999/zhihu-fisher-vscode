@@ -156,6 +156,8 @@ export class ContentProcessor {
         img.attr("referrerpolicy", "no-referrer");
         img.css("cursor", "default");
 
+        img.css('display', '');
+
         // 根据媒体显示模式设置缩放
         if (mediaDisplayMode === "mini") {
           img.css("width", "calc(50%)");
