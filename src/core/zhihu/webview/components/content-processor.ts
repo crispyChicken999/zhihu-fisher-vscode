@@ -507,6 +507,9 @@ export class ContentProcessor {
     // .RichText-ADLinkCardContainer 去除（广告，走开啊）
     $(".RichText-ADLinkCardContainer").remove();
 
+    // .ecommerce-ad-box 去除（电商广告，烦死了）
+    $(".ecommerce-ad-box").remove();
+
     // .RichText-MCNLinkCardContainer 去除（自媒体推广，烦死了）
     $(".RichText-MCNLinkCardContainer").remove();
 
