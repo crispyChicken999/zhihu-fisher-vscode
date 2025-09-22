@@ -98,7 +98,7 @@ export class ContentProcessor {
    */
   public static processContent(
     content: string,
-    options: RenderOptions,
+    options: RenderOptions | null,
     includeAdvancedFeatures: boolean = true
   ): string {
     if (!content) {
@@ -120,7 +120,7 @@ export class ContentProcessor {
       $('.zhihu-fisher-content-is-paid-needed').remove();
     }
 
-    const mediaDisplayMode = options.mediaDisplayMode || "normal";
+    const mediaDisplayMode = options?.mediaDisplayMode || "normal";
 
     // 删除自定义样式，style标签，避免和我们内部的样式冲突
     $("style").remove();

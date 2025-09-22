@@ -10,6 +10,7 @@ import { CommentsManager } from "./components/comments";
 import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 import { WebViewUtils, CollectionPickerUtils } from "../../utils";
 import { DisguiseManager } from "../../utils/disguise-manager";
+import { ContentProcessor } from "./components/content-processor";
 import { RelatedQuestionsManager } from "./components/related-questions";
 
 export class WebviewManager {
@@ -2376,7 +2377,8 @@ export class WebviewManager {
       });
 
       if (questionDetail) {
-        webviewItem.article.questionDetail = questionDetail;
+        const processedQuestionDetail = ContentProcessor.processContent(questionDetail, null, false); // 处理内容中的多媒体元素
+        webviewItem.article.questionDetail = processedQuestionDetail;
         console.log('成功提取问题详情内容');
 
         // 通过 postMessage 更新前端的问题详情内容
