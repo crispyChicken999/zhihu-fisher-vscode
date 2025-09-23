@@ -168,7 +168,6 @@ export class PuppeteerManager {
               ),
               args: [
                 '--no-sandbox',
-                '--single-process',
                 '--disable-setuid-sandbox',
                 "--window-size=1000,700",
               ],
