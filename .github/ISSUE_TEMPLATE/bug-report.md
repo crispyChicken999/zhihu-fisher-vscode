@@ -20,7 +20,9 @@ assignees: ''
 ---
 
 **控制台日志 (Console Log)**
-VSCode顶部-帮助-切换开发人员工具(Toggle DevTools)，提供BUG相关的LOG日志信息，以便排查：
+> VSCode顶部-帮助-切换开发人员工具(Toggle DevTools)
+
+请提供BUG相关的LOG日志信息，以便排查：
 
 
 ---
