@@ -162,10 +162,6 @@ export class PuppeteerManager {
             Store.browserInstance = await Puppeteer.launch({
               executablePath: executablePath,
               headless: headlessMode,
-              userDataDir: path.join(
-                os.tmpdir(),
-                "zhihu-fisher-puppeteer-dev-chrome-profile"
-              ),
               args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
