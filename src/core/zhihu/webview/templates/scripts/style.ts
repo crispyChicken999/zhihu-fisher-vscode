@@ -28,7 +28,10 @@ function setupStylePanel() {
     document.body.style.maxWidth = savedStyles.maxWidth;
     document.body.style.fontFamily = savedStyles.fontFamily;
     document.querySelector('header').style.color = savedStyles.contentColor;
-    document.querySelector('.question-detail-content').style.color = savedStyles.contentColor;
+    const questionDetailContentEle = document.querySelector('.question-detail-content');
+    if (questionDetailContentEle) {
+      questionDetailContentEle.style.color = savedStyles.contentColor;
+    }
     document.querySelector('.article-content').style.color = savedStyles.contentColor;
     document.querySelector('.comments-container').style.color = savedStyles.contentColor;
     document.querySelector('.comments-modal-container').style.color = savedStyles.contentColor;
@@ -132,7 +135,10 @@ function setupStylePanel() {
         document.querySelector('.article-content').style.color = color;
         document.querySelector('.comments-container').style.color = color;
         document.querySelector('.comments-modal-container').style.color = color;
-        document.querySelector('.question-detail-content').style.color = color;
+        const questionDetailContentEle = document.querySelector('.question-detail-content');
+        if (questionDetailContentEle) {
+          questionDetailContentEle.style.color = savedStyles.contentColor;
+        }
         updateLocalStorage();
 
         // 更新预设按钮的选中状态
