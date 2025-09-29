@@ -122,6 +122,10 @@
         "icon": "$(key)"
       },
       {
+        "command": "zhihu-fisher.openFakeFile",
+        "title": "打开伪装文件"
+      },
+      {
         "command": "zhihu-fisher.clearCollectionCache",
         "title": "清理收藏夹缓存",
         "icon": "$(clear-all)"
@@ -257,6 +261,26 @@
         "icon": "$(eye)"
       },
       {
+        "command": "zhihu-fisher.toggleWebviewDisguise",
+        "title": "开启",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "zhihu-fisher.disableWebviewDisguise",
+        "title": "关闭",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "zhihu-fisher.enableSidebarDisguise",
+        "title": "开启",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "zhihu-fisher.disableSidebarDisguise",
+        "title": "关闭",
+        "icon": "$(eye-closed)"
+      },
+      {
         "command": "zhihu-fisher.showDisguiseCache",
         "title": "查看伪装缓存状态",
         "icon": "$(info)"
@@ -265,6 +289,20 @@
         "command": "zhihu-fisher.showChangeLog",
         "title": "更新日志",
         "icon": "$(history)"
+      },
+      {
+        "command": "zhihu-fisher.toggleSidebarDisguise",
+        "title": "退出侧边栏伪装",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "zhihu-fisher.refreshFakeFileList",
+        "title": "刷新文件列表",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "zhihu-fisher.onFakeFileClick",
+        "title": "打开文件"
       }
     ],
     "viewsContainers": {
@@ -282,25 +320,36 @@
           "id": "zhihuRecommendList",
           "name": "推荐",
           "icon": "$(star)",
-          "contextualTitle": "知乎推荐"
+          "contextualTitle": "知乎推荐",
+          "when": "!zhihu-fisher.sidebarDisguised"
         },
         {
           "id": "zhihuHotList",
           "name": "热榜",
           "icon": "$(flame)",
-          "contextualTitle": "知乎热榜"
+          "contextualTitle": "知乎热榜",
+          "when": "!zhihu-fisher.sidebarDisguised"
         },
         {
           "id": "zhihuSearchList",
           "name": "搜索",
           "icon": "$(search)",
-          "contextualTitle": "知乎搜索"
+          "contextualTitle": "知乎搜索",
+          "when": "!zhihu-fisher.sidebarDisguised"
         },
         {
           "id": "zhihuCollectionsList",
           "name": "收藏",
           "icon": "$(bookmark)",
-          "contextualTitle": "知乎收藏"
+          "contextualTitle": "知乎收藏",
+          "when": "!zhihu-fisher.sidebarDisguised"
+        },
+        {
+          "id": "fakeFileList",
+          "name": "文件",
+          "icon": "$(files)",
+          "contextualTitle": "项目文件",
+          "when": "zhihu-fisher.sidebarDisguised"
         }
       ]
     },
@@ -320,12 +369,28 @@
       {
         "view": "zhihuCollectionsList",
         "contents": "加载知乎收藏中..."
+      },
+      {
+        "view": "fakeFileList",
+        "contents": "正在生成项目文件结构..."
       }
     ],
     "submenus": [
       {
         "id": "zhihu-fisher.mediaDisplayMenu",
         "label": "多媒体显示模式"
+      },
+      {
+        "id": "zhihu-fisher.smartDisguiseMenu",
+        "label": "智能伪装"
+      },
+      {
+        "id": "zhihu-fisher.webviewDisguiseMenu",
+        "label": "详情页伪装"
+      },
+      {
+        "id": "zhihu-fisher.sidebarDisguiseMenu",
+        "label": "侧边栏伪装"
       }
     ],
     "menus": {
@@ -356,7 +421,7 @@
           "group": "abrowser@5"
         },
         {
-          "command": "zhihu-fisher.toggleDisguise",
+          "submenu": "zhihu-fisher.smartDisguiseMenu",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "bmode@1"
         },
@@ -429,6 +494,16 @@
           "command": "zhihu-fisher.showAbout",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "zhelp@3"
+        },
+        {
+          "command": "zhihu-fisher.refreshFakeFileList",
+          "when": "view == fakeFileList",
+          "group": "navigation@1"
+        },
+        {
+          "command": "zhihu-fisher.toggleSidebarDisguise",
+          "when": "view == fakeFileList",
+          "group": "navigation@2"
         }
       ],
       "zhihu-fisher.mediaDisplayMenu": [
@@ -447,6 +522,36 @@
         {
           "command": "zhihu-fisher.setMiniMediaScale",
           "group": "2_scale@1"
+        }
+      ],
+      "zhihu-fisher.smartDisguiseMenu": [
+        {
+          "submenu": "zhihu-fisher.webviewDisguiseMenu",
+          "group": "1_webview"
+        },
+        {
+          "submenu": "zhihu-fisher.sidebarDisguiseMenu",
+          "group": "2_sidebar"
+        }
+      ],
+      "zhihu-fisher.webviewDisguiseMenu": [
+        {
+          "command": "zhihu-fisher.toggleWebviewDisguise",
+          "group": "1_enable"
+        },
+        {
+          "command": "zhihu-fisher.disableWebviewDisguise",
+          "group": "2_disable"
+        }
+      ],
+      "zhihu-fisher.sidebarDisguiseMenu": [
+        {
+          "command": "zhihu-fisher.enableSidebarDisguise",
+          "group": "1_enable"
+        },
+        {
+          "command": "zhihu-fisher.disableSidebarDisguise",
+          "group": "2_disable"
         }
       ],
       "view/item/context": [
@@ -675,7 +780,7 @@
             "正常模式(正常显示图片视频)"
           ],
           "default": "normal",
-          "description": "文章中媒体资源（图片、视频等）的显示方式。"
+          "description": "详情页中多媒体资源（图片、视频等）的显示方式。"
         },
         "zhihu-fisher.miniMediaScale": {
           "type": "number",
@@ -687,7 +792,7 @@
         "zhihu-fisher.customChromePath": {
           "type": "string",
           "default": "",
-          "description": "自定义谷歌Chrome 浏览器路径。如果设置了，插件将使用此路径的浏览器，而不是 Puppeteer 安装的 Chrome 浏览器。",
+          "description": "自定义Chrome谷歌浏览器路径。如果设置了，插件将使用此路径的浏览器，而不是 Puppeteer 安装的 Chrome 浏览器。",
           "scope": "machine"
         },
         "zhihu-fisher.cookie": {
@@ -721,6 +826,11 @@
           "maximum": 50,
           "default": 10,
           "description": "每批预加载的回答数量。只有达到该数量才会停止加载更多(限制范围5-50)。数值越小加载越快，小于10可能不生效。不建议修改的太大，因为会触发知乎的反爬虫机制，可能会导致Cookie提前失效！"
+        },
+        "zhihu-fisher.sidebarDisguiseEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用侧边栏伪装功能。开启后，点击侧边栏链接打开详情页和界面伪装时，会自动伪装侧边栏为模拟的文件列表。可以在详情页-设置面板-功能增强中自定义想要伪装的文件类型，如果不选择则会随机生成。"
         }
       }
     }

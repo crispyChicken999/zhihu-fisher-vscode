@@ -24,46 +24,62 @@ export class RelatedQuestionsManager {
     try {
       const relatedQuestions = await page.evaluate(() => {
         // 根据提供的DOM结构解析相关问题
-        const relatedQuestionsCard = document.querySelector('.Card[role="complementary"][aria-label="相关问题"]');
+        const relatedQuestionsCard = document.querySelector(
+          '.Card[role="complementary"][aria-label="相关问题"]'
+        );
         if (!relatedQuestionsCard) {
           return [];
         }
 
-        const questionItems = relatedQuestionsCard.querySelectorAll('.SimilarQuestions-item');
+        const questionItems = relatedQuestionsCard.querySelectorAll(
+          ".SimilarQuestions-item"
+        );
         const questions: any[] = [];
 
         questionItems.forEach((item: Element) => {
           try {
             // 提取问题标题
             const titleMeta = item.querySelector('meta[itemprop="name"]');
-            const title = titleMeta?.getAttribute('content') || '';
+            const title = titleMeta?.getAttribute("content") || "";
 
             // 提取问题URL
             const urlMeta = item.querySelector('meta[itemprop="url"]');
-            const url = urlMeta?.getAttribute('content') || '';
+            const url = urlMeta?.getAttribute("content") || "";
 
             // 提取回答数量
-            const answerCountMeta = item.querySelector('meta[itemprop="answerCount"]');
-            const answerCount = parseInt(answerCountMeta?.getAttribute('content') || '0', 10);
+            const answerCountMeta = item.querySelector(
+              'meta[itemprop="answerCount"]'
+            );
+            const answerCount = parseInt(
+              answerCountMeta?.getAttribute("content") || "0",
+              10
+            );
 
             // 提取关注数量
-            const followerCountMeta = item.querySelector('meta[itemprop="zhihu:followerCount"]');
-            const followerCount = parseInt(followerCountMeta?.getAttribute('content') || '0', 10);
+            const followerCountMeta = item.querySelector(
+              'meta[itemprop="zhihu:followerCount"]'
+            );
+            const followerCount = parseInt(
+              followerCountMeta?.getAttribute("content") || "0",
+              10
+            );
 
             // 从URL中提取问题ID
-            const questionId = url ? url.split('/').pop() || '' : '';
+            const questionId = url ? url.split("/").pop() || "" : "";
 
             if (title && url && questionId) {
               questions.push({
                 id: questionId,
                 title: title.trim(),
-                url: url.startsWith('http') ? url : `https://www.zhihu.com${url}`,
+                url: url.startsWith("http")
+                  ? url
+                  : `https://www.zhihu.com${url}`,
                 answerCount,
-                followerCount
+                followerCount,
               });
             }
           } catch (error) {
-            console.error('解析单个相关问题时出错:', error);
+            console.error("解析单个相关问题时出错:", error);
           }
         });
 
@@ -79,7 +95,6 @@ export class RelatedQuestionsManager {
         console.log("未找到相关问题");
         return [];
       }
-
     } catch (error) {
       console.error("解析相关问题时出错:", error);
       return [];
@@ -108,10 +123,14 @@ export class RelatedQuestionsManager {
       hasChanges = newQuestions.length > 0;
     } else {
       // 创建一个已存在问题ID的Set用于快速查找
-      const existingIds = new Set(webviewItem.article.relatedQuestions.map(q => q.id));
+      const existingIds = new Set(
+        webviewItem.article.relatedQuestions.map((q) => q.id)
+      );
 
       // 筛选出新的问题（去重）
-      const uniqueNewQuestions = newQuestions.filter(question => !existingIds.has(question.id));
+      const uniqueNewQuestions = newQuestions.filter(
+        (question) => !existingIds.has(question.id)
+      );
 
       if (uniqueNewQuestions.length > 0) {
         // 将新问题推送到现有列表
@@ -119,7 +138,9 @@ export class RelatedQuestionsManager {
         hasChanges = true;
       }
 
-      console.log(`去重后添加了 ${uniqueNewQuestions.length} 个新的相关问题，总数: ${webviewItem.article.relatedQuestions.length}`);
+      console.log(
+        `去重后添加了 ${uniqueNewQuestions.length} 个新的相关问题，总数: ${webviewItem.article.relatedQuestions.length}`
+      );
     }
 
     // 如果有变化，通知WebView更新相关问题数据
@@ -142,10 +163,14 @@ export class RelatedQuestionsManager {
       // 发送消息给WebView，更新相关问题数据
       webviewItem.webviewPanel.webview.postMessage({
         command: "updateRelatedQuestions",
-        data: webviewItem.article.relatedQuestions || []
+        data: webviewItem.article.relatedQuestions || [],
       });
 
-      console.log(`已通知WebView更新相关问题数据，共 ${webviewItem.article.relatedQuestions?.length || 0} 个问题`);
+      console.log(
+        `已通知WebView更新相关问题数据，共 ${
+          webviewItem.article.relatedQuestions?.length || 0
+        } 个问题`
+      );
     } catch (error) {
       console.error("通知WebView更新相关问题数据失败:", error);
     }
@@ -165,16 +190,8 @@ export class RelatedQuestionsComponent {
 
   /**
    * 渲染相关问题组件
-   * 根据新设计，这里只返回空字符串，不再显示完整列表
    */
   public render(): string {
-    return this.Icon();
-  }
-
-  /**
-   * 渲染沉浸模式的图标（点击显示弹窗）
-   */
-  private Icon(): string {
     const questionCount = this.relatedQuestions.length;
 
     return `

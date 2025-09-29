@@ -415,11 +415,80 @@ function toggleDisguiseMode(enabled) {
     enabled: enabled
   });
 
-  // 显示/隐藏伪装类型选择区域
+  // 显示/隐藏伪装相关区域
   const disguiseTypesSection = document.getElementById('disguise-types-section');
+  const sidebarDisguiseSection = document.getElementById('sidebar-disguise-section');
   if (disguiseTypesSection) {
     disguiseTypesSection.style.display = enabled ? 'block' : 'none';
   }
+  if (sidebarDisguiseSection) {
+    sidebarDisguiseSection.style.display = enabled ? 'block' : 'none';
+  }
+
+  // .disguise-divider
+  const dividers = document.querySelectorAll('.disguise-divider');
+  dividers.forEach(divider => {
+    divider.style.display = enabled ? 'block' : 'none';
+  });
+}
+
+/**
+ * 切换智能伪装功能(带侧边栏联动)
+ */
+function toggleDisguiseModeWithSidebar(enabled) {
+  // 先调用原始的切换函数
+  toggleDisguiseMode(enabled);
+
+  // 如果关闭了智能伪装，同时关闭侧边栏伪装
+  if (!enabled) {
+    const sidebarToggle = document.getElementById('sidebar-disguise-toggle');
+    if (sidebarToggle && sidebarToggle.checked) {
+      sidebarToggle.checked = false;
+      toggleSidebarDisguiseWithSync(false);
+    }
+  }
+}
+
+/**
+ * 切换侧边栏伪装功能(带实时同步)
+ */
+function toggleSidebarDisguiseWithSync(enabled) {
+  // 调用原始的切换函数
+  toggleSidebarDisguise(enabled);
+
+  // 立即同步状态到侧边栏
+  vscode.postMessage({
+    command: "syncSidebarDisguise",
+    enabled: enabled
+  });
+}
+
+/**
+ * 切换侧边栏伪装功能
+ */
+function toggleSidebarDisguise(enabled) {
+  vscode.postMessage({
+    command: "toggleSidebarDisguise",
+    enabled: enabled
+  });
+
+  // 显示/隐藏项目类型选择区域
+  const projectTypeSection = document.getElementById('sidebar-project-type-section');
+  if (projectTypeSection) {
+    projectTypeSection.style.display = enabled ? 'block' : 'none';
+  }
+}
+
+/**
+ * 更新伪装项目类型
+ */
+function updateFakeProjectType(projectType) {
+  vscode.postMessage({
+    command: "updateFakeProjectType",
+    projectType: projectType
+  });
+
+  console.log('项目类型已更新为:', projectType);
 }
 
 /**

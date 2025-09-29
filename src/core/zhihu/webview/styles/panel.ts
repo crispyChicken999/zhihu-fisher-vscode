@@ -198,6 +198,27 @@ export const panelCss = `
   margin-left: auto;
 }
 
+/* 项目类型选择器样式 */
+.style-option-select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--vscode-input-border);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border-radius: 2px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.style-option-select:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.style-option-select:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
 /* 伪装文件类型选择项样式 */
 .disguise-type-grid {
   display: grid;

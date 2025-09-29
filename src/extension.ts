@@ -4,12 +4,19 @@ import { ZhihuService } from "./core/zhihu/index";
 import { registerAllCommands } from "./core/commands";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
+import { SidebarDisguiseManager } from "./core/utils/sidebar-disguise-manager";
 import { sidebarCollectionsDataProvider } from "./core/zhihu/sidebar/collections";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
+
 export function activate(context: vscode.ExtensionContext) {
   console.log("🐟知乎摸鱼🐟 已激活！");
 
   Store.context = context; // 保存上下文到全局 Store
+
+  // 初始化侧边栏伪装管理器
+  SidebarDisguiseManager.getInstance().initialize(context).catch((error) => {
+    console.error('初始化侧边栏伪装管理器失败:', error);
+  });
 
   // 创建 知乎服务实例
   const zhihuService = new ZhihuService();

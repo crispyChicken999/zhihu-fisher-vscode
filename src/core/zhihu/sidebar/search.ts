@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
-import * as Puppeteer from "puppeteer";
 import { Store } from "../../stores";
+import * as Puppeteer from "puppeteer";
+import { ZhihuApiService } from "../api";
 import { CookieManager } from "../cookie";
 import { PuppeteerManager } from "../puppeteer";
-import { StatusTreeItem, TreeItem, LinkItem } from "../../types";
-import { ZhihuApiService } from "../api";
 import { CollectionPickerUtils } from "../../utils";
+import { TooltipContents } from "../../utils/tooltip-contents";
+import { StatusTreeItem, TreeItem, LinkItem } from "../../types";
 
 /**
  * 侧边栏的知乎搜索-树数据提供者
@@ -467,7 +468,7 @@ export class sidebarSearchListDataProvider
               excerpt,
               type: "question" as const,
               contentToken,
-              answerUrl: answerLink ? url: undefined, // 使用同一个URL作为回答链接
+              answerUrl: answerLink ? url : undefined, // 使用同一个URL作为回答链接
             };
           } catch (error) {
             console.error(`解析问题回答项时出错:`, error);
@@ -561,13 +562,7 @@ export class sidebarSearchListDataProvider
             command: "zhihu-fisher.setCustomChromePath",
             title: "设置自定义浏览器路径",
           },
-          "您设置的自定义浏览器路径无效，请重新设置。\n " +
-            "【解决方法】\n" +
-            "  点我重新设置~ 如果不想用自定义路径，点我然后直接按ESC即可清空设置。\n " +
-            "  清空设置后，插件会尝试使用默认位置的浏览器，如果没安装，会提示你安装。\n" +
-            "【注意】\n" +
-            "  设置完成后，请重启VSCode。避免出现bug。\n" +
-            "  优先级是：自定义路径 > 默认安装路径 \n"
+          TooltipContents.getInvalidBrowserPathTooltip()
         ),
       ];
     }
@@ -584,15 +579,7 @@ export class sidebarSearchListDataProvider
             command: "zhihu-fisher.configureBrowser",
             title: "配置浏览器",
           },
-          "点我配置爬虫浏览器\n " +
-            "【原因】\n" +
-            "  插件依赖Puppeteer去爬取页面数据，如果没有安装浏览器，或者配置的浏览器不是谷歌原版Chrome浏览器，\n" +
-            "  就会导致爬虫无法在后台创建浏览器实例，进而无法爬取数据。\n " +
-            "【解决方法】\n" +
-            "  点我去配置浏览器，提供两种方式：\n" +
-            "  在弹出的窗口中你可以选择安装默认的浏览器，或者选择自定义路径。\n" +
-            "【注意】\n" +
-            "  设置完成后，请重启VSCode。避免出现bug。\n"
+          TooltipContents.getBrowserUnavailableTooltip()
         ),
       ];
     }
@@ -608,16 +595,7 @@ export class sidebarSearchListDataProvider
             command: "zhihu-fisher.setCookie",
             title: "设置知乎Cookie",
           },
-          "点我设置Cookie\n" +
-            "【获取方式】\n" +
-            "  去到知乎首页，登陆自己的账号，然后点击F12打开开发者工具\n" +
-            "  选择 Network 选项卡，刷新页面，点击一个请求，找到请求头Request Headers，\n" +
-            "  里面 Cookie 字段，复制值的所有内容，粘贴到 VSCode 的输入框里面。\n" +
-            "【注意】\n" +
-            "  设置完成后，请重启VSCode。避免出现bug。\n" +
-            "【tips】\n" +
-            "  主包主包，我还是看不懂咋办啊TAT？\n" +
-            "  打开扩展，搜zhihu fisher，点开来，里面有设置 Cookie 的说明图。"
+          TooltipContents.getCookieRequiredTooltip()
         ),
       ];
     }
@@ -629,16 +607,26 @@ export class sidebarSearchListDataProvider
           `🔍正在知乎搜索【${Store.Zhihu.search.currentQuery}】🔍...`,
           new vscode.ThemeIcon("loading~spin"),
           null,
-          "爬虫正在后台加载知乎搜索结果(～￣▽￣)～\n" +
-            "模拟滚动加载更多中，请耐心等待...\n" +
-            "【注意】\n" +
-            "如果长时间没有响应，请确保浏览器正确配置，或者重新搜索~"
+          TooltipContents.getSearchLoadingTooltip(
+            Store.Zhihu.search.currentQuery
+          )
         ),
       ];
     }
 
     const list = Store.Zhihu.search.list;
     const query = Store.Zhihu.search.currentQuery;
+
+    // 创建打赏入口
+    const sponsorItem = new StatusTreeItem(
+      "请我喝杯咖啡吧~ 支持插件持续更新~(￣▽￣)ノ",
+      new vscode.ThemeIcon("coffee"),
+      {
+        command: "zhihu-fisher.buyMeCoffee",
+        title: "查看详情",
+      },
+      TooltipContents.getSponsorTooltip()
+    );
 
     // 如果有搜索结果，直接返回
     if (list && list.length > 0) {
@@ -650,7 +638,7 @@ export class sidebarSearchListDataProvider
           command: "zhihu-fisher.searchContent",
           title: "搜索知乎内容",
         },
-        "点我输入关键词重新搜索"
+        TooltipContents.getSearchAgainTooltip()
       );
 
       // 创建结果列表树项
@@ -658,10 +646,10 @@ export class sidebarSearchListDataProvider
         (item) => new TreeItem(item, vscode.TreeItemCollapsibleState.None)
       );
 
-      return [searchButtonItem, ...resultItems];
+      return [sponsorItem, searchButtonItem, ...resultItems];
     }
 
-    // 初始状态，只显示搜索按钮
+    // 初始状态，显示打赏入口和搜索按钮
     return [
       new StatusTreeItem(
         "点我搜索知乎内容",
@@ -670,7 +658,7 @@ export class sidebarSearchListDataProvider
           command: "zhihu-fisher.searchContent",
           title: "搜索知乎内容",
         },
-        "点我点我点我o(*￣▽￣*)o"
+        TooltipContents.getStartSearchTooltip()
       ),
     ];
   }

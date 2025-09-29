@@ -8,7 +8,7 @@ export class StylePanelComponent implements Component {
   private miniMediaScale: number = 50;
   private enableDisguise: boolean = true;
   private enableGrayscale: boolean = false;
-  private selectedDisguiseTypes: string[] = [];
+  private sidebarDisguiseEnabled: boolean = false;
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
@@ -17,8 +17,10 @@ export class StylePanelComponent implements Component {
       renderOptions.enableDisguise !== undefined
         ? renderOptions.enableDisguise
         : true;
-    this.selectedDisguiseTypes = renderOptions.selectedDisguiseTypes || [];
-    // 灰色模式从localStorage读取，不依赖renderOptions
+    this.sidebarDisguiseEnabled = renderOptions.sidebarDisguiseEnabled !== undefined
+      ? renderOptions.sidebarDisguiseEnabled
+      : false;
+    // 灰色模式从javaScript读取，不依赖renderOptions
     this.enableGrayscale = false;
   }
 
@@ -278,7 +280,7 @@ export class StylePanelComponent implements Component {
                     type="checkbox"
                     id="disguise-toggle"
                     ${this.enableDisguise ? "checked" : ""}
-                    onchange="toggleDisguiseMode(this.checked)"
+                    onchange="toggleDisguiseModeWithSidebar(this.checked)"
                     class="style-option-transform-scale"
                   >
                   <span class="style-option-font-weight">启用智能伪装</span>
@@ -301,7 +303,50 @@ export class StylePanelComponent implements Component {
               </details>
             </div>
 
-            <div class="style-option-divider" ${this.enableDisguise ? '' : 'style="display: none;"'}></div>
+            <div class="style-option-divider disguise-divider" ${this.enableDisguise ? '' : 'style="display: none;"'}></div>
+
+            <!-- 侧边栏伪装设置 -->
+            <div class="style-option-section" id="sidebar-disguise-section" ${this.enableDisguise ? '' : 'style="display: none;"'}>
+              <label class="style-option-label-inline style-option-font-weight">
+                侧边栏伪装功能
+                <span class="style-option-color-description">
+                  (将侧边栏伪装成文件列表)
+                </span>
+              </label>
+
+              <div class="style-option-flex style-option-label-inline">
+                <label class="style-option-flex style-option-gap-8 style-option-cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="sidebar-disguise-toggle"
+                    ${this.sidebarDisguiseEnabled ? "checked" : ""}
+                    onchange="toggleSidebarDisguiseWithSync(this.checked)"
+                    class="style-option-transform-scale"
+                  >
+                  <span class="style-option-font-weight">启用侧边栏伪装</span>
+                </label>
+              </div>
+
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">侧边栏伪装：</strong>将 知乎列表伪 装成 真实项目文件列表，配合界面伪装实现完整效果
+                  </div>
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">自动触发：</strong>打开文章时或界面伪装时自动启用侧边栏伪装
+                  </div>
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">项目类型：</strong>根据自定义伪装文件类型自动生成文件列表，如果没选择则默认全部随机
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong-link">恢复方式：</strong>点击侧边栏中的任何伪装文件即可恢复正常列表，或者关闭全部的知乎详情页后恢复
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="style-option-divider disguise-divider" ${this.enableDisguise ? '' : 'style="display: none;"'}></div>
 
             <!-- 伪装文件类型选择 -->
             <div class="style-option-section" id="disguise-types-section" ${this.enableDisguise ? '' : 'style="display: none;"'}>

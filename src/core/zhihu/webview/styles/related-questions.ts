@@ -8,19 +8,17 @@ export const relatedQuestionsCss = `
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0.7;
   user-select: none;
   font-size: inherit;
   padding: 2px;
   border-radius: 4px;
   background-color: transparent;
-  color: var(--vscode-foreground);
   transition: all 0.2s ease;
 }
 
 .related-questions-icon:hover {
   opacity: 1;
-  background-color: var(--vscode-button-hoverBackground);
+  background-color: var(--vscode-toolbar-hoverBackground);
   transform: translateY(-1px);
 }
 

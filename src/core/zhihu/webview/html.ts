@@ -14,15 +14,13 @@ import { QuestionDetailComponent } from "./components/question-detail";
 import { RelatedQuestionsComponent } from "./components/related-questions";
 
 // 导入模板文件
-import { articleTemplate } from "./templates/article";
-import { scriptsTemplate } from "./templates/scripts/index";
-import { loadingTemplate } from "./templates/loading";
-import { cookieTipsTemplate } from "./templates/cookieTips";
 import { errorTemplate } from "./templates/error";
-import {
-  articleKeyboardTips,
-  questionKeyboardTips,
-} from "./templates/keyboardTips";
+import { articleTemplate } from "./templates/article";
+import { loadingTemplate } from "./templates/loading";
+import { scriptsTemplate } from "./templates/scripts/index";
+import { cookieTipsTemplate } from "./templates/cookieTips";
+import { articleKeyboardTips } from "./templates/keyboardTips";
+import { questionKeyboardTips } from "./templates/keyboardTips";
 
 // 导入样式文件
 import { mainCss } from "./styles/main";
@@ -146,6 +144,10 @@ export class HtmlRenderer {
       "selectedDisguiseTypes",
       []
     );
+    const sidebarDisguiseEnabled = config.get<boolean>(
+      "sidebarDisguiseEnabled",
+      true
+    );
 
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];
@@ -159,6 +161,7 @@ export class HtmlRenderer {
       miniMediaScale,
       enableDisguise,
       selectedDisguiseTypes,
+      sidebarDisguiseEnabled,
     };
 
     // 判断内容类型：通过URL判断专栏文章
@@ -166,17 +169,20 @@ export class HtmlRenderer {
       ? "article"
       : "question";
 
+    // 创建作者信息组件
     const authorComponent = new AuthorComponent(
       currentAnswer?.author,
       renderOptions
     );
+
+    // 创建导航组件
     const navigationComponent = new NavigationComponent(
       webview,
       article,
       contentType
     );
 
-    // 创建沉浸模式的相关问题图标（用于meta组件）
+    // 创建沉浸模式的相关问题图标（用于放在标题后面）
     const relatedQuestionsIcon = new RelatedQuestionsComponent(
       article.relatedQuestions || []
     );
@@ -188,23 +194,31 @@ export class HtmlRenderer {
       renderOptions
     );
 
+    // 创建Meta组件
     const metaComponent = new MetaComponent(
       currentAnswer,
       contentType,
-      webview,
-      relatedQuestionsIcon.render()
+      webview
     );
+
+    // 创建文章内容组件
     const contentComponent = new ArticleContentComponent(
       currentAnswer?.content,
       renderOptions
     );
+
+    // 创建工具栏组件 - 侧边栏
     const toolbarComponent = new ToolbarComponent(
       currentAnswer?.url || webview.url || "",
       renderOptions,
       currentAnswer,
       webview.sourceType
     );
+
+    // 创建样式面板组件
     const stylePanelComponent = new StylePanelComponent(renderOptions);
+
+    // 创建评论组件
     const commentsComponent = CommentsManager.createCommentsContainerComponent(
       webviewId,
       currentAnswer?.id,
@@ -237,6 +251,7 @@ export class HtmlRenderer {
     // 生成伪装界面控制脚本（如果启用）
     const disguiseControlScript = enableDisguise ? disguiseScript : "";
 
+    // 填充脚本模板
     const scriptContent = scriptsTemplate
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
       .replace("${MINI_MEDIA_SCALE}", miniMediaScale.toString())
@@ -259,7 +274,7 @@ export class HtmlRenderer {
       webview.url.includes("/p/");
     const keyboardTips = isArticle ? articleKeyboardTips : questionKeyboardTips;
 
-    // 填充模板
+    // 最后一步，组装全部的HTML，嘎嘎嘎~
     return articleTemplate
       .replaceAll("${TITLE}", this.escapeHtml(article.title))
       .replace("${MAIN_CSS}", mainCss)
@@ -274,6 +289,10 @@ export class HtmlRenderer {
       .replace("${DISGUISE_CSS}", disguiseCss)
       .replace("${RELATED_QUESTIONS_CSS}", relatedQuestionsCss)
       .replace("${QUESTION_DETAIL_CSS}", questionDetailCss)
+      .replace(
+        "${RELATED_QUESTION_COMPONENT_ICON}",
+        relatedQuestionsIcon.render()
+      )
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replaceAll("${META_COMPONENT}", metaComponent.render())
@@ -281,8 +300,14 @@ export class HtmlRenderer {
       .replace("${COMMENTS_COMPONENT}", commentsComponent.render())
       .replace("${TOOLBAR_COMPONENT}", toolbarComponent.render())
       .replace("${STYLE_PANEL_COMPONENT}", stylePanelComponent.render())
-      .replace("${QUESTION_DETAIL_COMPONENT_ICON}", questionDetailComponent.render())
-      .replace("${QUESTION_DETAIL_COMPONENT_MODAL}", questionDetailComponent.renderModal())
+      .replace(
+        "${QUESTION_DETAIL_COMPONENT_ICON}",
+        questionDetailComponent.render()
+      )
+      .replace(
+        "${QUESTION_DETAIL_COMPONENT_MODAL}",
+        questionDetailComponent.renderModal()
+      )
       .replace("${SOURCE_URL}", currentAnswer?.url || webview.url || "")
       .replace("${KEYBOARD_TIPS}", keyboardTips)
       .replace(/\${MEDIA_MODE_CLASS}/g, mediaModeClass)

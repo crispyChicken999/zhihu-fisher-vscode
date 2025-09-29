@@ -7,11 +7,12 @@ import { CookieManager } from "../cookie";
 import { ZhihuApiService } from "../api/index";
 import { PuppeteerManager } from "../puppeteer";
 import { CommentsManager } from "./components/comments";
-import { LinkItem, WebViewItem, AnswerItem } from "../../types";
-import { WebViewUtils, CollectionPickerUtils } from "../../utils";
 import { DisguiseManager } from "../../utils/disguise-manager";
+import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 import { ContentProcessor } from "./components/content-processor";
+import { WebViewUtils, CollectionPickerUtils } from "../../utils";
 import { RelatedQuestionsManager } from "./components/related-questions";
+import { SidebarDisguiseManager } from "../../utils/sidebar-disguise-manager";
 
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
@@ -129,8 +130,17 @@ export class WebviewManager {
         // 如果启用了伪装功能，显示伪装界面
         if (enableDisguise) {
           DisguiseManager.showDisguiseInterface(panel);
+
+          // 同时触发侧边栏伪装
+          const sidebarManager = SidebarDisguiseManager.getInstance();
+          sidebarManager.onWebViewDisguised().catch((error) => {
+            console.error("触发侧边栏联动伪装失败:", error);
+          });
         }
       }
+
+      // 触发侧边栏伪装状态评估
+      console.log("WebView状态变化，已触发相关处理");
     });
 
     // 获取配置中的每批回答数量
@@ -188,6 +198,14 @@ export class WebviewManager {
 
     // 设置视图状态变化处理（监听标签页切换）
     this.setupViewStateChangeHandler(webviewId);
+
+    // 触发侧边栏伪装（WebView创建时）
+    try {
+      const sidebarManager = SidebarDisguiseManager.getInstance();
+      await sidebarManager.onWebViewCreated();
+    } catch (error) {
+      console.error("触发侧边栏伪装失败:", error);
+    }
 
     // 根据内容类型调用不同的爬取方法
     if (item.type === "article") {
@@ -1845,6 +1863,16 @@ export class WebviewManager {
           await this.handleToggleDisguise(message.enabled);
           break;
 
+        case "toggleSidebarDisguise":
+          // 处理侧边栏伪装开关切换
+          await this.handleToggleSidebarDisguise(message.enabled);
+          break;
+
+        case "syncSidebarDisguise":
+          // 处理侧边栏伪装实时同步
+          await this.handleSyncSidebarDisguise(message.enabled);
+          break;
+
         case "updateSelectedDisguiseTypes":
           // 处理更新选择的伪装类型
           await this.handleUpdateSelectedDisguiseTypes(message.selectedTypes);
@@ -1904,6 +1932,16 @@ export class WebviewManager {
 
             Store.webviewMap.delete(webviewId);
             await PuppeteerManager.closePage(webviewId);
+
+            // 检查是否需要恢复侧边栏（延迟执行，确保Store更新完成）
+            setTimeout(async () => {
+              try {
+                const sidebarManager = SidebarDisguiseManager.getInstance();
+                await sidebarManager.onWebViewClosed();
+              } catch (error) {
+                console.error("侧边栏恢复检查失败:", error);
+              }
+            }, 100);
           } catch (error) {
             console.error("关闭浏览器时出错:", error);
           }
@@ -2033,6 +2071,55 @@ export class WebviewManager {
     }
   }
 
+  /**
+   * 处理侧边栏伪装开关切换
+   * @param enabled 是否启用侧边栏伪装
+   */
+  private static async handleToggleSidebarDisguise(
+    enabled: boolean
+  ): Promise<void> {
+    try {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update(
+        "sidebarDisguiseEnabled",
+        enabled,
+        vscode.ConfigurationTarget.Global
+      );
+
+      vscode.window.showInformationMessage(
+        `侧边栏伪装功能已${enabled ? "启用" : "禁用"}`
+      );
+    } catch (error) {
+      console.error("切换侧边栏伪装功能时出错:", error);
+      vscode.window.showErrorMessage(
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * 处理侧边栏伪装实时同步
+   * @param enabled 是否启用侧边栏伪装
+   */
+  private static async handleSyncSidebarDisguise(
+    enabled: boolean
+  ): Promise<void> {
+    try {
+      // 直接同步到侧边栏，不保存配置
+      const sidebarManager = SidebarDisguiseManager.getInstance();
+
+      if (enabled) {
+        await sidebarManager.showDisguiseViews();
+      } else {
+        await sidebarManager.showNormalViews();
+      }
+
+      console.log(`侧边栏伪装状态已同步: ${enabled ? "启用" : "禁用"}`);
+    } catch (error) {
+      console.error("同步侧边栏伪装状态时出错:", error);
+    }
+  }
+
   /** 处理投票请求 */
   private static async handleVoteContent(
     webviewId: string,
@@ -2046,9 +2133,6 @@ export class WebviewManager {
     }
 
     try {
-      // 从API导入
-      const { ZhihuApiService } = await import("../api/index.js");
-
       if (contentType === "answer") {
         // 处理回答投票
         const voteType = voteValue as "up" | "down" | "neutral";
@@ -2267,11 +2351,6 @@ export class WebviewManager {
     selectedTypes: string[]
   ): Promise<void> {
     try {
-      // 导入DisguiseManager
-      const { DisguiseManager } = await import(
-        "../../utils/disguise-manager.js"
-      );
-
       // 临时更新配置以进行预览
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
       const originalTypes = config.get<string[]>("selectedDisguiseTypes", []);
@@ -2330,10 +2409,10 @@ export class WebviewManager {
       // 检查是否存在"显示全部"按钮并点击
       const expandButtonExists = await page.evaluate(() => {
         const expandButton = document.querySelector(
-          '.QuestionRichText-more'
+          ".QuestionRichText-more"
         ) as HTMLButtonElement;
 
-        if (expandButton && expandButton.textContent?.includes('显示全部')) {
+        if (expandButton && expandButton.textContent?.includes("显示全部")) {
           expandButton.click();
           return true;
         }
@@ -2343,7 +2422,7 @@ export class WebviewManager {
       if (expandButtonExists) {
         console.log('找到"显示全部"按钮，已点击展开');
         // 等待内容加载
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } else {
         console.log('未找到"显示全部"按钮，使用当前显示的内容');
       }
@@ -2352,7 +2431,7 @@ export class WebviewManager {
       const questionDetail = await page.evaluate(() => {
         // 优先查找展开后的完整内容
         const expandedContent = document.querySelector(
-          '.QuestionRichText .RichText.ztext'
+          ".QuestionRichText .RichText.ztext"
         );
 
         if (expandedContent) {
@@ -2373,25 +2452,28 @@ export class WebviewManager {
           '.QuestionRichText span[itemprop="text"]'
         );
 
-        return anyContent ? anyContent.innerHTML : '';
+        return anyContent ? anyContent.innerHTML : "";
       });
 
       if (questionDetail) {
-        const processedQuestionDetail = ContentProcessor.processContent(questionDetail, null, false); // 处理内容中的多媒体元素
+        const processedQuestionDetail = ContentProcessor.processContent(
+          questionDetail,
+          null,
+          false
+        ); // 处理内容中的多媒体元素
         webviewItem.article.questionDetail = processedQuestionDetail;
-        console.log('成功提取问题详情内容');
+        console.log("成功提取问题详情内容");
 
         // 通过 postMessage 更新前端的问题详情内容
         webviewItem.webviewPanel.webview.postMessage({
-          command: 'updateQuestionDetail',
+          command: "updateQuestionDetail",
           data: {
-            questionDetail: questionDetail
-          }
+            questionDetail: questionDetail,
+          },
         });
       } else {
-        console.log('未找到问题详情内容');
+        console.log("未找到问题详情内容");
       }
-
     } catch (error) {
       console.error("解析问题详情时出错:", error);
     }

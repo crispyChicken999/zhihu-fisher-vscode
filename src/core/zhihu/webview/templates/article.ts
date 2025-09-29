@@ -66,7 +66,7 @@ export const articleTemplate = `
     \${DISGUISE_INTERFACE}
 
     <header>
-      <h4>\${TITLE}\${QUESTION_DETAIL_COMPONENT_ICON}</h4>
+      <h4>\${TITLE}\${QUESTION_DETAIL_COMPONENT_ICON}\${RELATED_QUESTION_COMPONENT_ICON}</h4>
       <div class="article-meta \${MEDIA_MODE_CLASS}">
         \${AUTHOR_COMPONENT}
         <div class="article-meta-footer">

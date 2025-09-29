@@ -485,7 +485,7 @@ export class StatusTreeItem extends TreeItem {
     label: string,
     icon?: vscode.ThemeIcon,
     command?: vscode.Command | null,
-    tooltip?: string
+    tooltip?: string | vscode.MarkdownString
   ) {
     // 创建一个伪热榜项
     const statusItem: any = {
@@ -504,7 +504,12 @@ export class StatusTreeItem extends TreeItem {
 
     // 覆盖默认tooltip
     if (tooltip) {
-      this.tooltip = tooltip;
+      // 如果传入的是字符串，转换为 MarkdownString
+      if (typeof tooltip === 'string') {
+        this.tooltip = new vscode.MarkdownString(tooltip);
+      } else {
+        this.tooltip = tooltip;
+      }
     } else {
       this.tooltip = new vscode.MarkdownString(label);
     }

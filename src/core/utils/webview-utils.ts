@@ -285,7 +285,7 @@ export class WebViewUtils {
 
           // 提取发布时间
           const timeElement = answerElement.querySelector(
-            ".ContentItem-time a span"
+            ".ContentItem-time a"
           );
           const publishTime =
             timeElement?.getAttribute("data-tooltip") ||
