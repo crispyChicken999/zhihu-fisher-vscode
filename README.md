@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.4.6-green.svg)
+![Version](https://img.shields.io/badge/Version-0.4.7-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
 
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、图片/视频展示方式、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索、收藏夹等功能。
@@ -37,7 +37,8 @@
 13. 支持 收藏文章（F）、问答到指定收藏夹，支持缓存收藏夹信息，避免每次都要重新加载
 14. 支持 灰色模式（G），将页面所有内容转为灰色显示，进一步地摸鱼，降低被老板发现的风险 😂
 15. 支持 智能伪装模式，切到其他页面后自动将文章页面的标题和图标伪装为代码文件，界面伪装成代码编辑界面，避免摸鱼被发现，切回后自动恢复
-16. 支持 智能伪装模式自定义，用户可以自定义伪装的标题和图标，满足不同用户的需求，例如前端开发可以伪装为 HTML/JS/CSS 文件，后端开发可以伪装为 Python/Java/Go 文件等
+16. 支持 侧边栏伪装模式，侧边栏也会伪装成文件列表，进一步增强伪装效果
+17. 支持 智能伪装模式自定义，用户可以自定义伪装的标题和图标，满足不同用户的需求，例如前端开发可以伪装为 HTML/JS/CSS 文件，后端开发可以伪装为 Python/Java/Go 文件等
 
 更多功能，敬请探索~
 
