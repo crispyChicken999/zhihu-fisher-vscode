@@ -13,7 +13,7 @@ export const relatedQuestionsCss = `
   padding: 2px;
   border-radius: 4px;
   background-color: transparent;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .related-questions-icon:hover {
