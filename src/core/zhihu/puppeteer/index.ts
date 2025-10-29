@@ -166,6 +166,7 @@ export class PuppeteerManager {
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 "--window-size=1000,700",
+                "--disable-features=UseEcoQoSForBackgroundProcess" // 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
               ],
               pipe: true,
               protocolTimeout: 240000, // 设置协议超时时间为240秒 / 4分钟

@@ -37,6 +37,14 @@ export function registerWebviewCommands(): vscode.Disposable[] {
         return;
       }
 
+      // 检查收藏列表是否正在加载中
+      if (Store.Zhihu.collections.isLoading) {
+        vscode.window.showInformationMessage(
+          "收藏列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
       // 根据item的id推断来源类型
       let inferredSourceType: "collection" | "recommend" | "hot" | "search" = "recommend";
       if (item.id.startsWith("collection-")) {

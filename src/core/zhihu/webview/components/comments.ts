@@ -1,4 +1,3 @@
-import axios from "axios";
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
 import { Store } from "../../../stores";
@@ -1381,7 +1380,7 @@ export class CommentsManager {
     try {
       const url = this.commentRequestURL(answerId, offset, limit);
       console.log("评论获取API链接：", url);
-      const response = await axios.get(url, {
+      const response = await fetch(url, {
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -1389,14 +1388,33 @@ export class CommentsManager {
         },
       });
 
+      if (!response.ok) {
+        const error: any = new Error(`HTTP error! status: ${response.status}`);
+        try {
+          error.response = {
+            status: response.status,
+            data: await response.json(),
+          };
+        } catch (e) {
+          error.response = {
+            status: response.status,
+            data: await response.text(),
+          };
+        }
+        throw error;
+      }
+
+      const responseData = await response.json();
+      console.log("评论获取API返回数据：", responseData);
+
       // 简化判断逻辑：当返回的数据长度小于请求的limit，则认为是最后一页
       const is_end =
-        response.data.data.length < limit ||
-        response.data.data.length === 0 ||
-        !response.data.data;
+        responseData.data.length < limit ||
+        responseData.data.length === 0 ||
+        !responseData.data;
 
       return {
-        comments: response.data.data.map((comment: any) => {
+        comments: responseData.data.map((comment: any) => {
           // 处理 address_text，将其转换为 comment_tag
           const addressTag = comment.address_text
             ? {
@@ -1481,9 +1499,9 @@ export class CommentsManager {
         paging: {
           is_end: is_end,
           is_start: offset === 0,
-          next: response.data.paging.next,
-          previous: response.data.paging.previous,
-          totals: response.data.common_counts || 0,
+          next: responseData.paging.next,
+          previous: responseData.paging.previous,
+          totals: responseData.common_counts || 0,
           current: Math.floor(offset / limit) + 1,
         },
       };
@@ -1533,7 +1551,7 @@ export class CommentsManager {
   }> {
     try {
       const url = this.articleCommentRequestURL(articleId, offset, limit);
-      const response = await axios.get(url, {
+      const response = await fetch(url, {
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -1541,15 +1559,33 @@ export class CommentsManager {
         },
       });
 
+      if (!response.ok) {
+        const error: any = new Error(`HTTP error! status: ${response.status}`);
+        try {
+          error.response = {
+            status: response.status,
+            data: await response.json(),
+          };
+        } catch (e) {
+          error.response = {
+            status: response.status,
+            data: await response.text(),
+          };
+        }
+        throw error;
+      }
+
+      const responseData = await response.json();
+
       // 判断是否为最后一页：优先使用API返回的paging信息
       const is_end =
-        response.data.paging?.is_end !== false ||
-        response.data.data.length < limit ||
-        response.data.data.length === 0 ||
-        !response.data.data;
+        responseData.paging?.is_end !== false ||
+        responseData.data.length < limit ||
+        responseData.data.length === 0 ||
+        !responseData.data;
 
       return {
-        comments: response.data.data.map((comment: any) => {
+        comments: responseData.data.map((comment: any) => {
           return {
             id: comment.id,
             type: "comment" as const,
@@ -1593,10 +1629,10 @@ export class CommentsManager {
         paging: {
           is_end: is_end,
           is_start:
-            response.data.paging?.is_start !== false || offset === 0 || !offset,
-          next: response.data.paging?.next || null,
-          previous: response.data.paging?.previous || null,
-          totals: response.data.paging?.totals || response.data.data.length,
+            responseData.paging?.is_start !== false || offset === 0 || !offset,
+          next: responseData.paging?.next || null,
+          previous: responseData.paging?.previous || null,
+          totals: responseData.paging?.totals || responseData.data.length,
           current: Math.floor(offset / limit) + 1,
         },
       };
@@ -1648,13 +1684,33 @@ export class CommentsManager {
   }> {
     try {
       const url = this.childCommentRequestURL(commentId, offset, limit);
-      const response = await axios.get(url, {
+      console.log("子评论获取API链接：", url);
+      const response = await fetch(url, {
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
           Cookie: CookieManager.getCookie(),
         },
       });
+
+      if (!response.ok) {
+        const error: any = new Error(`HTTP error! status: ${response.status}`);
+        try {
+          error.response = {
+            status: response.status,
+            data: await response.json(),
+          };
+        } catch (e) {
+          error.response = {
+            status: response.status,
+            data: await response.text(),
+          };
+        }
+        throw error;
+      }
+
+      const responseData = await response.json();
+      console.log("子评论获取API返回数据：", responseData);
 
       // 从next和previous URL中提取offset参数
       const extractOffset = (url: string | null): string | null => {
@@ -1672,10 +1728,10 @@ export class CommentsManager {
 
       // 检查是否为最后一页
       const is_end =
-        response.data.data.length === 0 ||
-        response.data.data.length < limit ||
-        !response.data.data ||
-        !response.data.paging.next;
+        responseData.data.length === 0 ||
+        responseData.data.length < limit ||
+        !responseData.data ||
+        !responseData.paging.next;
 
       // 计算当前页码，这里需要根据API的特性做调整
       const currentPage =
@@ -1684,7 +1740,7 @@ export class CommentsManager {
           : Math.floor(Number(offset) / limit) + 1;
 
       return {
-        comments: response.data.data.map((comment: any) => {
+        comments: responseData.data.map((comment: any) => {
           // 处理子评论的 address_text，将其转换为 comment_tag
           const addressTag = comment.address_text
             ? {
@@ -1711,11 +1767,11 @@ export class CommentsManager {
         paging: {
           is_end: is_end,
           is_start: offset === 0 || offset === "0" || !offset,
-          next: response.data.paging.next,
-          previous: response.data.paging.previous,
-          totals: response.data.counts.total_counts,
-          next_offset: extractOffset(response.data.paging.next),
-          previous_offset: extractOffset(response.data.paging.previous),
+          next: responseData.paging.next,
+          previous: responseData.paging.previous,
+          totals: responseData.counts.total_counts,
+          next_offset: extractOffset(responseData.paging.next),
+          previous_offset: extractOffset(responseData.paging.previous),
           current: currentPage,
         },
       };
@@ -1836,8 +1892,10 @@ export class CommentsManager {
         return;
       }
 
+      console.log(`加载专栏评论 URL：${requestUrl}`);
+
       // 发送请求
-      const response = await axios.get(requestUrl, {
+      const response = await fetch(requestUrl, {
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -1845,8 +1903,27 @@ export class CommentsManager {
         },
       });
 
+      if (!response.ok) {
+        const error: any = new Error(`HTTP error! status: ${response.status}`);
+        try {
+          error.response = {
+            status: response.status,
+            data: await response.json(),
+          };
+        } catch (e) {
+          error.response = {
+            status: response.status,
+            data: await response.text(),
+          };
+        }
+        throw error;
+      }
+
+      const responseData = await response.json();
+      console.log("专栏评论获取API返回数据：", responseData);
+
       // 处理响应数据
-      const comments = response.data.data.map((comment: any) => {
+      const comments = responseData.data.map((comment: any) => {
         return {
           id: comment.id,
           type: "comment" as const,
@@ -1896,14 +1973,14 @@ export class CommentsManager {
 
       // 更新分页信息
       currentAnswer.commentPaging = {
-        is_end: response.data.paging?.is_end !== false || comments.length === 0,
+        is_end: responseData.paging?.is_end !== false || comments.length === 0,
         is_start:
-          response.data.paging?.is_start !== false || direction === "current",
-        next: response.data.paging?.next || null,
-        previous: response.data.paging?.previous || null,
-        totals: response.data.paging?.totals || comments.length,
+          responseData.paging?.is_start !== false || direction === "current",
+        next: responseData.paging?.next || null,
+        previous: responseData.paging?.previous || null,
+        totals: responseData.paging?.totals || comments.length,
         current:
-          response.data.paging?.current ||
+          responseData.paging?.current ||
           (direction === "current"
             ? 1
             : (currentAnswer.commentPaging?.current || 1) +

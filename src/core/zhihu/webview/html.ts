@@ -251,6 +251,12 @@ export class HtmlRenderer {
     // 生成伪装界面控制脚本（如果启用）
     const disguiseControlScript = enableDisguise ? disguiseScript : "";
 
+    // 判断是否为文章类型，生成对应的键盘提示
+    const isArticle =
+      webview.url.includes("zhuanlan.zhihu.com/p/") ||
+      webview.url.includes("/p/");
+    const keyboardTips = isArticle ? articleKeyboardTips : questionKeyboardTips;
+
     // 填充脚本模板
     const scriptContent = scriptsTemplate
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
@@ -267,12 +273,6 @@ export class HtmlRenderer {
         "${RELATED_QUESTIONS_DATA}",
         JSON.stringify(article.relatedQuestions || [])
       );
-
-    // 判断是否为文章类型，生成对应的键盘提示
-    const isArticle =
-      webview.url.includes("zhuanlan.zhihu.com/p/") ||
-      webview.url.includes("/p/");
-    const keyboardTips = isArticle ? articleKeyboardTips : questionKeyboardTips;
 
     // 最后一步，组装全部的HTML，嘎嘎嘎~
     return articleTemplate
@@ -291,7 +291,7 @@ export class HtmlRenderer {
       .replace("${QUESTION_DETAIL_CSS}", questionDetailCss)
       .replace(
         "${RELATED_QUESTION_COMPONENT_ICON}",
-        relatedQuestionsIcon.render()
+        isArticle ? "" : relatedQuestionsIcon.render()
       )
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())

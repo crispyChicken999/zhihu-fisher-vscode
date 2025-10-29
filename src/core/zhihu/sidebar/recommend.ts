@@ -117,6 +117,7 @@ export class sidebarRecommendListDataProvider
       vscode.window.showInformationMessage("正在加载中推荐，请稍候...");
       return;
     }
+
     try {
       this.loadingStatusItem.show();
 
@@ -682,7 +683,7 @@ export class sidebarRecommendListDataProvider
 
       // 在推荐列表底部添加刷新按钮
       const refreshButton = new StatusTreeItem(
-        "看完啦？点我刷新推荐列表~ (￣▽￣)ノ",
+        "看完啦~😎 点我刷新推荐列表~ (￣▽￣)ノ",
         new vscode.ThemeIcon("refresh"),
         {
           command: "zhihu-fisher.refreshRecommendList",

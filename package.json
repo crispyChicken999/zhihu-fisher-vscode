@@ -2,7 +2,7 @@
   "name": "zhihu-fisher",
   "displayName": "Zhihu Fisher",
   "description": "VSCode 刷知乎摸鱼插件 | 支持浏览知乎推荐、热榜、搜索内容，提供沉浸模式、图片大小调整、灰色模式、智能伪装模式。支持评论区、收藏夹等功能。",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.82.0"
@@ -863,9 +863,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "axios": "^1.8.4",
     "cheerio": "^1.0.0",
-    "jsdom": "^26.1.0",
     "marked": "^15.0.8",
     "puppeteer": "^24.6.1"
   }

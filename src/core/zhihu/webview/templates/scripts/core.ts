@@ -17,7 +17,7 @@ let currentAnswerIndex = \${CURRENT_ANSWER_INDEX};
 // 已加载回答数
 let loadedAnswerCount = \${LOADED_ANSWER_COUNT};
 
-// 文章ID
+// 内容ID - 也就是详情页webview的标识符
 const articleId = "\${ARTICLE_ID}";
 
 // 来源类型

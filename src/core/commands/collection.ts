@@ -17,7 +17,40 @@ export function registerCollectionCommands(
   // 注册刷新收藏夹命令
   const refreshCollectionsCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshCollections",
-    () => sidebarCollections.refresh()
+    () => {
+      if (Store.Zhihu.hot.isLoading) {
+        vscode.window.showInformationMessage(
+          "热榜列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查推荐列表是否正在加载中
+      if (Store.Zhihu.recommend.isLoading) {
+        vscode.window.showInformationMessage(
+          "推荐列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查搜索列表是否正在加载中
+      if (Store.Zhihu.search.isLoading) {
+        vscode.window.showInformationMessage(
+          "搜索结果正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查收藏列表是否正在加载中
+      if (Store.Zhihu.collections.isLoading) {
+        vscode.window.showInformationMessage(
+          "收藏列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      sidebarCollections.refresh();
+    }
   );
   commands.push(refreshCollectionsCommand);
 
@@ -405,7 +438,10 @@ export function registerCollectionCommands(
       });
 
       // 获取公开状态
-      const visibilityOptions = ["公开（有其他人关注此收藏夹时不可设置为私密）", "私密（只有你自己可以查看这个收藏夹）"];
+      const visibilityOptions = [
+        "公开（有其他人关注此收藏夹时不可设置为私密）",
+        "私密（只有你自己可以查看这个收藏夹）",
+      ];
       const selectedVisibility = await vscode.window.showQuickPick(
         visibilityOptions,
         {
@@ -417,7 +453,8 @@ export function registerCollectionCommands(
         return; // 用户取消了选择
       }
 
-      const isPublic = selectedVisibility === "公开（有其他人关注此收藏夹时不可设置为私密）";
+      const isPublic =
+        selectedVisibility === "公开（有其他人关注此收藏夹时不可设置为私密）";
 
       // 显示加载进度
       await vscode.window.withProgress(
@@ -466,7 +503,7 @@ export function registerCollectionCommands(
                   type: "created",
                   totalCount: result.collection.item_count,
                   isPrivate: !isPublic, // 根据用户选择的可见性设置私密状态
-                  lastUpdated: new Date().toISOString().split('T')[0], // 设置当前日期为更新时间
+                  lastUpdated: new Date().toISOString().split("T")[0], // 设置当前日期为更新时间
                 };
 
                 // 添加到我创建的收藏夹列表的开头

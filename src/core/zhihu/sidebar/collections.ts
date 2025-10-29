@@ -1,4 +1,3 @@
-import axios from "axios";
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
 import { Store } from "../../stores";
@@ -142,13 +141,6 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
     const shouldShowImage =
       mediaDisplayMode !== "none" && !!collectionItem.thumbnail;
 
-    // 构建更好的tooltip
-    const typeMap = {
-      article: "文章",
-      question: "问题",
-      answer: "回答",
-    };
-
     // 设置图标：根据配置和缩略图可用性决定
     if (shouldShowImage) {
       try {
@@ -186,42 +178,27 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
     }
 
     // 构建tooltip
+    const markdownTooltip = new vscode.MarkdownString();
+    markdownTooltip.isTrusted = true;
+    markdownTooltip.supportThemeIcons = true;
+    markdownTooltip.supportHtml = true;
+
+    const typeLabel =
+      collectionItem.type === "article"
+        ? `**<span style="color:#2196F3;background-color:#2196F333;">&nbsp;文章&nbsp;</span>**`
+        : `**<span style="color:#f68b83;background-color:#f68b8333;">&nbsp;问题&nbsp;</span>**`;
+
+    markdownTooltip.appendMarkdown(
+      `#### ${typeLabel} <b>${collectionItem.title}</b> \n\n`
+    );
+
+    markdownTooltip.appendMarkdown("\n ___ \n\n");
+
+    if (collectionItem.excerpt) {
+      markdownTooltip.appendMarkdown(`${collectionItem.author!.name ?? '匿名用户'}：${collectionItem.excerpt}\n\n`);
+    }
+
     if (shouldShowImage) {
-      const markdownTooltip = new vscode.MarkdownString();
-      markdownTooltip.supportHtml = true;
-
-      if (collectionItem.question && collectionItem.type === "answer") {
-        markdownTooltip.appendMarkdown(
-          `#### **问题**: ${collectionItem.question.title}`
-        );
-      } else if (collectionItem.type === "article") {
-        markdownTooltip.appendMarkdown(
-          `#### **文章**: ${collectionItem.title}`
-        );
-      } else if (collectionItem.type === "question") {
-        markdownTooltip.appendMarkdown(
-          `#### **问题**: ${collectionItem.title}`
-        );
-      } else {
-        markdownTooltip.appendMarkdown(`#### **${collectionItem.title}**`);
-      }
-
-      markdownTooltip.appendMarkdown(
-        `**[${typeMap[collectionItem.type]}]**\n\n`
-      );
-
-      if (collectionItem.author) {
-        markdownTooltip.appendMarkdown(
-          `**作者**: ${collectionItem.author.name}\n\n`
-        );
-      }
-
-      markdownTooltip.appendMarkdown("\n ___ \n\n");
-
-      if (collectionItem.excerpt) {
-        markdownTooltip.appendMarkdown(`${collectionItem.excerpt}\n\n`);
-      }
-
       // 根据显示模式和缩放比例计算图片宽度
       let imageWidth: number;
       if (mediaDisplayMode === "normal") {
@@ -238,58 +215,22 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
       markdownTooltip.appendMarkdown(
         `<img src="${collectionItem.thumbnail}" alt="缩略图" width="${imageWidth}" />\n\n`
       );
-
-      if (collectionItem.created) {
-        markdownTooltip.appendMarkdown("\n ___ \n\n");
-
-        const date = new Date(collectionItem.created);
-        markdownTooltip.appendMarkdown(
-          `**收藏时间**: ${date.toLocaleString()}`
-        );
-      }
-
-      // Alt键提示
-      markdownTooltip.appendMarkdown(`\n ___ \n\n *按住 Alt 键将鼠标悬停*`);
-
-      markdownTooltip.supportHtml = true;
-      markdownTooltip.isTrusted = true;
-      this.tooltip = markdownTooltip;
-    } else {
-      // 不显示图片时的tooltip
-      let tooltipContent = "";
-
-      if (collectionItem.question && collectionItem.type === "answer") {
-        tooltipContent += `**问题**: ${collectionItem.question.title}`;
-      } else if (collectionItem.type === "article") {
-        tooltipContent += `**标题**: ${collectionItem.title}`;
-      } else if (collectionItem.type === "question") {
-        tooltipContent += `**问题**: ${collectionItem.title}`;
-      }
-
-      tooltipContent += `**[${typeMap[collectionItem.type]}]**\n\n`;
-
-      if (collectionItem.author) {
-        tooltipContent += `**作者**: ${collectionItem.author.name}\n\n`;
-      }
-
-      tooltipContent += "\n ___ \n\n";
-
-      if (collectionItem.excerpt) {
-        tooltipContent += `${collectionItem.excerpt}\n\n`;
-      }
-
-      if (collectionItem.created) {
-        tooltipContent += "\n ___ \n\n";
-
-        const date = new Date(collectionItem.created);
-        tooltipContent += `**发布时间**: ${date.toLocaleString()}`;
-      }
-
-      // Alt键提示
-      tooltipContent += `\n ___ \n\n *按住 Alt 键将鼠标悬停*`;
-
-      this.tooltip = new vscode.MarkdownString(tooltipContent);
     }
+
+    if (collectionItem.created) {
+      markdownTooltip.appendMarkdown("\n ___ \n\n");
+
+      const date = new Date(collectionItem.created);
+      markdownTooltip.appendMarkdown(
+        `**收藏时间**: ${date.toLocaleString()}`
+      );
+    }
+
+    markdownTooltip.appendMarkdown(
+      `\n ___ \n\n **[原文链接](${collectionItem.url})**  |  *按住 Alt 键将鼠标悬停* `
+    );
+
+    this.tooltip = markdownTooltip;
 
     // 移除重复的appendMarkdown调用，因为已经在上面各自的分支中添加了
 
@@ -307,13 +248,6 @@ export class CollectionItemTreeItem extends vscode.TreeItem {
       title: "打开内容",
       arguments: [collectionItem, collectionId],
     };
-
-    // 如果有图片且需要显示，设置描述以显示图片
-    if (shouldShowImage) {
-      this.description = `${typeMap[collectionItem.type]}`;
-    } else {
-      this.description = typeMap[collectionItem.type];
-    }
   }
 }
 
@@ -801,7 +735,7 @@ export class sidebarCollectionsDataProvider
   private async getUserInfo(): Promise<ZhihuUser | null> {
     try {
       const cookie = CookieManager.getCookie();
-      const response = await axios.get(
+      const response = await fetch(
         "https://www.zhihu.com/api/v4/me?include=is_realname",
         {
           headers: {
@@ -812,7 +746,11 @@ export class sidebarCollectionsDataProvider
         }
       );
 
-      return response.data as ZhihuUser;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return (await response.json()) as ZhihuUser;
     } catch (error) {
       console.error("获取用户信息失败:", error);
       return null;
@@ -1184,7 +1122,7 @@ export class sidebarCollectionsDataProvider
   ): Promise<{ items: CollectionItem[]; totalCount: number }> {
     try {
       const cookie = CookieManager.getCookie();
-      const response = await axios.get(
+      const response = await fetch(
         `https://www.zhihu.com/api/v4/collections/${collectionId}/items?offset=${offset}&limit=20`,
         {
           headers: {
@@ -1195,9 +1133,14 @@ export class sidebarCollectionsDataProvider
         }
       );
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
       const items: CollectionItem[] = [];
-      const data = response.data.data || [];
-      const totalCount = response.data.paging?.totals || 0;
+      const data = responseData.data || [];
+      const totalCount = responseData.paging?.totals || 0;
 
       for (const item of data) {
         const content = item.content;

@@ -1,4 +1,3 @@
-import axios from "axios";
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
 import { Store } from "../../stores";
@@ -81,7 +80,8 @@ export class sidebarHotListDataProvider
   // 加载热榜内容
   private async getSideBarHotList(): Promise<void> {
     /**
-     * 虽然这个是通过axios和cheerio来加载列表的，但是呢为了一致性。
+     * 虽然这个是通过axios和cheerio来加载列表的，但是呢，最好还是等待puppeteer能正常启动再去加载。
+     * 不然就容易出现困惑，明明热榜加载出来了，但是点不开文章啥的。
      * 因为其他地方用到puppeteer那么如果，puppeteer启动失败的话，也不让热榜加载出来。
      * 因为加载文章也需要puppeteer，只加载了热榜列表却点不开，加载列表就没意义了。
      * 那么这里也做一下判断。
@@ -174,15 +174,18 @@ export class sidebarHotListDataProvider
       throw new Error("需要设置知乎Cookie才能访问");
     }
 
-    const response = await axios.get("https://www.zhihu.com/hot", {
+    let response = await fetch("https://www.zhihu.com/hot", {
       headers,
-      timeout: 15000, // 增加超时时间到15秒
-      maxRedirects: 5, // 允许重定向
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
     console.log("成功获取知乎热榜HTML，开始解析...");
 
-    const $ = cheerio.load(response.data);
+    const responseData = await response.text();
+    const $ = cheerio.load(responseData);
 
     // 检查是否有登录墙或验证码
     const isNeedLogin = !!$(".SignFlow-submitButton").length;

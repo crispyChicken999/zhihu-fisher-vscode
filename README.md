@@ -6,7 +6,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.4.7-green.svg)
+![Version](https://img.shields.io/badge/Version-0.4.8-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
 
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、图片/视频展示方式、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索、收藏夹等功能。
@@ -16,6 +16,7 @@
 - 假装敲代码，实则在 VSCode 中刷知乎！
 - 其实就是想上班摸会鱼，直接网页刷知乎容易被抓包，而且网页有很多图片，老板同事一看就知道你小子在摸鱼。（工资-1😅）
 - 结果发现市场中的那些插件，基本上都是几年前的产物了，不更新了或者用不了 😥，索性就直接写了一个。
+- 写这个的初衷就是自己用，顺便开源出来给大家用用，毕竟 VSCode 现在这么火，能在里面愉快地摸鱼也是不错的选择 😁
 - 如果有更多的意见和建议，欢迎提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)。我会尽快修复和更新~ 欢迎许愿 🤓☝
 - 若本插件对您有所帮助，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 - 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！🤣 独摸摸不如众摸摸~
@@ -154,9 +155,9 @@
 
 **简单说就是：Cookie 就存在你电脑里，插件不会偷偷上传，要来也没用 😂**
 
-你的 Cookie 就躺在 VSCode 的配置文件里，哪都不会去。插件只是用它来帮你刷刷知乎，看看推荐和热榜，别的啥都不干。你随时想删就删，想换就换，完全由你做主。
+你的 Cookie 存在 VSCode 的配置文件里面。插件只是用它来帮你刷刷知乎，看看推荐和热榜内容而已。
 
-代码完全开源，不会上传/分析你的数据，不信的话可以翻翻源码，或者私聊我 😁
+代码完全开源，不会上传/分析你的数据，不信的话可以你可以翻翻源码 😁
 
 </details>
 
@@ -166,7 +167,7 @@
 
 ## 💥 更新日志 💥
 
-查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
+- 查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
 
 ## 📝 TODO 📝
 
