@@ -250,6 +250,64 @@ export const commentsCss = `
   align-items: center;
 }
 
+/* 评论点赞按钮样式 */
+.zhihu-comment-like-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border-radius: 4px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.zhihu-comment-like-btn:hover:not(:disabled) {
+  color: var(--vscode-foreground);
+}
+
+.zhihu-comment-like-btn.liked {
+  color: #0084ff;
+}
+
+.zhihu-comment-like-btn.liked .like-icon {
+  fill: #0084ff;
+}
+
+.zhihu-comment-like-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.zhihu-comment-like-btn .like-icon {
+  transition: all 0.2s ease;
+}
+
+.zhihu-comment-like-btn:hover:not(:disabled) .like-icon {
+  transform: scale(1.1);
+}
+
+.zhihu-comment-like-btn .like-count {
+  font-weight: 500;
+  min-width: 16px;
+  text-align: left;
+}
+
+/* 点赞动画效果 */
+@keyframes 0{
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.zhihu-comment-like-btn.liked .like-icon {
+  animation: like-bounce 0.3s ease;
+}
+
 /* 子评论容器 */
 .zhihu-child-comments {
   margin-top: 1em;
@@ -303,6 +361,9 @@ export const commentsCss = `
 }
 
 .zhihu-child-comment-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
   font-size: 0.9em;
   opacity: 0.8;
 }

@@ -138,4 +138,56 @@ function loadArticleComments(articleId, direction) {
     direction: direction
   });
 }
+
+/**
+ * 评论点赞功能
+ */
+function likeComment(commentId, isLike) {
+  // 找到对应的评论元素
+  const commentElements = document.querySelectorAll(\`[data-comment-id="\${commentId}"]\`);
+
+  commentElements.forEach(commentElement => {
+    // 判断是按钮本身还是包含按钮的容器
+    let likeBtn = null;
+    if (commentElement.classList.contains('zhihu-comment-like-btn')) {
+      // 如果选中的就是按钮本身（子评论的情况）
+      likeBtn = commentElement;
+    } else {
+      // 如果选中的是容器（主评论的情况）
+      likeBtn = commentElement.querySelector('.zhihu-comment-like-btn');
+    }
+
+    if (!likeBtn) return;
+
+    const likeIcon = likeBtn.querySelector('.like-icon');
+    const likeCountSpan = likeBtn.querySelector('.like-count');
+
+    // 禁用按钮，防止重复点击
+    likeBtn.disabled = true;
+    likeBtn.style.opacity = '0.6';
+
+    // 乐观更新UI
+    const currentCount = parseInt(likeCountSpan.textContent) || 0;
+    if (isLike) {
+      likeBtn.classList.add('liked');
+      likeIcon.setAttribute('fill', 'currentColor');
+      likeCountSpan.textContent = currentCount + 1 || 1;
+      likeBtn.setAttribute('onclick', \`likeComment('\${commentId}', false)\`);
+      likeBtn.title = '取消点赞';
+    } else {
+      likeBtn.classList.remove('liked');
+      likeIcon.setAttribute('fill', 'none');
+      likeCountSpan.textContent = currentCount - 1 > 0 ? currentCount - 1 : 0;
+      likeBtn.setAttribute('onclick', \`likeComment('\${commentId}', true)\`);
+      likeBtn.title = '点赞';
+    }
+  });
+
+  // 发送消息到后端
+  vscode.postMessage({
+    command: "likeComment",
+    commentId: commentId,
+    isLike: isLike
+  });
+}
 `;

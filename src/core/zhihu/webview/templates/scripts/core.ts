@@ -115,6 +115,70 @@ window.addEventListener('message', event => {
     }, 100);
   }
 
+  // 处理评论点赞成功的消息
+  else if (message.command === 'likeCommentSuccess') {
+    const commentElements = document.querySelectorAll(\`[data-comment-id="\${message.commentId}"]\`);
+
+    commentElements.forEach(commentElement => {
+      // 判断是按钮本身还是包含按钮的容器
+      let likeBtn = null;
+      if (commentElement.classList.contains('zhihu-comment-like-btn')) {
+        // 如果选中的就是按钮本身（子评论的情况）
+        likeBtn = commentElement;
+      } else {
+        // 如果选中的是容器（主评论的情况）
+        likeBtn = commentElement.querySelector('.zhihu-comment-like-btn');
+      }
+
+      if (likeBtn) {
+        likeBtn.disabled = false;
+        likeBtn.style.opacity = '1';
+        likeBtn.setAttribute('data-is-liked', message.isLike);
+      }
+    });
+  }
+
+  // 处理评论点赞失败的消息
+  else if (message.command === 'likeCommentFailed') {
+    const commentElements = document.querySelectorAll(\`[data-comment-id="\${message.commentId}"]\`);
+
+    commentElements.forEach(commentElement => {
+      // 判断是按钮本身还是包含按钮的容器
+      let likeBtn = null;
+      if (commentElement.classList.contains('zhihu-comment-like-btn')) {
+        // 如果选中的就是按钮本身（子评论的情况）
+        likeBtn = commentElement;
+      } else {
+        // 如果选中的是容器（主评论的情况）
+        likeBtn = commentElement.querySelector('.zhihu-comment-like-btn');
+      }
+
+      if (!likeBtn) return;
+
+      const likeIcon = likeBtn.querySelector('.like-icon');
+      const likeCountSpan = likeBtn.querySelector('.like-count');
+      const currentCount = parseInt(likeCountSpan.textContent) || 0;
+
+      // 回滚状态
+      if (message.isLike) {
+        likeBtn.classList.remove('liked');
+        likeIcon.setAttribute('fill', 'none');
+        likeCountSpan.textContent = currentCount - 1 > 0 ? currentCount - 1 : '';
+        likeBtn.setAttribute('onclick', \`likeComment('\${message.commentId}', true)\`);
+        likeBtn.title = '点赞';
+      } else {
+        likeBtn.classList.add('liked');
+        likeIcon.setAttribute('fill', 'currentColor');
+        likeCountSpan.textContent = currentCount + 1 || 1;
+        likeBtn.setAttribute('onclick', \`likeComment('\${message.commentId}', false)\`);
+        likeBtn.title = '取消点赞';
+      }
+
+      likeBtn.disabled = false;
+      likeBtn.style.opacity = '1';
+    });
+  }
+
   // 处理更新子评论弹窗的消息
   else if (message.command === 'updateChildCommentsModal') {
     const mb = document.querySelector('.comments-modal-container');

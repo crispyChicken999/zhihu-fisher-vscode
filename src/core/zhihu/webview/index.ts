@@ -1893,6 +1893,15 @@ export class WebviewManager {
           );
           break;
 
+        case "likeComment":
+          // 处理评论点赞请求
+          await this.handleLikeComment(
+            webviewId,
+            message.commentId,
+            message.isLike
+          );
+          break;
+
         case "openZhihuLink":
           // 处理在VSCode中打开知乎链接的请求
           await this.handleOpenZhihuLink(message.url);
@@ -2223,6 +2232,116 @@ export class WebviewManager {
       // 更新界面
       this.updateWebview(webviewId);
     }
+  }
+
+  /**
+   * 处理评论点赞
+   * @param webviewId WebView的ID
+   * @param commentId 评论ID
+   * @param isLike 是否点赞（true=点赞，false=取消点赞）
+   */
+  private static async handleLikeComment(
+    webviewId: string,
+    commentId: string,
+    isLike: boolean
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      console.log(`${isLike ? '点赞' : '取消点赞'}评论: ${commentId}`);
+
+      // 调用API
+      const result = await ZhihuApiService.likeComment(commentId, isLike);
+
+      if (result.success || result) {
+        // 更新评论的点赞状态
+        this.updateCommentLikeStatus(webviewItem, commentId, isLike);
+
+        // 发送成功消息到前端
+        webviewItem.webviewPanel.webview.postMessage({
+          command: "likeCommentSuccess",
+          commentId: commentId,
+          isLike: isLike
+        });
+
+        console.log(`评论${isLike ? '点赞' : '取消点赞'}成功`);
+      } else {
+        throw new Error("点赞失败");
+      }
+    } catch (error: any) {
+      console.error("评论点赞时出错:", error);
+
+      // 发送失败消息到前端
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "likeCommentFailed",
+        commentId: commentId,
+        isLike: isLike,
+        error: error.message || "点赞失败"
+      });
+
+      // 显示错误提示
+      if (error.message?.includes("403")) {
+        vscode.window.showErrorMessage("无法点赞评论：可能需要登录或权限不足");
+      } else {
+        vscode.window.showErrorMessage(`评论点赞失败: ${error.message || "请检查网络连接和Cookie设置"}`);
+      }
+    }
+  }
+
+  /**
+   * 更新评论的点赞状态
+   * @param webviewItem WebView项
+   * @param commentId 评论ID
+   * @param isLike 是否点赞
+   */
+  private static updateCommentLikeStatus(
+    webviewItem: WebViewItem,
+    commentId: string,
+    isLike: boolean
+  ): void {
+    const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
+    const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
+
+    if (!currentAnswer || !currentAnswer.commentList) {
+      return;
+    }
+
+    // 递归查找并更新评论
+    const updateComment = (comments: any[]): boolean => {
+      for (const comment of comments) {
+        if (comment.id == commentId) {
+          // 同时更新 liked 和 is_liked 字段
+          comment.liked = isLike;
+          comment.is_liked = isLike;
+          // 更新点赞数
+          comment.vote_count = (comment.vote_count || 0) + (isLike ? 1 : -1);
+          if (comment.vote_count < 0) {
+            comment.vote_count = 0;
+          }
+          return true;
+        }
+
+        // 检查子评论
+        if (comment.child_comments && comment.child_comments.length > 0) {
+          if (updateComment(comment.child_comments)) {
+            return true;
+          }
+        }
+
+        // 检查所有子评论
+        if (comment.total_child_comments && comment.total_child_comments.length > 0) {
+          if (updateComment(comment.total_child_comments)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    updateComment(currentAnswer.commentList);
   }
 
   /** 处理在VSCode中打开知乎链接的请求 */

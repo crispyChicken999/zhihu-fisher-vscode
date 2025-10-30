@@ -609,6 +609,23 @@ export class CommentsComponent implements Component {
                 mediaDisplayMode
               );
               const childVoteCount = child.vote_count || 0;
+              const childIsLiked = child.liked || child.is_liked || false;
+
+              // 子评论点赞按钮
+              const childLikeButtonHtml = `
+                <button
+                  class="zhihu-comment-like-btn ${childIsLiked ? 'liked' : ''}"
+                  onclick="likeComment('${child.id}', ${!childIsLiked})"
+                  title="${childIsLiked ? '取消点赞' : '点赞'}"
+                  data-comment-id="${child.id}"
+                  data-is-liked="${childIsLiked}"
+                >
+                  <svg class="like-icon" width="12" height="12" viewBox="0 0 24 24" fill="${childIsLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                  </svg>
+                  <span class="like-count">${childVoteCount > 0 ? childVoteCount : 0}</span>
+                </button>
+              `;
 
               // 渲染子评论标签（移到footer）
               let childCommentTagsHtml = "";
@@ -723,11 +740,7 @@ export class CommentsComponent implements Component {
                 <div class="zhihu-child-comment-footer">
                   <span>${CommentsUtils.formatTime(child.created_time)}</span>
                   ${childCommentTagsHtml ? ` · ${childCommentTagsHtml}` : ""}
-                  ${
-                    childVoteCount > 0
-                      ? ` · <span>${childVoteCount}赞</span>`
-                      : ""
-                  }
+                  ${childLikeButtonHtml}
                 </div>
               </div>
             `;
@@ -747,6 +760,22 @@ export class CommentsComponent implements Component {
       `;
     }
 
+    // 处理点赞按钮 - 优先使用接口返回的 liked 字段
+    const isLiked = comment.liked || comment.is_liked || false;
+    const likeButtonHtml = `
+      <button
+        class="zhihu-comment-like-btn ${isLiked ? 'liked' : ''}"
+        onclick="likeComment('${comment.id}', ${!isLiked})"
+        title="${isLiked ? '取消点赞' : '点赞'}"
+        data-is-liked="${isLiked}"
+      >
+        <svg class="like-icon" width="14" height="14" viewBox="0 0 24 24" fill="${isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+        </svg>
+        <span class="like-count">${voteCount > 0 ? voteCount : ''}</span>
+      </button>
+    `;
+
     return `
       <div class="zhihu-comment" data-comment-id="${comment.id}">
         <div class="zhihu-comment-header">
@@ -757,11 +786,7 @@ export class CommentsComponent implements Component {
         <div class="zhihu-comment-footer">
           <span>${createdTime}</span>
           ${commentTagsHtml ? ` · ${commentTagsHtml}` : ""}
-          ${
-            voteCount > 0
-              ? ` · <span class="zhihu-comment-like">${voteCount}赞</span>`
-              : ""
-          }
+          ${likeButtonHtml}
         </div>
         ${childCommentsHtml}
         ${showMoreChildCommentsButton}
@@ -912,6 +937,23 @@ export class ChildCommentsModalComponent implements Component {
     const createdTime = CommentsUtils.formatTime(
       this.parentComment.created_time
     );
+    const parentIsLiked = this.parentComment.liked || this.parentComment.is_liked || false;
+
+    // 父评论点赞按钮（弹窗中）
+    const parentLikeButtonHtml = `
+      <button
+        class="zhihu-comment-like-btn ${parentIsLiked ? 'liked' : ''}"
+        onclick="likeComment('${this.parentComment.id}', ${!parentIsLiked})"
+        title="${parentIsLiked ? '取消点赞' : '点赞'}"
+        data-comment-id="${this.parentComment.id}"
+        data-is-liked="${parentIsLiked}"
+      >
+        <svg class="like-icon" width="14" height="14" viewBox="0 0 24 24" fill="${parentIsLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+        </svg>
+        <span class="like-count">${voteCount > 0 ? voteCount : 0}</span>
+      </button>
+    `;
 
     // 渲染父评论标签（移到footer）
     let parentCommentTagsHtml = "";
@@ -1018,6 +1060,23 @@ export class ChildCommentsModalComponent implements Component {
         );
         const childVoteCount = child.like_count || 0;
         const childCreatedTime = CommentsUtils.formatTime(child.created_time);
+        const childIsLiked = child.liked || child.is_liked || false;
+
+        // 子评论点赞按钮（弹窗中）
+        const childLikeButtonHtml = `
+          <button
+            class="zhihu-comment-like-btn ${childIsLiked ? 'liked' : ''}"
+            onclick="likeComment('${child.id}', ${!childIsLiked})"
+            title="${childIsLiked ? '取消点赞' : '点赞'}"
+            data-comment-id="${child.id}"
+            data-is-liked="${childIsLiked}"
+          >
+            <svg class="like-icon" width="12" height="12" viewBox="0 0 24 24" fill="${childIsLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+            </svg>
+            <span class="like-count">${childVoteCount > 0 ? childVoteCount : 0}</span>
+          </button>
+        `;
 
         // 渲染子评论标签（移到footer）
         let childCommentTagsHtml = "";
@@ -1115,11 +1174,7 @@ export class ChildCommentsModalComponent implements Component {
           <div class="zhihu-comment-footer">
             <span>${childCreatedTime}</span>
             ${childCommentTagsHtml ? ` · ${childCommentTagsHtml}` : ""}
-            ${
-              childVoteCount > 0
-                ? ` · <span class="zhihu-comment-like">${childVoteCount}赞</span>`
-                : ""
-            }
+            ${childLikeButtonHtml}
           </div>
         </div>
       `;
@@ -1177,11 +1232,7 @@ export class ChildCommentsModalComponent implements Component {
             <div class="zhihu-comment-footer">
               <span>${createdTime}</span>
               ${parentCommentTagsHtml ? ` · ${parentCommentTagsHtml}` : ""}
-              ${
-                voteCount > 0
-                  ? ` · <span class="zhihu-comment-like">${voteCount}赞</span>`
-                  : ""
-              }
+              ${parentLikeButtonHtml}
             </div>
           </div>
 
@@ -1615,6 +1666,7 @@ export class CommentsManager {
                 },
                 vote_count: child.like_count || 0,
                 like_count: child.like_count || 0,
+                liked: child.liked || child.is_liked || false,
                 child_comments: [],
                 child_comment_count: 0,
                 total_child_comments: [],

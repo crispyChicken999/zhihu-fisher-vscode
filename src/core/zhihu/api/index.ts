@@ -388,4 +388,34 @@ export class ZhihuApiService {
       throw error;
     }
   }
+
+  /**
+   * 对评论进行点赞
+   * @param commentId 评论ID
+   * @param isLike true=点赞, false=取消点赞
+   * @returns Promise<any> 点赞结果
+   */
+  static async likeComment(
+    commentId: string,
+    isLike: boolean = true
+  ): Promise<any> {
+    try {
+      const method = isLike ? "POST" : "DELETE";
+      const url = `https://www.zhihu.com/api/v4/comments/${commentId}/like`;
+
+      const result = await this.makeRequest(
+        url,
+        {
+          method: method,
+          contentType: "application/json",
+        },
+        `评论${isLike ? '点赞' : '取消点赞'}`
+      );
+
+      return result;
+    } catch (error) {
+      console.error("评论点赞时出错:", error);
+      throw error;
+    }
+  }
 }

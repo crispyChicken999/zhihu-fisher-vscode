@@ -341,6 +341,10 @@ export interface CommentItem {
   total_child_comments: CommentItem[];
   /** 评论的点赞数 */
   like_count: number;
+  /** 当前用户是否已点赞该评论（接口返回字段） */
+  liked?: boolean;
+  /** 当前用户是否已点赞该评论（内部使用字段） */
+  is_liked?: boolean;
 }
 
 /**
