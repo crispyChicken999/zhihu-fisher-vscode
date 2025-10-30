@@ -17,18 +17,22 @@ export class ZhihuApiService {
   /**
    * 获取通用的请求头
    */
-  private static getCommonHeaders(cookie: string, contentType?: string): Record<string, string> {
+  private static getCommonHeaders(
+    cookie: string,
+    contentType?: string
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       Accept: "application/json, text/plain, */*",
       "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
       "Accept-Encoding": "gzip, deflate, br",
       "Cache-Control": "no-cache",
       Cookie: cookie,
-      "DNT": "1",
+      DNT: "1",
       Origin: "https://www.zhihu.com",
       Pragma: "no-cache",
       Referer: "https://www.zhihu.com/",
-      "Sec-Ch-Ua": '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+      "Sec-Ch-Ua":
+        '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
       "Sec-Ch-Ua-Mobile": "?0",
       "Sec-Ch-Ua-Platform": '"Windows"',
       "Sec-Fetch-Dest": "empty",
@@ -59,7 +63,9 @@ export class ZhihuApiService {
       if (!cookie) {
         const errorMsg = `没有设置Cookie，无法${operationName}`;
         console.error(errorMsg);
-        vscode.window.showErrorMessage(`需要设置知乎Cookie才能使用${operationName}功能`);
+        vscode.window.showErrorMessage(
+          `需要设置知乎Cookie才能使用${operationName}功能`
+        );
         throw new Error(errorMsg);
       }
 
@@ -308,7 +314,9 @@ export class ZhihuApiService {
   /**
    * 删除收藏夹
    */
-  static async deleteCollection(collectionId: string): Promise<{ success: boolean; error?: string }> {
+  static async deleteCollection(
+    collectionId: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       console.log("删除收藏夹 - 收到的ID:", collectionId);
       const url = `https://www.zhihu.com/api/v4/collections/${collectionId}`;
@@ -341,7 +349,7 @@ export class ZhihuApiService {
   ): Promise<any> {
     try {
       const url = `https://www.zhihu.com/api/v4/answers/${answerId}/voters`;
-      
+
       const result = await this.makeRequest(
         url,
         {
@@ -371,7 +379,7 @@ export class ZhihuApiService {
   ): Promise<any> {
     try {
       const url = `https://www.zhihu.com/api/v4/articles/${articleId}/voters`;
-      
+
       const result = await this.makeRequest(
         url,
         {
@@ -409,7 +417,7 @@ export class ZhihuApiService {
           method: method,
           contentType: "application/json",
         },
-        `评论${isLike ? '点赞' : '取消点赞'}`
+        `评论${isLike ? "点赞" : "取消点赞"}`
       );
 
       return result;
