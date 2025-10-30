@@ -2312,7 +2312,7 @@ export class WebviewManager {
     // 递归查找并更新评论
     const updateComment = (comments: any[]): boolean => {
       for (const comment of comments) {
-        if (comment.id == commentId) {
+        if (Number(comment.id) === Number(commentId)) {
           // 同时更新 liked 和 is_liked 字段
           comment.liked = isLike;
           comment.is_liked = isLike;
