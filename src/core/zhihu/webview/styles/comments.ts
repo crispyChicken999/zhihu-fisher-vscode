@@ -453,7 +453,7 @@ export const commentsCss = `
   width: 100%;
   margin: 5px 50px 5px 10px;
   max-width: 600px;
-  max-height: 96vh;
+  height: calc(100vh - 15px);
   overflow: hidden;
   display: flex;
   flex-direction: column;

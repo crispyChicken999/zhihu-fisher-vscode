@@ -6,7 +6,7 @@ export const mainCss = `
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI",
     system-ui, "Ubuntu", "Droid Sans", sans-serif;
-  padding: 0 20px;
+  padding: 0 1.5em;
   margin: 0 auto;
   max-width: 800px;
   line-height: 1.6;
@@ -22,7 +22,7 @@ body:has(.zhihu-comments-modal-overlay) {
 }
 
 body.immersive-mode {
-  padding: 0 50px 0 20px;
+  padding: 0 max(50px, 2.5em) 0 1em;
 }
 
 /* 灰色模式样式 - 只对知乎内容生效，不影响伪装界面和其他UI元素 */
@@ -80,7 +80,6 @@ html.grayscale-mode .fisher-welcome-message {
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--vscode-editor-foreground);
-  margin-top: 24px;
   margin-bottom: min(15px, 1em);
   font-weight: 600;
   line-height: 1.25;
@@ -88,22 +87,36 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 {
   font-size: 2em;
+  margin-top: 0.67em;
   padding-bottom: 0.3em;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 h2 {
   font-size: 1.5em;
+  margin-top: 0.83em;
   padding-bottom: 0.3em;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 h3 {
   font-size: 1.25em;
+  margin-top: 1em;
 }
 
 h4 {
   font-size: 1.1em;
+  margin-top: 1.2em;
+}
+
+h5 {
+  font-size: 1em;
+  margin-top: 1.5em;
+}
+
+h6 {
+  font-size: 0.9em;
+  margin-top: 1.75em;
 }
 
 a {
