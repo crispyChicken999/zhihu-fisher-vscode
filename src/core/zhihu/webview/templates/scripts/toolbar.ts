@@ -201,9 +201,12 @@ function updateToolbarButtons(toolbar, config, isExpandable) {
     }
   });
 
-  // 先隐藏所有按钮
+  // 先隐藏所有按钮（排除提示按钮）
   buttons.forEach(button => {
-    button.style.display = 'none';
+    // 不隐藏空工具栏提示按钮
+    if (button.id !== 'empty-toolbar-hint') {
+      button.style.display = 'none';
+    }
   });
 
   // 按配置排序和显示按钮
@@ -299,11 +302,61 @@ function updateToolbarContainerVisibility(config) {
       // 至少有一个按钮可见，显示工具栏容器
       toolbarExpandable.style.display = '';
       toolbarToggle.style.display = '';
+      // 移除提示按钮（如果存在）
+      removeEmptyToolbarHint();
     } else {
-      // 所有按钮都隐藏，隐藏工具栏容器
-      toolbarExpandable.style.display = 'none';
-      toolbarToggle.style.display = 'none';
+      // 所有按钮都隐藏，显示提示按钮
+      toolbarExpandable.style.display = '';
+      toolbarToggle.style.display = '';
+      // 显示提示按钮
+      showEmptyToolbarHint();
     }
+  }
+}
+
+/**
+ * 显示空工具栏提示按钮
+ */
+function showEmptyToolbarHint() {
+  const toolbarExpandable = document.getElementById('toolbar-expandable');
+  if (!toolbarExpandable) return;
+
+  // 检查是否已经存在提示按钮
+  let hintButton = document.getElementById('empty-toolbar-hint');
+  
+  if (hintButton) {
+    // 如果已存在，只需要显示它
+    hintButton.style.display = 'flex';
+    return;
+  }
+
+  // 创建提示按钮
+  hintButton = document.createElement('button');
+  hintButton.id = 'empty-toolbar-hint';
+  hintButton.className = 'button empty-hint-button';
+  hintButton.setAttribute('tooltip', '💡 所有工具栏按钮已隐藏\\n\\n📌 快速恢复方法：\\n  · 点击此按钮打开设置面板\\n  · 按 . 键打开设置\\n  · 按 X 键退出沉浸模式\\n  · 滑动到页面底部查看设置');
+  hintButton.setAttribute('placement', 'left-bottom');
+  hintButton.onclick = function() {
+    toggleStylePanel('toolbar');
+  };
+
+  hintButton.innerHTML = \`
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M11 17h2v-6h-2zm1-8q.425 0 .713-.288T13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"/>
+    </svg>
+  \`;
+
+  toolbarExpandable.insertBefore(hintButton, toolbarExpandable.firstChild);
+}
+
+/**
+ * 移除空工具栏提示按钮
+ */
+function removeEmptyToolbarHint() {
+  const hintButton = document.getElementById('empty-toolbar-hint');
+  if (hintButton) {
+    // 不删除按钮，只是隐藏它，这样下次可以直接显示
+    hintButton.style.display = 'none';
   }
 }
 
@@ -343,10 +396,10 @@ function hideToolbarButton(buttonId, event) {
     // 检查并更新工具栏容器的显示状态
     updateToolbarContainerVisibility(config);
 
-    // 显示提示信息
+    // 显示提示信息，告诉用户如何打开设置
     vscode.postMessage({
       command: 'showNotification',
-      message: \`已隐藏"\${button.name}"按钮，可在设置面板中重新启用\`
+      message: \`✅ 已隐藏"\${button.name}"按钮 💡 按。键打开设置可重新启用\`
     });
   }
 }

@@ -407,7 +407,7 @@ export class ToolbarComponent implements Component {
     // 添加关闭按钮（只在沉浸模式的可展开工具栏中显示）
     const closeButton = isExpandable
       ? `
-      <span class="button-close" onclick="hideToolbarButton('${button.id}', event)" tooltip="隐藏此按钮" placement="top-right">
+      <span class="button-close" onclick="hideToolbarButton('${button.id}', event)" tooltip="🚫 隐藏此按钮&#010💡 按 . 键可重新启用" placement="top-right">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
           <path fill="currentColor" d="m6 6l12 12M6 18L18 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
         </svg>

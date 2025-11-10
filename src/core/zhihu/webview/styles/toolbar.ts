@@ -203,13 +203,40 @@ body.immersive-mode .immersive-button {
   position: relative;
 }
 
+/* 空工具栏提示按钮样式 */
+.empty-hint-button {
+  background-color: var(--vscode-inputValidation-warningBackground) !important;
+  color: var(--vscode-inputValidation-warningForeground) !important;
+  border: 1px solid var(--vscode-inputValidation-warningBorder) !important;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.empty-hint-button:hover {
+  background-color: var(--vscode-button-hoverBackground) !important;
+  animation: none;
+}
+
+/* 正常模式下隐藏空工具栏提示按钮 */
+body:not(.immersive-mode) .empty-hint-button {
+  display: none !important;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* 按钮关闭功能 */
 .toolbar-expandable-item .button-close {
   position: absolute;
   top: -9px;
   right: -6px;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   background-color: var(--vscode-errorForeground);
   border-radius: 50%;
   align-items: center;
