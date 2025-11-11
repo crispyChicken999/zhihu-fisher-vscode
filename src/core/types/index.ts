@@ -281,6 +281,8 @@ export interface AnswerAuthor {
   avatar: string;
   /** 作者的粉丝数 */
   followersCount: number;
+  /** 是否已关注该作者 */
+  isFollowing?: boolean;
 }
 
 /** 评论数据结构 */

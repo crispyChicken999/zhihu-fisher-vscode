@@ -65,4 +65,167 @@ export const authorCss = `
 .author-link:hover {
   text-decoration: underline;
 }
+
+/* 关注按钮样式 */
+.author-follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.author-follow-btn .follow-text {
+  transition: opacity 0.2s ease;
+}
+
+/* 未关注状态 - hover显示"立即关注" */
+.author-follow-btn[data-is-following="false"]:hover .follow-text::before {
+  content: "立即";
+}
+
+/* 已关注状态 - hover时文字变为"取消关注" */
+.author-follow-btn[data-is-following="true"]:hover .follow-text {
+  opacity: 0;
+}
+
+.author-follow-btn[data-is-following="true"]:hover::after {
+  content: "取消关注";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+
+.author-follow-btn:hover {
+  background-color: var(--vscode-button-hoverBackground);
+  transform: translateY(-1px);
+}
+
+.author-follow-btn:active {
+  transform: translateY(0);
+}
+
+.author-follow-btn[data-is-following="true"] {
+  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+
+.author-follow-btn[data-is-following="true"] svg {
+  display: none;
+}
+
+.author-follow-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 沉浸模式下的作者信息悬浮窗 */
+.immersive-author-info {
+  display: none;
+  position: relative;
+  margin-bottom: 1em;
+}
+
+body.immersive-mode .immersive-author-info {
+  display: block;
+}
+
+.immersive-author-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 2px 0px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.immersive-author-trigger:hover {
+  background-color: var(--vscode-editor-inactiveSelectionBackground);
+  text-decoration: underline;
+  padding: 2px 6px;
+}
+
+.immersive-author-popover {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  padding: 12px;
+  background-color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.immersive-author-popover.show {
+  display: block;
+}
+
+.immersive-author-popover .author-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.immersive-author-popover .author-popover-avatar {
+  width: 3em;
+  height: 3em;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+/* Mini模式下的头像 - 缩小尺寸 */
+.immersive-author-popover .author-popover-avatar.mini-media {
+  width: 2em;
+  height: 2em;
+}
+
+/* 隐藏图片模式 - 完全隐藏头像 */
+.immersive-author-popover .author-popover-avatar.hide-media {
+  display: none;
+}
+
+.immersive-author-popover .author-info-text {
+  flex-grow: 1;
+}
+
+.immersive-author-popover .author-popover-name {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.immersive-author-popover .author-bio-text {
+  font-size: 0.9em;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.immersive-author-popover .author-follow-btn {
+  width: 100%;
+  justify-content: center;
+}
 `;

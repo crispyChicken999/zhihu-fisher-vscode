@@ -426,4 +426,54 @@ export class ZhihuApiService {
       throw error;
     }
   }
+
+  /**
+   * 关注用户
+   * @param userId 用户ID
+   * @returns Promise<any> 关注结果
+   */
+  static async followUser(userId: string): Promise<any> {
+    try {
+      const url = `https://www.zhihu.com/api/v4/members/${userId}/followers`;
+
+      const result = await this.makeRequest(
+        url,
+        {
+          method: "POST",
+          contentType: "application/json",
+        },
+        "关注用户"
+      );
+
+      return result;
+    } catch (error) {
+      console.error("关注用户时出错:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 取消关注用户
+   * @param userId 用户ID
+   * @returns Promise<any> 取消关注结果
+   */
+  static async unfollowUser(userId: string): Promise<any> {
+    try {
+      const url = `https://www.zhihu.com/api/v4/members/${userId}/followers`;
+
+      const result = await this.makeRequest(
+        url,
+        {
+          method: "DELETE",
+          contentType: "application/json",
+        },
+        "取消关注用户"
+      );
+
+      return result;
+    } catch (error) {
+      console.error("取消关注用户时出错:", error);
+      throw error;
+    }
+  }
 }

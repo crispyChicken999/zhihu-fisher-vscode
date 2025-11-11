@@ -139,6 +139,7 @@ function updateMediaDisplayClass(mode) {
   const comments = document.querySelector('.comments-container');
   const commentsModal = document.querySelector('.comments-modal-container');
   const questionDetail = document.querySelector('.question-detail-content');
+  const immersiveAuthorAvatar = document.querySelector('.immersive-author-popover .author-popover-avatar');
 
   if (content && meta) {
     // 移除所有模式类
@@ -152,6 +153,9 @@ function updateMediaDisplayClass(mode) {
     }
     if (questionDetail) {
       questionDetail.classList.remove('hide-media', 'mini-media');
+    }
+    if (immersiveAuthorAvatar) {
+      immersiveAuthorAvatar.classList.remove('hide-media', 'mini-media');
     }
 
     // 添加当前模式类
@@ -167,6 +171,9 @@ function updateMediaDisplayClass(mode) {
       if (questionDetail) {
         questionDetail.classList.add('hide-media');
       }
+      if (immersiveAuthorAvatar) {
+        immersiveAuthorAvatar.classList.add('hide-media');
+      }
     } else if (mode === 'mini') {
       content.classList.add('mini-media');
       meta.classList.add('mini-media');
@@ -178,6 +185,9 @@ function updateMediaDisplayClass(mode) {
       }
       if (questionDetail) {
         questionDetail.classList.add('mini-media');
+      }
+      if (immersiveAuthorAvatar) {
+        immersiveAuthorAvatar.classList.add('mini-media');
       }
     }
 

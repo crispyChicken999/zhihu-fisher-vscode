@@ -296,6 +296,7 @@ export class HtmlRenderer {
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replaceAll("${META_COMPONENT}", metaComponent.render())
+      .replace("${IMMERSIVE_AUTHOR_COMPONENT}", authorComponent.renderImmersive())
       .replace("${ARTICLE_CONTENT}", contentComponent.render())
       .replace("${COMMENTS_COMPONENT}", commentsComponent.render())
       .replace("${TOOLBAR_COMPONENT}", toolbarComponent.render())

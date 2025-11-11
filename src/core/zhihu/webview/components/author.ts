@@ -50,8 +50,10 @@ export class AuthorComponent implements Component {
     const authorBio = this.author.signature || "";
     const authorFollowersCount = this.author.followersCount || 0;
     const authorUrl = this.author.url || "";
+    const authorId = this.author.id;
+    const isFollowing = this.author.isFollowing || false;
 
-    let authorHTML = `<div class="author-info">`;
+    let authorHTML = `<div class="author-info" data-author-id="${authorId}">`;
 
     // 如果有作者头像，显示头像
     if (this.author.avatar) {
@@ -92,8 +94,87 @@ export class AuthorComponent implements Component {
             : ""
         }
       </div>
+      <button class="author-follow-btn"
+              data-author-id="${authorId}"
+              data-is-following="${isFollowing}"
+              onclick="toggleFollowAuthor('${authorId}')"
+              title="${isFollowing ? '取消关注' : '关注作者'}">
+        <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" d="M13.25 3.25a1.25 1.25 0 1 0-2.5 0v7.5h-7.5a1.25 1.25 0 1 0 0 2.5h7.5v7.5a1.25 1.25 0 1 0 2.5 0v-7.5h7.5a1.25 1.25 0 0 0 0-2.5h-7.5v-7.5Z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="follow-text">${isFollowing ? '已关注' : '关注'}</span>
+      </button>
     </div>`;
 
     return authorHTML;
+  }
+
+  /**
+   * 渲染沉浸模式的作者信息（仅在沉浸模式下显示）
+   * @returns 沉浸模式作者信息HTML
+   */
+  public renderImmersive(): string {
+    if (!this.author) {
+      return "";
+    }
+
+    const authorName = this.author.name;
+    const authorAvatar = this.author.avatar || "";
+    const authorBio = this.author.signature || "";
+    const authorId = this.author.id;
+    const isFollowing = this.author.isFollowing || false;
+
+    // 根据媒体显示模式设置头像的CSS类
+    const mediaDisplayMode = this.options.mediaDisplayMode;
+    let avatarClass = "author-popover-avatar";
+
+    // 添加媒体模式类，CSS会根据这些类控制显示
+    if (mediaDisplayMode === "mini") {
+      avatarClass += " mini-media";
+    } else if (mediaDisplayMode === "none") {
+      avatarClass += " hide-media";
+    }
+
+    return `
+      <div class="immersive-author-info">
+        <span class="immersive-author-trigger" onclick="toggleImmersiveAuthorPopover('${authorId}')" title="点击查看作者信息（可关注/取消关注）">
+          ${this.escapeHtml(authorName)}：
+        </span>
+        <div class="immersive-author-popover" data-author-id="${authorId}">
+          <div class="author-header">
+            <img src="${authorAvatar || ""}"
+                alt="${this.escapeHtml(authorName)}"
+                class="${avatarClass}"
+                referrerpolicy="no-referrer" />
+            <div class="author-info-text">
+              <div class="author-popover-name">
+              <a href="${this.author.url || "#"}" class="author-link" target="_blank" rel="noopener noreferrer">
+                ${this.escapeHtml(
+                  authorName
+                )}
+              </a>
+              </div>
+            </div>
+          </div>
+          ${
+            authorBio
+              ? `<div class="author-bio-text">${this.escapeHtml(
+                  authorBio
+                )}</div>`
+              : ""
+          }
+          <button class="author-follow-btn"
+                  data-author-id="${authorId}"
+                  data-is-following="${isFollowing}"
+                  onclick="toggleFollowAuthor('${authorId}')"
+                  title="${isFollowing ? '取消关注' : '关注作者'}">
+            <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" d="M13.25 3.25a1.25 1.25 0 1 0-2.5 0v7.5h-7.5a1.25 1.25 0 1 0 0 2.5h7.5v7.5a1.25 1.25 0 1 0 2.5 0v-7.5h7.5a1.25 1.25 0 0 0 0-2.5h-7.5v-7.5Z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="follow-text">${isFollowing ? '已关注' : '关注'}</span>
+          </button>
+        </div>
+      </div>
+    `;
   }
 }

@@ -674,6 +674,20 @@ export class WebviewManager {
           ? authorSignature.textContent?.trim() || ""
           : "";
 
+        // 检测是否已关注该作者（解析关注按钮）
+        let isFollowing = false;
+        const followButton = document.querySelector(
+          ".AuthorInfo button.FollowButton"
+        );
+        if (followButton) {
+          // 如果按钮文字包含"已关注"，说明已经关注了
+          const buttonText = followButton.textContent?.trim() || "";
+          isFollowing = buttonText.includes("已关注");
+          console.log(
+            `作者的关注状态: ${isFollowing ? "已关注" : "未关注"} (按钮文字: "${buttonText}")`
+          );
+        }
+
         // 作者粉丝数 .NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue
         const authorFollowerElement = document.querySelector(
           ".NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue"
@@ -753,6 +767,7 @@ export class WebviewManager {
             avatar: authorAvatarUrl,
             signature: authorHeadline,
             authorFollowerCount,
+            isFollowing, // 添加关注状态
           },
           publishTime,
           likeCount,
@@ -779,6 +794,7 @@ export class WebviewManager {
           avatar: articleData.author.avatar,
           signature: articleData.author.signature,
           followersCount: articleData.author.authorFollowerCount,
+          isFollowing: articleData.author.isFollowing, // 添加关注状态
         },
         likeCount: articleData.likeCount,
         commentCount: articleData.commentCount,
@@ -1255,6 +1271,20 @@ export class WebviewManager {
               ".AuthorInfo-badgeText"
             )?.textContent;
 
+            // 检测是否已关注该作者（解析关注按钮）
+            let isFollowing = false;
+            const followButton = authorElement?.querySelector(
+              "button.FollowButton"
+            );
+            if (followButton) {
+              // 如果按钮文字包含"已关注"，说明已经关注了
+              const buttonText = followButton.textContent?.trim() || "";
+              isFollowing = buttonText.includes("已关注");
+              console.log(
+                `作者 ${authorName} 的关注状态: ${isFollowing ? "已关注" : "未关注"} (按钮文字: "${buttonText}")`
+              );
+            }
+
             // 获取回答点赞数 answerElement <meta itemprop="upvoteCount" content="648">
             const likeCount = element
               .querySelector("meta[itemprop='upvoteCount']")
@@ -1347,6 +1377,7 @@ export class WebviewManager {
                 signature: authorSignature || "",
                 avatar: authorAvatar || "",
                 followersCount: parseInt(followersCount || "0", 10) || 0,
+                isFollowing: isFollowing, // 添加关注状态
               },
               likeCount: parseInt(likeCount || "0", 10) || 0,
               commentCount: parseInt(commentCount || "0", 10) || 0,
@@ -1905,6 +1936,16 @@ export class WebviewManager {
         case "openZhihuLink":
           // 处理在VSCode中打开知乎链接的请求
           await this.handleOpenZhihuLink(message.url);
+          break;
+
+        case "followAuthor":
+          // 处理关注作者请求
+          await this.handleFollowAuthor(webviewId, message.authorId);
+          break;
+
+        case "unfollowAuthor":
+          // 处理取消关注作者请求
+          await this.handleUnfollowAuthor(webviewId, message.authorId);
           break;
       }
     });
@@ -2595,6 +2636,102 @@ export class WebviewManager {
       }
     } catch (error) {
       console.error("解析问题详情时出错:", error);
+    }
+  }
+
+  /**
+   * 处理关注作者请求
+   * @param webviewId WebView的ID
+   * @param authorId 作者ID
+   */
+  private static async handleFollowAuthor(
+    webviewId: string,
+    authorId: string
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 调用API关注用户
+      await ZhihuApiService.followUser(authorId);
+
+      // 更新Store中所有回答的作者关注状态
+      webviewItem.article.answerList.forEach((answer) => {
+        if (answer.author.id === authorId) {
+          answer.author.isFollowing = true;
+        }
+      });
+
+      // 通知前端更新状态
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateAuthorFollowStatus",
+        authorId: authorId,
+        isFollowing: true,
+      });
+
+      vscode.window.showInformationMessage("已关注该作者");
+    } catch (error) {
+      console.error("关注作者时出错:", error);
+      vscode.window.showErrorMessage(
+        `关注失败: ${error instanceof Error ? error.message : String(error)}`
+      );
+
+      // 通知前端恢复状态
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateAuthorFollowStatus",
+        authorId: authorId,
+        isFollowing: false,
+      });
+    }
+  }
+
+  /**
+   * 处理取消关注作者请求
+   * @param webviewId WebView的ID
+   * @param authorId 作者ID
+   */
+  private static async handleUnfollowAuthor(
+    webviewId: string,
+    authorId: string
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 调用API取消关注用户
+      await ZhihuApiService.unfollowUser(authorId);
+
+      // 更新Store中所有回答的作者关注状态
+      webviewItem.article.answerList.forEach((answer) => {
+        if (answer.author.id === authorId) {
+          answer.author.isFollowing = false;
+        }
+      });
+
+      // 通知前端更新状态
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateAuthorFollowStatus",
+        authorId: authorId,
+        isFollowing: false,
+      });
+
+      vscode.window.showInformationMessage("已取消关注");
+    } catch (error) {
+      console.error("取消关注作者时出错:", error);
+      vscode.window.showErrorMessage(
+        `取消关注失败: ${error instanceof Error ? error.message : String(error)}`
+      );
+
+      // 通知前端恢复状态
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateAuthorFollowStatus",
+        authorId: authorId,
+        isFollowing: true,
+      });
     }
   }
 }

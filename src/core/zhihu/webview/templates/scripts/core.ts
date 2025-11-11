@@ -219,6 +219,13 @@ window.addEventListener('message', event => {
       console.log('问题详情内容已更新');
     }
   }
+
+  // 处理更新作者关注状态的消息
+  else if (message.command === 'updateAuthorFollowStatus') {
+    if (typeof updateAuthorFollowStatus === 'function') {
+      updateAuthorFollowStatus(message.authorId, message.isFollowing);
+    }
+  }
 });
 
 /**
