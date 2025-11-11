@@ -17,6 +17,10 @@ export const Store: ContentStore = {
       list: [],
       isLoading: false,
     },
+    follow: {
+      list: [],
+      isLoading: false,
+    },
     search: {
       list: [],
       isLoading: false,

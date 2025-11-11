@@ -37,6 +37,30 @@ export function registerSearchCommands(sidebarSearch: sidebarSearchListDataProvi
         return;
       }
 
+      // 检查搜索列表是否正在加载中
+      if (Store.Zhihu.search.isLoading) {
+        vscode.window.showInformationMessage(
+          "搜索结果正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查收藏列表是否正在加载中
+      if (Store.Zhihu.collections.isLoading) {
+        vscode.window.showInformationMessage(
+          "收藏列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查关注列表是否正在加载中
+      if (Store.Zhihu.follow.isLoading) {
+        vscode.window.showInformationMessage(
+          "关注列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
       const canCreateBrowser = await PuppeteerManager.canCreateBrowser();
       if (!canCreateBrowser) {
         vscode.window.showErrorMessage(

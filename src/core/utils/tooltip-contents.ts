@@ -301,8 +301,13 @@ export class TooltipContents {
   /**
    * 加载失败重试提示
    */
-  static getRetryTooltip(type: 'hot' | 'recommend'): vscode.MarkdownString {
-    const typeName = type === 'hot' ? '热榜' : '推荐';
+  static getRetryTooltip(type: 'hot' | 'recommend' | 'follow'): vscode.MarkdownString {
+    const typeNameMap: Record<'hot' | 'recommend' | 'follow', string> = {
+      'hot': '热榜',
+      'recommend': '推荐',
+      'follow': '关注'
+    };
+    const typeName = typeNameMap[type];
     const tooltip = new vscode.MarkdownString(
       `🔄 **${typeName}加载失败，点击重试** 🔄\n\n` +
       "---\n\n" +
@@ -317,6 +322,50 @@ export class TooltipContents {
       "  3️⃣ 如仍失败，请检查 Cookie 是否有效\n\n" +
       "---\n\n" +
       "🎯 点击此处重新加载"
+    );
+
+    tooltip.isTrusted = true;
+    tooltip.supportThemeIcons = true;
+    return tooltip;
+  }
+
+  /**
+   * 关注内容加载中提示
+   */
+  static getFollowLoadingTooltip(): vscode.MarkdownString {
+    const tooltip = new vscode.MarkdownString(
+      "👥 **正在加载关注动态** 👥\n\n" +
+      "---\n\n" +
+      "🤖 **智能爬取过程：**\n\n" +
+      "  - 模拟真实用户访问知乎关注页面\n\n" +
+      "  - 自动滚动加载更多关注动态\n\n" +
+      "  - 解析关注用户的最新回答和文章\n\n" +
+      "  - 筛选你关注的人的动态内容\n\n" +
+      "  - 内容包括关注的人赞过的回答、关注了问题/文章、回答了问题等\n\n" +
+      "---\n\n" +
+      "⏱️ **预计用时：** 10-30 秒\n\n" +
+      "🔄 如加载时间过长，可能是网络问题或 Cookie 过期\n\n" +
+      "💡 **小贴士：** 加载期间暂时无法打开文章，避免冲突\n\n" +
+      "---\n\n" +
+      "🐟 请耐心等待，为您获取关注的最新动态..."
+    );
+
+    tooltip.isTrusted = true;
+    tooltip.supportThemeIcons = true;
+    return tooltip;
+  }
+
+  /**
+   * 刷新关注列表提示
+   */
+  static getRefreshFollowTooltip(): vscode.MarkdownString {
+    const tooltip = new vscode.MarkdownString(
+      "🔄 **刷新关注动态** 🔄\n\n" +
+      "---\n\n" +
+      "✨ 点击获取关注用户的最新动态\n\n" +
+      "👥 查看你关注的人最新发布的回答和文章\n\n" +
+      "📱 与知乎 App 关注页面同步\n\n" +
+      "🎯 第一时间了解感兴趣的内容创作者的更新"
     );
 
     tooltip.isTrusted = true;

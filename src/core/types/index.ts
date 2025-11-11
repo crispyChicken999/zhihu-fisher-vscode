@@ -32,6 +32,14 @@ export interface ContentStore {
       list: LinkItem[];
     };
 
+    /** 知乎关注列表数据 */
+    follow: {
+      /** 是否正在加载关注 */
+      isLoading: boolean;
+      /** 关注列表 */
+      list: LinkItem[];
+    };
+
     /** 知乎搜索数据 */
     search: {
       /** 是否正在搜索 */
@@ -98,6 +106,31 @@ export interface LinkItem {
   contentToken?: string;
   /** 回答的完整URL，用于浏览器打开特定回答 */
   answerUrl?: string;
+  /** 关注信息（仅关注列表使用） */
+  followInfo?: {
+    /** 关注者名称 */
+    followerName: string;
+    /** 关注者URL */
+    followerUrl: string;
+    /** 关注动作（如"赞同了回答"） */
+    followAction: string;
+    /** 关注时间 */
+    followTime: string;
+    /** 作者名称 */
+    authorName: string;
+    /** 作者头像 */
+    authorAvatar: string;
+    /** 作者URL */
+    authorUrl: string;
+    /** 作者标签 */
+    authorBadge: string;
+    /** 点赞数 */
+    upvoteCount: string;
+    /** 评论数 */
+    commentCount: string;
+    /** 原始内容类型：question(问题本身) | answer(回答) | article(文章) */
+    rawContentType?: string;
+  };
 }
 
 /** 页面数据结构 */
@@ -390,6 +423,10 @@ export class TreeItem extends vscode.TreeItem {
 
     const link = listItem.answerUrl || listItem.url || "https://www.zhihu.com/";
 
+    // 检查是否是关注的问题（只关注了问题，没有回答）
+    const isFollowedQuestionOnly = 
+      listItem.followInfo?.rawContentType === "question";
+
     // 设置工具提示：根据配置和图片可用性决定
     if (shouldShowImage) {
       const markdownTooltip = new vscode.MarkdownString();
@@ -397,15 +434,47 @@ export class TreeItem extends vscode.TreeItem {
       markdownTooltip.supportThemeIcons = true;
       markdownTooltip.supportHtml = true;
 
+      // 如果有关注信息，先显示关注信息
+      if (listItem.followInfo) {
+        const info = listItem.followInfo;
+        markdownTooltip.appendMarkdown(
+          `👥 **[${info.followerName}](${info.followerUrl})** ${info.followAction}`
+        );
+        // 只有非"关注了问题"的情况才显示时间
+        if (!isFollowedQuestionOnly && info.followTime) {
+          markdownTooltip.appendMarkdown(` · ⏰ ${info.followTime}`);
+        }
+        markdownTooltip.appendMarkdown("\n\n");
+        markdownTooltip.appendMarkdown("\n ___ \n\n");
+
+        // 只有当不是"关注的问题"时才显示作者信息
+        if (!isFollowedQuestionOnly && info.authorName) {
+          markdownTooltip.appendMarkdown(
+            `✍️ 作者：**[${info.authorName}](${info.authorUrl})**`
+          );
+          if (info.authorBadge) {
+            markdownTooltip.appendMarkdown(` · 💼 *${info.authorBadge}*\n\n`);
+          } else {
+            markdownTooltip.appendMarkdown("\n\n");
+          }
+          if (info.authorAvatar) {
+            markdownTooltip.appendMarkdown(
+              `<img src="${info.authorAvatar}" alt="作者头像" width="50" style="border-radius: 50%;" />\n\n`
+            );
+          }
+          markdownTooltip.appendMarkdown("\n ___ \n\n");
+        }
+      }
+
       markdownTooltip.appendMarkdown(
-        `#### ${typeLabel} <b>${listItem.title}</b> \n\n`
+        `#### ${typeLabel} **${listItem.title}** \n`
       );
+      markdownTooltip.appendMarkdown("\n ___ \n\n");
 
       if (listItem.hotValue) {
         markdownTooltip.appendMarkdown(`🔥 ${listItem.hotValue} 🔥\n\n`);
+        markdownTooltip.appendMarkdown("\n ___ \n\n");
       }
-
-      markdownTooltip.appendMarkdown("\n ___ \n\n");
 
       if (listItem.excerpt) {
         const excerpt = listItem.excerpt.replaceAll('~','-');
@@ -426,6 +495,15 @@ export class TreeItem extends vscode.TreeItem {
         imageWidth = 150;
       }
 
+      // 只有当不是"关注的问题"时才显示点赞和评论数
+      if (listItem.followInfo && !isFollowedQuestionOnly) {
+        markdownTooltip.appendMarkdown(
+          `\n___ \n\n 👍 ${listItem.followInfo.upvoteCount} 赞同 · 💬 ${listItem.followInfo.commentCount} 评论\n`
+        );
+
+        markdownTooltip.appendMarkdown("\n ___ \n\n");
+      }
+
       markdownTooltip.appendMarkdown(
         `<img src="${listItem.imgUrl}" alt="预览图" width="${imageWidth}" />\n`
       );
@@ -440,8 +518,35 @@ export class TreeItem extends vscode.TreeItem {
       simpleTooltip.supportThemeIcons = true;
       simpleTooltip.supportHtml = true;
 
+      // 如果有关注信息，先显示关注信息
+      if (listItem.followInfo) {
+        const info = listItem.followInfo;
+        simpleTooltip.appendMarkdown(
+          `👥 **[${info.followerName}](${info.followerUrl})** ${info.followAction}`
+        );
+        // 只有非"关注了问题"的情况才显示时间
+        if (!isFollowedQuestionOnly && info.followTime) {
+          simpleTooltip.appendMarkdown(` · ⏰ ${info.followTime}`);
+        }
+        simpleTooltip.appendMarkdown("\n\n");
+        simpleTooltip.appendMarkdown("\n ___ \n\n");
+
+        // 只有当不是"关注的问题"时才显示作者信息
+        if (!isFollowedQuestionOnly && info.authorName) {
+          simpleTooltip.appendMarkdown(
+            `✍️ 作者：**[${info.authorName}](${info.authorUrl})**`
+          );
+          if (info.authorBadge) {
+            simpleTooltip.appendMarkdown(` · 💼 *${info.authorBadge}*\n\n`);
+          } else {
+            simpleTooltip.appendMarkdown("\n\n");
+          }
+          simpleTooltip.appendMarkdown("\n ___ \n\n");
+        }
+      }
+
       simpleTooltip.appendMarkdown(
-        `#### ${typeLabel} <b>${listItem.title}</b> \n\n`
+        `#### ${typeLabel} **${listItem.title}**</p> \n`
       );
 
       if (listItem.hotValue) {
@@ -454,6 +559,14 @@ export class TreeItem extends vscode.TreeItem {
         const excerpt = listItem.excerpt.replaceAll('~','-');
         simpleTooltip.appendMarkdown(excerpt);
       }
+
+      // 只有当不是"关注的问题"时才显示点赞和评论数
+      if (listItem.followInfo && !isFollowedQuestionOnly) {
+        simpleTooltip.appendMarkdown(
+          `\n___ \n\n 👍 ${listItem.followInfo.upvoteCount} 赞同 · 💬 ${listItem.followInfo.commentCount} 评论\n`
+        );
+      }
+
       this.tooltip = simpleTooltip;
     }
 
@@ -477,7 +590,12 @@ export class TreeItem extends vscode.TreeItem {
     };
 
     // 根据配置和图片可用性设置 contextValue
-    this.contextValue = shouldShowImage ? "TreeItemWithImage" : "TreeItem";
+    // 如果是关注的问题（只关注了问题，没有回答），使用特殊的contextValue，不显示收藏按钮
+    if (isFollowedQuestionOnly) {
+      this.contextValue = shouldShowImage ? "FollowedQuestionWithImage" : "FollowedQuestion";
+    } else {
+      this.contextValue = shouldShowImage ? "TreeItemWithImage" : "TreeItem";
+    }
   }
 }
 

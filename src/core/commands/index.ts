@@ -9,12 +9,14 @@ import { registerBrowserCommands } from './browser';
 import { registerWebviewCommands } from './webview';
 import { registerGeneralCommands } from './general';
 import { registerRecommendCommands } from './recommend';
+import { registerFollowCommands } from './follow';
 import { registerCollectionCommands } from './collection';
 import { registerWebviewNavigationCommands } from './webview-navigation';
 import { sidebarHotListDataProvider } from '../zhihu/sidebar/hot';
 import { sidebarSearchListDataProvider } from '../zhihu/sidebar/search';
 import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
 import { sidebarRecommendListDataProvider } from '../zhihu/sidebar/recommend';
+import { sidebarFollowListDataProvider } from '../zhihu/sidebar/follow';
 
 /**
  * 注册所有命令
@@ -27,12 +29,13 @@ export function registerAllCommands(
     zhihuService: ZhihuService;
     sidebarHot: sidebarHotListDataProvider;
     sidebarRecommend: sidebarRecommendListDataProvider;
+    sidebarFollow: sidebarFollowListDataProvider;
     sidebarSearch: sidebarSearchListDataProvider;
     sidebarCollections: sidebarCollectionsDataProvider;
   }
 ) {
   // 注册各类命令
-  const { zhihuService, sidebarHot, sidebarRecommend, sidebarSearch, sidebarCollections } = dependencies;
+  const { zhihuService, sidebarHot, sidebarRecommend, sidebarFollow, sidebarSearch, sidebarCollections } = dependencies;
 
   const subscriptions = [
     ...registerHotCommands(sidebarHot),
@@ -42,9 +45,10 @@ export function registerAllCommands(
     ...registerBrowserCommands(),
     ...registerWebviewCommands(),
     ...registerWebviewNavigationCommands(),
-    ...registerCookieCommands(zhihuService, sidebarHot, sidebarRecommend, sidebarSearch, sidebarCollections),
+    ...registerCookieCommands(zhihuService, sidebarHot, sidebarRecommend, sidebarFollow, sidebarSearch, sidebarCollections),
     ...registerCollectionCommands(sidebarCollections),
     ...registerRecommendCommands(sidebarRecommend),
+    ...registerFollowCommands(sidebarFollow),
     ...registerAboutCommands()
   ];
 

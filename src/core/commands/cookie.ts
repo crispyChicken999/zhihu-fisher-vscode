@@ -3,6 +3,7 @@ import { PuppeteerManager } from '../zhihu/puppeteer';
 import { ZhihuService } from '../zhihu/index';
 import { sidebarHotListDataProvider } from '../zhihu/sidebar/hot';
 import { sidebarRecommendListDataProvider } from '../zhihu/sidebar/recommend';
+import { sidebarFollowListDataProvider } from '../zhihu/sidebar/follow';
 import { sidebarSearchListDataProvider } from '../zhihu/sidebar/search';
 import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
 
@@ -11,6 +12,7 @@ import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
  * @param zhihuService 知乎服务实例
  * @param sidebarHot 热榜侧边栏数据提供者
  * @param sidebarRecommend 推荐侧边栏数据提供者
+ * @param sidebarFollow 关注侧边栏数据提供者
  * @param sidebarSearch 搜索侧边栏数据提供者
  * @param sidebarCollections 收藏夹侧边栏数据提供者
  */
@@ -18,6 +20,7 @@ export function registerCookieCommands(
   zhihuService: ZhihuService,
   sidebarHot: sidebarHotListDataProvider,
   sidebarRecommend: sidebarRecommendListDataProvider,
+  sidebarFollow: sidebarFollowListDataProvider,
   sidebarSearch: sidebarSearchListDataProvider,
   sidebarCollections: sidebarCollectionsDataProvider
 ): vscode.Disposable[] {
@@ -55,6 +58,7 @@ export function registerCookieCommands(
       zhihuService.clearCookie();
       sidebarHot.reset();
       sidebarRecommend.reset();
+      sidebarFollow.reset();
       sidebarSearch.reset();
       sidebarCollections.reset();
     }

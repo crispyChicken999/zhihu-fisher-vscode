@@ -18,6 +18,7 @@ export function registerCollectionCommands(
   const refreshCollectionsCommand = vscode.commands.registerCommand(
     "zhihu-fisher.refreshCollections",
     () => {
+      // 检查热榜列表是否正在加载中
       if (Store.Zhihu.hot.isLoading) {
         vscode.window.showInformationMessage(
           "热榜列表正在加载中，请稍候再试..."
@@ -45,6 +46,14 @@ export function registerCollectionCommands(
       if (Store.Zhihu.collections.isLoading) {
         vscode.window.showInformationMessage(
           "收藏列表正在加载中，请稍候再试..."
+        );
+        return;
+      }
+
+      // 检查关注列表是否正在加载中
+      if (Store.Zhihu.follow.isLoading) {
+        vscode.window.showInformationMessage(
+          "关注列表正在加载中，请稍候再试..."
         );
         return;
       }

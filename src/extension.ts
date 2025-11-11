@@ -7,6 +7,7 @@ import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
 import { SidebarDisguiseManager } from "./core/utils/sidebar-disguise-manager";
 import { sidebarCollectionsDataProvider } from "./core/zhihu/sidebar/collections";
 import { sidebarRecommendListDataProvider } from "./core/zhihu/sidebar/recommend";
+import { sidebarFollowListDataProvider } from "./core/zhihu/sidebar/follow";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("🐟知乎摸鱼🐟 已激活！");
@@ -28,6 +29,14 @@ export function activate(context: vscode.ExtensionContext) {
     showCollapseAll: false,
   });
   sidebarRecommend.setTreeView(recommendListView);
+
+  // 侧边栏 关注 列表
+  const sidebarFollow = new sidebarFollowListDataProvider();
+  const followListView = vscode.window.createTreeView("zhihuFollowList", {
+    treeDataProvider: sidebarFollow,
+    showCollapseAll: false,
+  });
+  sidebarFollow.setTreeView(followListView);
 
   // 侧边栏 热榜 列表
   const sidebarHot = new sidebarHotListDataProvider();
@@ -68,6 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
         // 使用新的 refreshView 方法来更新视图，而不重新加载数据
         sidebarHot.refreshView();
         sidebarRecommend.refreshView();
+        sidebarFollow.refreshView();
         sidebarSearch.refreshView();
         sidebarCollections.refreshView();
       }
@@ -91,6 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
     zhihuService,
     sidebarHot,
     sidebarRecommend,
+    sidebarFollow,
     sidebarSearch,
     sidebarCollections,
   });
