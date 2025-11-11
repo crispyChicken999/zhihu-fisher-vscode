@@ -79,7 +79,7 @@ export const authorCss = `
   cursor: pointer;
   font-size: 0.9em;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
   position: relative;

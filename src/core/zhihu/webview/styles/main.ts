@@ -26,8 +26,12 @@ body.immersive-mode {
 }
 
 /* 灰色模式样式 - 只对知乎内容生效，不影响伪装界面和其他UI元素 */
-html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not(.style-panel-mask):not(.fisher-welcome-message):not(.comments-modal-container):not(.related-questions-modal):not(.question-detail-modal) {
+html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not(.style-panel-mask):not(.fisher-welcome-message):not(.comments-modal-container):not(.related-questions-modal):not(.question-detail-modal):not(.immersive-author-popover):not(.immersive-author-info) {
   filter: grayscale(100%);
+}
+
+html.grayscale-mode .immersive-author-trigger {
+  color: var(--vscode-foreground);
 }
 
 /* 确保伪装界面在灰色模式下保持正常颜色 */
