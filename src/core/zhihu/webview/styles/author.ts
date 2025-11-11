@@ -218,7 +218,7 @@ body.immersive-mode .immersive-author-info {
 }
 
 .immersive-author-popover .author-bio-text {
-  font-size: 0.9em;
+  font-size: 1em;
   color: var(--vscode-descriptionForeground);
   line-height: 1.4;
   margin-bottom: 10px;
