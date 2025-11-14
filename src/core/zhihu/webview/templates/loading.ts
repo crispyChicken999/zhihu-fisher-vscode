@@ -426,7 +426,17 @@ export const loadingTemplate = `
         maxWidth: '800px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, "Ubuntu", "Droid Sans", sans-serif',
         contentColor: getComputedStyle(document.body).getPropertyValue('--vscode-foreground').trim(),
+        contentOpacity: 100,
         textAlign: 'left'
+      };
+
+      // 将hex颜色转换为rgba格式
+      const hexToRgba = (hex, opacity) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        const alpha = opacity / 100;
+        return \`rgba(\${r}, \${g}, \${b}, \${alpha})\`;
       };
 
       // 从localStorage加载样式设置
@@ -439,17 +449,23 @@ export const loadingTemplate = `
         document.body.style.maxWidth = savedStyles.maxWidth;
         document.body.style.fontFamily = savedStyles.fontFamily;
 
-        // 应用自定义文字颜色
+        // 获取透明度设置
+        const opacity = savedStyles.contentOpacity !== undefined ? savedStyles.contentOpacity : 100;
+        
+        // 应用自定义文字颜色(考虑透明度)
         const loadingContainer = document.querySelector('.loading-container');
         const title = document.querySelector('h3');
         const loadingText = document.querySelector('h2');
         const excerpt = document.querySelector('.excerpt');
 
         if (savedStyles.contentColor && savedStyles.contentColor !== defaultStyles.contentColor) {
-          if (loadingContainer) loadingContainer.style.color = savedStyles.contentColor;
-          if (title) title.style.color = savedStyles.contentColor;
-          if (excerpt) excerpt.style.color = savedStyles.contentColor;
-          if (loadingText) loadingText.style.color = savedStyles.contentColor;
+          // 根据透明度决定使用hex还是rgba格式
+          const finalColor = opacity < 100 ? hexToRgba(savedStyles.contentColor, opacity) : savedStyles.contentColor;
+          
+          if (loadingContainer) loadingContainer.style.color = finalColor;
+          if (title) title.style.color = finalColor;
+          if (excerpt) excerpt.style.color = finalColor;
+          if (loadingText) loadingText.style.color = finalColor;
         }
 
         if (loadingText) loadingText.style.textAlign = savedStyles.textAlign;

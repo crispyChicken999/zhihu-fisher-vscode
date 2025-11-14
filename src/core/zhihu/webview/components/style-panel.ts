@@ -148,6 +148,15 @@ export class StylePanelComponent implements Component {
                   <button class="color-preset-btn" data-color="#a0d911" title="黄绿" style="background-color: #a0d911" onclick="selectPresetColor('#a0d911')"></button>
                 </div>
               </div>
+
+              <!-- 透明度滑块 -->
+              <div class="style-option-opacity-container">
+                <label for="content-opacity-slider" class="style-option-label">透明度</label>
+                <div class="style-option-flex">
+                  <input type="range" id="content-opacity-slider" min="0" max="100" value="100" class="style-option-flex-1">
+                  <span id="content-opacity-value" class="style-option-width-30">100%</span>
+                </div>
+              </div>
             </div>
 
             <div class="style-option">

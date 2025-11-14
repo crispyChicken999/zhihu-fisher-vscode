@@ -135,37 +135,48 @@ export const authorCss = `
 .immersive-author-info {
   display: none;
   position: relative;
-  margin-bottom: 1em;
 }
 
-body.immersive-mode .immersive-author-info {
-  display: block;
+/* 仅在沉浸模式下的 answer-meta 中显示 */
+body.immersive-mode .answer-meta .immersive-author-info {
+  display: inline-flex;
+  align-items: center;
 }
 
 .immersive-author-trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--vscode-textLink-foreground);
+  color: inherit;
   cursor: pointer;
-  font-weight: 600;
-  padding: 2px 0px;
+  font-weight: 500;
+  padding: 4px 0px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  font-size: 1em;
+  white-space: nowrap;
+}
+
+.immersive-author-trigger svg {
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
 .immersive-author-trigger:hover {
-  background-color: var(--vscode-editor-inactiveSelectionBackground);
+  background-color: var(--vscode-list-hoverBackground);
   text-decoration: underline;
-  padding: 2px 6px;
+  padding: 4px 8px;
+}
+
+.immersive-author-trigger:hover svg {
+  opacity: 1;
 }
 
 .immersive-author-popover {
   display: none;
   position: absolute;
-  top: 100%;
+  bottom: calc(100% + 4px);
   left: 0;
-  margin-top: 8px;
   padding: 12px;
   background-color: var(--vscode-editor-background);
   border: 1px solid var(--vscode-panel-border);
@@ -174,6 +185,7 @@ body.immersive-mode .immersive-author-info {
   z-index: 1000;
   min-width: 280px;
   max-width: 400px;
+  white-space: normal;
 }
 
 .immersive-author-popover.show {

@@ -132,7 +132,7 @@ export const relatedQuestionsCss = `
 
 .related-question-item:hover {
   border-color: var(--vscode-commandCenter-activeBorder);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0px 0px 1em 0px var(--vscode-commandCenter-activeBorder);
 }
 
 .question-content {

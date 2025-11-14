@@ -240,7 +240,6 @@ p.ztext-empty-paragraph {
   margin: 10px auto;
   padding: 5px 10px;
   border-radius: 4px;
-  max-width: 500px;
   background: var(--vscode-textPreformat-background);
   color: var(--vscode-textLink-activeForeground);
   text-decoration: none;

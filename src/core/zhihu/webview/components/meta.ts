@@ -8,21 +8,25 @@ export class MetaComponent implements Component {
   private answer: AnswerItem;
   private contentType?: "question" | "article";
   private webviewItem?: WebViewItem;
+  private immersiveAuthorHtml?: string;
 
   /**
    * 构造函数
    * @param answer 回答数据
    * @param contentType 内容类型
    * @param webviewItem WebView项（用于文章投票和页码跳转）
+   * @param immersiveAuthorHtml 沉浸模式作者信息HTML
    */
   constructor(
     answer: AnswerItem,
     contentType?: "question" | "article",
     webviewItem?: WebViewItem,
+    immersiveAuthorHtml?: string,
   ) {
     this.answer = answer;
     this.contentType = contentType;
     this.webviewItem = webviewItem;
+    this.immersiveAuthorHtml = immersiveAuthorHtml;
   }
 
   /**
@@ -241,6 +245,7 @@ export class MetaComponent implements Component {
                 : ""
             }
           </div>
+          ${this.immersiveAuthorHtml || ""}
         </div>
       </div>
     `;

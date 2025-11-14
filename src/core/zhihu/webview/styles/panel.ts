@@ -43,6 +43,13 @@ export const panelCss = `
   cursor: pointer;
 }
 
+/* 透明度容器样式 */
+.style-option-opacity-container {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
 /* 颜色预设样式 */
 .color-presets-container {
   margin-top: 8px;

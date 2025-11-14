@@ -83,9 +83,6 @@ export const articleTemplate = `
 
     \${NAVIGATION_COMPONENT}
 
-    <!-- 沉浸模式的作者信息 -->
-    \${IMMERSIVE_AUTHOR_COMPONENT}
-
     <div class="article-content \${MEDIA_MODE_CLASS}">\${ARTICLE_CONTENT}</div>
 
     \${META_COMPONENT}

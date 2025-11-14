@@ -110,7 +110,7 @@ export class AuthorComponent implements Component {
   }
 
   /**
-   * 渲染沉浸模式的作者信息（仅在沉浸模式下显示）
+   * 渲染沉浸模式的作者信息（仅在沉浸模式下的 answer-meta 中显示）
    * @returns 沉浸模式作者信息HTML
    */
   public renderImmersive(): string {
@@ -138,7 +138,10 @@ export class AuthorComponent implements Component {
     return `
       <div class="immersive-author-info">
         <span class="immersive-author-trigger" onclick="toggleImmersiveAuthorPopover('${authorId}')" title="点击查看作者信息（可关注/取消关注）">
-          ${this.escapeHtml(authorName)}：
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          ${this.escapeHtml(authorName)}
         </span>
         <div class="immersive-author-popover" data-author-id="${authorId}">
           <div class="author-header">

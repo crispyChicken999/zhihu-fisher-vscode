@@ -9,6 +9,7 @@ export const styleScript = `
     maxWidth: '800px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, "Ubuntu", "Droid Sans", sans-serif',
     contentColor: getComputedStyle(document.body).getPropertyValue('--vscode-foreground').trim(),
+    contentOpacity: 100,
     textAlign: 'left'
   };
 
@@ -21,32 +22,55 @@ function setupStylePanel() {
   // 从localStorage加载样式设置
   const savedStyles = JSON.parse(localStorage.getItem('zhihu-fisher-text-styles')) || defaultStyles;
 
+  // 将hex颜色转换为rgba格式
+  const hexToRgba = (hex, opacity) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const alpha = opacity / 100;
+    return \`rgba(\${r}, \${g}, \${b}, \${alpha})\`;
+  };
+
+  // 应用颜色到元素
+  const applyColor = (color, opacity) => {
+    const finalColor = opacity < 100 ? hexToRgba(color, opacity) : color;
+    document.querySelector('header').style.color = finalColor;
+    const questionDetailContentEle = document.querySelector('.question-detail-content');
+    if (questionDetailContentEle) {
+      questionDetailContentEle.style.color = finalColor;
+    }
+    document.querySelector('.article-content').style.color = finalColor;
+    document.querySelector('.comments-container').style.color = finalColor;
+    document.querySelector('.comments-modal-container').style.color = finalColor;
+  };
+
   if (savedStyles) {
     // 更新页面的样式
     document.body.style.fontSize = savedStyles.fontSize;
     document.body.style.lineHeight = savedStyles.lineHeight;
     document.body.style.maxWidth = savedStyles.maxWidth;
     document.body.style.fontFamily = savedStyles.fontFamily;
-    document.querySelector('header').style.color = savedStyles.contentColor;
-    const questionDetailContentEle = document.querySelector('.question-detail-content');
-    if (questionDetailContentEle) {
-      questionDetailContentEle.style.color = savedStyles.contentColor;
-    }
-    document.querySelector('.article-content').style.color = savedStyles.contentColor;
-    document.querySelector('.comments-container').style.color = savedStyles.contentColor;
-    document.querySelector('.comments-modal-container').style.color = savedStyles.contentColor;
+    
+    // 应用颜色(考虑透明度)
+    const opacity = savedStyles.contentOpacity !== undefined ? savedStyles.contentOpacity : 100;
+    applyColor(savedStyles.contentColor, opacity);
+    
     document.querySelector('.article-content').style.textAlign = savedStyles.textAlign;
     document.querySelector('.comments-container').style.textAlign = savedStyles.textAlign;
     document.querySelector('.comments-modal-container').style.textAlign = savedStyles.textAlign;
   }
 
   const updateLocalStorage = () => {
+    const opacitySlider = document.getElementById('content-opacity-slider');
+    const opacity = opacitySlider ? parseInt(opacitySlider.value) : 100;
+    
     const styles = {
       fontSize: document.body.style.fontSize,
       lineHeight: document.body.style.lineHeight,
       maxWidth: document.body.style.maxWidth,
       fontFamily: document.body.style.fontFamily,
       contentColor: document.querySelector('#content-color').value,
+      contentOpacity: opacity,
       textAlign: document.querySelector('.article-content').style.textAlign
     };
     localStorage.setItem('zhihu-fisher-text-styles', JSON.stringify(styles));
@@ -130,15 +154,19 @@ function setupStylePanel() {
     if (colorInput && colorValue) {
       colorInput.addEventListener('input', function() {
         const color = this.value;
-        colorValue.textContent = color;
-        document.querySelector('header').style.color = color;
-        document.querySelector('.article-content').style.color = color;
-        document.querySelector('.comments-container').style.color = color;
-        document.querySelector('.comments-modal-container').style.color = color;
-        const questionDetailContentEle = document.querySelector('.question-detail-content');
-        if (questionDetailContentEle) {
-          questionDetailContentEle.style.color = savedStyles.contentColor;
+        const opacitySlider = document.getElementById('content-opacity-slider');
+        const opacity = opacitySlider ? parseInt(opacitySlider.value) : 100;
+        
+        // 更新显示的颜色值
+        if (opacity < 100) {
+          const finalColor = hexToRgba(color, opacity);
+          colorValue.textContent = finalColor;
+        } else {
+          colorValue.textContent = color;
         }
+        
+        // 应用颜色
+        applyColor(color, opacity);
         updateLocalStorage();
 
         // 更新预设按钮的选中状态
@@ -153,7 +181,14 @@ function setupStylePanel() {
       });
 
       colorInput.value = savedStyles.contentColor || defaultStyles.contentColor;
-      colorValue.textContent = savedStyles.contentColor || defaultStyles.contentColor;
+      
+      // 初始化显示的颜色值
+      const initialOpacity = savedStyles.contentOpacity !== undefined ? savedStyles.contentOpacity : 100;
+      if (initialOpacity < 100) {
+        colorValue.textContent = hexToRgba(colorInput.value, initialOpacity);
+      } else {
+        colorValue.textContent = savedStyles.contentColor || defaultStyles.contentColor;
+      }
 
       // 初始化预设按钮的选中状态
       setTimeout(() => {
@@ -168,6 +203,40 @@ function setupStylePanel() {
         });
       }, 100);
     }
+  }
+
+  // 透明度滑块
+  const opacitySlider = document.getElementById('content-opacity-slider');
+  const opacityValue = document.getElementById('content-opacity-value');
+
+  if (opacitySlider && opacityValue) {
+    opacitySlider.addEventListener('input', function() {
+      const opacity = parseInt(this.value);
+      opacityValue.textContent = opacity + '%';
+      
+      const colorInput = document.getElementById('content-color');
+      const colorValue = document.getElementById('content-color-value');
+      if (colorInput && colorValue) {
+        const color = colorInput.value;
+        
+        // 更新显示的颜色值
+        if (opacity < 100) {
+          const finalColor = hexToRgba(color, opacity);
+          colorValue.textContent = finalColor;
+        } else {
+          colorValue.textContent = color;
+        }
+        
+        // 应用颜色
+        applyColor(color, opacity);
+        updateLocalStorage();
+      }
+    });
+
+    // 初始化透明度值
+    const initialOpacity = savedStyles.contentOpacity !== undefined ? savedStyles.contentOpacity : 100;
+    opacitySlider.value = initialOpacity;
+    opacityValue.textContent = initialOpacity + '%';
   }
 
   // 对齐方式选择器 text-align input radio
@@ -264,6 +333,12 @@ function setupStylePanel() {
         }
       }
 
+      // 重置透明度
+      if (opacitySlider && opacityValue) {
+        opacitySlider.value = defaultStyles.contentOpacity;
+        opacityValue.textContent = defaultStyles.contentOpacity + '%';
+      }
+
       if (textAlignSelect) {
         textAlignSelect.value = defaultStyles.textAlign;
       }
@@ -346,28 +421,50 @@ function switchStyleTab(tabName) {
 function selectPresetColor(color) {
   const colorInput = document.getElementById('content-color');
   const colorValue = document.getElementById('content-color-value');
+  const opacitySlider = document.getElementById('content-opacity-slider');
 
   if (colorInput && colorValue) {
     // 更新颜色选择器的值
     colorInput.value = color;
-    colorValue.textContent = color;
+    
+    // 获取当前透明度
+    const opacity = opacitySlider ? parseInt(opacitySlider.value) : 100;
+    
+    // 将hex颜色转换为rgba格式
+    const hexToRgba = (hex, opacity) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      const alpha = opacity / 100;
+      return \`rgba(\${r}, \${g}, \${b}, \${alpha})\`;
+    };
+    
+    // 更新显示的颜色值
+    if (opacity < 100) {
+      const finalColor = hexToRgba(color, opacity);
+      colorValue.textContent = finalColor;
+    } else {
+      colorValue.textContent = color;
+    }
 
     // 应用颜色到页面元素
+    const finalColor = opacity < 100 ? hexToRgba(color, opacity) : color;
     const header = document.querySelector('header');
     const articleContent = document.querySelector('.article-content');
     const commentsContainer = document.querySelector('.comments-container');
     const commentsModal = document.querySelector('.comments-modal-container');
     const questionDetail = document.querySelector('.question-detail-content');
 
-    if (header) header.style.color = color;
-    if (articleContent) articleContent.style.color = color;
-    if (commentsContainer) commentsContainer.style.color = color;
-    if (commentsModal) commentsModal.style.color = color;
-    if (questionDetail) questionDetail.style.color = color;
+    if (header) header.style.color = finalColor;
+    if (articleContent) articleContent.style.color = finalColor;
+    if (commentsContainer) commentsContainer.style.color = finalColor;
+    if (commentsModal) commentsModal.style.color = finalColor;
+    if (questionDetail) questionDetail.style.color = finalColor;
 
     // 更新本地存储
     const savedStyles = JSON.parse(localStorage.getItem('zhihu-fisher-text-styles')) || defaultStyles;
     savedStyles.contentColor = color;
+    savedStyles.contentOpacity = opacity;
     localStorage.setItem('zhihu-fisher-text-styles', JSON.stringify(savedStyles));
 
     // 更新预设按钮的选中状态

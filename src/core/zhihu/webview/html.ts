@@ -194,11 +194,12 @@ export class HtmlRenderer {
       renderOptions
     );
 
-    // 创建Meta组件
+    // 创建Meta组件（传入沉浸模式作者信息）
     const metaComponent = new MetaComponent(
       currentAnswer,
       contentType,
-      webview
+      webview,
+      authorComponent.renderImmersive()
     );
 
     // 创建文章内容组件
@@ -296,7 +297,6 @@ export class HtmlRenderer {
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
       .replaceAll("${META_COMPONENT}", metaComponent.render())
-      .replace("${IMMERSIVE_AUTHOR_COMPONENT}", authorComponent.renderImmersive())
       .replace("${ARTICLE_CONTENT}", contentComponent.render())
       .replace("${COMMENTS_COMPONENT}", commentsComponent.render())
       .replace("${TOOLBAR_COMPONENT}", toolbarComponent.render())
