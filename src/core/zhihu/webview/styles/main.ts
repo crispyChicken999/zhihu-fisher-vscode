@@ -30,9 +30,6 @@ html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not
   filter: grayscale(100%);
 }
 
-html.grayscale-mode .immersive-author-trigger {
-  color: var(--vscode-foreground);
-}
 
 /* 确保伪装界面在灰色模式下保持正常颜色 */
 html.grayscale-mode .disguise-code-interface {
