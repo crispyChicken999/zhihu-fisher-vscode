@@ -172,7 +172,8 @@ export const commentsCss = `
   text-decoration: underline;
 }
 
-.zhihu-comment-author-headline {
+.zhihu-comment-author-headline,
+.zhihu-child-comment-author-headline {
   color: var(--vscode-descriptionForeground);
   line-height: 1.2;
   opacity: 0.5;
@@ -344,6 +345,10 @@ export const commentsCss = `
   border-radius: 50%;
   object-fit: cover;
   margin-right: 0.67em;
+}
+
+.zhihu-child-comment-author {
+  display: flex;
 }
 
 .zhihu-child-comment-author-name {

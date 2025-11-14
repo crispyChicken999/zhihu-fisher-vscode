@@ -691,7 +691,7 @@ export class CommentsComponent implements Component {
                 const replyToAuthorHeadline = replyToAuthor.headline || "";
 
                 childAuthorDisplayHtml = `
-                  <div>
+                  <div class="zhihu-child-comment-author">
                     <div class="zhihu-child-comment-author-name zhihu-reply-chain">
                       <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
                   childAuthorHeadline !== ""
@@ -712,7 +712,7 @@ export class CommentsComponent implements Component {
               } else {
                 // 无回复关系：正常显示作者和签名
                 childAuthorDisplayHtml = `
-                  <div>
+                  <div class="zhihu-child-comment-author">
                     <div class="zhihu-child-comment-author-name">
                       <a href="${childAuthorUrl}" title="『${childAuthorName}』&#010签名：${
                   childAuthorHeadline !== ""
