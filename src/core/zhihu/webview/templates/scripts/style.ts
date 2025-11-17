@@ -50,11 +50,11 @@ function setupStylePanel() {
     document.body.style.lineHeight = savedStyles.lineHeight;
     document.body.style.maxWidth = savedStyles.maxWidth;
     document.body.style.fontFamily = savedStyles.fontFamily;
-    
+
     // 应用颜色(考虑透明度)
     const opacity = savedStyles.contentOpacity !== undefined ? savedStyles.contentOpacity : 100;
     applyColor(savedStyles.contentColor, opacity);
-    
+
     document.querySelector('.article-content').style.textAlign = savedStyles.textAlign;
     document.querySelector('.comments-container').style.textAlign = savedStyles.textAlign;
     document.querySelector('.comments-modal-container').style.textAlign = savedStyles.textAlign;
@@ -63,7 +63,7 @@ function setupStylePanel() {
   const updateLocalStorage = () => {
     const opacitySlider = document.getElementById('content-opacity-slider');
     const opacity = opacitySlider ? parseInt(opacitySlider.value) : 100;
-    
+
     const styles = {
       fontSize: document.body.style.fontSize,
       lineHeight: document.body.style.lineHeight,
@@ -156,7 +156,7 @@ function setupStylePanel() {
         const color = this.value;
         const opacitySlider = document.getElementById('content-opacity-slider');
         const opacity = opacitySlider ? parseInt(opacitySlider.value) : 100;
-        
+
         // 更新显示的颜色值
         if (opacity < 100) {
           const finalColor = hexToRgba(color, opacity);
@@ -164,7 +164,7 @@ function setupStylePanel() {
         } else {
           colorValue.textContent = color;
         }
-        
+
         // 应用颜色
         applyColor(color, opacity);
         updateLocalStorage();
@@ -181,7 +181,7 @@ function setupStylePanel() {
       });
 
       colorInput.value = savedStyles.contentColor || defaultStyles.contentColor;
-      
+22
       // 初始化显示的颜色值
       const initialOpacity = savedStyles.contentOpacity !== undefined ? savedStyles.contentOpacity : 100;
       if (initialOpacity < 100) {
@@ -213,12 +213,12 @@ function setupStylePanel() {
     opacitySlider.addEventListener('input', function() {
       const opacity = parseInt(this.value);
       opacityValue.textContent = opacity + '%';
-      
+
       const colorInput = document.getElementById('content-color');
       const colorValue = document.getElementById('content-color-value');
       if (colorInput && colorValue) {
         const color = colorInput.value;
-        
+
         // 更新显示的颜色值
         if (opacity < 100) {
           const finalColor = hexToRgba(color, opacity);
@@ -226,7 +226,7 @@ function setupStylePanel() {
         } else {
           colorValue.textContent = color;
         }
-        
+
         // 应用颜色
         applyColor(color, opacity);
         updateLocalStorage();
@@ -426,10 +426,10 @@ function selectPresetColor(color) {
   if (colorInput && colorValue) {
     // 更新颜色选择器的值
     colorInput.value = color;
-    
+
     // 获取当前透明度
     const opacity = opacitySlider ? parseInt(opacitySlider.value) : 100;
-    
+
     // 将hex颜色转换为rgba格式
     const hexToRgba = (hex, opacity) => {
       const r = parseInt(hex.slice(1, 3), 16);
@@ -438,7 +438,7 @@ function selectPresetColor(color) {
       const alpha = opacity / 100;
       return \`rgba(\${r}, \${g}, \${b}, \${alpha})\`;
     };
-    
+
     // 更新显示的颜色值
     if (opacity < 100) {
       const finalColor = hexToRgba(color, opacity);
@@ -747,7 +747,7 @@ function clearAllDisguiseTypes() {
  */
 function previewDisguise() {
   const selectedTypes = getSelectedDisguiseTypes();
-  
+
   vscode.postMessage({
     command: "previewDisguise",
     selectedTypes: selectedTypes
