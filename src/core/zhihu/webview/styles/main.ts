@@ -120,6 +120,15 @@ h6 {
   margin-top: 1.75em;
 }
 
+body.immersive-mode .article-content h1,
+body.immersive-mode .article-content h2,
+body.immersive-mode .article-content h3,
+body.immersive-mode .article-content h4,
+body.immersive-mode .article-content h5,
+body.immersive-mode .article-content h6 {
+  font-size: 1em;
+}
+
 a {
   color: var(--vscode-textLink-foreground);
   text-decoration: none;
