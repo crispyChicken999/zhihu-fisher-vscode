@@ -45,7 +45,7 @@ export class SidebarDisguiseManager {
     try {
       this.registerCommands(context);
     } catch (error) {
-      console.warn('部分命令可能已存在，跳过重复注册:', error);
+      console.warn("部分命令可能已存在，跳过重复注册:", error);
     }
 
     // 监听配置变化
@@ -172,15 +172,12 @@ export class SidebarDisguiseManager {
         }
       ),
 
-      this.safeRegisterCommand(
-        "zhihu-fisher.refreshFakeFileList",
-        () => {
-          if (this.fakeFileProvider) {
-            this.fakeFileProvider.refresh();
-            vscode.window.showInformationMessage("伪装文件列表已刷新");
-          }
+      this.safeRegisterCommand("zhihu-fisher.refreshFakeFileList", () => {
+        if (this.fakeFileProvider) {
+          this.fakeFileProvider.refresh();
+          vscode.window.showInformationMessage("伪装文件列表已刷新");
         }
-      ),
+      }),
 
       this.safeRegisterCommand(
         "zhihu-fisher.openFakeFile",
@@ -188,8 +185,6 @@ export class SidebarDisguiseManager {
           vscode.window.showInformationMessage(`打开伪装文件: ${fileName}`);
         }
       ),
-
-
 
       this.safeRegisterCommand(
         "zhihu-fisher.onFakeFileClick",
@@ -205,14 +200,17 @@ export class SidebarDisguiseManager {
     ];
 
     // 只添加成功注册的命令到context.subscriptions
-    const validCommands = commands.filter(cmd => cmd !== null);
+    const validCommands = commands.filter((cmd) => cmd !== null);
     context.subscriptions.push(...validCommands);
   }
 
   /**
    * 安全地注册命令，避免重复注册
    */
-  private safeRegisterCommand(commandId: string, callback: (...args: any[]) => any): vscode.Disposable | null {
+  private safeRegisterCommand(
+    commandId: string,
+    callback: (...args: any[]) => any
+  ): vscode.Disposable | null {
     try {
       return vscode.commands.registerCommand(commandId, callback);
     } catch (error) {
@@ -242,8 +240,11 @@ export class SidebarDisguiseManager {
 
     // 检查侧边栏伪装是否启用
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    const sidebarDisguiseEnabled = config.get<boolean>("sidebarDisguiseEnabled", true);
-    
+    const sidebarDisguiseEnabled = config.get<boolean>(
+      "sidebarDisguiseEnabled",
+      true
+    );
+
     if (!sidebarDisguiseEnabled) {
       console.log("WebView创建，但侧边栏伪装功能已关闭，跳过自动伪装");
       return;
@@ -264,8 +265,11 @@ export class SidebarDisguiseManager {
 
     // 检查侧边栏伪装是否启用
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    const sidebarDisguiseEnabled = config.get<boolean>("sidebarDisguiseEnabled", true);
-    
+    const sidebarDisguiseEnabled = config.get<boolean>(
+      "sidebarDisguiseEnabled",
+      true
+    );
+
     if (!sidebarDisguiseEnabled) {
       console.log("WebView界面伪装触发，但侧边栏伪装功能已关闭，跳过联动伪装");
       return;
@@ -280,30 +284,21 @@ export class SidebarDisguiseManager {
    */
   public async onWebViewClosed(): Promise<void> {
     // 检查是否还有其他活跃的WebView
-    const hasActiveWebView = this.hasActiveZhihuWebView();
+    const hasWebView = this.hasZhihuWebView();
 
-    if (!hasActiveWebView && this.isCurrentlyDisguised) {
+    if (!hasWebView && this.isCurrentlyDisguised) {
       await this.showNormalViews();
       console.log("所有WebView已关闭，恢复正常侧边栏");
     }
   }
 
   /**
-   * 检查是否有活跃的知乎WebView
+   * 检查是否还有知乎详情页被打开
+   * 简化逻辑：只要有任何WebView存在就返回true
+   * 原本是判断webview是否被聚焦/可见再决定是否显示正常的侧边栏，现在的话就只要有WebView存在就伪装侧边栏，全都关闭了才恢复侧边栏
    */
-  private hasActiveZhihuWebView(): boolean {
-    if (Store.webviewMap && Store.webviewMap.size > 0) {
-      for (const [webviewId, webviewItem] of Store.webviewMap.entries()) {
-        if (
-          webviewItem &&
-          webviewItem.webviewPanel &&
-          !webviewItem.webviewPanel.active
-        ) {
-          return true;
-        }
-      }
-    }
-    return false;
+  private hasZhihuWebView(): boolean {
+    return Store.webviewMap?.size > 0 || false;
   }
 
   /**
