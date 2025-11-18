@@ -308,3 +308,7 @@ npm run watch
 - 看到这里，帮忙给个 Star ⭐️ 支持一下吧！
 
 ![赞赏码](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg)
+
+## ⭐️ Star History ⭐️
+
+[![Star History Chart](https://api.star-history.com/svg?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)](https://www.star-history.com/#crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)
