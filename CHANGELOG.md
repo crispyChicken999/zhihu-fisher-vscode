@@ -2,7 +2,7 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
-## [Unreleased]
+## [0.5.3] - 2025-11-18
 
 ### Features
 
