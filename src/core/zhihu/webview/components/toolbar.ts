@@ -201,6 +201,17 @@ export class ToolbarComponent implements Component {
         order: 9,
       },
       {
+        id: "export",
+        name: "导出Markdown",
+        category: "tools",
+        icon: '<path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm4 18H6V4h7v5h5zM8 15.5l1.5 1.5l2.5-2.5l2.5 2.5l1.5-1.5l-4-4z"/>',
+        tooltip: "导出为Markdown文件&#010供AI工具分析总结",
+        placement: "left-top",
+        onclick: "showExportMarkdownModal()",
+        visible: true,
+        order: 17,
+      },
+      {
         id: "immersive",
         name: "退出沉浸模式",
         category: "function",
@@ -522,6 +533,12 @@ export class ToolbarComponent implements Component {
         <button class="button donate-button" onclick="showDonateModal()" tooltip="感谢您的使用( •̀ ω •́ )✧&#010觉得不错？欢迎请开发者喝杯咖啡~ (点击赞赏)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M11 18q-2.925 0-4.962-2.037T4 11V5q0-.825.588-1.412T6 3h12.5q1.45 0 2.475 1.025T22 6.5t-1.025 2.475T18.5 10H18v1q0 2.925-2.037 4.963T11 18M6 8h10V5H6zm12 0h.5q.625 0 1.063-.437T20 6.5t-.437-1.062T18.5 5H18zM4 21v-2h16v2z"/>
+          </svg>
+        </button>
+
+        <button class="button export-button" onclick="showExportMarkdownModal()" tooltip="导出为Markdown文件&#010供AI工具分析总结" placement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm4 18H6V4h7v5h5zM8 15.5l1.5 1.5l2.5-2.5l2.5 2.5l1.5-1.5l-4-4z"/>
           </svg>
         </button>
 

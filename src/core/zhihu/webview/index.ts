@@ -2017,6 +2017,16 @@ export class WebviewManager {
           // 处理取消关注作者请求
           await this.handleUnfollowAuthor(webviewId, message.authorId);
           break;
+
+        case "getExportStats":
+          // 处理获取导出统计信息请求
+          await this.handleGetExportStats(webviewId);
+          break;
+
+        case "exportMarkdown":
+          // 处理导出Markdown请求
+          await this.handleExportMarkdown(webviewId);
+          break;
       }
     });
   }
@@ -2977,6 +2987,344 @@ export class WebviewManager {
         isFollowing: false,
       });
     }
+  }
+
+  /**
+   * 处理获取导出统计信息请求
+   * @param webviewId WebView的ID
+   */
+  private static async handleGetExportStats(
+    webviewId: string
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 统计回答数量
+      const answerCount = webviewItem.article.answerList.length;
+
+      // 统计评论数量（从已加载的回答中统计）
+      let commentCount = 0;
+      webviewItem.article.answerList.forEach((answer) => {
+        // commentList包含了已加载的评论
+        commentCount += answer.commentList.length;
+        // 统计子评论（优先使用 total_child_comments，如果没有则使用 child_comments）
+        answer.commentList.forEach((comment) => {
+          const childComments = (comment.total_child_comments && Array.isArray(comment.total_child_comments))
+            ? comment.total_child_comments
+            : (comment.child_comments && Array.isArray(comment.child_comments))
+              ? comment.child_comments
+              : [];
+          commentCount += childComments.length;
+        });
+      });
+
+      // 发送统计信息到前端
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "displayExportModal",
+        stats: {
+          answerCount,
+          commentCount,
+        },
+      });
+    } catch (error) {
+      console.error("获取导出统计信息失败:", error);
+      vscode.window.showErrorMessage(
+        `获取统计信息失败: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  /**
+   * 处理导出Markdown请求
+   * @param webviewId WebView的ID
+   */
+  private static async handleExportMarkdown(
+    webviewId: string
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      vscode.window.showInformationMessage("正在生成 Markdown 文件...");
+
+      // 生成Markdown内容
+      const markdown = this.generateMarkdownContent(webviewItem);
+
+      // 生成文件名（使用标题，移除特殊字符）
+      const fileName = webviewItem.article.title
+        .replace(/[<>:"/\\|?*]/g, "_")
+        .substring(0, 100);
+
+      // 获取工作区路径
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders || workspaceFolders.length === 0) {
+        // 如果没有工作区，让用户选择保存位置
+        const uri = await vscode.window.showSaveDialog({
+          defaultUri: vscode.Uri.file(`${fileName}.md`),
+          filters: {
+            Markdown: ["md"],
+          },
+        });
+
+        if (uri) {
+          await vscode.workspace.fs.writeFile(
+            uri,
+            Buffer.from(markdown, "utf8")
+          );
+          vscode.window.showInformationMessage(
+            `✅ Markdown文件已导出: ${uri.fsPath}`
+          );
+          // 打开文件
+          await vscode.window.showTextDocument(uri);
+        }
+      } else {
+        // 保存到工作区根目录
+        const filePath = vscode.Uri.joinPath(
+          workspaceFolders[0].uri,
+          `${fileName}.md`
+        );
+        await vscode.workspace.fs.writeFile(
+          filePath,
+          Buffer.from(markdown, "utf8")
+        );
+        vscode.window.showInformationMessage(
+          `✅ Markdown文件已导出: ${filePath.fsPath}`
+        );
+        // 打开文件
+        await vscode.window.showTextDocument(filePath);
+      }
+    } catch (error) {
+      console.error("导出Markdown失败:", error);
+      vscode.window.showErrorMessage(
+        `导出失败: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * 生成Markdown内容
+   * @param webviewItem WebView项
+   */
+  private static generateMarkdownContent(webviewItem: WebViewItem): string {
+    let markdown = "";
+
+    // 添加标题
+    markdown += `# ${webviewItem.article.title}\n\n`;
+
+    // 添加元信息
+    markdown += `> 📅 导出时间: ${new Date().toLocaleString("zh-CN")}\n`;
+    markdown += `> 🔗 原文链接: ${webviewItem.url}\n`;
+    markdown += `> 📊 已加载回答数: ${webviewItem.article.answerList.length}\n\n`;
+
+    // 添加问题详情（如果有）
+    if (webviewItem.article.questionDetail) {
+      markdown += "## 问题详情\n\n";
+      markdown += this.htmlToMarkdown(webviewItem.article.questionDetail);
+      markdown += "\n\n";
+    }
+
+    // 添加分隔线
+    markdown += "---\n\n";
+
+    // 遍历所有回答
+    webviewItem.article.answerList.forEach((answer, index) => {
+      // 回答标题和URL
+      markdown += `## 回答 ${index + 1}\n\n`;
+      if (answer.url) {
+        markdown += `> 🔗 回答链接: [${answer.url}](${answer.url})\n\n`;
+      }
+
+      // 作者信息
+      if (answer.author) {
+        markdown += `**👤 作者:** [${answer.author.name || "未知作者"}](${
+          answer.author.url || ""
+        })\n\n`;
+        if (answer.author.signature) {
+          markdown += `> ${answer.author.signature}\n\n`;
+        }
+      }
+
+      // 元信息
+      if (answer.likeCount !== undefined || answer.commentCount !== undefined) {
+        markdown += "**📊 数据:**\n";
+        if (answer.likeCount !== undefined) {
+          markdown += `- 👍 点赞: ${answer.likeCount}\n`;
+        }
+        if (answer.commentCount !== undefined) {
+          markdown += `- 💬 评论: ${answer.commentCount}\n`;
+        }
+        if (answer.publishTime) {
+          markdown += `- 📅 发布: ${answer.publishTime}\n`;
+        }
+        if (answer.updateTime && answer.updateTime !== answer.publishTime) {
+          markdown += `- ✏️ 更新: ${answer.updateTime}\n`;
+        }
+        markdown += "\n";
+      }
+
+      // 回答内容
+      markdown += "### 回答内容\n\n";
+      if (answer.content) {
+        markdown += this.htmlToMarkdown(answer.content);
+      }
+      markdown += "\n\n";
+
+      // 评论（如果已加载）
+      if (answer.commentList && answer.commentList.length > 0) {
+        markdown += `### 💬 评论区 (${answer.commentList.length}条)\n\n`;
+
+        answer.commentList.forEach((comment, commentIndex) => {
+          markdown += `#### 评论 ${commentIndex + 1}\n\n`;
+          markdown += `**${comment.author?.name || "匿名用户"}**`;
+          if (comment.created_time) {
+            const timeStr = new Date(comment.created_time * 1000).toLocaleString("zh-CN");
+            markdown += ` · ${timeStr}`;
+          }
+          if (comment.vote_count) {
+            markdown += ` · 👍 ${comment.vote_count}`;
+          }
+          markdown += "\n\n";
+          markdown += `${comment.content || ""}\n\n`;
+
+          // 子评论（回复）
+          // 优先使用 total_child_comments（用户手动加载的），如果没有则使用 child_comments（API初始返回的）
+          const childComments = (comment.total_child_comments && comment.total_child_comments.length > 0)
+            ? comment.total_child_comments
+            : (comment.child_comments && comment.child_comments.length > 0)
+              ? comment.child_comments
+              : [];
+
+          if (childComments.length > 0) {
+            markdown += `**↳ 回复 (${childComments.length}条):**\n\n`;
+            childComments.forEach((childComment) => {
+              markdown += `  - **${childComment.author?.name || "匿名用户"}**`;
+              if (childComment.created_time) {
+                const childTimeStr = new Date(childComment.created_time * 1000).toLocaleString("zh-CN");
+                markdown += ` · ${childTimeStr}`;
+              }
+              if (childComment.vote_count) {
+                markdown += ` · 👍 ${childComment.vote_count}`;
+              }
+              markdown += "\n";
+              markdown += `    ${childComment.content || ""}\n\n`;
+            });
+          }
+        });
+      }
+
+      // 回答之间的分隔线
+      if (index < webviewItem.article.answerList.length - 1) {
+        markdown += "---\n\n";
+      }
+    });
+
+    // 添加页脚
+    markdown += "\n---\n\n";
+    markdown += `> 📝 本文件由 [知乎摸鱼插件](https://github.com/crispyChicken999/zhihu-fisher-vscode) 导出\n\n`;
+    markdown += `> 💡 提示: 您可以将此文件发送给 AI 工具进行分析总结\n\n`;
+
+    // 添加免责声明
+    markdown += "## ⚠️ 免责声明\n\n";
+    markdown += "1. **内容版权**: 本文件中的所有内容（包括问题、回答、评论等）版权归知乎平台及原作者所有。本工具仅提供技术手段导出您已在知乎平台上可见的公开内容，用于个人学习、研究和备份目的。\n\n";
+    markdown += "2. **使用限制**: 导出的内容仅供个人非商业用途使用。未经原作者授权，请勿将导出内容用于任何商业用途、二次发布、转载或其他可能侵犯原作者权益的行为。\n\n";
+    markdown += "3. **责任声明**: 使用本工具导出内容的用户应自行承担因使用导出内容而产生的一切法律责任。本工具开发者不对用户使用导出内容的行为承担任何责任，包括但不限于因侵犯知识产权、违反平台规则等引起的任何纠纷或损失。\n\n";
+    markdown += "4. **合规使用**: 请遵守知乎平台的用户协议和相关法律法规，尊重原创作者的知识产权。如需引用或转载内容，请务必标注来源并获得原作者授权。\n\n";
+    markdown += "5. **数据准确性**: 导出的内容为导出时刻的快照，可能与当前知乎平台上的实际内容存在差异。本工具不保证导出内容的完整性和准确性。\n\n";
+    markdown += `6. **开源协议**: 本工具遵循开源协议，使用即表示您同意上述条款。更多信息请访问: https://github.com/crispyChicken999/zhihu-fisher-vscode\n\n`;
+
+    return markdown;
+  }
+
+  /**
+   * 简单的HTML转Markdown转换
+   * @param html HTML内容
+   */
+  private static htmlToMarkdown(html: string): string {
+    if (!html) {return "";}
+
+    // 使用marked的反向转换，或者简单处理
+    let text = html;
+
+    // 移除script和style标签
+    text = text.replace(/<script[^>]*>.*?<\/script>/gi, "");
+    text = text.replace(/<style[^>]*>.*?<\/style>/gi, "");
+
+    // 处理图片
+    text = text.replace(
+      /<img[^>]*src=["']([^"']*)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi,
+      "![$2]($1)"
+    );
+    text = text.replace(
+      /<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']*)["'][^>]*>/gi,
+      "![$1]($2)"
+    );
+    text = text.replace(/<img[^>]*src=["']([^"']*)["'][^>]*>/gi, "![图片]($1)");
+
+    // 处理链接
+    text = text.replace(
+      /<a[^>]*href=["']([^"']*)["'][^>]*>([^<]*)<\/a>/gi,
+      "[$2]($1)"
+    );
+
+    // 处理代码块
+    text = text.replace(
+      /<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi,
+      "\n```\n$1\n```\n"
+    );
+    text = text.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, "\n```\n$1\n```\n");
+
+    // 处理行内代码
+    text = text.replace(/<code[^>]*>([^<]*)<\/code>/gi, "`$1`");
+
+    // 处理标题
+    text = text.replace(/<h1[^>]*>([^<]*)<\/h1>/gi, "\n# $1\n\n");
+    text = text.replace(/<h2[^>]*>([^<]*)<\/h2>/gi, "\n## $1\n\n");
+    text = text.replace(/<h3[^>]*>([^<]*)<\/h3>/gi, "\n### $1\n\n");
+    text = text.replace(/<h4[^>]*>([^<]*)<\/h4>/gi, "\n#### $1\n\n");
+    text = text.replace(/<h5[^>]*>([^<]*)<\/h5>/gi, "\n##### $1\n\n");
+    text = text.replace(/<h6[^>]*>([^<]*)<\/h6>/gi, "\n###### $1\n\n");
+
+    // 处理粗体和斜体
+    text = text.replace(/<strong[^>]*>([^<]*)<\/strong>/gi, "**$1**");
+    text = text.replace(/<b[^>]*>([^<]*)<\/b>/gi, "**$1**");
+    text = text.replace(/<em[^>]*>([^<]*)<\/em>/gi, "*$1*");
+    text = text.replace(/<i[^>]*>([^<]*)<\/i>/gi, "*$1*");
+
+    // 处理列表
+    text = text.replace(/<li[^>]*>([^<]*)<\/li>/gi, "- $1\n");
+    text = text.replace(/<\/ul>/gi, "\n");
+    text = text.replace(/<\/ol>/gi, "\n");
+    text = text.replace(/<ul[^>]*>/gi, "\n");
+    text = text.replace(/<ol[^>]*>/gi, "\n");
+
+    // 处理段落和换行
+    text = text.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n");
+    text = text.replace(/<br\s*\/?>/gi, "\n");
+    text = text.replace(/<div[^>]*>([\s\S]*?)<\/div>/gi, "$1\n");
+
+    // 移除所有剩余的HTML标签
+    text = text.replace(/<[^>]+>/g, "");
+
+    // 解码HTML实体
+    text = text.replace(/&nbsp;/g, " ");
+    text = text.replace(/&lt;/g, "<");
+    text = text.replace(/&gt;/g, ">");
+    text = text.replace(/&amp;/g, "&");
+    text = text.replace(/&quot;/g, '"');
+    text = text.replace(/&#39;/g, "'");
+
+    // 清理多余的空行
+    text = text.replace(/\n{3,}/g, "\n\n");
+    text = text.trim();
+
+    return text;
   }
 
   /**

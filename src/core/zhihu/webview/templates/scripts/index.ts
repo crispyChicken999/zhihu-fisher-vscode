@@ -16,6 +16,7 @@ import { shortcutsScript } from './shortcuts';
 import { questionDetailScript } from './question-detail';
 import { authorScript } from './author';
 import { answerSortScript } from './answer-sort';
+import { exportScript } from './export';
 
 /**
  * 完整的脚本模板 - 拼接所有功能模块
@@ -48,4 +49,6 @@ ${questionDetailScript}
 ${authorScript}
 
 ${answerSortScript}
+
+${exportScript}
 `;

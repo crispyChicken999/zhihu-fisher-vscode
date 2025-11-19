@@ -229,6 +229,13 @@ window.addEventListener('message', event => {
       updateAuthorFollowStatus(message.authorId, message.isFollowing);
     }
   }
+
+  // 处理显示导出弹窗的消息
+  else if (message.command === 'displayExportModal') {
+    if (typeof displayExportModal === 'function') {
+      displayExportModal(message.stats);
+    }
+  }
 });
 
 /**
