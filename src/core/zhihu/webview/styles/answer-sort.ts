@@ -199,7 +199,7 @@ export const answerSortCss = `
 
   /* 提示信息 */
   .sort-tips {
-    padding: 12px 16px;
+    padding: 8px 16px;
     font-size: 0.85em;
     color: var(--vscode-descriptionForeground);
     border-top: 1px solid var(--vscode-panel-border);
