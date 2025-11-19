@@ -108,6 +108,7 @@ export const navigationCss = `
 
 /* 回答跳转选择器样式 */
 .answer-jump-select {
+  user-select: none;
   background-color: var(--vscode-dropdown-background);
   color: var(--vscode-dropdown-foreground);
   border: 1px solid var(--vscode-dropdown-border);
