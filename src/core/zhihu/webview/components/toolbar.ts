@@ -29,12 +29,18 @@ export class ToolbarComponent implements Component {
   private contentType: "article" | "answer" = "answer"; // 内容类型
   private toolbarConfig: ToolbarButtonConfig[] = []; // 工具栏按钮配置
   private sourceType: string = ""; // 内容来源类型
+  private sortType: string = ""; // 当前排序类型
 
   /**
    * 构造函数
    * @param url 回答或文章的URL
    */
-  constructor(url: string, renderOptions: RenderOptions, answer: AnswerItem, sourceType: string) {
+  constructor(
+    url: string,
+    renderOptions: RenderOptions,
+    answer: AnswerItem,
+    sourceType: string
+  ) {
     this.url = url;
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
     // 从localStorage获取沉浸模式状态
@@ -43,6 +49,8 @@ export class ToolbarComponent implements Component {
     // 判断是否为文章类型（通过URL判断）
     this.isArticle =
       url.includes("zhuanlan.zhihu.com/p/") || url.includes("/p/");
+    // 从URL中判断排序类型 是默认排序 | 时间排序（/answers/updated）
+    this.sortType = answer.sortType || "default";
 
     // 提取内容ID和类型用于收藏功能
     if (this.isArticle) {
@@ -159,6 +167,16 @@ export class ToolbarComponent implements Component {
         order: 7,
       },
       {
+        id: "disguise",
+        name: "代码伪装",
+        category: "function",
+        icon: '<path fill="currentColor" d="M7.8 18q-1.275 0-2.437-.45t-2.088-1.325q-1.2-1.125-1.737-2.662T1 10.375q0-1.95.95-3.162T4.725 6q.35 0 .663.063t.637.187L12 8.475l5.975-2.225q.325-.125.638-.187T19.275 6Q21.1 6 22.05 7.213t.95 3.162q0 1.65-.537 3.188t-1.738 2.662q-.925.875-2.087 1.325T16.2 18q-1.65 0-2.8-.75l-1.15-.75h-.5l-1.15.75Q9.45 18 7.8 18m.925-4q.725 0 1.15-.337t.425-.913q0-.975-1.3-1.862T6.275 10q-.725 0-1.15.338t-.425.912q0 .975 1.3 1.863T8.725 14m6.55 0Q16.7 14 18 13.112t1.3-1.862q0-.6-.413-.925T17.726 10Q16.3 10 15 10.888t-1.3 1.862q0 .575.413.913t1.162.337"/>',
+        tooltip: "代码伪装(Space)",
+        onclick: "toggleDisguiseInterface()",
+        visible: true,
+        order: 16,
+      },
+      {
         id: "feedback",
         name: "问题反馈",
         category: "tools",
@@ -250,8 +268,8 @@ export class ToolbarComponent implements Component {
       );
     }
 
-    if (this.sourceType === "inner-link") {
-      // 如果是inner-link类型，不显示上下篇内容按钮
+    if (this.sourceType === "inner-link" || this.sortType === "updated") {
+      // 如果是inner-link类型，不显示上下篇内容按钮 || 时间排序不显示上下篇内容按钮
       defaultConfig = defaultConfig.filter(
         (btn) => btn.id !== "prev-article" && btn.id !== "next-article"
       );
@@ -407,7 +425,7 @@ export class ToolbarComponent implements Component {
     // 添加关闭按钮（只在沉浸模式的可展开工具栏中显示）
     const closeButton = isExpandable
       ? `
-      <span class="button-close" onclick="hideToolbarButton('${button.id}', event)" tooltip="🚫 隐藏此按钮&#010💡 按 . 键可重新启用" placement="top-right">
+      <span class="button-close" onclick="hideToolbarButton('${button.id}', event)" tooltip="🚫 隐藏此按钮&#010💡 按。键可重新启用" placement="top-right">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
           <path fill="currentColor" d="m6 6l12 12M6 18L18 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
         </svg>
@@ -418,7 +436,9 @@ export class ToolbarComponent implements Component {
     const onclickAttr = button.onclick ? `onclick="${button.onclick}"` : "";
 
     return `
-      <button class="${buttonClass}" ${additionalAttributes} ${onclickAttr} tooltip="${button.tooltip}" placement="${button.placement?? 'left'}">
+      <button class="${buttonClass}" ${additionalAttributes} ${onclickAttr} tooltip="${
+      button.tooltip
+    }" placement="${button.placement ?? "left"}">
         ${buttonContent}
         ${closeButton}
       </button>
@@ -447,7 +467,9 @@ export class ToolbarComponent implements Component {
           </svg>
         </button>
 
-        <button class="button copy-button" onclick="copyLink(this,'${this.url}')" tooltip="复制链接(C)" placement="top">
+        <button class="button copy-button" onclick="copyLink(this,'${
+          this.url
+        }')" tooltip="复制链接(C)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
               <path d="M7 9.667A2.667 2.667 0 0 1 9.667 7h8.666A2.667 2.667 0 0 1 21 9.667v8.666A2.667 2.667 0 0 1 18.333 21H9.667A2.667 2.667 0 0 1 7 18.333z"/>
@@ -456,13 +478,17 @@ export class ToolbarComponent implements Component {
           </svg>
         </button>
 
-        <button class="button open-button" onclick="openPage('${this.url}')" tooltip="在浏览器中打开(B)" placement="top">
+        <button class="button open-button" onclick="openPage('${
+          this.url
+        }')" tooltip="在浏览器中打开(B)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M14 3v2h3.59l-9.83 9.83l1.41 1.41L19 6.41V10h2V3m-2 16H5V5h7V3H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2z"/>
           </svg>
         </button>
 
-        <button class="button favorite-button" onclick="favoriteContent('${this.contentToken}', '${this.contentType}')" tooltip="收藏到收藏夹(F)" placement="top">
+        <button class="button favorite-button" onclick="favoriteContent('${
+          this.contentToken
+        }', '${this.contentType}')" tooltip="收藏到收藏夹(F)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M17.562 21.56a1 1 0 0 1-.465-.116L12 18.764l-5.097 2.68a1 1 0 0 1-1.45-1.053l.973-5.676l-4.124-4.02a1 1 0 0 1 .554-1.705l5.699-.828l2.549-5.164a1.04 1.04 0 0 1 1.793 0l2.548 5.164l5.699.828a1 1 0 0 1 .554 1.705l-4.124 4.02l.974 5.676a1 1 0 0 1-.985 1.169Z"/>
           </svg>
@@ -480,6 +506,13 @@ export class ToolbarComponent implements Component {
           </svg>
         </button>
 
+        <!-- 代码伪装按钮 -->
+        <button class="button disguise-button" onclick="toggleDisguiseInterface()" tooltip="代码伪装(Space)" placement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M7.8 18q-1.275 0-2.437-.45t-2.088-1.325q-1.2-1.125-1.737-2.662T1 10.375q0-1.95.95-3.162T4.725 6q.35 0 .663.063t.637.187L12 8.475l5.975-2.225q.325-.125.638-.187T19.275 6Q21.1 6 22.05 7.213t.95 3.162q0 1.65-.537 3.188t-1.738 2.662q-.925.875-2.087 1.325T16.2 18q-1.65 0-2.8-.75l-1.15-.75h-.5l-1.15.75Q9.45 18 7.8 18m.925-4q.725 0 1.15-.337t.425-.913q0-.975-1.3-1.862T6.275 10q-.725 0-1.15.338t-.425.912q0 .975 1.3 1.863T8.725 14m6.55 0Q16.7 14 18 13.112t1.3-1.862q0-.6-.413-.925T17.726 10Q16.3 10 15 10.888t-1.3 1.862q0 .575.413.913t1.162.337"/>
+          </svg>
+        </button>
+
         <button class="button feedback-button" onclick="openPage('https://github.com/crispyChicken999/zhihu-fisher-vscode/issues')" tooltip="问题反馈 | 提建议(欢迎许愿)&#010(点击前往GitHub反馈)" placement="top">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/>
@@ -492,18 +525,23 @@ export class ToolbarComponent implements Component {
           </svg>
         </button>
 
-        <!-- 上下篇文章/问题切换按钮 -->
-        <button class="button prev-article-button" onclick="loadPreviousArticle()" tooltip="上一篇内容(Ctrl+↑ / W)" placement="top">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M11 20V7.825l-5.6 5.6L4 12l8-8l8 8l-1.4 1.425l-5.6-5.6V20z"/>
-          </svg>
-        </button>
+        ${
+          this.sourceType === "inner-link" || this.sortType === "updated"
+            ? ""
+            : `<!-- 上下篇文章/问题切换按钮 -->
+            <button class="button prev-article-button" onclick="loadPreviousArticle()" tooltip="上一篇内容(Ctrl+↑ / W)" placement="top">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M11 20V7.825l-5.6 5.6L4 12l8-8l8 8l-1.4 1.425l-5.6-5.6V20z"/>
+              </svg>
+            </button>
 
-        <button class="button next-article-button" onclick="loadNextArticle()" tooltip="下一篇内容(Ctrl+↓ / S)" placement="top">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M11 4v12.175l-5.6-5.6L4 12l8 8l8-8l-1.4-1.425l-5.6 5.6V4z"/>
-          </svg>
-        </button>
+            <button class="button next-article-button" onclick="loadNextArticle()" tooltip="下一篇内容(Ctrl+↓ / S)" placement="top">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M11 4v12.175l-5.6-5.6L4 12l8 8l8-8l-1.4-1.425l-5.6 5.6V4z"/>
+              </svg>
+            </button>
+          `
+        }
       </div>
 
       <!-- 沉浸模式下的工具栏按钮 -->

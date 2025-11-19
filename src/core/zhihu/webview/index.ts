@@ -54,13 +54,14 @@ export class WebviewManager {
       }
     }
 
-    // 生成唯一的webview ID
+    // 生成唯一的webview ID（包含排序类型信息）
     const webviewId = WebViewUtils.generateUniqueWebViewId(
       baseId,
       sourceType,
       contentType,
       answerId,
-      collectionId
+      collectionId,
+      item.sortType // 传递排序类型
     );
 
     // 检查是否已经打开了这个特定的内容
@@ -99,6 +100,10 @@ export class WebviewManager {
       // 获取伪装配置
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
       const enableDisguise = config.get<boolean>("enableDisguise", false);
+      const enableSideBarDisguise = config.get<boolean>(
+        "sidebarDisguiseEnabled",
+        false
+      );
 
       if (e.webviewPanel.active) {
         // 激活时恢复原始标题和图标
@@ -131,11 +136,15 @@ export class WebviewManager {
         if (enableDisguise) {
           DisguiseManager.showDisguiseInterface(panel);
 
-          // 同时触发侧边栏伪装
-          const sidebarManager = SidebarDisguiseManager.getInstance();
-          sidebarManager.onWebViewDisguised().catch((error) => {
-            console.error("触发侧边栏联动伪装失败:", error);
-          });
+          if (enableSideBarDisguise) {
+            // 同时触发侧边栏伪装 if 开启了的话
+            const sidebarManager = SidebarDisguiseManager.getInstance();
+            sidebarManager.onWebViewDisguised().catch((error) => {
+              console.error("触发侧边栏联动伪装失败:", error);
+            });
+          } else {
+            console.log("侧边栏伪装功能未启用，未联动侧边栏");
+          }
         }
       }
 
@@ -436,6 +445,27 @@ export class WebviewManager {
         console.error("解析问题详情失败:", error);
       }
 
+      // 检测是否支持时间排序（检查排序选项按钮数量）
+      const supportTimeSort = await page.evaluate(async () => {
+        // 先尝试点击排序按钮展开菜单
+        const toggleButton = document.querySelector(
+          "button.Select-button"
+        ) as HTMLButtonElement;
+        if (toggleButton) {
+          toggleButton.click();
+          // 等待一下让菜单显示出来，其实不等也可以，不过还是等一下哈哈
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        const sortButtons = document.querySelectorAll(
+          ".Select-list.Answers-select .Select-option"
+        );
+        // 如果有2个或更多排序选项，说明支持时间排序
+        return sortButtons.length >= 2;
+      });
+      webviewItem.article.supportTimeSort = supportTimeSort;
+      console.log(`该问题是否支持时间排序: ${supportTimeSort}`);
+
       // 全部回答的总数量
       const totalAnswerCount = await page.evaluate(() => {
         const answerElements = document.querySelector(
@@ -684,7 +714,9 @@ export class WebviewManager {
           const buttonText = followButton.textContent?.trim() || "";
           isFollowing = buttonText.includes("已关注");
           console.log(
-            `作者的关注状态: ${isFollowing ? "已关注" : "未关注"} (按钮文字: "${buttonText}")`
+            `作者的关注状态: ${
+              isFollowing ? "已关注" : "未关注"
+            } (按钮文字: "${buttonText}")`
           );
         }
 
@@ -1233,8 +1265,8 @@ export class WebviewManager {
               return;
             }
 
-            // 获取问题ID
-            const questionId = location.href.split("/").pop() as string;
+            // 获取问题ID https://www.zhihu.com/question/1971269237239691012/answers/updated || https://www.zhihu.com/question/1971269237239691012
+            const questionId = location.href.replace('/answers/updated', '').split('/')[4];
 
             // 获取回答ID
             const answerId =
@@ -1281,7 +1313,9 @@ export class WebviewManager {
               const buttonText = followButton.textContent?.trim() || "";
               isFollowing = buttonText.includes("已关注");
               console.log(
-                `作者 ${authorName} 的关注状态: ${isFollowing ? "已关注" : "未关注"} (按钮文字: "${buttonText}")`
+                `作者 ${authorName} 的关注状态: ${
+                  isFollowing ? "已关注" : "未关注"
+                } (按钮文字: "${buttonText}")`
               );
             }
 
@@ -1295,10 +1329,36 @@ export class WebviewManager {
               .querySelector("meta[itemprop='commentCount']")
               ?.getAttribute("content");
 
-            // 获取回答发布时间 <meta itemprop="dateCreated" content="2024-06-21T03:27:48.000Z">
-            const publishTime = element
-              .querySelector("meta[itemprop='dateCreated']")
-              ?.getAttribute("content");
+            // 获取回答发布时间
+            // 优先从 ContentItem-time 元素中提取完整时间(包括时和分)
+            // <div class="ContentItem-time"><a target="_blank" data-tooltip="发布于 2025-11-09 09:04" ...>发布于 2025-11-09 09:04</a></div>
+            let publishTimeStr = "";
+            const timeElement = element.querySelector(".ContentItem-time a");
+            if (timeElement) {
+              const tooltip =
+                timeElement.getAttribute("data-tooltip") ||
+                timeElement.textContent;
+              if (tooltip) {
+                // 从 "发布于 2025-11-09 09:04" 提取时间部分
+                const match = tooltip.match(
+                  /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/
+                );
+                publishTimeStr = match ? match[1] : "";
+              }
+            }
+
+            // 如果没有找到,则使用meta标签
+            if (!publishTimeStr) {
+              // <meta itemprop="dateCreated" content="2024-06-21T03:27:48.000Z">
+              const publishTime = element
+                .querySelector("meta[itemprop='dateCreated']")
+                ?.getAttribute("content");
+              publishTimeStr = publishTime
+                ? new Date(publishTime).toLocaleString("zh-CN", {
+                    timeZone: "Asia/Shanghai",
+                  })
+                : "";
+            }
 
             // 获取回答更新时间 <meta itemprop="dateModified" content="2024-06-21T03:27:48.000Z">
             const updateTime = element
@@ -1382,11 +1442,7 @@ export class WebviewManager {
               likeCount: parseInt(likeCount || "0", 10) || 0,
               commentCount: parseInt(commentCount || "0", 10) || 0,
               voteStatus: voteStatus, // 添加投票状态
-              publishTime: publishTime
-                ? new Date(publishTime).toLocaleString("zh-CN", {
-                    timeZone: "Asia/Shanghai",
-                  })
-                : "",
+              publishTime: publishTimeStr,
               commentList: [],
               commentStatus: "collapsed", // 默认收起评论
               commentPaging: {
@@ -1661,7 +1717,7 @@ export class WebviewManager {
   }
 
   /** 切换媒体显示模式 */
-  private static async toggleMedia(webviewId: string): Promise<void> {
+  private static async toggleMedia(_webviewId: string): Promise<void> {
     // 获取当前配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const currentMode = config.get<string>("mediaDisplayMode", "normal");
@@ -1904,6 +1960,11 @@ export class WebviewManager {
           await this.handleSyncSidebarDisguise(message.enabled);
           break;
 
+        case "manualDisguiseToggle":
+          // 处理手动代码伪装切换
+          await this.handleManualDisguiseToggle(webviewId, message.action);
+          break;
+
         case "updateSelectedDisguiseTypes":
           // 处理更新选择的伪装类型
           await this.handleUpdateSelectedDisguiseTypes(message.selectedTypes);
@@ -1936,6 +1997,15 @@ export class WebviewManager {
         case "openZhihuLink":
           // 处理在VSCode中打开知乎链接的请求
           await this.handleOpenZhihuLink(message.url);
+          break;
+
+        case "switchAnswerSort":
+          // 处理回答排序切换请求
+          await this.handleSwitchAnswerSort(
+            webviewId,
+            message.url,
+            message.sortType
+          );
           break;
 
         case "followAuthor":
@@ -2170,6 +2240,130 @@ export class WebviewManager {
     }
   }
 
+  // 防抖标志：记录正在执行伪装切换的webview ID
+  private static togglingDisguiseWebviews = new Set<string>();
+
+  /**
+   * 处理手动代码伪装切换（快捷键或工具栏按钮触发）
+   * @param webviewId WebView ID
+   * @param action 操作类型: 'show' 或 'hide'
+   */
+  private static async handleManualDisguiseToggle(
+    webviewId: string,
+    action: "show" | "hide"
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    // 防抖检查：如果该webview正在执行伪装切换，忽略新的请求
+    if (this.togglingDisguiseWebviews.has(webviewId)) {
+      console.log(`WebView ${webviewId} 正在执行伪装切换，忽略重复请求`);
+      return;
+    }
+
+    // 标记为正在切换
+    this.togglingDisguiseWebviews.add(webviewId);
+
+    // 检查是否开启了智能伪装模式
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const enableDisguise = config.get<boolean>("enableDisguise", false);
+    const enableSideBarDisguise = config.get<boolean>(
+      "sidebarDisguiseEnabled",
+      false
+    );
+
+    if (!enableDisguise) {
+      // 未开启智能伪装，提示用户
+      const result = await vscode.window.showInformationMessage(
+        "代码伪装功能需要先开启智能伪装模式，是否现在开启？",
+        "开启",
+        "取消"
+      );
+
+      if (result === "开启") {
+        // 开启智能伪装
+        await config.update(
+          "enableDisguise",
+          true,
+          vscode.ConfigurationTarget.Global
+        );
+        vscode.window.showInformationMessage("已开启智能伪装模式");
+        // 继续执行伪装操作
+      } else {
+        // 用户取消，不执行伪装，解除防抖锁定
+        this.togglingDisguiseWebviews.delete(webviewId);
+        return;
+      }
+    }
+
+    const panel = webviewItem.webviewPanel;
+    const currentTitle = this.getShortTitle(webviewItem.article.title);
+
+    if (action === "show") {
+      // 显示伪装前，检查webview是否处于激活状态
+      // 如果已经失焦，则不执行手动显示伪装（因为失焦时会自动触发智能伪装）
+      if (!panel.active) {
+        console.log(`WebView ${webviewId} 已失焦，取消手动显示伪装操作`);
+        this.togglingDisguiseWebviews.delete(webviewId);
+        return;
+      }
+
+      // 显示伪装 - 修改标题和图标
+      const disguise = DisguiseManager.getDisguiseOrDefault(
+        webviewId,
+        currentTitle
+      );
+      panel.title = disguise.title;
+      panel.iconPath = disguise.iconPath;
+
+      // 显示伪装界面（这里会发送postMessage给前端）
+      DisguiseManager.showDisguiseInterface(panel);
+
+      if (enableSideBarDisguise) {
+        // 同时触发侧边栏伪装
+        try {
+          const sidebarManager = SidebarDisguiseManager.getInstance();
+          await sidebarManager.onWebViewDisguised();
+        } catch (error) {
+          console.error("触发侧边栏伪装失败:", error);
+        }
+      } else {
+        console.log(
+          `WebView ${webviewId} 手动显示伪装操作取消，侧边栏伪装未触发`
+        );
+      }
+    } else {
+      // 隐藏伪装前，检查webview是否处于激活状态
+      // 如果已经失焦，则不执行手动隐藏伪装（因为失焦时会自动触发智能伪装）
+      if (!panel.active) {
+        console.log(`WebView ${webviewId} 已失焦，取消手动隐藏伪装操作`);
+        this.togglingDisguiseWebviews.delete(webviewId);
+        return;
+      }
+
+      // 隐藏伪装 - 恢复标题和图标
+      panel.title = currentTitle;
+      panel.iconPath = vscode.Uri.joinPath(
+        Store.context!.extensionUri,
+        "resources",
+        "icon.svg"
+      );
+
+      // 隐藏伪装界面（这里会发送postMessage给前端）
+      DisguiseManager.hideDisguiseInterface(panel);
+    }
+
+    // 动画完成后解除防抖锁定（总时长：1000ms欢迎消息 + 300ms动画）
+    setTimeout(
+      () => {
+        this.togglingDisguiseWebviews.delete(webviewId);
+      },
+      action === "hide" ? 1300 : 300
+    );
+  }
+
   /** 处理投票请求 */
   private static async handleVoteContent(
     webviewId: string,
@@ -2292,7 +2486,7 @@ export class WebviewManager {
     }
 
     try {
-      console.log(`${isLike ? '点赞' : '取消点赞'}评论: ${commentId}`);
+      console.log(`${isLike ? "点赞" : "取消点赞"}评论: ${commentId}`);
 
       // 调用API
       const result = await ZhihuApiService.likeComment(commentId, isLike);
@@ -2305,10 +2499,10 @@ export class WebviewManager {
         webviewItem.webviewPanel.webview.postMessage({
           command: "likeCommentSuccess",
           commentId: commentId,
-          isLike: isLike
+          isLike: isLike,
         });
 
-        console.log(`评论${isLike ? '点赞' : '取消点赞'}成功`);
+        console.log(`评论${isLike ? "点赞" : "取消点赞"}成功`);
       } else {
         throw new Error("点赞失败");
       }
@@ -2320,14 +2514,16 @@ export class WebviewManager {
         command: "likeCommentFailed",
         commentId: commentId,
         isLike: isLike,
-        error: error.message || "点赞失败"
+        error: error.message || "点赞失败",
       });
 
       // 显示错误提示
       if (error.message?.includes("403")) {
         vscode.window.showErrorMessage("无法点赞评论：可能需要登录或权限不足");
       } else {
-        vscode.window.showErrorMessage(`评论点赞失败: ${error.message || "请检查网络连接和Cookie设置"}`);
+        vscode.window.showErrorMessage(
+          `评论点赞失败: ${error.message || "请检查网络连接和Cookie设置"}`
+        );
       }
     }
   }
@@ -2373,7 +2569,10 @@ export class WebviewManager {
         }
 
         // 检查所有子评论
-        if (comment.total_child_comments && comment.total_child_comments.length > 0) {
+        if (
+          comment.total_child_comments &&
+          comment.total_child_comments.length > 0
+        ) {
           if (updateComment(comment.total_child_comments)) {
             return true;
           }
@@ -2383,6 +2582,90 @@ export class WebviewManager {
     };
 
     updateComment(currentAnswer.commentList);
+  }
+
+  /**
+   * 处理回答排序切换
+   * 优先切换到已存在的页面，如果不存在则在当前页面刷新
+   */
+  private static async handleSwitchAnswerSort(
+    currentWebviewId: string,
+    targetUrl: string,
+    targetSortType: "default" | "updated"
+  ): Promise<void> {
+    try {
+      console.log(
+        `handleSwitchAnswerSort 调用: targetSortType=${targetSortType}, targetUrl=${targetUrl}`
+      );
+
+      const currentWebview = Store.webviewMap.get(currentWebviewId);
+      if (!currentWebview) {
+        console.error("当前WebView不存在");
+        return;
+      }
+
+      const currentWebviewArticle = currentWebview.article;
+
+      // 从URL创建LinkItem
+      const linkItem = this.createLinkItemFromUrl(targetUrl);
+      if (!linkItem) {
+        vscode.window.showErrorMessage("无法解析知乎链接");
+        return;
+      }
+
+      console.log(
+        `linkItem创建成功: id=${linkItem.id}, sortType=${linkItem.sortType}`
+      );
+
+      // 生成目标排序方式的webviewId
+      // 注意：这里使用传入的targetSortType参数，而不是linkItem中的sortType
+      const sortTypeParam =
+        targetSortType === "updated" ? "updated" : undefined;
+      console.log(`生成目标webviewId参数: sortTypeParam=${sortTypeParam}`);
+
+      const targetWebviewId = WebViewUtils.generateUniqueWebViewId(
+        linkItem.id,
+        currentWebview.sourceType,
+        linkItem.type === "article" ? "article" : "answer",
+        undefined,
+        currentWebview.collectionId,
+        sortTypeParam
+      );
+
+      console.log(
+        `排序切换: 当前=${currentWebviewId}, 目标=${targetWebviewId}, 目标排序=${targetSortType}`
+      );
+
+      // 检查目标排序的页面是否已存在
+      const existingView = Store.webviewMap.get(targetWebviewId);
+
+      if (existingView) {
+        // 如果已存在，直接切换过去
+        console.log("目标排序页面已存在，切换过去");
+        existingView.webviewPanel.reveal();
+      } else {
+        // 如果不存在，创建新页面显示目标排序
+        console.log("目标排序页面不存在，创建新页面");
+
+        // 更新linkItem的sortType以匹配目标排序
+        linkItem.sortType =
+          targetSortType === "updated" ? "updated" : undefined;
+
+        // 设置linkItem的标题和摘要
+        linkItem.title = currentWebviewArticle.title;
+        linkItem.excerpt = currentWebviewArticle.excerpt;
+
+        // 调用openWebview创建新的webview
+        await this.openWebview(
+          linkItem,
+          currentWebview.sourceType,
+          currentWebview.collectionId
+        );
+      }
+    } catch (error) {
+      console.error("切换排序时出错:", error);
+      vscode.window.showErrorMessage("切换排序失败");
+    }
   }
 
   /** 处理在VSCode中打开知乎链接的请求 */
@@ -2429,6 +2712,9 @@ export class WebviewManager {
         const questionMatch = pathname.match(/^\/question\/(\d+)/);
         const answerMatch = pathname.match(/^\/question\/\d+\/answer\/(\d+)/);
 
+        // 检测是否是按时间排序的URL
+        const isTimeSorted = pathname.includes("/answers/updated");
+
         if (questionMatch) {
           id = questionMatch[1];
           title = `知乎问题 ${id}`;
@@ -2443,6 +2729,7 @@ export class WebviewManager {
               excerpt: "正在加载回答中，请稍后~",
               type: type,
               answerUrl: url, // 保存特定回答的URL
+              sortType: isTimeSorted ? "updated" : undefined, // 添加排序类型
             };
           }
         }
@@ -2457,12 +2744,17 @@ export class WebviewManager {
       }
 
       if (id) {
+        // 检测是否是按时间排序的URL（针对问题类型）
+        const isTimeSorted =
+          type === "question" && pathname.includes("/answers/updated");
+
         return {
           id: id,
           url: url,
           title: title,
           excerpt: "正在加载中，请稍后~",
           type: type,
+          sortType: isTimeSorted ? "updated" : undefined, // 添加排序类型
         };
       }
 
@@ -2723,7 +3015,9 @@ export class WebviewManager {
     } catch (error) {
       console.error("取消关注作者时出错:", error);
       vscode.window.showErrorMessage(
-        `取消关注失败: ${error instanceof Error ? error.message : String(error)}`
+        `取消关注失败: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
 
       // 通知前端恢复状态

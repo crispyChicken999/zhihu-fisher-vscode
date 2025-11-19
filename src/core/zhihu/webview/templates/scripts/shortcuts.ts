@@ -51,7 +51,8 @@ function getDefaultShortcutConfig() {
     'media-toggle': ['/'],
     'back-top': ['V'],
     'toolbar-toggle': ['T'],
-    'grayscale': ['G']
+    'grayscale': ['G'],
+    'disguise': ['Space']
   };
 }
 

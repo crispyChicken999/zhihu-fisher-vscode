@@ -12,6 +12,7 @@ export class WebViewUtils {
    * @param contentType 内容类型（article、answer）
    * @param answerId 可选的回答ID，用于特定回答
    * @param collectionId 可选的收藏夹ID，用于区分不同收藏夹中的相同内容
+   * @param sortType 可选的排序类型，用于区分同一问题的不同排序方式
    * @returns 唯一的 WebView ID
    */
   public static generateUniqueWebViewId(
@@ -19,7 +20,8 @@ export class WebViewUtils {
     sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link",
     contentType: "article" | "answer",
     answerId?: string,
-    collectionId?: string
+    collectionId?: string,
+    sortType?: string
   ): string {
     // 提取纯净的ID，避免重复前缀
     let cleanBaseId = baseId;
@@ -38,6 +40,11 @@ export class WebViewUtils {
     // 如果是特定回答，添加回答ID
     if (answerId) {
       webviewId += `-answer-${answerId}`;
+    }
+
+    // 如果有排序类型，添加到ID中以区分不同排序方式
+    if (sortType) {
+      webviewId += `-sort-${sortType}`;
     }
 
     return webviewId;

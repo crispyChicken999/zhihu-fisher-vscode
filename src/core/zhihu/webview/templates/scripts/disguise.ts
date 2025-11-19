@@ -114,5 +114,43 @@ export const disguiseScript =`
       }, 1000); // 等待1秒
     }
   });
+
+  // 暴露全局函数供快捷键使用
+  window.toggleDisguiseInterface = function() {
+    if (!disguiseElement) return;
+
+    const isVisible = disguiseElement.style.display === 'block' || disguiseElement.classList.contains('show');
+
+    if (isVisible) {
+      // 当前显示，需要隐藏 - 只通知extension，等待后端检查后再执行
+      vscode.postMessage({
+        command: 'manualDisguiseToggle',
+        action: 'hide'
+      });
+      // 不再直接发送hideDisguise，等待后端响应
+    } else {
+      // 当前隐藏，需要显示 - 只通知extension，等待后端检查后再执行
+      vscode.postMessage({
+        command: 'manualDisguiseToggle',
+        action: 'show'
+      });
+      // 不再直接发送showDisguise，等待后端响应
+    }
+  };
+
+  // 为伪装界面添加点击事件监听，点击时退出伪装
+  if (disguiseElement) {
+    disguiseElement.addEventListener('click', function() {
+      const isVisible = disguiseElement.style.display === 'block' || disguiseElement.classList.contains('show');
+
+      if (isVisible) {
+        // 如果伪装界面可见，点击时隐藏
+        vscode.postMessage({
+          command: 'manualDisguiseToggle',
+          action: 'hide'
+        });
+      }
+    });
+  }
 })();
 `;

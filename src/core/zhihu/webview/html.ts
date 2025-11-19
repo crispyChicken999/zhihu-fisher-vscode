@@ -12,6 +12,7 @@ import { StylePanelComponent } from "./components/style-panel";
 import { DisguiseManager } from "../../utils/disguise-manager";
 import { QuestionDetailComponent } from "./components/question-detail";
 import { RelatedQuestionsComponent } from "./components/related-questions";
+import { AnswerSortComponent } from "./components/answer-sort";
 
 // 导入模板文件
 import { errorTemplate } from "./templates/error";
@@ -35,6 +36,7 @@ import { navigationCss } from "./styles/navigation";
 import { componentsCss } from "./styles/components";
 import { questionDetailCss } from "./styles/question-detail";
 import { relatedQuestionsCss } from "./styles/related-questions";
+import { answerSortCss } from "./styles/answer-sort";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -187,6 +189,23 @@ export class HtmlRenderer {
       article.relatedQuestions || []
     );
 
+    // 检测当前URL的排序类型
+    const currentSortType = webview.url.includes('/answers/updated') ? 'updated' : 'default';
+
+    // 从URL中提取问题ID
+    const questionIdMatch = webview.url.match(/\/question\/(\d+)/);
+    const questionId = questionIdMatch ? questionIdMatch[1] : '';
+
+    // 获取是否支持时间排序（默认为 true）
+    const supportTimeSort = article.supportTimeSort ?? true;
+
+    // 创建回答排序选择组件
+    const answerSortComponent = new AnswerSortComponent(
+      webview.url,
+      currentSortType,
+      supportTimeSort
+    );
+
     // 创建问题详情组件
     const questionDetailComponent = new QuestionDetailComponent(
       article.questionDetail || "",
@@ -290,9 +309,14 @@ export class HtmlRenderer {
       .replace("${DISGUISE_CSS}", disguiseCss)
       .replace("${RELATED_QUESTIONS_CSS}", relatedQuestionsCss)
       .replace("${QUESTION_DETAIL_CSS}", questionDetailCss)
+      .replace("${ANSWER_SORT_CSS}", answerSortCss)
       .replace(
         "${RELATED_QUESTION_COMPONENT_ICON}",
         isArticle ? "" : relatedQuestionsIcon.render()
+      )
+      .replace(
+        "${ANSWER_SORT_COMPONENT}",
+        isArticle ? "" : answerSortComponent.render()
       )
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
@@ -311,6 +335,8 @@ export class HtmlRenderer {
       )
       .replace("${SOURCE_URL}", currentAnswer?.url || webview.url || "")
       .replace("${KEYBOARD_TIPS}", keyboardTips)
+      .replace("${CONTENT_ID}", questionId || webview.id || "")
+      .replace("${SORT_TYPE}", currentSortType)
       .replace(/\${MEDIA_MODE_CLASS}/g, mediaModeClass)
       .replace("${DISGUISE_INTERFACE}", disguiseInterfaceHtml)
       .replace("${DISGUISE_SCRIPT}", disguiseControlScript)

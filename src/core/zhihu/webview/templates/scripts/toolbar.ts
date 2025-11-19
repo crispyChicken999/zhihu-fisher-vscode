@@ -144,14 +144,15 @@ function getDefaultToolbarConfig() {
     { id: 'copy', name: '复制链接', category: 'tools', visible: true, order: 5, },
     { id: 'style', name: '设置', category: 'function', visible: true, order: 6, },
     { id: 'grayscale', name: '灰色模式', category: 'function', visible: true, order: 7, },
-    { id: 'feedback', name: '问题反馈', category: 'tools', visible: true, order: 8, },
-    { id: 'donate', name: '赞赏开发者', category: 'tools', visible: true, order: 9, },
-    { id: 'immersive', name: '沉浸模式', category: 'function', visible: true, order: 10, },
-    { id: 'comments', name: '查看评论', category: 'function', visible: true, order: 11, },
-    { id: 'prev-article', name: '上一篇内容', category: 'navigation', visible: true, order: 12, },
-    { id: 'next-article', name: '下一篇内容', category: 'navigation', visible: true, order: 13, },
-    { id: 'prev-answer', name: '上一个回答', category: 'navigation', visible: true, order: 14, },
-    { id: 'next-answer', name: '下一个回答', category: 'navigation', visible: true, order: 15, },
+    { id: 'disguise', name: '代码伪装', category: 'function', visible: true, order: 8, },
+    { id: 'feedback', name: '问题反馈', category: 'tools', visible: true, order: 9, },
+    { id: 'donate', name: '赞赏开发者', category: 'tools', visible: true, order: 10, },
+    { id: 'immersive', name: '沉浸模式', category: 'function', visible: true, order: 11, },
+    { id: 'comments', name: '查看评论', category: 'function', visible: true, order: 12, },
+    { id: 'prev-article', name: '上一篇内容', category: 'navigation', visible: true, order: 13, },
+    { id: 'next-article', name: '下一篇内容', category: 'navigation', visible: true, order: 14, },
+    { id: 'prev-answer', name: '上一个回答', category: 'navigation', visible: true, order: 15, },
+    { id: 'next-answer', name: '下一个回答', category: 'navigation', visible: true, order: 16, },
   ];
 }
 

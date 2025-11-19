@@ -15,6 +15,7 @@ import { toolbarScript } from './toolbar';
 import { shortcutsScript } from './shortcuts';
 import { questionDetailScript } from './question-detail';
 import { authorScript } from './author';
+import { answerSortScript } from './answer-sort';
 
 /**
  * 完整的脚本模板 - 拼接所有功能模块
@@ -45,4 +46,6 @@ ${shortcutsScript}
 ${questionDetailScript}
 
 ${authorScript}
+
+${answerSortScript}
 `;

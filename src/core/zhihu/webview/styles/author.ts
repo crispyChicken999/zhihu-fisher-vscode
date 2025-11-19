@@ -150,11 +150,12 @@ body.immersive-mode .answer-meta .immersive-author-info {
   color: inherit;
   cursor: pointer;
   font-weight: 500;
-  padding: 4px 0px;
+  padding: 0px;
   border-radius: 4px;
   transition: all 0.2s ease;
   font-size: 1em;
   white-space: nowrap;
+  user-select: none;
 }
 
 .immersive-author-trigger svg {
@@ -164,80 +165,180 @@ body.immersive-mode .answer-meta .immersive-author-info {
 
 .immersive-author-trigger:hover {
   background-color: var(--vscode-list-hoverBackground);
-  text-decoration: underline;
-  padding: 4px 8px;
+  padding: 0px 4px;
 }
 
 .immersive-author-trigger:hover svg {
   opacity: 1;
 }
 
+/* Popover 容器 - Fixed 全屏 */
 .immersive-author-popover {
   display: none;
-  position: absolute;
-  bottom: calc(100% + 4px);
+  position: fixed;
+  top: 0;
   left: 0;
-  padding: 12px;
-  background-color: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-panel-border);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  min-width: 280px;
-  max-width: 400px;
-  white-space: normal;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
 }
 
 .immersive-author-popover.show {
-  display: block;
+  display: flex;
 }
 
-.immersive-author-popover .author-header {
+/* 遮罩层 */
+.immersive-author-popover .popover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 1;
+}
+
+/* 主体内容 */
+.immersive-author-popover .popover-content-wrapper {
+  position: relative;
+  z-index: 2;
+  background-color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px var(--vscode-scrollbar-shadow);
+  width: 90%;
+  max-width: 450px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: popoverFadeIn 0.2s ease-out;
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 标题栏 */
+.immersive-author-popover .popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75em 1em;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  background-color: var(--vscode-editor-background);
+}
+
+.immersive-author-popover .popover-header h3 {
+  margin: 0;
+  font-size: min(1.25em, 16px);
+  font-weight: 700;
+  color: var(--vscode-foreground);
+}
+
+.immersive-author-popover .popover-close {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 0px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.immersive-author-popover .popover-close:hover {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-foreground);
+}
+
+/* 内容区域 */
+.immersive-author-popover .popover-body {
+  padding: 1em;
+  overflow-y: auto;
+  background-color: var(--vscode-editor-background);
+}
+
+.immersive-author-popover .popover-content-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* 左侧信息 */
+.immersive-author-popover .author-info-left {
+  flex-grow: 1;
+  min-width: 0; /* 防止flex子项溢出 */
+}
+
+.immersive-author-popover .author-basic-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 10px;
 }
 
 .immersive-author-popover .author-popover-avatar {
-  width: 3em;
-  height: 3em;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  transition: all 0.3s ease;
+  border: 2px solid var(--vscode-editor-background);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Mini模式下的头像 - 缩小尺寸 */
 .immersive-author-popover .author-popover-avatar.mini-media {
-  width: 2em;
-  height: 2em;
+  width: 32px;
+  height: 32px;
 }
 
-/* 隐藏图片模式 - 完全隐藏头像 */
 .immersive-author-popover .author-popover-avatar.hide-media {
   display: none;
 }
 
-.immersive-author-popover .author-info-text {
+.immersive-author-popover .author-text-info {
   flex-grow: 1;
+  min-width: 0;
 }
 
 .immersive-author-popover .author-popover-name {
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-weight: 600;
-  color: var(--vscode-foreground);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .immersive-author-popover .author-bio-text {
-  font-size: 1em;
+  font-size: 0.9em;
   color: var(--vscode-descriptionForeground);
   line-height: 1.4;
-  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 右侧按钮 */
+.immersive-author-popover .author-info-right {
+  flex-shrink: 0;
 }
 
 .immersive-author-popover .author-follow-btn {
-  width: 100%;
+  width: auto;
+  min-width: 80px;
   justify-content: center;
 }
 `;

@@ -61,6 +61,9 @@ document.addEventListener("DOMContentLoaded", function() {
   // 设置ESC键监听，支持关闭子评论弹窗
   setupEscKeyListener();
 
+  // 初始化排序模式标签显示
+  initializeSortModeTag();
+
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
 
@@ -255,5 +258,22 @@ function setupEscKeyListener() {
       }
     }
   });
+}
+
+/**
+ * 初始化排序模式标签显示
+ */
+function initializeSortModeTag() {
+  const sortModeTag = document.getElementById('sortModeTag');
+  if (!sortModeTag) return;
+
+  // 从body的data-sort-type属性检查排序类型
+  const sortType = document.body.getAttribute('data-sort-type');
+  if (sortType === 'updated') {
+    sortModeTag.textContent = '按时间排序';
+    sortModeTag.style.display = 'inline-block';
+  } else {
+    sortModeTag.style.display = 'none';
+  }
 }
 `;

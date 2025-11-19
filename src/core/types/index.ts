@@ -106,6 +106,8 @@ export interface LinkItem {
   contentToken?: string;
   /** 回答的完整URL，用于浏览器打开特定回答 */
   answerUrl?: string;
+  /** 排序类型：用于区分同一问题的不同排序方式 */
+  sortType?: "updated" | "default";
   /** 关注信息（仅关注列表使用） */
   followInfo?: {
     /** 关注者名称 */
@@ -204,6 +206,10 @@ export interface ArticleInfo {
   isVoting?: boolean;
   /** 相关问题列表 */
   relatedQuestions?: RelatedQuestion[];
+  /** 当前回答的排序类型 */
+  currentSortType?: "default" | "updated";
+  /** 是否支持按时间排序（某些问题不支持时间排序） */
+  supportTimeSort?: boolean;
 }
 
 /** 相关问题数据结构 */
@@ -265,6 +271,8 @@ export interface AnswerItem {
   updateTime: string;
   /** 回答的内容 */
   content: string;
+  /** 排序类型：default(默认排序) | updated(时间排序) */
+  sortType?: "default" | "updated";
 }
 
 /** 回答作者信息 */

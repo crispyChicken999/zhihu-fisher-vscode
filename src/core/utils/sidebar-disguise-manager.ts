@@ -260,6 +260,7 @@ export class SidebarDisguiseManager {
   public async onWebViewDisguised(): Promise<void> {
     // 检查智能伪装总开关
     if (!this.isDisguiseEnabled) {
+      console.log("WebView界面伪装触发，但侧边栏伪装功能已关闭，跳过联动伪装");
       return;
     }
 

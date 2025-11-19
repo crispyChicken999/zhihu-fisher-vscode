@@ -224,7 +224,32 @@ function setupKeyboardNavigation() {
         toggleFixedToolbar();
       }
     }
+
+    // Space - 切换代码伪装界面
+    if (event.key === ' ' || event.code === 'Space') {
+      // Ctrl、Meta、Shift、Alt键被按下时不响应
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      if (typeof toggleDisguiseInterface === 'function') {
+        toggleDisguiseInterface();
+      }
+    }
   });
+}
+
+document.body.onkeydown = function (event) {
+  const e = window.event || event;
+
+  // 禁用空格键的默认滚动行为
+  if (event.key === ' ' || event.code === 'Space') {
+    if (e.preventDefault) {
+      e.preventDefault();
+    } else {
+      window.event.returnValue = false;
+    }
+  }
 }
 
 // 用于记录按键序列

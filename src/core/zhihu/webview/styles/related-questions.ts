@@ -14,6 +14,7 @@ export const relatedQuestionsCss = `
   border-radius: 4px;
   background-color: transparent;
   transition: transform 0.2s ease;
+  vertical-align: text-bottom;
 }
 
 .related-questions-icon:hover {

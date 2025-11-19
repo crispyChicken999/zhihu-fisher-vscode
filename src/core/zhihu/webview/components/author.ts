@@ -137,45 +137,57 @@ export class AuthorComponent implements Component {
 
     return `
       <div class="immersive-author-info">
-        <span class="immersive-author-trigger" onclick="toggleImmersiveAuthorPopover('${authorId}')" title="点击查看作者信息（可关注/取消关注）">
+        <span class="immersive-author-trigger" onclick="toggleImmersiveAuthorPopover('${authorId}')" title="点击查看作者信息&#010（可关注/取消关注）">
           <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
           </svg>
           ${this.escapeHtml(authorName)}
         </span>
         <div class="immersive-author-popover" data-author-id="${authorId}">
-          <div class="author-header">
-            <img src="${authorAvatar || ""}"
-                alt="${this.escapeHtml(authorName)}"
-                class="${avatarClass}"
-                referrerpolicy="no-referrer" />
-            <div class="author-info-text">
-              <div class="author-popover-name">
-              <a href="${this.author.url || "#"}" class="author-link" target="_blank" rel="noopener noreferrer">
-                ${this.escapeHtml(
-                  authorName
-                )}
-              </a>
+          <div class="popover-overlay" onclick="toggleImmersiveAuthorPopover('${authorId}')"></div>
+          <div class="popover-content-wrapper">
+            <div class="popover-header">
+              <h3>作者（答主）信息</h3>
+              <button class="popover-close" onclick="toggleImmersiveAuthorPopover('${authorId}')" title="关闭">×</button>
+            </div>
+            <div class="popover-body">
+              <div class="popover-content-inner">
+                <div class="author-info-left">
+                  <div class="author-basic-info">
+                    <img src="${authorAvatar || ""}"
+                        alt="${this.escapeHtml(authorName)}"
+                        class="${avatarClass}"
+                        referrerpolicy="no-referrer" />
+                    <div class="author-text-info">
+                      <div class="author-popover-name">
+                        <a href="${this.author.url || "#"}" class="author-link" target="_blank" rel="noopener noreferrer" title="点击查看作者主页">
+                          ${this.escapeHtml(authorName)}
+                        </a>
+                      </div>
+                      ${
+                        authorBio
+                          ? `<div class="author-bio-text">${this.escapeHtml(authorBio)}</div>`
+                          : ""
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="author-info-right">
+                  <button class="author-follow-btn"
+                    data-author-id="${authorId}"
+                    data-is-following="${isFollowing}"
+                    onclick="toggleFollowAuthor('${authorId}')"
+                    title="${isFollowing ? '取消关注' : '关注作者'}"
+                  >
+                    <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="currentColor">
+                      <path fill-rule="evenodd" d="M13.25 3.25a1.25 1.25 0 1 0-2.5 0v7.5h-7.5a1.25 1.25 0 1 0 0 2.5h7.5v7.5a1.25 1.25 0 1 0 2.5 0v-7.5h7.5a1.25 1.25 0 0 0 0-2.5h-7.5v-7.5Z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="follow-text">${isFollowing ? '已关注' : '关注'}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-          ${
-            authorBio
-              ? `<div class="author-bio-text">${this.escapeHtml(
-                  authorBio
-                )}</div>`
-              : ""
-          }
-          <button class="author-follow-btn"
-                  data-author-id="${authorId}"
-                  data-is-following="${isFollowing}"
-                  onclick="toggleFollowAuthor('${authorId}')"
-                  title="${isFollowing ? '取消关注' : '关注作者'}">
-            <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="currentColor">
-              <path fill-rule="evenodd" d="M13.25 3.25a1.25 1.25 0 1 0-2.5 0v7.5h-7.5a1.25 1.25 0 1 0 0 2.5h7.5v7.5a1.25 1.25 0 1 0 2.5 0v-7.5h7.5a1.25 1.25 0 0 0 0-2.5h-7.5v-7.5Z" clip-rule="evenodd"></path>
-            </svg>
-            <span class="follow-text">${isFollowing ? '已关注' : '关注'}</span>
-          </button>
         </div>
       </div>
     `;

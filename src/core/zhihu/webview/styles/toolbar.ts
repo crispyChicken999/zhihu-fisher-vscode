@@ -107,6 +107,7 @@ body.immersive-mode .related-questions-section {
 
 body.immersive-mode .nav-info {
   padding: 0;
+  flex-wrap: wrap;
 }
 
 /* 正常模式下：隐藏第二个 answer-meta（文章内容后的） */
@@ -126,7 +127,8 @@ body.immersive-mode .article-content + .answer-meta {
   background: none;
   border-radius: 0px;
   max-width: fit-content;
-  gap: min(1em, 12px);
+  column-gap: min(1em, 12px);
+  row-gap: 0;
 }
 
 /* 沉浸模式下的 meta-item 样式优化 */
@@ -191,7 +193,7 @@ body.immersive-mode .immersive-button {
 }
 
 .toolbar-expandable.expanded {
-  max-height: 600px;
+  max-height: 630px;
   opacity: 1;
   pointer-events: auto;
   display: flex;
@@ -204,15 +206,16 @@ body.immersive-mode .immersive-button {
 }
 
 /* 空工具栏提示按钮样式 */
-.empty-hint-button {
-  background-color: var(--vscode-inputValidation-warningBackground) !important;
-  color: var(--vscode-inputValidation-warningForeground) !important;
-  border: 1px solid var(--vscode-inputValidation-warningBorder) !important;
+.fixed-toolbar button.empty-hint-button {
+  background-color: var(--vscode-inputValidation-warningBackground);
+  color: var(--vscode-inputValidation-warningForeground);
+  border: 1px solid var(--vscode-inputValidation-warningBorder);
   animation: pulse 2s ease-in-out infinite;
+  padding: 4px 5px;
 }
 
-.empty-hint-button:hover {
-  background-color: var(--vscode-button-hoverBackground) !important;
+.fixed-toolbar button.empty-hint-button:hover {
+  background-color: var(--vscode-button-hoverBackground);
   animation: none;
 }
 

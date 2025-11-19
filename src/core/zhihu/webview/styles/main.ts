@@ -17,7 +17,9 @@ body {
 
 /* 当样式面板可见时，隐藏body的滚动条防止滚动 */
 body:has(.style-panel.visible),
-body:has(.zhihu-comments-modal-overlay) {
+body:has(.zhihu-comments-modal-overlay),
+body:has(.answer-sort-popover.show),
+body:has(.immersive-author-popover.show) {
   overflow: hidden;
 }
 
@@ -26,29 +28,21 @@ body.immersive-mode {
 }
 
 /* 灰色模式样式 - 只对知乎内容生效，不影响伪装界面和其他UI元素 */
-html.grayscale-mode body > *:not(.disguise-code-interface):not(.style-panel):not(.style-panel-mask):not(.fisher-welcome-message):not(.comments-modal-container):not(.related-questions-modal):not(.question-detail-modal):not(.immersive-author-popover):not(.immersive-author-info) {
+html.grayscale-mode body .article-content,
+html.grayscale-mode body .zhihu-comments-modal-content,
+html.grayscale-mode body .question-detail-modal-body,
+html.grayscale-mode body .comments-container,
+html.grayscale-mode body .fixed-toolbar,
+html.grayscale-mode body .article-meta,
+html.grayscale-mode body .answer-meta > *:not(.immersive-author-info),
+html.grayscale-mode body .navigation,
+html.grayscale-mode body .toolbar {
   filter: grayscale(100%);
 }
 
-
-/* 确保伪装界面在灰色模式下保持正常颜色 */
-html.grayscale-mode .disguise-code-interface {
-  filter: none !important;
-}
-
-/* 确保样式面板在灰色模式下保持正常颜色 */
-html.grayscale-mode .style-panel,
-html.grayscale-mode .style-panel-mask {
-  filter: none !important;
-}
-
-html.grayscale-mode .zhihu-comments-modal-content {
-  filter: grayscale(100%);
-}
-
-/* 确保欢迎消息在灰色模式下保持正常颜色 */
-html.grayscale-mode .fisher-welcome-message {
-  filter: none !important;
+body[data-sort-type='updated'] .prev-article-button,
+body[data-sort-type='updated'] .next-article-button {
+  display: none !important;
 }
 
 /* FancyBox 自定义样式 */
