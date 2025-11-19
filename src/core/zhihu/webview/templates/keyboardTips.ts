@@ -3,7 +3,7 @@
  */
 // 文章类型的键盘提示（提示用户可设置快捷键）
 export const articleKeyboardTips = `
-<div style="display: inline-flex; gap: 6px;align-items: center;">
+<div style="display: inline-flex; gap: 6px; align-items: center; user-select: none;">
   <span style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px;">
     <span>快捷键</span>
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -21,7 +21,7 @@ export const articleKeyboardTips = `
 
 // 问题类型的键盘提示（提示用户可设置快捷键）
 export const questionKeyboardTips = `
-<div style="display: inline-flex; gap: 6px;align-items: center;">
+<div style="display: inline-flex; gap: 6px;align-items: center; user-select: none;">
   <span style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px;">
     <span>快捷键</span>
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">

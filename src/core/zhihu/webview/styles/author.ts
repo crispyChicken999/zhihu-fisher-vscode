@@ -155,7 +155,6 @@ body.immersive-mode .answer-meta .immersive-author-info {
   transition: all 0.2s ease;
   font-size: 1em;
   white-space: nowrap;
-  user-select: none;
 }
 
 .immersive-author-trigger svg {

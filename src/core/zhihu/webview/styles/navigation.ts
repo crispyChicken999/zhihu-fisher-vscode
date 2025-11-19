@@ -51,6 +51,7 @@ export const navigationCss = `
 .navigation-buttons {
   display: flex;
   gap: 10px;
+  user-select: none;
 }
 
 .navigation-buttons .prev,
@@ -90,6 +91,7 @@ export const navigationCss = `
   align-items: center;
   flex-wrap: nowrap;
   padding: 4px 0;
+  user-select: none;
 }
 
 .nav-info > * {

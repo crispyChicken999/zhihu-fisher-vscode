@@ -126,6 +126,7 @@ export const articleCss = `
   cursor: pointer;
   font-size: 1em;
   font-weight: 500;
+  user-select: none;
 }
 
 .vote-button:hover {
@@ -202,13 +203,17 @@ export const articleCss = `
 .meta-item.comment {
   color: #42a5f5;
   cursor: pointer;
+  user-select: none;
 }
+
 .meta-item.comment:hover {
   color: #1675fb !important;
 }
+
 .meta-item.comment:hover svg{
   filter: none !important;
 }
+
 .meta-item.time {
   color: var(--vscode-descriptionForeground);
   display: flex;

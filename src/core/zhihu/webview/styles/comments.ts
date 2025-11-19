@@ -17,6 +17,7 @@ export const commentsCss = `
   justify-content: space-between;
   flex-wrap: wrap;
   margin: 10px 0;
+  user-select: none;
 }
 
 .zhihu-comments-header h3 {
@@ -378,6 +379,7 @@ export const commentsCss = `
   display: flex;
   justify-content: space-between;
   margin: 10px 0;
+  user-select: none;
 }
 
 .zhihu-comment-pagination button {
@@ -420,6 +422,7 @@ export const commentsCss = `
   padding: 0.67em 0 0 0;
   cursor: pointer;
   font-size: 1em;
+  user-select: none;
 }
 
 .zhihu-show-all-replies-btn:hover {
@@ -473,6 +476,7 @@ export const commentsCss = `
   padding: 10px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
+  user-select: none;
 }
 
 .zhihu-comments-modal-header h3 {
@@ -530,6 +534,7 @@ export const commentsCss = `
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  user-select: none;
   border-top: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-editor-background);
 }
