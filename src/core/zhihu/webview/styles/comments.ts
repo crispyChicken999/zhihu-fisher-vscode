@@ -131,6 +131,18 @@ export const commentsCss = `
   margin-bottom: 0.67em;
 }
 
+.zhihu-comment-header:has(.zhihu-reply-chain) .zhihu-comment-avatar {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.comments-container.mini-media .zhihu-comment-header:has(.zhihu-reply-chain) .zhihu-comment-avatar {
+  width: 1.5em !important;
+  height: 1.5em !important;
+  max-width: unset !important;
+  max-height: unset !important;
+}
+
 .zhihu-comment-avatar {
   width: 2.5em;
   height: 2.5em;
