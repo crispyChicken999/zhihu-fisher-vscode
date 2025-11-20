@@ -3252,10 +3252,10 @@ export class WebviewManager {
     // 使用marked的反向转换，或者简单处理
     let text = html;
 
-    // 移除script和style标签
+    // 移除script、style和noscript标签
     text = text.replace(/<script[^>]*>.*?<\/script>/gi, "");
     text = text.replace(/<style[^>]*>.*?<\/style>/gi, "");
-
+    text = text.replace(/<noscript[^>]*>.*?<\/noscript>/gi, "");
     // 处理图片
     text = text.replace(
       /<img[^>]*src=["']([^"']*)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi,
