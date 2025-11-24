@@ -1266,7 +1266,9 @@ export class WebviewManager {
             }
 
             // 获取问题ID https://www.zhihu.com/question/1971269237239691012/answers/updated || https://www.zhihu.com/question/1971269237239691012
-            const questionId = location.href.replace('/answers/updated', '').split('/')[4];
+            const questionId = location.href
+              .replace("/answers/updated", "")
+              .split("/")[4];
 
             // 获取回答ID
             const answerId =
@@ -1361,9 +1363,16 @@ export class WebviewManager {
             }
 
             // 获取回答更新时间 <meta itemprop="dateModified" content="2024-06-21T03:27:48.000Z">
-            const updateTime = element
+            let updateTime = element
               .querySelector("meta[itemprop='dateModified']")
               ?.getAttribute("content");
+            if (updateTime && updateTime !== publishTimeStr) {
+              updateTime = new Date(updateTime).toLocaleString("zh-CN", {
+                timeZone: "Asia/Shanghai",
+              });
+            } else {
+              updateTime = "";
+            }
 
             // 获取回答内容 answerElement 里面的.RichContent 的 <div class="RichContent-inner">...</div>
             const contentElement = element.querySelector(
@@ -2993,9 +3002,7 @@ export class WebviewManager {
    * 处理获取导出统计信息请求
    * @param webviewId WebView的ID
    */
-  private static async handleGetExportStats(
-    webviewId: string
-  ): Promise<void> {
+  private static async handleGetExportStats(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -3012,9 +3019,11 @@ export class WebviewManager {
         commentCount += answer.commentList.length;
         // 统计子评论（优先使用 total_child_comments，如果没有则使用 child_comments）
         answer.commentList.forEach((comment) => {
-          const childComments = (comment.total_child_comments && Array.isArray(comment.total_child_comments))
-            ? comment.total_child_comments
-            : (comment.child_comments && Array.isArray(comment.child_comments))
+          const childComments =
+            comment.total_child_comments &&
+            Array.isArray(comment.total_child_comments)
+              ? comment.total_child_comments
+              : comment.child_comments && Array.isArray(comment.child_comments)
               ? comment.child_comments
               : [];
           commentCount += childComments.length;
@@ -3043,9 +3052,7 @@ export class WebviewManager {
    * 处理导出Markdown请求
    * @param webviewId WebView的ID
    */
-  private static async handleExportMarkdown(
-    webviewId: string
-  ): Promise<void> {
+  private static async handleExportMarkdown(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
       return;
@@ -3184,7 +3191,9 @@ export class WebviewManager {
           markdown += `#### 评论 ${commentIndex + 1}\n\n`;
           markdown += `**${comment.author?.name || "匿名用户"}**`;
           if (comment.created_time) {
-            const timeStr = new Date(comment.created_time * 1000).toLocaleString("zh-CN");
+            const timeStr = new Date(
+              comment.created_time * 1000
+            ).toLocaleString("zh-CN");
             markdown += ` · ${timeStr}`;
           }
           if (comment.vote_count) {
@@ -3195,9 +3204,11 @@ export class WebviewManager {
 
           // 子评论（回复）
           // 优先使用 total_child_comments（用户手动加载的），如果没有则使用 child_comments（API初始返回的）
-          const childComments = (comment.total_child_comments && comment.total_child_comments.length > 0)
-            ? comment.total_child_comments
-            : (comment.child_comments && comment.child_comments.length > 0)
+          const childComments =
+            comment.total_child_comments &&
+            comment.total_child_comments.length > 0
+              ? comment.total_child_comments
+              : comment.child_comments && comment.child_comments.length > 0
               ? comment.child_comments
               : [];
 
@@ -3206,7 +3217,9 @@ export class WebviewManager {
             childComments.forEach((childComment) => {
               markdown += `  - **${childComment.author?.name || "匿名用户"}**`;
               if (childComment.created_time) {
-                const childTimeStr = new Date(childComment.created_time * 1000).toLocaleString("zh-CN");
+                const childTimeStr = new Date(
+                  childComment.created_time * 1000
+                ).toLocaleString("zh-CN");
                 markdown += ` · ${childTimeStr}`;
               }
               if (childComment.vote_count) {
@@ -3232,11 +3245,16 @@ export class WebviewManager {
 
     // 添加免责声明
     markdown += "## ⚠️ 免责声明\n\n";
-    markdown += "1. **内容版权**: 本文件中的所有内容（包括问题、回答、评论等）版权归知乎平台及原作者所有。本工具仅提供技术手段导出您已在知乎平台上可见的公开内容，用于个人学习、研究和备份目的。\n\n";
-    markdown += "2. **使用限制**: 导出的内容仅供个人非商业用途使用。未经原作者授权，请勿将导出内容用于任何商业用途、二次发布、转载或其他可能侵犯原作者权益的行为。\n\n";
-    markdown += "3. **责任声明**: 使用本工具导出内容的用户应自行承担因使用导出内容而产生的一切法律责任。本工具开发者不对用户使用导出内容的行为承担任何责任，包括但不限于因侵犯知识产权、违反平台规则等引起的任何纠纷或损失。\n\n";
-    markdown += "4. **合规使用**: 请遵守知乎平台的用户协议和相关法律法规，尊重原创作者的知识产权。如需引用或转载内容，请务必标注来源并获得原作者授权。\n\n";
-    markdown += "5. **数据准确性**: 导出的内容为导出时刻的快照，可能与当前知乎平台上的实际内容存在差异。本工具不保证导出内容的完整性和准确性。\n\n";
+    markdown +=
+      "1. **内容版权**: 本文件中的所有内容（包括问题、回答、评论等）版权归知乎平台及原作者所有。本工具仅提供技术手段导出您已在知乎平台上可见的公开内容，用于个人学习、研究和备份目的。\n\n";
+    markdown +=
+      "2. **使用限制**: 导出的内容仅供个人非商业用途使用。未经原作者授权，请勿将导出内容用于任何商业用途、二次发布、转载或其他可能侵犯原作者权益的行为。\n\n";
+    markdown +=
+      "3. **责任声明**: 使用本工具导出内容的用户应自行承担因使用导出内容而产生的一切法律责任。本工具开发者不对用户使用导出内容的行为承担任何责任，包括但不限于因侵犯知识产权、违反平台规则等引起的任何纠纷或损失。\n\n";
+    markdown +=
+      "4. **合规使用**: 请遵守知乎平台的用户协议和相关法律法规，尊重原创作者的知识产权。如需引用或转载内容，请务必标注来源并获得原作者授权。\n\n";
+    markdown +=
+      "5. **数据准确性**: 导出的内容为导出时刻的快照，可能与当前知乎平台上的实际内容存在差异。本工具不保证导出内容的完整性和准确性。\n\n";
     markdown += `6. **开源协议**: 本工具遵循开源协议，使用即表示您同意上述条款。更多信息请访问: https://github.com/crispyChicken999/zhihu-fisher-vscode\n\n`;
 
     return markdown;
@@ -3247,7 +3265,9 @@ export class WebviewManager {
    * @param html HTML内容
    */
   private static htmlToMarkdown(html: string): string {
-    if (!html) {return "";}
+    if (!html) {
+      return "";
+    }
 
     // 使用marked的反向转换，或者简单处理
     let text = html;
