@@ -36,6 +36,7 @@ html.grayscale-mode body .fixed-toolbar,
 html.grayscale-mode body .article-meta,
 html.grayscale-mode body .answer-meta > *:not(.immersive-author-info),
 html.grayscale-mode body .navigation,
+html.grayscale-mode body .fancybox__container,
 html.grayscale-mode body .toolbar {
   filter: grayscale(100%);
 }
