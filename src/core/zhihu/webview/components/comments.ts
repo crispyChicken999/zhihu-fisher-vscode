@@ -784,8 +784,7 @@ export class CommentsComponent implements Component {
         </div>
         <div class="zhihu-comment-content">${formattedContent}</div>
         <div class="zhihu-comment-footer">
-          <span>${createdTime}</span>
-          ${commentTagsHtml ? ` · ${commentTagsHtml}` : ""}
+          <span>${createdTime}${commentTagsHtml ? ` · ${commentTagsHtml}` : ""}</span>
           ${likeButtonHtml}
         </div>
         ${childCommentsHtml}
@@ -1172,8 +1171,7 @@ export class ChildCommentsModalComponent implements Component {
           </div>
           <div class="zhihu-comment-content">${childFormattedContent}</div>
           <div class="zhihu-comment-footer">
-            <span>${childCreatedTime}</span>
-            ${childCommentTagsHtml ? ` · ${childCommentTagsHtml}` : ""}
+            <span>${childCreatedTime}${childCommentTagsHtml ? ` · ${childCommentTagsHtml}` : ""}</span>
             ${childLikeButtonHtml}
           </div>
         </div>
@@ -1230,8 +1228,7 @@ export class ChildCommentsModalComponent implements Component {
             </div>
             <div class="zhihu-comment-content">${formattedContent}</div>
             <div class="zhihu-comment-footer">
-              <span>${createdTime}</span>
-              ${parentCommentTagsHtml ? ` · ${parentCommentTagsHtml}` : ""}
+              <span>${createdTime}${parentCommentTagsHtml ? ` · ${parentCommentTagsHtml}` : ""}</span>
               ${parentLikeButtonHtml}
             </div>
           </div>
