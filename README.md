@@ -4,10 +4,15 @@
 
 # 🐟 知乎摸鱼 🐟 (Zhihu Fisher)
 
+<div align="center">
+
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
 ![Version](https://img.shields.io/badge/Version-0.5.6-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
+![Stars](https://img.shields.io/github/stars/crispyChicken999/zhihu-fisher-vscode?style=social)
+
+</div>
 
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、图片/视频展示方式、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索、收藏夹等功能。
 
@@ -79,6 +84,8 @@
 
 <details>
 <summary>💻 各系统默认浏览器路径</summary>
+
+> 一般情况下谷歌浏览器都会安装在这个路径下，直接复制粘贴即可，如果不行就按照下面的方法去找一下。
 
 - **Windows 用户**：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
 - **Mac 用户**：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
@@ -170,7 +177,7 @@
 
 ## 💥 更新日志 💥
 
-- 查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
+查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
 
 ## 📝 TODO 📝
 
@@ -268,7 +275,7 @@
 
 ## 🤝 参与贡献 🤝
 
-- 我们欢迎所有形式的贡献！无论您是新手还是专家，都可以为项目做出贡献：
+众人拾柴火焰高，欢迎各位开发者一同参与到本项目中来，共同完善和提升这个插件！
 
 <details>
 <summary>贡献方式</summary>
