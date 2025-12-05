@@ -2,9 +2,9 @@
   <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250428102917058-270629388.png" alt="zhihu-fisher"  width="200" height="200" />
 </p>
 
-# 🐟 知乎摸鱼 🐟 (Zhihu Fisher)
+ <div align="center">
 
-<div align="center">
+<h1> 🐟 知乎摸鱼 🐟 (Zhihu Fisher) </h1>
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
