@@ -165,11 +165,24 @@ export class sidebarRecommendListDataProvider
     // 创建并获取浏览器页面
     const page = await PuppeteerManager.createPage();
 
+    console.time("loadRecommendListTime");
     console.log("导航到知乎首页...");
     await page.goto("https://www.zhihu.com/", {
-      waitUntil: "networkidle0", // "domcontentloaded"
-      timeout: 60000, // 60秒超时
+      waitUntil: "domcontentloaded",
+      timeout: 30000, // 60秒超时
     });
+
+    try {
+      // 意思是等5s或者是等待网络空闲，知乎估计会发起很多请求，导致可能永远都等待不到网络空闲，那么这里就相当于强制等5s，然后再读取网页内容。
+      console.time("waitForNetworkIdle");
+      await page.waitForNetworkIdle({ timeout: 5000 });
+      console.log("页面网络空闲");
+    } catch (networkIdleError) {
+      // 网络空闲超时不是致命错误，继续处理
+      console.log("等待网络空闲超时，但继续处理页面内容");
+    } finally {
+      console.timeEnd("waitForNetworkIdle");
+    }
 
     PuppeteerManager.setPageInstance("recommend", page); // 设置页面实例
 
@@ -208,6 +221,7 @@ export class sidebarRecommendListDataProvider
       const recommendList = await this.parseRecommendList(page);
       console.log(`成功解析出${recommendList.length}个推荐项目`);
       console.log("推荐列表解析完成，更新Store...");
+      console.timeEnd("loadRecommendListTime");
       Store.Zhihu.recommend.list = recommendList; // 更新推荐列表
     } catch (error) {
       console.error("获取推荐列表失败:", error);
@@ -703,7 +717,7 @@ export class sidebarRecommendListDataProvider
           command: "zhihu-fisher.refreshRecommendList",
           title: "刷新知乎推荐",
         },
-        TooltipContents.getRetryTooltip('recommend')
+        TooltipContents.getRetryTooltip("recommend")
       ),
     ];
   }

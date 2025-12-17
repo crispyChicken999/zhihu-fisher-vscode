@@ -163,17 +163,21 @@ export class PuppeteerManager {
               executablePath: executablePath,
               headless: headlessMode,
               args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
                 "--window-size=1000,700",
-                "--disable-features=UseEcoQoSForBackgroundProcess" // 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
+                "--disable-features=UseEcoQoSForBackgroundProcess", // 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
               ],
               pipe: true,
               protocolTimeout: 240000, // 设置协议超时时间为240秒 / 4分钟
             });
             await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒钟
             // console.log("浏览器实例创建成功！")
-            console.log(`第${i + 1}次尝试后，成功启动浏览器！${isDebugMode ? "（调试模式）" : "（后台模式）"}`);
+            console.log(
+              `第${i + 1}次尝试后，成功启动浏览器！${
+                isDebugMode ? "（调试模式）" : "（后台模式）"
+              }`
+            );
             break; // 成功启动后跳出循环
           } catch (error) {
             console.error("尝试启动浏览器失败:", error);
@@ -188,7 +192,9 @@ export class PuppeteerManager {
 
             if (i === browserStartAttempts - 1) {
               console.error("5次尝试启动浏览器均失败，请稍候重试");
-              throw new Error("5次尝试启动浏览器均失败，请稍候重试，可能是网络问题");
+              throw new Error(
+                "5次尝试启动浏览器均失败，请稍候重试，可能是网络问题"
+              );
             }
             console.log("等待5秒后重试...");
             await new Promise((resolve) => setTimeout(resolve, 5000)); // 等待5秒钟
@@ -433,6 +439,36 @@ export class PuppeteerManager {
       console.log("关闭浏览器实例...");
       await Store.browserInstance.close();
       Store.browserInstance = null;
+    }
+  }
+
+  /**
+   * 清理孤立的页面实例
+   * 关闭那些没有对应webview的页面，防止资源泄漏
+   */
+  static async cleanupOrphanedPages(): Promise<void> {
+    console.log("开始清理孤立的页面实例...");
+    const orphanedKeys: string[] = [];
+
+    // 找出所有没有对应webview的页面
+    for (const [key, page] of Store.pagesInstance.entries()) {
+      if (!Store.webviewMap.has(key)) {
+        orphanedKeys.push(key);
+      }
+    }
+
+    if (orphanedKeys.length > 0) {
+      console.log(`发现 ${orphanedKeys.length} 个孤立页面，正在清理...`);
+      for (const key of orphanedKeys) {
+        try {
+          await this.closePage(key);
+        } catch (error) {
+          console.error(`清理孤立页面 ${key} 时出错:`, error);
+        }
+      }
+      console.log("孤立页面清理完成");
+    } else {
+      console.log("没有发现孤立页面");
     }
   }
 }

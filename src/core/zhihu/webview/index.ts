@@ -410,11 +410,57 @@ export class WebviewManager {
       const page = await PuppeteerManager.createPage();
       PuppeteerManager.setPageInstance(webviewId, page); // 设置页面实例
 
-      // 前往页面
-      await page.goto(webviewItem.url, {
-        waitUntil: "networkidle0",
-        timeout: 60000, // 60秒超时
-      });
+      // 前往页面 - 添加更好的错误处理和超时管理
+      console.log(`正在导航到页面: ${webviewItem.url}`);
+      try {
+        await page.goto(webviewItem.url, {
+          waitUntil: "domcontentloaded", // 改为domcontentloaded，更快且更可靠
+          timeout: 30000, // 减少到30秒超时，避免长时间等待
+        });
+        console.log("页面DOM加载完成");
+
+        // 等待网络空闲，但使用更短的超时和容错处理
+        try {
+          // 意思是等5s或者是等待网络空闲，知乎估计会发起很多请求，导致可能永远都等待不到网络空闲，那么这里就相当于强制等5s，然后再读取网页内容。
+          console.time('waitForNetworkIdle')
+          await page.waitForNetworkIdle({ timeout: 5000 });
+          console.log("页面网络空闲");
+        } catch (networkIdleError) {
+          // 网络空闲超时不是致命错误，继续处理
+          console.log("等待网络空闲超时，但继续处理页面内容");
+        } finally {
+          console.timeEnd('waitForNetworkIdle')
+        }
+      } catch (gotoError: any) {
+        console.error("页面导航出错:", gotoError.message);
+
+        // 如果是超时错误，尝试检查页面是否至少部分加载
+        if (
+          gotoError.message.includes("timeout") ||
+          gotoError.message.includes("Navigation")
+        ) {
+          console.log("导航超时，检查页面是否可用...");
+
+          // 检查页面是否至少部分可用
+          try {
+            const pageTitle = await page.title();
+            console.log(`页面标题: ${pageTitle}`);
+
+            // 如果能获取到标题，说明页面至少部分加载了，继续处理
+            if (pageTitle) {
+              console.log("页面部分可用，继续处理");
+            } else {
+              throw new Error("页面完全无法访问");
+            }
+          } catch (titleError) {
+            // 页面完全不可用，抛出错误
+            throw new Error(`页面导航失败且无法恢复: ${gotoError.message}`);
+          }
+        } else {
+          // 其他类型的错误，直接抛出
+          throw gotoError;
+        }
+      }
 
       // 到这一步，页面加载完成，开始处理内容
       console.log("页面加载完成，开始读取页面...");
@@ -2071,6 +2117,13 @@ export class WebviewManager {
 
             Store.webviewMap.delete(webviewId);
             await PuppeteerManager.closePage(webviewId);
+
+            // 定期清理孤立的页面实例，防止资源泄漏
+            try {
+              await PuppeteerManager.cleanupOrphanedPages();
+            } catch (cleanupError) {
+              console.error("清理孤立页面时出错:", cleanupError);
+            }
 
             // 检查是否需要恢复侧边栏（延迟执行，确保Store更新完成）
             setTimeout(async () => {
