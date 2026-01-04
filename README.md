@@ -8,7 +8,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.5.7-green.svg)
+![Version](https://img.shields.io/badge/Version-0.5.8-green.svg)
 ![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
 ![Stars](https://img.shields.io/github/stars/crispyChicken999/zhihu-fisher-vscode?style=social)
 
