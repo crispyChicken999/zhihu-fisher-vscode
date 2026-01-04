@@ -422,9 +422,30 @@ export class PuppeteerManager {
   static async closePage(key: string): Promise<void> {
     const page = Store.pagesInstance.get(key);
     if (page) {
-      console.log(`关闭${key}页面`);
-      await page.close();
-      Store.pagesInstance.delete(key);
+      try {
+        // 检查页面是否已经关闭
+        if (page.isClosed()) {
+          console.log(`页面 ${key} 已经关闭，跳过关闭操作`);
+          Store.pagesInstance.delete(key);
+          return;
+        }
+
+        console.log(`关闭${key}页面`);
+        await page.close();
+        Store.pagesInstance.delete(key);
+      } catch (error: any) {
+        // 如果页面已经被关闭，忽略错误
+        if (
+          error.message?.includes("Target closed") ||
+          error.message?.includes("No target with given id")
+        ) {
+          console.log(`页面 ${key} 已被关闭，清理引用`);
+          Store.pagesInstance.delete(key);
+        } else {
+          console.error(`关闭页面 ${key} 时出错:`, error);
+          throw error;
+        }
+      }
     } else {
       console.log(`页面不存在: ${key}`);
     }
@@ -452,8 +473,16 @@ export class PuppeteerManager {
 
     // 找出所有没有对应webview的页面
     for (const [key, page] of Store.pagesInstance.entries()) {
+      // 检查页面是否已关闭或没有对应的webview
       if (!Store.webviewMap.has(key)) {
-        orphanedKeys.push(key);
+        // 只添加未关闭的页面到清理列表
+        if (!page.isClosed()) {
+          orphanedKeys.push(key);
+        } else {
+          // 如果页面已关闭，直接从Map中删除引用
+          console.log(`页面 ${key} 已关闭，清理引用`);
+          Store.pagesInstance.delete(key);
+        }
       }
     }
 
@@ -464,6 +493,8 @@ export class PuppeteerManager {
           await this.closePage(key);
         } catch (error) {
           console.error(`清理孤立页面 ${key} 时出错:`, error);
+          // 即使出错也要清理引用，避免内存泄漏
+          Store.pagesInstance.delete(key);
         }
       }
       console.log("孤立页面清理完成");
