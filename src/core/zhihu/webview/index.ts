@@ -419,17 +419,27 @@ export class WebviewManager {
         });
         console.log("页面DOM加载完成");
 
+        // 立即检测知乎错误页面并禁用重定向（在5秒自动跳转之前）
+        const hasErrorPage = await this.checkAndHandleZhihuErrorPage(
+          webviewId,
+          page,
+          "answer"
+        );
+        if (hasErrorPage) {
+          return;
+        }
+
         // 等待网络空闲，但使用更短的超时和容错处理
         try {
           // 意思是等5s或者是等待网络空闲，知乎估计会发起很多请求，导致可能永远都等待不到网络空闲，那么这里就相当于强制等5s，然后再读取网页内容。
-          console.time('waitForNetworkIdle')
+          console.time("waitForNetworkIdle");
           await page.waitForNetworkIdle({ timeout: 5000 });
           console.log("页面网络空闲");
         } catch (networkIdleError) {
           // 网络空闲超时不是致命错误，继续处理
           console.log("等待网络空闲超时，但继续处理页面内容");
         } finally {
-          console.timeEnd('waitForNetworkIdle')
+          console.timeEnd("waitForNetworkIdle");
         }
       } catch (gotoError: any) {
         console.error("页面导航出错:", gotoError.message);
@@ -596,6 +606,84 @@ export class WebviewManager {
     }
   }
 
+  /**
+   * 检测知乎错误页面并禁用自动重定向
+   * @param webviewId - WebView的ID
+   * @param page - Puppeteer的Page实例
+   * @param contentType - 内容类型（'question'、'answer' 或 'article'）
+   * @returns 如果检测到错误页面返回 true，否则返回 false
+   */
+  private static async checkAndHandleZhihuErrorPage(
+    webviewId: string,
+    page: Puppeteer.Page,
+    contentType: "question" | "answer" | "article" = "question"
+  ): Promise<boolean> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return false;
+    }
+
+    // 检测错误页面并禁用重定向
+    const isErrorPage = await page.evaluate(() => {
+      // 检测错误页面标题
+      const errorTitle = document.querySelector("h1.ErrorPage-title");
+      const hasErrorPage =
+        errorTitle?.textContent?.includes("你似乎来到了没有知识存在的荒原") ||
+        false;
+
+      if (hasErrorPage) {
+        // 禁用所有定时器，阻止自动重定向
+        const highestTimeoutId = Number(setTimeout(() => {}, 0));
+        for (let i = 0; i < highestTimeoutId; i++) {
+          clearTimeout(i);
+        }
+
+        // 禁用所有间隔器
+        const highestIntervalId = Number(setInterval(() => {}, 9999));
+        for (let i = 0; i < highestIntervalId; i++) {
+          clearInterval(i);
+        }
+
+        console.log("检测到错误页面，已禁用自动重定向");
+      }
+
+      return hasErrorPage;
+    });
+
+    // 如果检测到错误页面，显示错误提示
+    if (isErrorPage) {
+      const contentTypeText = contentType === "article" ? "文章" : "问题或回答";
+      console.log(
+        `检测到知乎错误页面（${contentTypeText}已被删除），在重定向前拦截`
+      );
+
+      // 隐藏状态栏加载提示
+      this.hideStatusBarItem(webviewId);
+
+      const errorTitle = "页面失效";
+      const errorDescription = `该${contentTypeText}已被删除或不存在`;
+      const errorReasons = [
+        `该${contentTypeText}可能已被作者删除`,
+        `该${contentTypeText}可能已被知乎管理员删除`,
+        `该${contentTypeText}可能违反了知乎社区规范`,
+        `该${contentTypeText}的URL可能不正确`,
+      ];
+
+      webviewItem.webviewPanel.webview.html = HtmlRenderer.getErrorHtml(
+        errorTitle,
+        errorDescription,
+        webviewItem.url,
+        errorReasons
+      );
+
+      webviewItem.isLoading = false;
+      webviewItem.isLoaded = true;
+      return true;
+    }
+
+    return false;
+  }
+
   /** 隐藏状态栏项目 */
   private static hideStatusBarItem(webviewId: string): void {
     const statusBarItem = Store.statusBarMap.get(webviewId);
@@ -639,11 +727,35 @@ export class WebviewManager {
 
       // 前往文章页面
       await page.goto(webviewItem.url, {
-        waitUntil: "networkidle0",
+        waitUntil: "domcontentloaded",
         timeout: 60000,
       });
 
       console.log("文章页面加载完成，开始读取页面...");
+
+      // 立即检测知乎错误页面并禁用重定向（在5秒自动跳转之前）
+      const hasErrorPage = await this.checkAndHandleZhihuErrorPage(
+        webviewId,
+        page,
+        "article"
+      );
+      if (hasErrorPage) {
+        return;
+      }
+
+      // 等待网络空闲，但使用更短的超时和容错处理
+      try {
+        // 意思是等5s或者是等待网络空闲，知乎估计会发起很多请求，导致可能永远都等待不到网络空闲，那么这里就相当于强制等5s，然后再读取网页内容。
+        console.time("waitForNetworkIdle");
+        await page.waitForNetworkIdle({ timeout: 5000 });
+        console.log("页面网络空闲");
+      } catch (networkIdleError) {
+        // 网络空闲超时不是致命错误，继续处理
+        console.log("等待网络空闲超时，但继续处理页面内容");
+      } finally {
+        console.timeEnd("waitForNetworkIdle");
+      }
+
       webviewItem.isLoading = false;
       webviewItem.webviewPanel.title = shortTitle;
 
