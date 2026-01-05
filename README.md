@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250428102917058-270629388.png" alt="zhihu-fisher"  width="200" height="200" />
+  <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250428102917058-270629388.png" alt="zhihu-fisher" width="200" height="200" />
 </p>
 
 <div align="center">
@@ -17,35 +17,33 @@
 
 </div>
 
----
-
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、隐藏图片、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索内容、查看关注人动态、管理收藏夹等功能。
 
-## 📑 目录
+## 📑 目录 (Table of Contents)
 
-- [📑 目录](#-目录)
-- [🔮 项目背景](#-项目背景)
-- [📸 功能预览](#-功能预览)
-- [✨ 主要功能](#-主要功能)
-- [💻 系统要求](#-系统要求)
-- [🚀 快速开始](#-快速开始)
+- [📑 目录 (Table of Contents)](#-目录-table-of-contents)
+- [🔮 项目背景 (Project Background)](#-项目背景-project-background)
+- [📸 功能预览 (Feature Preview)](#-功能预览-feature-preview)
+- [✨ 主要功能 (Key Features)](#-主要功能-key-features)
+- [💻 系统要求 (System Requirements)](#-系统要求-system-requirements)
+- [🚀 快速开始 (Quick Start)](#-快速开始-quick-start)
   - [1. 安装插件](#1-安装插件)
   - [2. 配置浏览器](#2-配置浏览器)
   - [3. 配置 Cookie](#3-配置-cookie)
   - [4. 开始使用](#4-开始使用)
-- [💥 更新日志](#-更新日志)
-- [🗺️ 路线图](#️-路线图)
-- [❓ 常见问题](#-常见问题)
-- [🔧 技术实现](#-技术实现)
-- [📬 问题反馈](#-问题反馈)
-- [⚠️ 免责声明](#️-免责声明)
-- [🤝 参与贡献](#-参与贡献)
-- [🤝 贡献者](#-贡献者)
-- [📄 开源协议](#-开源协议)
-- [💖 欢迎赞赏](#-欢迎赞赏)
-- [📊 Star History](#-star-history)
+- [💥 更新日志 (Changelog)](#-更新日志-changelog)
+- [🗺️ TODO (Roadmap)](#️-todo-roadmap)
+- [❓ 常见问题 (FAQ)](#-常见问题-faq)
+- [🔧 技术实现 (Technical Implementation)](#-技术实现-technical-implementation)
+- [📬 问题反馈 (Issue Feedback)](#-问题反馈-issue-feedback)
+- [⚠️ 免责声明 (Disclaimer)](#️-免责声明-disclaimer)
+- [🤝 参与贡献 (Contributing)](#-参与贡献-contributing)
+- [🤝 贡献者 (Contributors)](#-贡献者-contributors)
+- [📄 开源协议 (License)](#-开源协议-license)
+- [💖 欢迎赞赏 (Support \& Donation)](#-欢迎赞赏-support--donation)
+- [⭐ Star History](#-star-history)
 
-## 🔮 项目背景
+## 🔮 项目背景 (Project Background)
 
 - 假装敲代码，实则在 VSCode 中刷知乎！
 - 其实就是想上班摸会鱼，直接网页刷知乎容易被抓包，并且网页有很多图片更明显了，老板同事一看就知道你小子在摸鱼。（工资-1😅）
@@ -56,7 +54,7 @@
 - 若本插件对您有所帮助，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 - 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！🤣 独摸摸不如众摸摸~
 
-## 📸 功能预览
+## 📸 功能预览 (Feature Preview)
 
 <div align="center">
 
@@ -66,7 +64,7 @@ _主要功能展示_
 
 </div>
 
-## ✨ 主要功能
+## ✨ 主要功能 (Key Features)
 
 1. 支持 加载`知乎热榜`
 2. 支持 加载`知乎推荐`
@@ -91,13 +89,13 @@ _主要功能展示_
 
 更多功能，敬请探索~
 
-## 💻 系统要求
+## 💻 系统要求 (System Requirements)
 
 - **VSCode 版本**：1.82.0 及以上
 - **操作系统**：Windows / MacOS / Linux
 - **浏览器**：Chrome 120+ 或使用插件自动安装的 Chromium
 
-## 🚀 快速开始
+## 🚀 快速开始 (Quick Start)
 
 ### 1. 安装插件
 
@@ -217,11 +215,11 @@ _Cookie 获取示例图_
 
 配置完成后，插件将自动加载内容。点击侧边栏中的内容即可开始阅读。开始愉快摸鱼吧 🐟🎉~
 
-## 💥 更新日志
+## 💥 更新日志 (Changelog)
 
 - 查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
 
-## 🗺️ 路线图
+## 🗺️ TODO (Roadmap)
 
 - [ ] 支持多账号切换
 - [ ] 支持离线阅读模式
@@ -231,7 +229,7 @@ _Cookie 获取示例图_
 
 > 💡 欢迎在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中提出您的功能建议！
 
-## ❓ 常见问题
+## ❓ 常见问题 (FAQ)
 
 <details>
 <summary>已修复的问题</summary>
@@ -258,20 +256,18 @@ _Cookie 获取示例图_
 
 </details>
 
----
-
 > 更多问题，欢迎在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中进行反馈，我看到后会尽快修复。
 
-## 🔧 技术实现
+## 🔧 技术实现 (Technical Implementation)
 
 - 基于 VSCode 插件脚手架，使用 Puppeteer 在后台来模拟浏览知乎，抓取内容并渲染成 HTML，最后在 VSCode 中显示。
 - 技术栈：TypeScript、Puppeteer、Cheerio、HTML、CSS
 
-## 📬 问题反馈
+## 📬 问题反馈 (Issue Feedback)
 
 - 在[GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)中提交问题，我看到会尽快回复和修复。
 
-## ⚠️ 免责声明
+## ⚠️ 免责声明 (Disclaimer)
 
 - **本插件仅供学习和研究目的使用，请勿用于任何商业用途。**
 - **本项目与知乎官方无任何关联，仅为个人学习和技术研究项目。**
@@ -313,13 +309,10 @@ _Cookie 获取示例图_
 
 </details>
 
-## 🤝 参与贡献
+## 🤝 参与贡献 (Contributing)
 
 众人拾柴火焰高，欢迎各位开发者一同参与到本项目中来，共同完善和提升这个插件！
-
 感谢每一位贡献者！🙏
-
-更多说明，请查看 [OPEN_SOURCE.md](./OPEN_SOURCE.md)。
 
 <details>
 <summary>贡献方式</summary>
@@ -347,7 +340,9 @@ npm run watch
 
 </details>
 
-## 🤝 贡献者
+> 更多说明，请查看 [OPEN_SOURCE.md](./OPEN_SOURCE.md)。
+
+## 🤝 贡献者 (Contributors)
 
 感谢所有为本项目做出贡献的开发者！
 
@@ -357,11 +352,11 @@ npm run watch
 
 > 贡献者头像由 [contrib.rocks](https://contrib.rocks) 自动生成
 
-## 📄 开源协议
+## 📄 开源协议 (License)
 
 - 本项目采用 [MIT 协议](./LICENSE) 开源，您可以自由使用、修改和分发。
 
-## 💖 欢迎赞赏
+## 💖 欢迎赞赏 (Support & Donation)
 
 - 一分也是爱，您的支持是我更新的最大动力！ 💰
 - 如果帮到你麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
@@ -369,6 +364,6 @@ npm run watch
 
 ![赞赏码](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg)
 
-## 📊 Star History
+## ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)](https://www.star-history.com/#crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)
