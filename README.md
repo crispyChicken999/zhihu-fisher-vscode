@@ -4,19 +4,24 @@
 
 <div align="center">
 
-<h1> 🐟 知乎摸鱼 🐟 (Zhihu Fisher) </h1>
+<h1>🐟 知乎摸鱼 (Zhihu Fisher)</h1>
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
 ![Version](https://img.shields.io/badge/Version-0.5.8-green.svg)
-![Supported](https://img.shields.io/badge/Supported-Windows_MacOS_Linux-purple.svg)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20MacOS%20%7C%20Linux-purple.svg)
+
 ![Stars](https://img.shields.io/github/stars/crispyChicken999/zhihu-fisher-vscode?style=social)
+![Downloads](https://img.shields.io/visual-studio-marketplace/d/CrispyChicken.zhihu-fisher)
+![Rating](https://img.shields.io/visual-studio-marketplace/r/CrispyChicken.zhihu-fisher)
 
 </div>
 
+---
+
 使用 VSCode，浏览知乎推荐及热榜内容，快乐摸鱼。提供沉浸模式、隐藏图片、灰色模式、智能伪装模式，避免摸鱼被发现！支持评论区、搜索内容、查看关注人动态、管理收藏夹等功能。
 
-## 🔮 背景 🔮
+## 🔮 项目背景
 
 - 假装敲代码，实则在 VSCode 中刷知乎！
 - 其实就是想上班摸会鱼，直接网页刷知乎容易被抓包，而且网页有很多图片，老板同事一看就知道你小子在摸鱼。（工资-1😅）
@@ -26,7 +31,7 @@
 - 若本插件对您有所帮助，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 - 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！🤣 独摸摸不如众摸摸~
 
-## 🚀 主要功能 🚀
+## ✨ 主要功能
 
 1. 支持 加载`知乎热榜`
 2. 支持 加载`知乎推荐`
@@ -51,13 +56,23 @@
 
 更多功能，敬请探索~
 
-<img src="https://img2024.cnblogs.com/blog/3085939/202507/3085939-20250711153038514-925146507.png" alt="智能伪装模式示例" width="400">
+## 📸 功能预览
 
-## 🎯 支持的 VSCode 版本 🎯
+<div align="center">
 
-- **1.82.0** 及以上版本
+<img src="https://img2024.cnblogs.com/blog/3085939/202601/3085939-20260105093007226-1194584688.gif" alt="智能伪装模式示例" width="800">
 
-## 🎉 使用方式 🎉
+_主要功能展示_
+
+</div>
+
+## 💻 系统要求
+
+- **VSCode 版本**：1.82.0 及以上
+- **操作系统**：Windows / MacOS / Linux
+- **浏览器**：Chrome 120+ 或使用插件自动安装的 Chromium
+
+## 🚀 快速开始
 
 ### 1. 安装插件
 
@@ -85,7 +100,7 @@
 <details>
 <summary>💻 各系统默认浏览器路径</summary>
 
-> 一般情况下谷歌浏览器都会安装在这个路径下，直接复制粘贴即可，如果不行就按照下面的方法去找一下。
+> 一般情况下谷歌浏览器都会安装在这个路径下，直接复制粘贴即可，如果不行就按照下面的方法去获取。
 
 - **Windows 用户**：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
 - **Mac 用户**：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
@@ -165,7 +180,7 @@
 
 **简单说就是：Cookie 就存在你电脑里，插件不会偷偷上传，要来也没用 😂**
 
-你的 Cookie 存在 VSCode 的配置文件里面。插件只是用它来帮你刷刷知乎，看看推荐和热榜内容而已。
+你的 Cookie 存在 VSCode 的配置文件里面。插件只是用它来帮你刷知乎，看看推荐和热榜内容而已。
 
 代码完全开源，不会上传/分析你的数据，不信的话可以你可以翻翻源码 😁
 
@@ -175,29 +190,12 @@
 
 加载完成后点击内容即可查看，就可以愉快 🐟 摸鱼 🐟 啦~
 
-## 💥 更新日志 💥
+## 💥 更新日志
 
-查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
+- 查看[完整更新日志](./CHANGELOG.md)，了解所有版本的详细更改。
 
-## 📝 TODO 📝
 
-<details>
-<summary>目前已完成的功能</summary>
-
-- ~~重构代码，简化流程~~ **(v0.0.6 已重构)**
-- ~~增加更多功能，比如搜索、收藏等~~ **(v0.0.8 已实现搜索功能，v0.2.2 已实现收藏功能)**
-- ~~详情页面添加回答跳转功能~~ **(v0.0.7 已实现分页跳转)**
-- ~~支持快捷键切换图片隐藏和显示~~ **(v0.1.0 已实现)**
-- ~~支持用户指定自己的 Chrome.exe 浏览器地址，就不用下载新的了~~ **(v0.1.1 已实现)**
-- ~~支持小图模式，比如想要摸鱼，但是也想偷偷看图片~~ **(v0.1.3 已实现)**
-- ~~支持设置文章的各种样式，比如字体大小、颜色等~~ **(v0.1.3 已实现)**
-- ~~支持加载回答的评论等。~~ **(v0.1.4 已实现)**
-
-</details>
-
-🤗 更多功能，欢迎许愿 🎉~
-
-## 🐞 已知问题 🐞
+## ❓ 常见问题
 
 <details>
 <summary>已修复的问题</summary>
@@ -228,54 +226,91 @@
 
 > 更多问题，欢迎在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中进行反馈，我看到后会尽快修复。
 
-## 🤓☝ 实现原理 🤓☝
+## 🔧 技术实现
 
 - 基于 VSCode 插件脚手架，使用 Puppeteer 在后台来模拟浏览知乎，抓取内容并渲染成 HTML，最后在 VSCode 中显示。
 - 技术栈：TypeScript、Puppeteer、Cherrio、HTML、CSS
 
-## 📬 反馈问题 📬
+## 📬 问题反馈
 
 - 在[GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)中提交问题，我看到会尽快回复和修复。
 
-## 🌟 开源项目 & 免责声明 🌟
+## ⚠️ 重要声明
 
-<details>
-<summary>代码开源说明</summary>
+> **本项目与知乎官方无任何关联，仅为个人学习和技术研究项目。**
 
-本项目现已完全开源！欢迎各位有志之士一同参与开发和完善：
-
-- **欢迎贡献代码** - 提交 Pull Request
-- **报告问题** - 在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中反馈 Bug
-- **功能建议** - 提出新功能想法和改进建议
-- **完善文档** - 帮助改进文档和使用说明
-- **Star 支持** - 给项目点个 Star，让更多人发现
-</details>
-
-<details>
-<summary>免责声明</summary>
+### 📋 免责声明
 
 **本插件仅供学习和研究目的使用，请勿用于任何商业用途。**
 
-**隐私保护：** 本插件仅将浏览器中已展示的内容搬运至 VSCode 中展示，不会上传、收集、存储或分析任何用户数据或隐私信息，所有数据仅在本地处理，不会用于任何营利行为。
+#### 🔒 隐私保护承诺
 
-**技术说明：** 插件不会绕过知乎的反爬机制，不会恶意破坏或影响原网站正常使用。知乎对部分内容采用反爬技术，可能导致显示异常，建议直接前往知乎官网查看完整内容。
+- ✅ 本插件仅将浏览器中已展示的内容搬运至 VSCode 中展示
+- ✅ **不会上传、收集、存储或分析**任何用户数据或隐私信息
+- ✅ 所有数据仅在本地处理，不会用于任何营利行为
+- ✅ 您的 Cookie 仅存储在本地 VSCode 配置文件中
+- ✅ 代码完全开源，欢迎审查源码验证安全性
 
-- **允许**：个人学习、技术研究、代码交流
-- **禁止**：商业使用、大规模数据采集、违反知乎服务条款的行为
-- **禁止**：用于任何可能损害知乎平台或用户利益的活动
+#### 🛡️ 技术说明
 
-**使用须知：**
+- ✅ 插件通过 Puppeteer 模拟正常用户浏览行为
+- ✅ 不会绕过知乎的反爬机制
+- ✅ 不会恶意破坏或影响原网站正常使用
+- ⚠️ 知乎对部分内容采用反爬技术，可能导致显示异常
+- 💡 如遇显示问题，建议直接前往知乎官网查看完整内容
 
-- 遵守知乎的用户协议和服务条款
-- 合理使用，避免给知乎服务器造成过大负担
-- 尊重原创作者的版权和知识产权
-</details>
+#### ✅ 允许的使用方式
 
-🐟 **请合理使用，文明摸鱼！** 🐟
+- ✅ 个人学习和技术研究
+- ✅ 代码交流和技术讨论
+- ✅ 改进阅读体验和效率提升
+- ✅ 开源贡献和功能建议
 
-## 🤝 参与贡献 🤝
+#### ❌ 禁止的使用方式
 
-众人拾柴火焰高，欢迎各位开发者一同参与到本项目中来，共同完善和提升这个插件！
+- ❌ 任何形式的商业使用
+- ❌ 大规模数据采集或爬虫行为
+- ❌ 违反知乎服务条款的行为
+- ❌ 用于任何可能损害知乎平台或用户利益的活动
+- ❌ 侵犯原创作者版权和知识产权的行为
+
+#### 📜 使用须知
+
+使用本插件即表示您同意以下条款：
+
+1. **遵守法律法规**：遵守中华人民共和国相关法律法规
+2. **遵守平台规则**：遵守知乎的用户协议和服务条款
+3. **合理使用**：避免给知乎服务器造成过大负担
+4. **尊重版权**：尊重原创作者的版权和知识产权
+5. **自担风险**：因使用本插件产生的任何法律纠纷，作者不承担任何责任
+6. **配合下架**：如知乎官方认为本项目侵权，作者将立即配合下架处理
+
+#### 📮 联系方式
+
+如有任何法律问题、侵权疑虑或其他事宜，请通过以下方式联系：
+
+- **GitHub Issues**: [提交问题](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)
+- **项目主页**: [GitHub Repository](https://github.com/crispyChicken999/zhihu-fisher-vscode)
+
+---
+
+🐟 **请合理使用，文明摸鱼！尊重知识产权，遵守平台规则！** 🐟
+
+---
+
+## 🌟 Star History
+
+本项目现已完全开源！欢迎各位有志之士一同参与开发和完善：
+
+- **欢迎贡献代码** - 提交 Pull Request 改进功能
+- **报告问题** - 在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中反馈 Bug
+- **功能建议** - 提出新功能想法和改进建议
+- **完善文档** - 帮助改进文档和使用说明
+- **Star 支持** - 给项目点个 ⭐️，让更多人发现这个项目
+
+## 🤝 参与贡献
+
+- 众人拾柴火焰高，欢迎各位开发者一同参与到本项目中来，共同完善和提升这个插件！
 
 <details>
 <summary>贡献方式</summary>
@@ -306,11 +341,11 @@ npm run watch
 - 感谢每一位贡献者！🙏
 - 更多说明，请查看 [OPEN_SOURCE.md](./OPEN_SOURCE.md)。
 
-## 📄 开源协议 📄
+## 📄 开源协议
 
 - 本项目采用 [MIT 协议](./LICENSE) 开源，您可以自由使用、修改和分发。
 
-## 💖 欢迎赞赏 💖
+## 💖 支持项目
 
 - 一分也是爱，您的支持是我更新的最大动力！ 💰
 - 如果帮到你麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
@@ -318,6 +353,6 @@ npm run watch
 
 ![赞赏码](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg)
 
-## ⭐️ Star History ⭐️
+## 📊 Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)](https://www.star-history.com/#crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)
