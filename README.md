@@ -8,7 +8,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.5.8-green.svg)
+![Version](https://img.shields.io/badge/Version-0.5.9-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20MacOS%20%7C%20Linux-purple.svg)
 
 ![Downloads](https://img.shields.io/visual-studio-marketplace/d/CrispyChicken.zhihu-fisher)
