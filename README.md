@@ -101,15 +101,16 @@ _主要功能展示_
 
 在 VSCode 扩展市场搜索 "Zhihu Fisher" 并安装，安装完成后在侧边栏中找到 📖 图标。
 
+---
+
 ### 2. 配置浏览器
 
 本插件使用 Puppeteer 库在后台模拟浏览器访问知乎，因此需要配置 Chrome 浏览器路径。
-
-配置完成后请重启 VSCode 以应用设置。
+配置完成后，请重启 VSCode 以应用设置。
 
 > **工作原理**：插件通过 Puppeteer 在后台启动浏览器，模拟用户浏览行为获取内容，然后在 VSCode 中进行展示。
 
-插件提供两种浏览器配置方式：
+⚙️ 插件提供两种浏览器配置方式：
 
 1. **使用本地浏览器（推荐）**：使用已安装的 Chrome 浏览器
 2. **自动安装浏览器**：通过插件自动下载并安装 Chromium
@@ -123,20 +124,22 @@ _主要功能展示_
 
 **参考路径**：Chrome 浏览器的默认安装路径如下（实际安装路径可能不同，请根据实际情况调整）：
 
----
+💻 各系统默认浏览器路径:
 
-<details>
-<summary>💻 各系统默认浏览器路径</summary>
+> 一般情况下谷歌浏览器都会安装在`示例路径`下，直接复制粘贴即可，如果不行就按照下面的方法去获取。
 
-> 一般情况下谷歌浏览器都会安装在这个路径下，直接复制粘贴即可，如果不行就按照下面的方法去获取。
-
-- **Windows 用户**：`C:\Program Files\Google\Chrome\Application\chrome.exe`，需要以`chrome.exe`结尾
-- **Mac 用户**：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
-- **Linux 用户**：`/usr/bin/google-chrome` 或 `/snap/bin/chromium` （第一个路径是推荐的）
-
----
-
-</details>
+- **Windows 用户**：需要以`chrome.exe`结尾
+  ```
+  C:\Program Files\Google\Chrome\Application\chrome.exe
+  ```
+- **Mac 用户**：
+  ```
+  /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  ```
+- **Linux 用户**：
+  ```
+  /usr/bin/google-chrome
+  ```
 
 <details>
 <summary>Windows 获取本地 Chrome 浏览器路径的方法</summary>
@@ -176,6 +179,9 @@ _主要功能展示_
 ---
 
 </details>
+
+---
+
 </details>
 
 <details>
@@ -190,6 +196,8 @@ _主要功能展示_
 - **Linux 用户**：`/home/[用户名]/.cache/puppeteer/chrome/linux-x64-135.0.7049.84/chrome-linux-x64/chrome`
 
 </details>
+
+---
 
 ### 3. 配置 Cookie
 
@@ -210,6 +218,8 @@ _Cookie 获取示例图_
 > Cookie 使用说明：Cookie 仅存储在您的本地 VSCode 配置文件中，插件不会上传或分享您的 Cookie 信息。插件仅使用 Cookie 来模拟登录状态，获取知乎推荐和热榜内容。所有代码完全开源，欢迎审查源码验证安全性。
 
 </details>
+
+---
 
 ### 4. 开始使用
 
