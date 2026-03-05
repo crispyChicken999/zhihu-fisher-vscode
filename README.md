@@ -8,7 +8,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.5.9-green.svg)
+![Version](https://img.shields.io/badge/Version-0.6.0-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20MacOS%20%7C%20Linux-purple.svg)
 
 ![Downloads](https://img.shields.io/visual-studio-marketplace/d/CrispyChicken.zhihu-fisher)
@@ -86,6 +86,8 @@ _主要功能展示_
 18. 支持 `侧边栏伪装模式`，侧边栏会伪装成文件列表，进一步增强伪装效果
 19. 支持 `自定义智能伪装模式列表`，用户可以自定义伪装的标题和图标，满足不同用户的需求，例如前端开发可以伪装为 `HTML/JS/CSS` 文件，后端开发可以伪装为 `Python/Java/Go` 文件等
 20. 支持 导出为 `Markdown` 文件，方便离线阅读和保存，导出的文件包含了问题标题、描述、每个回答的内容及评论信息、作者信息、点赞数、评论数等详细信息
+21. 支持 `知乎 AI (知乎直答)` 弹窗查看内容中的关键词解释
+22. 支持 `AI 总结回答` 功能，一键获取当前回答的核心内容摘要
 
 更多功能，敬请探索~
 
