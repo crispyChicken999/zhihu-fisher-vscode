@@ -119,7 +119,9 @@ export class ZhidaManager {
         let container: Element | null = null;
         for (const sel of selectors) {
           container = document.querySelector(sel);
-          if (container) break;
+          if (container) {
+            break;
+          }
         }
 
         if (container) {
@@ -276,7 +278,9 @@ export class ZhidaManager {
         // 未出现完成按钮 = 正在思考中
         return btn ? !btn.textContent?.includes("完成回答") : false;
       });
-      if (isLoading) return true;
+      if (isLoading) {
+        return true;
+      }
       await new Promise((r) => setTimeout(r, 200));
     }
     return false;
@@ -289,7 +293,9 @@ export class ZhidaManager {
     try {
       const existed = await page.evaluate(() => {
         const panel = document.querySelector(".AIPanel-enter-done");
-        if (!panel) return false;
+        if (!panel) {
+          return false;
+        }
         const closeBtn = panel.querySelector<HTMLElement>(
           '[aria-label="关闭"], [data-tooltip="关闭"]',
         );
@@ -300,7 +306,9 @@ export class ZhidaManager {
         return false;
       });
 
-      if (!existed) return;
+      if (!existed) {
+        return;
+      }
 
       // 等待面板彻底消失（最多 2 秒）
       const waitStart = Date.now();
@@ -308,7 +316,9 @@ export class ZhidaManager {
         const stillHere = await page.evaluate(
           () => !!document.querySelector(".AIPanel-enter-done"),
         );
-        if (!stillHere) break;
+        if (!stillHere) {
+          break;
+        }
         await new Promise((r) => setTimeout(r, 100));
       }
     } catch (_) {
