@@ -13,6 +13,7 @@ import { ContentProcessor } from "./components/content-processor";
 import { WebViewUtils, CollectionPickerUtils } from "../../utils";
 import { RelatedQuestionsManager } from "./components/related-questions";
 import { SidebarDisguiseManager } from "../../utils/sidebar-disguise-manager";
+import { ZhidaManager } from "../zhida";
 
 export class WebviewManager {
   /** 在vscode编辑器中打开页面（新建一个窗口） */
@@ -24,7 +25,7 @@ export class WebviewManager {
       | "hot"
       | "search"
       | "inner-link" = "recommend",
-    collectionId?: string
+    collectionId?: string,
   ): Promise<void> {
     // 提取基础ID和内容类型
     let baseId = item.id;
@@ -37,7 +38,7 @@ export class WebviewManager {
     // 检查是否是特定回答（有answerUrl的情况）
     if (item.answerUrl) {
       const extractedAnswerId = WebViewUtils.extractAnswerIdFromUrl(
-        item.answerUrl
+        item.answerUrl,
       );
       if (extractedAnswerId) {
         answerId = extractedAnswerId;
@@ -45,7 +46,7 @@ export class WebviewManager {
 
         // 跳转到问题页面，用于后续加载全部回答
         const questionId = WebViewUtils.extractQuestionIdFromUrl(
-          item.answerUrl
+          item.answerUrl,
         );
         if (questionId) {
           targetUrl = WebViewUtils.buildQuestionAllAnswersUrl(questionId);
@@ -61,7 +62,7 @@ export class WebviewManager {
       contentType,
       answerId,
       collectionId,
-      item.sortType // 传递排序类型
+      item.sortType, // 传递排序类型
     );
 
     // 检查是否已经打开了这个特定的内容
@@ -86,13 +87,13 @@ export class WebviewManager {
         localResourceRoots: [
           vscode.Uri.joinPath(Store.context!.extensionUri, "resources"),
         ],
-      }
+      },
     );
 
     panel.iconPath = vscode.Uri.joinPath(
       Store.context!.extensionUri,
       "resources",
-      "icon.svg"
+      "icon.svg",
     );
 
     // 当面板失去焦点的时候，使用智能伪装系统
@@ -102,7 +103,7 @@ export class WebviewManager {
       const enableDisguise = config.get<boolean>("enableDisguise", false);
       const enableSideBarDisguise = config.get<boolean>(
         "sidebarDisguiseEnabled",
-        false
+        false,
       );
 
       if (e.webviewPanel.active) {
@@ -115,7 +116,7 @@ export class WebviewManager {
         panel.iconPath = vscode.Uri.joinPath(
           Store.context!.extensionUri,
           "resources",
-          "icon.svg"
+          "icon.svg",
         );
 
         DisguiseManager.hideDisguiseInterface(panel);
@@ -127,7 +128,7 @@ export class WebviewManager {
           : shortTitle;
         const disguise = DisguiseManager.getDisguiseOrDefault(
           webviewId,
-          currentTitle
+          currentTitle,
         );
         panel.title = disguise.title;
         panel.iconPath = disguise.iconPath;
@@ -196,7 +197,7 @@ export class WebviewManager {
     panel.webview.html = HtmlRenderer.getLoadingHtml(
       item.title,
       item.excerpt,
-      item.imgUrl
+      item.imgUrl,
     );
 
     // 设置消息处理
@@ -242,7 +243,7 @@ export class WebviewManager {
    */
   private static updateNavInfoViaMessage(
     webviewId: string,
-    isLoading: boolean = false
+    isLoading: boolean = false,
   ): void {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -276,7 +277,7 @@ export class WebviewManager {
       // 显示状态栏加载提示
       const statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
-        100
+        100,
       );
       const shortTitle = this.getShortTitle(webviewItem.article.title);
 
@@ -297,12 +298,12 @@ export class WebviewManager {
         webviewItem.article.specificAnswerUrl
       ) {
         console.log(
-          `特定回答模式，先获取回答内容: ${webviewItem.article.specificAnswerUrl}`
+          `特定回答模式，先获取回答内容: ${webviewItem.article.specificAnswerUrl}`,
         );
         try {
           const preloadedAnswer = await WebViewUtils.fetchSpecificAnswerContent(
             webviewId,
-            webviewItem.article.specificAnswerUrl
+            webviewItem.article.specificAnswerUrl,
           );
           if (preloadedAnswer) {
             // 将预加载的回答转换为标准AnswerItem格式并放在第一位
@@ -369,7 +370,7 @@ export class WebviewManager {
               errorTitle,
               errorDescription,
               webviewItem.article.specificAnswerUrl || webviewItem.url,
-              errorReasons
+              errorReasons,
             );
 
             webviewItem.isLoading = false;
@@ -397,7 +398,7 @@ export class WebviewManager {
             errorTitle,
             errorDescription,
             webviewItem.article.specificAnswerUrl || webviewItem.url,
-            errorReasons
+            errorReasons,
           );
 
           webviewItem.isLoading = false;
@@ -423,7 +424,7 @@ export class WebviewManager {
         const hasErrorPage = await this.checkAndHandleZhihuErrorPage(
           webviewId,
           page,
-          "answer"
+          "answer",
         );
         if (hasErrorPage) {
           return;
@@ -480,9 +481,8 @@ export class WebviewManager {
         webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
       }
 
-      const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
-        page
-      );
+      const isCookieExpired =
+        await CookieManager.checkIfPageHasLoginElement(page);
       if (isCookieExpired) {
         console.log("Cookie过期，请重新登录！");
         webviewItem.webviewPanel.webview.html =
@@ -505,7 +505,7 @@ export class WebviewManager {
       const supportTimeSort = await page.evaluate(async () => {
         // 先尝试点击排序按钮展开菜单
         const toggleButton = document.querySelector(
-          "button.Select-button"
+          "button.Select-button",
         ) as HTMLButtonElement;
         if (toggleButton) {
           toggleButton.click();
@@ -514,7 +514,7 @@ export class WebviewManager {
         }
 
         const sortButtons = document.querySelectorAll(
-          ".Select-list.Answers-select .Select-option"
+          ".Select-list.Answers-select .Select-option",
         );
         // 如果有2个或更多排序选项，说明支持时间排序
         return sortButtons.length >= 2;
@@ -525,7 +525,7 @@ export class WebviewManager {
       // 全部回答的总数量
       const totalAnswerCount = await page.evaluate(() => {
         const answerElements = document.querySelector(
-          ".List-header .List-headerText span"
+          ".List-header .List-headerText span",
         );
         // 2,437 个回答， 需要去掉逗号、空格和汉字
         const count = answerElements?.textContent?.replace(/[^\d]/g, "");
@@ -569,7 +569,7 @@ export class WebviewManager {
             errorTitle,
             errorDescription,
             webviewItemAfterParsing.url,
-            errorReasons
+            errorReasons,
           );
 
         webviewItemAfterParsing.isLoading = false;
@@ -616,7 +616,7 @@ export class WebviewManager {
   private static async checkAndHandleZhihuErrorPage(
     webviewId: string,
     page: Puppeteer.Page,
-    contentType: "question" | "answer" | "article" = "question"
+    contentType: "question" | "answer" | "article" = "question",
   ): Promise<boolean> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -654,7 +654,7 @@ export class WebviewManager {
     if (isErrorPage) {
       const contentTypeText = contentType === "article" ? "文章" : "问题或回答";
       console.log(
-        `检测到知乎错误页面（${contentTypeText}已被删除），在重定向前拦截`
+        `检测到知乎错误页面（${contentTypeText}已被删除），在重定向前拦截`,
       );
 
       // 隐藏状态栏加载提示
@@ -673,7 +673,7 @@ export class WebviewManager {
         errorTitle,
         errorDescription,
         webviewItem.url,
-        errorReasons
+        errorReasons,
       );
 
       webviewItem.isLoading = false;
@@ -712,7 +712,7 @@ export class WebviewManager {
       // 显示状态栏加载提示
       const statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
-        100
+        100,
       );
       const shortTitle = this.getShortTitle(webviewItem.article.title);
       statusBarItem.text = `$(sync~spin) 加载文章: ${shortTitle}`;
@@ -737,7 +737,7 @@ export class WebviewManager {
       const hasErrorPage = await this.checkAndHandleZhihuErrorPage(
         webviewId,
         page,
-        "article"
+        "article",
       );
       if (hasErrorPage) {
         return;
@@ -759,9 +759,8 @@ export class WebviewManager {
       webviewItem.isLoading = false;
       webviewItem.webviewPanel.title = shortTitle;
 
-      const isCookieExpired = await CookieManager.checkIfPageHasLoginElement(
-        page
-      );
+      const isCookieExpired =
+        await CookieManager.checkIfPageHasLoginElement(page);
       if (isCookieExpired) {
         console.log("Cookie过期，请重新登录！");
         webviewItem.webviewPanel.webview.html =
@@ -795,7 +794,7 @@ export class WebviewManager {
   /** 解析文章内容 */
   private static async parseArticleContent(
     webviewId: string,
-    page: Puppeteer.Page
+    page: Puppeteer.Page,
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -817,7 +816,7 @@ export class WebviewManager {
 
           if (realTitle && realTitle !== webviewItem.article.title) {
             console.log(
-              `更新专栏文章标题: ${webviewItem.article.title} -> ${realTitle}`
+              `更新专栏文章标题: ${webviewItem.article.title} -> ${realTitle}`,
             );
             webviewItem.article.title = realTitle;
             webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
@@ -831,7 +830,7 @@ export class WebviewManager {
       const articleData = await page.evaluate(() => {
         // 获取文章主体内容
         const contentElement = document.querySelector(
-          ".Post-RichTextContainer .RichText"
+          ".Post-RichTextContainer .RichText",
         );
         const content = contentElement
           ? contentElement.innerHTML
@@ -865,7 +864,7 @@ export class WebviewManager {
         // 检测是否已关注该作者（解析关注按钮）
         let isFollowing = false;
         const followButton = document.querySelector(
-          ".AuthorInfo button.FollowButton"
+          ".AuthorInfo button.FollowButton",
         );
         if (followButton) {
           // 如果按钮文字包含"已关注"，说明已经关注了
@@ -874,13 +873,13 @@ export class WebviewManager {
           console.log(
             `作者的关注状态: ${
               isFollowing ? "已关注" : "未关注"
-            } (按钮文字: "${buttonText}")`
+            } (按钮文字: "${buttonText}")`,
           );
         }
 
         // 作者粉丝数 .NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue
         const authorFollowerElement = document.querySelector(
-          ".NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue"
+          ".NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue",
         );
         let authorFollowerCount = 0;
         if (authorFollowerElement) {
@@ -907,17 +906,17 @@ export class WebviewManager {
 
         // 先检查所有投票相关的按钮
         const allVoteButtons = document.querySelectorAll(
-          "[class*='VoteButton']"
+          "[class*='VoteButton']",
         );
         console.log(`文章找到 ${allVoteButtons.length} 个投票按钮`);
 
         // 更精确地查找赞同按钮：VoteButton + is-active，但不包含 VoteButton--down
         const upVoteButton = document.querySelector(
-          ".VoteButton.is-active:not(.VoteButton--down)"
+          ".VoteButton.is-active:not(.VoteButton--down)",
         );
         // 查找不赞同按钮：VoteButton--down + is-active
         const downVoteButton = document.querySelector(
-          ".VoteButton--down.is-active"
+          ".VoteButton--down.is-active",
         );
 
         // 输出调试信息
@@ -939,14 +938,14 @@ export class WebviewManager {
 
         // 获取评论数
         const commentElement = document.querySelector(
-          ".BottomActions-CommentBtn"
+          ".BottomActions-CommentBtn",
         );
         const commentText = commentElement
           ? commentElement.textContent?.trim() || "0"
           : "0";
         const commentCount = parseInt(
           commentText.replace(/[^\d]/g, "") || "0",
-          10
+          10,
         );
 
         return {
@@ -1134,7 +1133,7 @@ export class WebviewManager {
       const list = this.getListBySourceType(sourceType, collectionId);
       if (!list) {
         vscode.window.showErrorMessage(
-          "未找到对应的列表数据，列表可能已经刷新了"
+          "未找到对应的列表数据，列表可能已经刷新了",
         );
         return;
       }
@@ -1186,7 +1185,7 @@ export class WebviewManager {
       const list = this.getListBySourceType(sourceType, collectionId);
       if (!list) {
         vscode.window.showErrorMessage(
-          "未找到对应的列表数据，列表可能已经刷新了"
+          "未找到对应的列表数据，列表可能已经刷新了",
         );
         return;
       }
@@ -1218,7 +1217,7 @@ export class WebviewManager {
   /** 根据来源类型获取对应的列表 */
   private static getListBySourceType(
     sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link",
-    collectionId?: string
+    collectionId?: string,
   ): LinkItem[] | null {
     switch (sourceType) {
       case "hot":
@@ -1287,7 +1286,7 @@ export class WebviewManager {
   /** 在列表中查找指定项的索引 */
   private static findItemIndexInList(
     targetItem: LinkItem,
-    list: LinkItem[]
+    list: LinkItem[],
   ): number {
     return list.findIndex((item) => {
       // 如果有answerUrl，说明这是一个回答类型的内容
@@ -1304,7 +1303,7 @@ export class WebviewManager {
   /** 跳转到指定回答 */
   public static async jumpToAnswer(
     webviewId: string,
-    answerIndex: number
+    answerIndex: number,
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -1359,7 +1358,7 @@ export class WebviewManager {
   /** 从页面中解析全部的回答 */
   private static async parseAllAnswers(
     webviewId: string,
-    page: Puppeteer.Page
+    page: Puppeteer.Page,
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -1382,7 +1381,7 @@ export class WebviewManager {
         try {
           const realTitle = await page.evaluate(() => {
             const questionTitleElement = document.querySelector(
-              ".QuestionHeader-title"
+              ".QuestionHeader-title",
             );
             if (questionTitleElement) {
               return questionTitleElement.textContent?.trim() || "";
@@ -1392,7 +1391,7 @@ export class WebviewManager {
 
           if (realTitle && realTitle !== webviewItem.article.title) {
             console.log(
-              `更新页面标题: ${webviewItem.article.title} -> ${realTitle}`
+              `更新页面标题: ${webviewItem.article.title} -> ${realTitle}`,
             );
             webviewItem.article.title = realTitle;
             webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
@@ -1407,7 +1406,7 @@ export class WebviewManager {
       const answerList = await page.evaluate(() => {
         // 处理页面内容，获取回答列表
         const answerElements = document.querySelectorAll(
-          ".QuestionAnswers-answers .List-item"
+          ".QuestionAnswers-answers .List-item",
         );
         const list: AnswerItem[] = [];
 
@@ -1415,7 +1414,7 @@ export class WebviewManager {
           try {
             // 获取回答元素 <div class="ContentItem AnswerItem">...</div>
             const answerElement = element.querySelector(
-              ".ContentItem.AnswerItem"
+              ".ContentItem.AnswerItem",
             );
 
             // 跳过无效的回答元素，例如占位符，或者回答元素不存在
@@ -1432,7 +1431,7 @@ export class WebviewManager {
             const answerId =
               answerElement?.getAttribute("name") || `answer-${index}`;
             const authorElement = element.querySelector(
-              ".ContentItem-meta .AuthorInfo"
+              ".ContentItem-meta .AuthorInfo",
             );
 
             // 获取作者名称 authorElement 里面有 <meta itemprop="name" content="手抓饼熊">
@@ -1460,13 +1459,13 @@ export class WebviewManager {
 
             // 获取作者签名 < class="AuthorInfo-badgeText">手抓饼熊</>
             const authorSignature = authorElement?.querySelector(
-              ".AuthorInfo-badgeText"
+              ".AuthorInfo-badgeText",
             )?.textContent;
 
             // 检测是否已关注该作者（解析关注按钮）
             let isFollowing = false;
             const followButton = authorElement?.querySelector(
-              "button.FollowButton"
+              "button.FollowButton",
             );
             if (followButton) {
               // 如果按钮文字包含"已关注"，说明已经关注了
@@ -1475,7 +1474,7 @@ export class WebviewManager {
               console.log(
                 `作者 ${authorName} 的关注状态: ${
                   isFollowing ? "已关注" : "未关注"
-                } (按钮文字: "${buttonText}")`
+                } (按钮文字: "${buttonText}")`,
               );
             }
 
@@ -1501,7 +1500,7 @@ export class WebviewManager {
               if (tooltip) {
                 // 从 "发布于 2025-11-09 09:04" 提取时间部分
                 const match = tooltip.match(
-                  /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/
+                  /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/,
                 );
                 publishTimeStr = match ? match[1] : "";
               }
@@ -1534,13 +1533,13 @@ export class WebviewManager {
 
             // 获取回答内容 answerElement 里面的.RichContent 的 <div class="RichContent-inner">...</div>
             const contentElement = element.querySelector(
-              ".RichContent .RichContent-inner"
+              ".RichContent .RichContent-inner",
             );
 
             // .KfeCollection-AnswerTopCard-Container 这个是盐选的标识，如果发现了则加到答案内容里
             const isPaidAnswer =
               document.querySelector(
-                ".KfeCollection-AnswerTopCard-Container"
+                ".KfeCollection-AnswerTopCard-Container",
               ) !== null;
 
             // 获取内容的HTML字符串
@@ -1554,24 +1553,24 @@ export class WebviewManager {
 
             // 查找投票按钮区域，更精确的选择器
             const contentItemActions = element.querySelector(
-              ".ContentItem-actions"
+              ".ContentItem-actions",
             );
             if (contentItemActions) {
               // 先检查所有投票相关的按钮
               const allVoteButtons = contentItemActions.querySelectorAll(
-                "[class*='VoteButton']"
+                "[class*='VoteButton']",
               );
               console.log(
-                `回答 ${answerId} 找到 ${allVoteButtons.length} 个投票按钮`
+                `回答 ${answerId} 找到 ${allVoteButtons.length} 个投票按钮`,
               );
 
               // 更精确地查找赞同按钮：VoteButton + is-active，但不包含 VoteButton--down
               const upVoteButton = contentItemActions.querySelector(
-                ".VoteButton.is-active:not(.VoteButton--down)"
+                ".VoteButton.is-active:not(.VoteButton--down)",
               );
               // 查找不赞同按钮：VoteButton--down + is-active
               const downVoteButton = contentItemActions.querySelector(
-                ".VoteButton--down.is-active"
+                ".VoteButton--down.is-active",
               );
 
               // 输出调试信息
@@ -1640,7 +1639,7 @@ export class WebviewManager {
       // 处理回答去重逻辑
       const processedAnswers: AnswerItem[] = [];
       const existingAnswerIds = new Set(
-        webviewItem.article.answerList.map((a) => a.id)
+        webviewItem.article.answerList.map((a) => a.id),
       );
 
       // 获取目标回答ID（用于特定回答模式）
@@ -1657,7 +1656,7 @@ export class WebviewManager {
           existingAnswerIds.has(item.id)
         ) {
           const preloadedAnswerIndex = webviewItem.article.answerList.findIndex(
-            (a) => a.id === targetAnswerId
+            (a) => a.id === targetAnswerId,
           );
           if (preloadedAnswerIndex !== -1) {
             // 更新预加载的回答内容（保留原有的评论状态）
@@ -1683,7 +1682,7 @@ export class WebviewManager {
 
         // 找到当前已加载的回答（这里主要是恢复评论状态）
         const existingAnswer = webviewItem.article.answerList.find(
-          (v) => v.id === item.id
+          (v) => v.id === item.id,
         );
 
         // 如果当前回答已经存在，则恢复评论列表和分页参数
@@ -1733,7 +1732,7 @@ export class WebviewManager {
    */
   private static async loadMoreAnswers(
     webviewId: string,
-    page: Puppeteer.Page
+    page: Puppeteer.Page,
   ): Promise<void> {
     // 在递归开始时先检查页面是否已经关闭
     if (!Store.webviewMap.has(webviewId)) {
@@ -1761,7 +1760,7 @@ export class WebviewManager {
       `当前批次已加载：${
         webviewItem.batchConfig.afterLoadCount -
         webviewItem.batchConfig.beforeLoadCount
-      }，批次数量限制为：${webviewItem.batchConfig.limitPerBatch}`
+      }，批次数量限制为：${webviewItem.batchConfig.limitPerBatch}`,
     );
 
     // 模拟滚动到底部加载更多回答
@@ -1782,7 +1781,7 @@ export class WebviewManager {
       // 如果滚动高度没有变化，可能是加载完成了，认为是已经触及页面底部，那么应该中断加载
       if (scrollHeightBefore === scrollHeightAfter) {
         console.log(
-          "滚动后页面高度没有变化，可能已经加载完成，停止加载更多回答。"
+          "滚动后页面高度没有变化，可能已经加载完成，停止加载更多回答。",
         );
         webviewItem.article.loadComplete = true; // 设置为加载完成
         webviewItem.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
@@ -1793,7 +1792,7 @@ export class WebviewManager {
         return;
       } else {
         console.log(
-          `滚动后页面高度变化：${scrollHeightBefore}px -> ${scrollHeightAfter}px，认为有更多内容`
+          `滚动后页面高度变化：${scrollHeightBefore}px -> ${scrollHeightAfter}px，认为有更多内容`,
         );
       }
 
@@ -1832,7 +1831,7 @@ export class WebviewManager {
             afterLoadCount - beforeLoadCount
           } 个新回答，达到每批 ${limitPerBatch} 个回答的限制， 总共已加载${
             webviewItemUpdated.article.loadedAnswerCount
-          }，停止加载更多`
+          }，停止加载更多`,
         );
         webviewItemUpdated.batchConfig.isLoadingBatch = false; // 设置为批次加载完成
 
@@ -1856,7 +1855,7 @@ export class WebviewManager {
       console.log("error.message: ", error.message);
       if (
         error.message.includes(
-          "ProtocolError: Input.dispatchMouseEvent timed out."
+          "ProtocolError: Input.dispatchMouseEvent timed out.",
         ) ||
         error.message.includes("protocolTimeout")
       ) {
@@ -1908,14 +1907,14 @@ export class WebviewManager {
     await config.update(
       "mediaDisplayMode",
       newMode,
-      vscode.ConfigurationTarget.Global
+      vscode.ConfigurationTarget.Global,
     );
   }
 
   /** 设置媒体显示模式 */
   private static async setMediaMode(
     webviewId: string,
-    mode: string
+    mode: string,
   ): Promise<void> {
     // 处理直接设置媒体模式的消息
     if (!mode) {
@@ -1926,7 +1925,7 @@ export class WebviewManager {
     await config.update(
       "mediaDisplayMode",
       mode,
-      vscode.ConfigurationTarget.Global
+      vscode.ConfigurationTarget.Global,
     );
   }
 
@@ -1940,7 +1939,7 @@ export class WebviewManager {
     await config.update(
       "miniMediaScale",
       scale,
-      vscode.ConfigurationTarget.Global
+      vscode.ConfigurationTarget.Global,
     );
   }
 
@@ -1965,7 +1964,7 @@ export class WebviewManager {
             webviewItem.webviewPanel.webview.html = HtmlRenderer.getLoadingHtml(
               webviewItem.article.title,
               webviewItem.article.excerpt,
-              "" // 这里没有缩略图信息，传空字符串
+              "", // 这里没有缩略图信息，传空字符串
             );
           }
           break;
@@ -1983,7 +1982,7 @@ export class WebviewManager {
         case "showTroubleshootingGuide":
           // 处理故障排除指引的请求
           await vscode.commands.executeCommand(
-            "zhihu-fisher.showTroubleshootingGuide"
+            "zhihu-fisher.showTroubleshootingGuide",
           );
           break;
 
@@ -2002,7 +2001,7 @@ export class WebviewManager {
             vscode.env.openExternal(vscode.Uri.parse(message.url));
           } else {
             vscode.env.openExternal(
-              vscode.Uri.parse(webviewItemForBrowser.url)
+              vscode.Uri.parse(webviewItemForBrowser.url),
             );
           }
           break;
@@ -2015,7 +2014,7 @@ export class WebviewManager {
               HtmlRenderer.getLoadingHtml(
                 webviewItemForReload.article.title,
                 webviewItemForReload.article.excerpt || "重新加载中...",
-                ""
+                "",
               );
             // 重新爬取数据
             await this.crawlingURLData(webviewId);
@@ -2031,7 +2030,7 @@ export class WebviewManager {
               HtmlRenderer.getLoadingHtml(
                 webviewItemForCookie.article.title,
                 webviewItemForCookie.article.excerpt || "正在重新加载...",
-                ""
+                "",
               );
           }
           break;
@@ -2075,7 +2074,7 @@ export class WebviewManager {
           await CommentsManager.loadComments(
             webviewId,
             message.answerId,
-            message.page
+            message.page,
           );
           break;
 
@@ -2083,7 +2082,7 @@ export class WebviewManager {
           await CommentsManager.loadChildComments(
             webviewId,
             message.commentId,
-            message.page
+            message.page,
           );
           break;
 
@@ -2095,7 +2094,7 @@ export class WebviewManager {
           await CommentsManager.loadArticleComments(
             webviewId,
             message.articleId,
-            message.direction
+            message.direction,
           );
           break;
 
@@ -2108,7 +2107,7 @@ export class WebviewManager {
           // 处理收藏内容请求
           await this.handleFavoriteContent(
             message.contentToken,
-            message.contentType
+            message.contentType,
           );
           break;
 
@@ -2148,7 +2147,7 @@ export class WebviewManager {
             webviewId,
             message.contentId,
             message.voteValue,
-            message.contentType
+            message.contentType,
           );
           break;
 
@@ -2157,7 +2156,7 @@ export class WebviewManager {
           await this.handleLikeComment(
             webviewId,
             message.commentId,
-            message.isLike
+            message.isLike,
           );
           break;
 
@@ -2171,7 +2170,7 @@ export class WebviewManager {
           await this.handleSwitchAnswerSort(
             webviewId,
             message.url,
-            message.sortType
+            message.sortType,
           );
           break;
 
@@ -2193,6 +2192,16 @@ export class WebviewManager {
         case "exportMarkdown":
           // 处理导出Markdown请求
           await this.handleExportMarkdown(webviewId);
+          break;
+
+        case "openZhidaPanel":
+          // 处理点击 zhida 星星关键词，在 VSCode 内展示 AI 解释
+          await this.handleOpenZhidaPanel(webviewId, message.href);
+          break;
+
+        case "zhidaSummarize":
+          // 处理点击 AI 总结按钮
+          await this.handleZhidaSummarize(webviewId, message.answerId);
           break;
       }
     });
@@ -2255,7 +2264,7 @@ export class WebviewManager {
         WebviewManager.onDidDisposeCallback?.(webviewId);
       },
       null,
-      []
+      [],
     );
   }
 
@@ -2303,7 +2312,7 @@ export class WebviewManager {
   /** 处理收藏内容请求 */
   private static async handleFavoriteContent(
     contentToken: string,
-    contentType: "article" | "answer"
+    contentType: "article" | "answer",
   ): Promise<void> {
     try {
       if (!contentToken) {
@@ -2315,7 +2324,7 @@ export class WebviewManager {
       const selectedCollectionId =
         await CollectionPickerUtils.showCollectionPicker(
           contentToken,
-          contentType
+          contentType,
         );
 
       if (!selectedCollectionId) {
@@ -2329,24 +2338,24 @@ export class WebviewManager {
       const success = await ZhihuApiService.addToCollection(
         selectedCollectionId,
         contentToken,
-        contentType
+        contentType,
       );
 
       if (success) {
         vscode.window.showInformationMessage(
-          `成功收藏${contentType === "article" ? "文章" : "回答"}！`
+          `成功收藏${contentType === "article" ? "文章" : "回答"}！`,
         );
       } else {
         vscode.window.showErrorMessage(
           `收藏${
             contentType === "article" ? "文章" : "回答"
-          }失败，可能是该收藏夹已有相同内容，换个收藏夹试试~`
+          }失败，可能是该收藏夹已有相同内容，换个收藏夹试试~`,
         );
       }
     } catch (error) {
       console.error("收藏内容时出错:", error);
       vscode.window.showErrorMessage(
-        `收藏失败: ${error instanceof Error ? error.message : String(error)}`
+        `收藏失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -2361,16 +2370,16 @@ export class WebviewManager {
       await config.update(
         "enableDisguise",
         enabled,
-        vscode.ConfigurationTarget.Global
+        vscode.ConfigurationTarget.Global,
       );
 
       vscode.window.showInformationMessage(
-        `智能伪装功能已${enabled ? "启用" : "禁用"}`
+        `智能伪装功能已${enabled ? "启用" : "禁用"}`,
       );
     } catch (error) {
       console.error("切换智能伪装功能时出错:", error);
       vscode.window.showErrorMessage(
-        `设置失败: ${error instanceof Error ? error.message : String(error)}`
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -2380,23 +2389,23 @@ export class WebviewManager {
    * @param enabled 是否启用侧边栏伪装
    */
   private static async handleToggleSidebarDisguise(
-    enabled: boolean
+    enabled: boolean,
   ): Promise<void> {
     try {
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
       await config.update(
         "sidebarDisguiseEnabled",
         enabled,
-        vscode.ConfigurationTarget.Global
+        vscode.ConfigurationTarget.Global,
       );
 
       vscode.window.showInformationMessage(
-        `侧边栏伪装功能已${enabled ? "启用" : "禁用"}`
+        `侧边栏伪装功能已${enabled ? "启用" : "禁用"}`,
       );
     } catch (error) {
       console.error("切换侧边栏伪装功能时出错:", error);
       vscode.window.showErrorMessage(
-        `设置失败: ${error instanceof Error ? error.message : String(error)}`
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -2406,7 +2415,7 @@ export class WebviewManager {
    * @param enabled 是否启用侧边栏伪装
    */
   private static async handleSyncSidebarDisguise(
-    enabled: boolean
+    enabled: boolean,
   ): Promise<void> {
     try {
       // 直接同步到侧边栏，不保存配置
@@ -2434,7 +2443,7 @@ export class WebviewManager {
    */
   private static async handleManualDisguiseToggle(
     webviewId: string,
-    action: "show" | "hide"
+    action: "show" | "hide",
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -2455,7 +2464,7 @@ export class WebviewManager {
     const enableDisguise = config.get<boolean>("enableDisguise", false);
     const enableSideBarDisguise = config.get<boolean>(
       "sidebarDisguiseEnabled",
-      false
+      false,
     );
 
     if (!enableDisguise) {
@@ -2463,7 +2472,7 @@ export class WebviewManager {
       const result = await vscode.window.showInformationMessage(
         "代码伪装功能需要先开启智能伪装模式，是否现在开启？",
         "开启",
-        "取消"
+        "取消",
       );
 
       if (result === "开启") {
@@ -2471,7 +2480,7 @@ export class WebviewManager {
         await config.update(
           "enableDisguise",
           true,
-          vscode.ConfigurationTarget.Global
+          vscode.ConfigurationTarget.Global,
         );
         vscode.window.showInformationMessage("已开启智能伪装模式");
         // 继续执行伪装操作
@@ -2497,7 +2506,7 @@ export class WebviewManager {
       // 显示伪装 - 修改标题和图标
       const disguise = DisguiseManager.getDisguiseOrDefault(
         webviewId,
-        currentTitle
+        currentTitle,
       );
       panel.title = disguise.title;
       panel.iconPath = disguise.iconPath;
@@ -2515,7 +2524,7 @@ export class WebviewManager {
         }
       } else {
         console.log(
-          `WebView ${webviewId} 手动显示伪装操作取消，侧边栏伪装未触发`
+          `WebView ${webviewId} 手动显示伪装操作取消，侧边栏伪装未触发`,
         );
       }
     } else {
@@ -2532,7 +2541,7 @@ export class WebviewManager {
       panel.iconPath = vscode.Uri.joinPath(
         Store.context!.extensionUri,
         "resources",
-        "icon.svg"
+        "icon.svg",
       );
 
       // 隐藏伪装界面（这里会发送postMessage给前端）
@@ -2544,7 +2553,7 @@ export class WebviewManager {
       () => {
         this.togglingDisguiseWebviews.delete(webviewId);
       },
-      action === "hide" ? 1300 : 300
+      action === "hide" ? 1300 : 300,
     );
   }
 
@@ -2553,7 +2562,7 @@ export class WebviewManager {
     webviewId: string,
     contentId: string,
     voteValue: string | number,
-    contentType: "answer" | "article"
+    contentType: "answer" | "article",
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -2593,9 +2602,9 @@ export class WebviewManager {
               voteType === "up"
                 ? "赞同"
                 : voteType === "down"
-                ? "不赞同"
-                : "中立"
-            }`
+                  ? "不赞同"
+                  : "中立"
+            }`,
           );
         } else {
           vscode.window.showErrorMessage("投票失败，请稍后重试");
@@ -2662,7 +2671,7 @@ export class WebviewManager {
   private static async handleLikeComment(
     webviewId: string,
     commentId: string,
-    isLike: boolean
+    isLike: boolean,
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -2706,7 +2715,7 @@ export class WebviewManager {
         vscode.window.showErrorMessage("无法点赞评论：可能需要登录或权限不足");
       } else {
         vscode.window.showErrorMessage(
-          `评论点赞失败: ${error.message || "请检查网络连接和Cookie设置"}`
+          `评论点赞失败: ${error.message || "请检查网络连接和Cookie设置"}`,
         );
       }
     }
@@ -2721,7 +2730,7 @@ export class WebviewManager {
   private static updateCommentLikeStatus(
     webviewItem: WebViewItem,
     commentId: string,
-    isLike: boolean
+    isLike: boolean,
   ): void {
     const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
     const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
@@ -2775,11 +2784,11 @@ export class WebviewManager {
   private static async handleSwitchAnswerSort(
     currentWebviewId: string,
     targetUrl: string,
-    targetSortType: "default" | "updated"
+    targetSortType: "default" | "updated",
   ): Promise<void> {
     try {
       console.log(
-        `handleSwitchAnswerSort 调用: targetSortType=${targetSortType}, targetUrl=${targetUrl}`
+        `handleSwitchAnswerSort 调用: targetSortType=${targetSortType}, targetUrl=${targetUrl}`,
       );
 
       const currentWebview = Store.webviewMap.get(currentWebviewId);
@@ -2798,7 +2807,7 @@ export class WebviewManager {
       }
 
       console.log(
-        `linkItem创建成功: id=${linkItem.id}, sortType=${linkItem.sortType}`
+        `linkItem创建成功: id=${linkItem.id}, sortType=${linkItem.sortType}`,
       );
 
       // 生成目标排序方式的webviewId
@@ -2813,11 +2822,11 @@ export class WebviewManager {
         linkItem.type === "article" ? "article" : "answer",
         undefined,
         currentWebview.collectionId,
-        sortTypeParam
+        sortTypeParam,
       );
 
       console.log(
-        `排序切换: 当前=${currentWebviewId}, 目标=${targetWebviewId}, 目标排序=${targetSortType}`
+        `排序切换: 当前=${currentWebviewId}, 目标=${targetWebviewId}, 目标排序=${targetSortType}`,
       );
 
       // 检查目标排序的页面是否已存在
@@ -2843,7 +2852,7 @@ export class WebviewManager {
         await this.openWebview(
           linkItem,
           currentWebview.sourceType,
-          currentWebview.collectionId
+          currentWebview.collectionId,
         );
       }
     } catch (error) {
@@ -2954,25 +2963,25 @@ export class WebviewManager {
    * @param selectedTypes 用户选择的伪装类型数组
    */
   private static async handleUpdateSelectedDisguiseTypes(
-    selectedTypes: string[]
+    selectedTypes: string[],
   ): Promise<void> {
     try {
       const config = vscode.workspace.getConfiguration("zhihu-fisher");
       await config.update(
         "selectedDisguiseTypes",
         selectedTypes,
-        vscode.ConfigurationTarget.Global
+        vscode.ConfigurationTarget.Global,
       );
 
       console.log(
         `伪装类型已更新: ${
           selectedTypes.length > 0 ? selectedTypes.join(", ") : "使用全部类型"
-        }`
+        }`,
       );
     } catch (error) {
       console.error("更新伪装类型时出错:", error);
       vscode.window.showErrorMessage(
-        `设置失败: ${error instanceof Error ? error.message : String(error)}`
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -2984,7 +2993,7 @@ export class WebviewManager {
    */
   private static async handlePreviewDisguise(
     webviewId: string,
-    selectedTypes: string[]
+    selectedTypes: string[],
   ): Promise<void> {
     try {
       // 临时更新配置以进行预览
@@ -2995,7 +3004,7 @@ export class WebviewManager {
       await config.update(
         "selectedDisguiseTypes",
         selectedTypes,
-        vscode.ConfigurationTarget.Global
+        vscode.ConfigurationTarget.Global,
       );
 
       // 清除当前缓存并生成新的伪装
@@ -3013,16 +3022,16 @@ export class WebviewManager {
       await config.update(
         "selectedDisguiseTypes",
         originalTypes,
-        vscode.ConfigurationTarget.Global
+        vscode.ConfigurationTarget.Global,
       );
 
       vscode.window.showInformationMessage(
-        `伪装预览: 当前页面已伪装为"${newDisguise.title}"`
+        `伪装预览: 当前页面已伪装为"${newDisguise.title}"`,
       );
     } catch (error) {
       console.error("预览伪装效果时出错:", error);
       vscode.window.showErrorMessage(
-        `预览失败: ${error instanceof Error ? error.message : String(error)}`
+        `预览失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -3034,7 +3043,7 @@ export class WebviewManager {
    */
   private static async parseQuestionDetail(
     webviewId: string,
-    page: Puppeteer.Page
+    page: Puppeteer.Page,
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -3045,7 +3054,7 @@ export class WebviewManager {
       // 检查是否存在"显示全部"按钮并点击
       const expandButtonExists = await page.evaluate(() => {
         const expandButton = document.querySelector(
-          ".QuestionRichText-more"
+          ".QuestionRichText-more",
         ) as HTMLButtonElement;
 
         if (expandButton && expandButton.textContent?.includes("显示全部")) {
@@ -3067,7 +3076,7 @@ export class WebviewManager {
       const questionDetail = await page.evaluate(() => {
         // 优先查找展开后的完整内容
         const expandedContent = document.querySelector(
-          ".QuestionRichText .RichText.ztext"
+          ".QuestionRichText .RichText.ztext",
         );
 
         if (expandedContent) {
@@ -3076,7 +3085,7 @@ export class WebviewManager {
 
         // 如果没有展开内容，使用收缩状态的内容
         const collapsedContent = document.querySelector(
-          '.QuestionRichText--collapsed span[itemprop="text"]'
+          '.QuestionRichText--collapsed span[itemprop="text"]',
         );
 
         if (collapsedContent) {
@@ -3085,7 +3094,7 @@ export class WebviewManager {
 
         // 最后尝试获取任何问题描述内容
         const anyContent = document.querySelector(
-          '.QuestionRichText span[itemprop="text"]'
+          '.QuestionRichText span[itemprop="text"]',
         );
 
         return anyContent ? anyContent.innerHTML : "";
@@ -3095,7 +3104,7 @@ export class WebviewManager {
         const processedQuestionDetail = ContentProcessor.processContent(
           questionDetail,
           null,
-          false
+          false,
         ); // 处理内容中的多媒体元素
         webviewItem.article.questionDetail = processedQuestionDetail;
         console.log("成功提取问题详情内容");
@@ -3122,7 +3131,7 @@ export class WebviewManager {
    */
   private static async handleFollowAuthor(
     webviewId: string,
-    authorId: string
+    authorId: string,
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -3151,7 +3160,7 @@ export class WebviewManager {
     } catch (error) {
       console.error("关注作者时出错:", error);
       vscode.window.showErrorMessage(
-        `关注失败: ${error instanceof Error ? error.message : String(error)}`
+        `关注失败: ${error instanceof Error ? error.message : String(error)}`,
       );
 
       // 通知前端恢复状态
@@ -3189,8 +3198,8 @@ export class WebviewManager {
             Array.isArray(comment.total_child_comments)
               ? comment.total_child_comments
               : comment.child_comments && Array.isArray(comment.child_comments)
-              ? comment.child_comments
-              : [];
+                ? comment.child_comments
+                : [];
           commentCount += childComments.length;
         });
       });
@@ -3208,7 +3217,7 @@ export class WebviewManager {
       vscode.window.showErrorMessage(
         `获取统计信息失败: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -3248,10 +3257,10 @@ export class WebviewManager {
         if (uri) {
           await vscode.workspace.fs.writeFile(
             uri,
-            Buffer.from(markdown, "utf8")
+            Buffer.from(markdown, "utf8"),
           );
           vscode.window.showInformationMessage(
-            `✅ Markdown文件已导出: ${uri.fsPath}`
+            `✅ Markdown文件已导出: ${uri.fsPath}`,
           );
           // 打开文件
           await vscode.window.showTextDocument(uri);
@@ -3260,14 +3269,14 @@ export class WebviewManager {
         // 保存到工作区根目录
         const filePath = vscode.Uri.joinPath(
           workspaceFolders[0].uri,
-          `${fileName}.md`
+          `${fileName}.md`,
         );
         await vscode.workspace.fs.writeFile(
           filePath,
-          Buffer.from(markdown, "utf8")
+          Buffer.from(markdown, "utf8"),
         );
         vscode.window.showInformationMessage(
-          `✅ Markdown文件已导出: ${filePath.fsPath}`
+          `✅ Markdown文件已导出: ${filePath.fsPath}`,
         );
         // 打开文件
         await vscode.window.showTextDocument(filePath);
@@ -3275,7 +3284,7 @@ export class WebviewManager {
     } catch (error) {
       console.error("导出Markdown失败:", error);
       vscode.window.showErrorMessage(
-        `导出失败: ${error instanceof Error ? error.message : String(error)}`
+        `导出失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -3357,7 +3366,7 @@ export class WebviewManager {
           markdown += `**${comment.author?.name || "匿名用户"}**`;
           if (comment.created_time) {
             const timeStr = new Date(
-              comment.created_time * 1000
+              comment.created_time * 1000,
             ).toLocaleString("zh-CN");
             markdown += ` · ${timeStr}`;
           }
@@ -3374,8 +3383,8 @@ export class WebviewManager {
             comment.total_child_comments.length > 0
               ? comment.total_child_comments
               : comment.child_comments && comment.child_comments.length > 0
-              ? comment.child_comments
-              : [];
+                ? comment.child_comments
+                : [];
 
           if (childComments.length > 0) {
             markdown += `**↳ 回复 (${childComments.length}条):**\n\n`;
@@ -3383,7 +3392,7 @@ export class WebviewManager {
               markdown += `  - **${childComment.author?.name || "匿名用户"}**`;
               if (childComment.created_time) {
                 const childTimeStr = new Date(
-                  childComment.created_time * 1000
+                  childComment.created_time * 1000,
                 ).toLocaleString("zh-CN");
                 markdown += ` · ${childTimeStr}`;
               }
@@ -3444,24 +3453,24 @@ export class WebviewManager {
     // 处理图片
     text = text.replace(
       /<img[^>]*src=["']([^"']*)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi,
-      "![$2]($1)"
+      "![$2]($1)",
     );
     text = text.replace(
       /<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']*)["'][^>]*>/gi,
-      "![$1]($2)"
+      "![$1]($2)",
     );
     text = text.replace(/<img[^>]*src=["']([^"']*)["'][^>]*>/gi, "![图片]($1)");
 
     // 处理链接
     text = text.replace(
       /<a[^>]*href=["']([^"']*)["'][^>]*>([^<]*)<\/a>/gi,
-      "[$2]($1)"
+      "[$2]($1)",
     );
 
     // 处理代码块
     text = text.replace(
       /<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi,
-      "\n```\n$1\n```\n"
+      "\n```\n$1\n```\n",
     );
     text = text.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, "\n```\n$1\n```\n");
 
@@ -3519,7 +3528,7 @@ export class WebviewManager {
    */
   private static async handleUnfollowAuthor(
     webviewId: string,
-    authorId: string
+    authorId: string,
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -3550,7 +3559,7 @@ export class WebviewManager {
       vscode.window.showErrorMessage(
         `取消关注失败: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
 
       // 通知前端恢复状态
@@ -3558,6 +3567,103 @@ export class WebviewManager {
         command: "updateAuthorFollowStatus",
         authorId: authorId,
         isFollowing: true,
+      });
+    }
+  }
+
+  /**
+   * 处理点击 zhida 星星关键词，在 VSCode 内弹窗显示 AI 解释
+   */
+  private static async handleOpenZhidaPanel(
+    webviewId: string,
+    href: string,
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    // 先告诉前端显示加载状态
+    webviewItem.webviewPanel.webview.postMessage({
+      command: "zhidaResult",
+      state: "loading",
+      keyword: "",
+    });
+
+    // 获取 Puppeteer 页面
+    const page = PuppeteerManager.getPageInstance(webviewId);
+    if (!page || page.isClosed()) {
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "zhidaResult",
+        state: "error",
+        error: "Puppeteer 页面不存在或已关闭，请确认文章页面已加载",
+      });
+      return;
+    }
+
+    try {
+      const result = await ZhidaManager.fetchZhidaAnswer(page, href);
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "zhidaResult",
+        state: result.success ? "success" : "error",
+        keyword: result.keyword,
+        answerHtml: result.answerHtml,
+        error: result.error,
+      });
+    } catch (error: any) {
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "zhidaResult",
+        state: "error",
+        error: `获取 AI 解释失败：${error?.message || String(error)}`,
+      });
+    }
+  }
+
+  /**
+   * 处理点击 AI 总结按钮，在 VSCode 内弹窗显示 AI 总结内容
+   */
+  private static async handleZhidaSummarize(
+    webviewId: string,
+    answerId: string,
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    // 先告诉前端显示加载状态
+    webviewItem.webviewPanel.webview.postMessage({
+      command: "zhidaResult",
+      state: "loading",
+      keyword: "AI 总结",
+    });
+
+    const page = PuppeteerManager.getPageInstance(webviewId);
+    if (!page || page.isClosed()) {
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "zhidaResult",
+        state: "error",
+        keyword: "AI 总结",
+        error: "Puppeteer 页面不存在或已关闭，请确认文章页面已加载",
+      });
+      return;
+    }
+
+    try {
+      const result = await ZhidaManager.fetchZhidaSummary(page, answerId);
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "zhidaResult",
+        state: result.success ? "success" : "error",
+        keyword: result.keyword,
+        answerHtml: result.answerHtml,
+        error: result.error,
+      });
+    } catch (error: any) {
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "zhidaResult",
+        state: "error",
+        keyword: "AI 总结",
+        error: `获取 AI 总结失败：${error?.message || String(error)}`,
       });
     }
   }

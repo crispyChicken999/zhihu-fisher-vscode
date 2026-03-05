@@ -49,7 +49,7 @@ export class ContentProcessor {
    * @returns 是否为盐选内容
    */
   private static isPaidContent($: cheerio.CheerioAPI): boolean {
-    const isPaid = $('.zhihu-fisher-content-is-paid-needed').length > 0;
+    const isPaid = $(".zhihu-fisher-content-is-paid-needed").length > 0;
     return isPaid;
   }
 
@@ -99,7 +99,7 @@ export class ContentProcessor {
   public static processContent(
     content: string,
     options: RenderOptions | null,
-    includeAdvancedFeatures: boolean = true
+    includeAdvancedFeatures: boolean = true,
   ): string {
     if (!content) {
       return `<div class="empty-content">
@@ -112,12 +112,12 @@ export class ContentProcessor {
 
     // 检测是否为盐选付费内容
     const isPaid = this.isPaidContent($);
-    let copyrightWarning = '';
+    let copyrightWarning = "";
 
     if (isPaid) {
       copyrightWarning = this.generateCopyrightWarning();
       // 移除原始的付费相关元素以避免重复显示
-      $('.zhihu-fisher-content-is-paid-needed').remove();
+      $(".zhihu-fisher-content-is-paid-needed").remove();
     }
 
     const mediaDisplayMode = options?.mediaDisplayMode || "normal";
@@ -156,7 +156,7 @@ export class ContentProcessor {
         img.attr("referrerpolicy", "no-referrer");
         img.css("cursor", "default");
 
-        img.css('display', '');
+        img.css("display", "");
 
         // 根据媒体显示模式设置缩放
         if (mediaDisplayMode === "mini") {
@@ -329,7 +329,7 @@ export class ContentProcessor {
 
         // 添加复制按钮
         const copyButton = $(
-          `<button class="code-copy-btn" onclick="copyCode(this)">复制</button>`
+          `<button class="code-copy-btn" onclick="copyCode(this)">复制</button>`,
         );
         pre.prepend(copyButton);
 
@@ -394,12 +394,12 @@ export class ContentProcessor {
           if (isInline) {
             // 行内公式
             mathEl.html(
-              `<span class="math-inline" data-math="${mathContent}">\\(${mathContent}\\)</span>`
+              `<span class="math-inline" data-math="${mathContent}">\\(${mathContent}\\)</span>`,
             );
           } else {
             // 块级公式
             mathEl.html(
-              `<div class="math-display" data-math="${mathContent}">\\[${mathContent}\\]</div>`
+              `<div class="math-display" data-math="${mathContent}">\\[${mathContent}\\]</div>`,
             );
           }
         }
@@ -421,11 +421,11 @@ export class ContentProcessor {
 
           if (isInline) {
             script.replaceWith(
-              `<span class="math-inline" data-math="${cleanContent}">\\(${cleanContent}\\)</span>`
+              `<span class="math-inline" data-math="${cleanContent}">\\(${cleanContent}\\)</span>`,
             );
           } else {
             script.replaceWith(
-              `<div class="math-display" data-math="${cleanContent}">\\[${cleanContent}\\]</div>`
+              `<div class="math-display" data-math="${cleanContent}">\\[${cleanContent}\\]</div>`,
             );
           }
         }
@@ -470,6 +470,38 @@ export class ContentProcessor {
         }
       }
 
+      // 处理知乎直答链接（zhida.zhihu.com），拦截为 VSCode 内弹窗
+      if (href.includes("zhida.zhihu.com")) {
+        // 如果是第一个回答页面，直答链接不做处理，以便用户跳转外部浏览器
+        if (options?.isFirstAnswer) {
+          return;
+        }
+
+        // 从 URL q= 参数解析关键词，服务端（cheerio）阶段直接算好存属性
+        let zhidaKeyword = "";
+        try {
+          zhidaKeyword = decodeURIComponent(
+            new URL(href).searchParams.get("q") || "",
+          );
+        } catch (_) {}
+        // 若 URL 解析不到，用链接本身的纯文字（去掉 SVG 子元素）
+        if (!zhidaKeyword) {
+          zhidaKeyword = link.clone().children().remove().end().text().trim();
+        }
+
+        link.attr("data-zhida-href", href);
+        link.attr("data-zhida-keyword", zhidaKeyword);
+        link.removeAttr("href");
+        link.attr("href", "javascript:void(0)");
+        link.attr(
+          "onclick",
+          `openZhidaPanel(this.getAttribute('data-zhida-href'), this.getAttribute('data-zhida-keyword'))`,
+        );
+        link.attr("title", "点击在 VSCode 内查看 AI 解释");
+        link.addClass("zhida-link-intercepted");
+        return;
+      }
+
       // 处理知乎内部链接，添加VSCode打开选项
       const isZhihuInternalLink = this.isZhihuInternalLink(href);
       if (isZhihuInternalLink) {
@@ -481,7 +513,7 @@ export class ContentProcessor {
 
         // 在原有链接后添加VSCode打开选项
         const vscodeOption = $(
-          `<span class="zhihu-link-vscode" onclick="openWebView('${href}');" title="${href} &#010(在 VSCode 中查看)"><svg width="min(1em, 12px)" height="min(1em, 12px)" viewBox="0 0 24 24"><path fill="currentColor" d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zM18.5 16.5L13 12l5.5-4.5v9z"></path></svg></span>`
+          `<span class="zhihu-link-vscode" onclick="openWebView('${href}');" title="${href} &#010(在 VSCode 中查看)"><svg width="min(1em, 12px)" height="min(1em, 12px)" viewBox="0 0 24 24"><path fill="currentColor" d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zM18.5 16.5L13 12l5.5-4.5v9z"></path></svg></span>`,
         );
 
         // 将VSCode选项添加到链接后面
@@ -512,7 +544,6 @@ export class ContentProcessor {
 
     // .RichText-MCNLinkCardContainer 去除（自媒体推广，烦死了）
     $(".RichText-MCNLinkCardContainer").remove();
-
 
     // 如果是盐选内容，在内容前添加版权警告
     const finalHtml = $.html();

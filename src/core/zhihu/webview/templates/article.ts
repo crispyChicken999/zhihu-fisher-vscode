@@ -60,6 +60,7 @@ export const articleTemplate = `
       \${RELATED_QUESTIONS_CSS}
       \${QUESTION_DETAIL_CSS}
       \${ANSWER_SORT_CSS}
+      \${ZHIDA_PANEL_CSS}
     </style>
   </head>
   <body data-content-id="\${CONTENT_ID}" data-sort-type="\${SORT_TYPE}">
@@ -96,6 +97,8 @@ export const articleTemplate = `
     \${TOOLBAR_COMPONENT}
 
     \${QUESTION_DETAIL_COMPONENT_MODAL}
+
+    \${ZHIDA_PANEL_MODAL}
 
     \${STYLE_PANEL_COMPONENT}
 

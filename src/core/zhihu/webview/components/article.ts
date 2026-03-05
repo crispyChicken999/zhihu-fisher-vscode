@@ -27,4 +27,3 @@ export class ArticleContentComponent implements Component {
     return ContentProcessor.processContent(this.content, this.options, true);
   }
 }
-

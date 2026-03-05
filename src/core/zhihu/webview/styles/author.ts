@@ -155,6 +155,7 @@ body.immersive-mode .answer-meta .immersive-author-info {
   transition: all 0.2s ease;
   font-size: 1em;
   white-space: nowrap;
+  padding: 0px 4px;
 }
 
 .immersive-author-trigger svg {
@@ -164,7 +165,7 @@ body.immersive-mode .answer-meta .immersive-author-info {
 
 .immersive-author-trigger:hover {
   background-color: var(--vscode-list-hoverBackground);
-  padding: 0px 4px;
+  transform: translateY(-1px);
 }
 
 .immersive-author-trigger:hover svg {

@@ -118,7 +118,7 @@ export const articleCss = `
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0px 2px;
+  padding: 2px;
   border: 1px solid transparent;
   border-radius: 4px;
   background-color: var(--vscode-button-secondaryBackground);
@@ -127,6 +127,10 @@ export const articleCss = `
   font-size: 1em;
   font-weight: 500;
   user-select: none;
+}
+
+.vote-button.vote-down {
+  padding: 3px;
 }
 
 .vote-button:hover {
@@ -204,14 +208,18 @@ export const articleCss = `
   color: #42a5f5;
   cursor: pointer;
   user-select: none;
+  transition: all 0.3s;
+  border-radius: 4px;
+  padding: 2px 4px;
 }
 
 .meta-item.comment:hover {
-  color: #1675fb !important;
+  transform: translateY(-1px);
+  background-color: var(--vscode-toolbar-hoverBackground);
 }
 
-.meta-item.comment:hover svg{
-  filter: none !important;
+.meta-item.comment:hover svg {
+  opacity: 1;
 }
 
 .meta-item.time {

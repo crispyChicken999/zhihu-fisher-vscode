@@ -9,6 +9,7 @@ import { NavigationComponent } from "./components/navigation";
 import { disguiseScript } from "./templates/scripts/disguise";
 import { ArticleContentComponent } from "./components/article";
 import { StylePanelComponent } from "./components/style-panel";
+import { ZhidaPanelComponent } from "./components/zhida-panel";
 import { DisguiseManager } from "../../utils/disguise-manager";
 import { QuestionDetailComponent } from "./components/question-detail";
 import { RelatedQuestionsComponent } from "./components/related-questions";
@@ -37,6 +38,7 @@ import { componentsCss } from "./styles/components";
 import { questionDetailCss } from "./styles/question-detail";
 import { relatedQuestionsCss } from "./styles/related-questions";
 import { answerSortCss } from "./styles/answer-sort";
+import { zhidaPanelCss } from "./styles/zhida-panel";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -69,7 +71,7 @@ export class HtmlRenderer {
   public static getLoadingHtml(
     title: string,
     excerpt: string,
-    imgUrl?: string
+    imgUrl?: string,
   ): string {
     const excerptText = excerpt || "🐟无摘要🐟";
 
@@ -108,7 +110,7 @@ export class HtmlRenderer {
     description: string,
     sourceUrl: string,
     reasons: string[],
-    actions?: string
+    actions?: string,
   ): string {
     const reasonsHtml = reasons
       .map((reason) => `<li>${this.escapeHtml(reason)}</li>`)
@@ -116,7 +118,7 @@ export class HtmlRenderer {
     const defaultActions = `
       <button class="action-button" onclick="reloadPage()">重新加载</button>
       <button class="action-button secondary" onclick="openInBrowser('${this.escapeHtml(
-        sourceUrl
+        sourceUrl,
       )}')">🌐 浏览器打开</button>
       <button class="action-button secondary" onclick="setCookie()">更新Cookie</button>
     `;
@@ -144,11 +146,11 @@ export class HtmlRenderer {
     const enableDisguise = config.get<boolean>("enableDisguise", true);
     const selectedDisguiseTypes = config.get<string[]>(
       "selectedDisguiseTypes",
-      []
+      [],
     );
     const sidebarDisguiseEnabled = config.get<boolean>(
       "sidebarDisguiseEnabled",
-      true
+      true,
     );
 
     // 当前回答
@@ -164,6 +166,7 @@ export class HtmlRenderer {
       enableDisguise,
       selectedDisguiseTypes,
       sidebarDisguiseEnabled,
+      isFirstAnswer: article.currentAnswerIndex === 0,
     };
 
     // 判断内容类型：通过URL判断专栏文章
@@ -174,27 +177,29 @@ export class HtmlRenderer {
     // 创建作者信息组件
     const authorComponent = new AuthorComponent(
       currentAnswer?.author,
-      renderOptions
+      renderOptions,
     );
 
     // 创建导航组件
     const navigationComponent = new NavigationComponent(
       webview,
       article,
-      contentType
+      contentType,
     );
 
     // 创建沉浸模式的相关问题图标（用于放在标题后面）
     const relatedQuestionsIcon = new RelatedQuestionsComponent(
-      article.relatedQuestions || []
+      article.relatedQuestions || [],
     );
 
     // 检测当前URL的排序类型
-    const currentSortType = webview.url.includes('/answers/updated') ? 'updated' : 'default';
+    const currentSortType = webview.url.includes("/answers/updated")
+      ? "updated"
+      : "default";
 
     // 从URL中提取问题ID
     const questionIdMatch = webview.url.match(/\/question\/(\d+)/);
-    const questionId = questionIdMatch ? questionIdMatch[1] : '';
+    const questionId = questionIdMatch ? questionIdMatch[1] : "";
 
     // 获取是否支持时间排序（默认为 true）
     const supportTimeSort = article.supportTimeSort ?? true;
@@ -203,14 +208,14 @@ export class HtmlRenderer {
     const answerSortComponent = new AnswerSortComponent(
       webview.url,
       currentSortType,
-      supportTimeSort
+      supportTimeSort,
     );
 
     // 创建问题详情组件
     const questionDetailComponent = new QuestionDetailComponent(
       article.questionDetail || "",
       contentType,
-      renderOptions
+      renderOptions,
     );
 
     // 创建Meta组件（传入沉浸模式作者信息）
@@ -218,13 +223,14 @@ export class HtmlRenderer {
       currentAnswer,
       contentType,
       webview,
-      authorComponent.renderImmersive()
+      authorComponent.renderImmersive(),
+      article.currentAnswerIndex === 0,
     );
 
     // 创建文章内容组件
     const contentComponent = new ArticleContentComponent(
       currentAnswer?.content,
-      renderOptions
+      renderOptions,
     );
 
     // 创建工具栏组件 - 侧边栏
@@ -232,7 +238,7 @@ export class HtmlRenderer {
       currentAnswer?.url || webview.url || "",
       renderOptions,
       currentAnswer,
-      webview.sourceType
+      webview.sourceType,
     );
 
     // 创建样式面板组件
@@ -243,7 +249,7 @@ export class HtmlRenderer {
       webviewId,
       currentAnswer?.id,
       currentAnswer?.commentCount || 0,
-      renderOptions
+      renderOptions,
     );
 
     // 媒体模式类
@@ -259,7 +265,7 @@ export class HtmlRenderer {
     const resourcesUri =
       webviewItem?.webviewPanel.webview
         .asWebviewUri(
-          vscode.Uri.joinPath(Store.context!.extensionUri, "resources")
+          vscode.Uri.joinPath(Store.context!.extensionUri, "resources"),
         )
         .toString() || "";
 
@@ -284,14 +290,14 @@ export class HtmlRenderer {
       .replace("${CURRENT_ANSWER_INDEX}", article.currentAnswerIndex.toString())
       .replace(
         "${LOADED_ANSWER_COUNT}",
-        (article.loadedAnswerCount || article.answerList.length).toString()
+        (article.loadedAnswerCount || article.answerList.length).toString(),
       )
       .replace("${ARTICLE_ID}", webview.id || "")
       .replace("${SOURCE_TYPE}", webview.sourceType)
       .replace("${RESOURCES_BASE_PATH}", resourcesUri)
       .replace(
         "${RELATED_QUESTIONS_DATA}",
-        JSON.stringify(article.relatedQuestions || [])
+        JSON.stringify(article.relatedQuestions || []),
       );
 
     // 最后一步，组装全部的HTML，嘎嘎嘎~
@@ -310,13 +316,15 @@ export class HtmlRenderer {
       .replace("${RELATED_QUESTIONS_CSS}", relatedQuestionsCss)
       .replace("${QUESTION_DETAIL_CSS}", questionDetailCss)
       .replace("${ANSWER_SORT_CSS}", answerSortCss)
+      .replace("${ZHIDA_PANEL_CSS}", zhidaPanelCss)
+      .replace("${ZHIDA_PANEL_MODAL}", ZhidaPanelComponent.renderModal())
       .replace(
         "${RELATED_QUESTION_COMPONENT_ICON}",
-        isArticle ? "" : relatedQuestionsIcon.render()
+        isArticle ? "" : relatedQuestionsIcon.render(),
       )
       .replace(
         "${ANSWER_SORT_COMPONENT}",
-        isArticle ? "" : answerSortComponent.render()
+        isArticle ? "" : answerSortComponent.render(),
       )
       .replace("${AUTHOR_COMPONENT}", authorComponent.render())
       .replaceAll("${NAVIGATION_COMPONENT}", navigationComponent.render())
@@ -327,11 +335,11 @@ export class HtmlRenderer {
       .replace("${STYLE_PANEL_COMPONENT}", stylePanelComponent.render())
       .replace(
         "${QUESTION_DETAIL_COMPONENT_ICON}",
-        questionDetailComponent.render()
+        questionDetailComponent.render(),
       )
       .replace(
         "${QUESTION_DETAIL_COMPONENT_MODAL}",
-        questionDetailComponent.renderModal()
+        questionDetailComponent.renderModal(),
       )
       .replace("${SOURCE_URL}", currentAnswer?.url || webview.url || "")
       .replace("${KEYBOARD_TIPS}", keyboardTips)

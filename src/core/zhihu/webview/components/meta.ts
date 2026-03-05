@@ -9,6 +9,7 @@ export class MetaComponent implements Component {
   private contentType?: "question" | "article";
   private webviewItem?: WebViewItem;
   private immersiveAuthorHtml?: string;
+  private isFirstAnswer?: boolean;
 
   /**
    * 构造函数
@@ -16,17 +17,20 @@ export class MetaComponent implements Component {
    * @param contentType 内容类型
    * @param webviewItem WebView项（用于文章投票和页码跳转）
    * @param immersiveAuthorHtml 沉浸模式作者信息HTML
+   * @param isFirstAnswer 是否为当前问题的首个回答
    */
   constructor(
     answer: AnswerItem,
     contentType?: "question" | "article",
     webviewItem?: WebViewItem,
     immersiveAuthorHtml?: string,
+    isFirstAnswer?: boolean,
   ) {
     this.answer = answer;
     this.contentType = contentType;
     this.webviewItem = webviewItem;
     this.immersiveAuthorHtml = immersiveAuthorHtml;
+    this.isFirstAnswer = isFirstAnswer;
   }
 
   /**
@@ -97,7 +101,7 @@ export class MetaComponent implements Component {
         if (isNaN(date.getTime())) {
           // 匹配类似 "2024-01-15 14:30" 的格式
           const match = dateTimeStr.match(
-            /(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})日?\s*(\d{1,2})?:?(\d{1,2})?/
+            /(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})日?\s*(\d{1,2})?:?(\d{1,2})?/,
           );
           if (match) {
             const [, year, month, day, hour = "0", minute = "0"] = match;
@@ -106,7 +110,7 @@ export class MetaComponent implements Component {
               parseInt(month) - 1,
               parseInt(day),
               parseInt(hour),
-              parseInt(minute)
+              parseInt(minute),
             );
           }
         }
@@ -232,7 +236,7 @@ export class MetaComponent implements Component {
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 1 0-9-9c0 1.488.36 2.89 1 4.127L3 21l4.873-1c1.236.639 2.64 1 4.127 1"/>
               </g>
             </svg>
-            <span>${commentCount}</span>
+            ${commentCount}
           </div>
           <div class="meta-item time">
             <svg xmlns="http://www.w3.org/2000/svg" width="min(1em,12px)" height="min(1em,12px)" viewBox="0 0 24 24">
@@ -246,6 +250,17 @@ export class MetaComponent implements Component {
             }
           </div>
           ${this.immersiveAuthorHtml || ""}
+          ${
+            this.isFirstAnswer
+              ? ""
+              : `
+          <button class="zhida-summarize-btn" title="AI 总结此回答" onclick="requestZhidaSummary('${this.answer.id}')">
+            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5.219 12.433.876 11.347a.722.722 0 0 1 0-1.402L5.219 8.86a3.228 3.228 0 0 0 2.348-2.348l1.086-4.343a.722.722 0 0 1 1.402 0l1.085 4.343a3.228 3.228 0 0 0 2.349 2.348l4.343 1.086a.722.722 0 0 1 0 1.402l-4.343 1.086a3.228 3.228 0 0 0-2.349 2.348l-1.085 4.343a.722.722 0 0 1-1.402 0L7.567 14.78a3.228 3.228 0 0 0-2.348-2.348ZM16.236.129a.361.361 0 0 1 .677 0l.607 1.64c.122.33.382.59.711.711l1.64.607a.361.361 0 0 1 0 .677l-1.64.607c-.33.122-.59.382-.711.711l-.607 1.64a.361.361 0 0 1-.677 0l-.607-1.64a1.203 1.203 0 0 0-.711-.71l-1.64-.608a.361.361 0 0 1 0-.677l1.64-.607c.33-.122.59-.381.711-.71l.607-1.641Z"/>
+            </svg>
+          </button>
+          `
+          }
         </div>
       </div>
     `;

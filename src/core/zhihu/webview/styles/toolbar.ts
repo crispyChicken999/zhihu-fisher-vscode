@@ -127,7 +127,7 @@ body.immersive-mode .article-content + .answer-meta {
   background: none;
   border-radius: 0px;
   max-width: fit-content;
-  column-gap: min(1em, 12px);
+  column-gap: 5px;
   row-gap: 0;
 }
 
