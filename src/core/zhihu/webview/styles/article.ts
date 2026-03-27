@@ -208,7 +208,6 @@ export const articleCss = `
   color: #42a5f5;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s;
   border-radius: 4px;
   padding: 2px 4px;
 }
