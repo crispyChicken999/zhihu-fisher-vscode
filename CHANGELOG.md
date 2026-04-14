@@ -2,6 +2,12 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.6.2] - 2026-04-14
+
+### Bug Fixes
+
+- 修复了 `README.md` 中 VS Marketplace 徽章（下载量与评分等）因旧版 API 弃权而无法显示（显示为 "retired badge"）的问题，整体迁移为 Badgen 服务，提升徽章稳定性。
+
 ## [0.6.1] - 2026-03-27
 
 ### Bug Fixes

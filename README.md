@@ -6,13 +6,13 @@
 
 <h1>🐟 知乎摸鱼 (Zhihu Fisher)</h1>
 
-![License](https://img.shields.io/badge/License-MIT-orange.svg)
+![License](https://img.shields.io/badge/License-MIT-red.svg)
 ![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.6.1-green.svg)
+![Version](https://badgen.net/vs-marketplace/v/CrispyChicken.zhihu-fisher)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20MacOS%20%7C%20Linux-purple.svg)
 
-![Downloads](https://img.shields.io/visual-studio-marketplace/d/CrispyChicken.zhihu-fisher)
-![Rating](https://img.shields.io/visual-studio-marketplace/r/CrispyChicken.zhihu-fisher)
+![Downloads](https://badgen.net/vs-marketplace/i/CrispyChicken.zhihu-fisher)
+![Rating](https://badgen.net/vs-marketplace/rating/CrispyChicken.zhihu-fisher)
 ![Stars](https://img.shields.io/github/stars/crispyChicken999/zhihu-fisher-vscode?style=social)
 
 </div>
