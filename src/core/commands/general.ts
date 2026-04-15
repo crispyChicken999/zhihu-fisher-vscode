@@ -181,5 +181,45 @@ export function registerGeneralCommands(): vscode.Disposable[] {
     )
   );
 
+  // 关注列表过滤：正常展示（包含赞同）
+  commands.push(
+    vscode.commands.registerCommand(
+      "zhihu-fisher.setFollowUpVotesShowAll",
+      async () => {
+        const config = vscode.workspace.getConfiguration("zhihu-fisher");
+
+        await config.update(
+          "hideFollowUpVotes",
+          false,
+          vscode.ConfigurationTarget.Global
+        );
+
+        vscode.window.showInformationMessage(
+          "关注列表已设置为正常展示，包括关注人赞同的内容。重新加载关注列表后生效。"
+        );
+      }
+    )
+  );
+
+  // 关注列表过滤：仅展示创作内容
+  commands.push(
+    vscode.commands.registerCommand(
+      "zhihu-fisher.setFollowUpVotesHideVotes",
+      async () => {
+        const config = vscode.workspace.getConfiguration("zhihu-fisher");
+
+        await config.update(
+          "hideFollowUpVotes",
+          true,
+          vscode.ConfigurationTarget.Global
+        );
+
+        vscode.window.showInformationMessage(
+          "关注列表已设置为仅展示创作内容，隐藏关注人赞同的内容。重新加载关注列表后生效。"
+        );
+      }
+    )
+  );
+
   return commands;
 }

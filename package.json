@@ -2,7 +2,7 @@
   "name": "zhihu-fisher",
   "displayName": "Zhihu Fisher",
   "description": "VSCode 刷知乎摸鱼插件 | 支持浏览知乎推荐、热榜、关注、搜索内容，提供沉浸模式、图片大小调整、灰色模式、智能伪装模式。支持评论区、收藏夹等功能。",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.82.0"
@@ -332,6 +332,14 @@
       {
         "command": "zhihu-fisher.onFakeFileClick",
         "title": "打开文件"
+      },
+      {
+        "command": "zhihu-fisher.setFollowUpVotesShowAll",
+        "title": "正常展示(包含赞同)"
+      },
+      {
+        "command": "zhihu-fisher.setFollowUpVotesHideVotes",
+        "title": "仅展示创作内容"
       }
     ],
     "viewsContainers": {
@@ -431,6 +439,10 @@
       {
         "id": "zhihu-fisher.sidebarDisguiseMenu",
         "label": "侧边栏伪装"
+      },
+      {
+        "id": "zhihu-fisher.followUpVotesMenu",
+        "label": "关注列表过滤"
       }
     ],
     "menus": {
@@ -494,6 +506,11 @@
           "command": "zhihu-fisher.setAnswersPerBatch",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
           "group": "config@4"
+        },
+        {
+          "submenu": "zhihu-fisher.followUpVotesMenu",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "group": "config@5"
         },
         {
           "command": "zhihu-fisher.toggleDebugMode",
@@ -709,6 +726,16 @@
           "command": "zhihu-fisher.removeFromCollection",
           "when": "view == zhihuCollectionsList && viewItem =~ /.*removable.*/",
           "group": "inline"
+        }
+      ],
+      "zhihu-fisher.followUpVotesMenu": [
+        {
+          "command": "zhihu-fisher.setFollowUpVotesShowAll",
+          "group": "1_filter@1"
+        },
+        {
+          "command": "zhihu-fisher.setFollowUpVotesHideVotes",
+          "group": "1_filter@2"
         }
       ]
     },

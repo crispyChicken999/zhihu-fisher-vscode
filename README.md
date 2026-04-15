@@ -6,14 +6,15 @@
 
 <h1>🐟 知乎摸鱼 (Zhihu Fisher)</h1>
 
-![License](https://img.shields.io/badge/License-MIT-red.svg)
-![VSCode](https://img.shields.io/badge/VSCode-1.82.0%2B-blue.svg)
-![Version](https://badgen.net/vs-marketplace/v/CrispyChicken.zhihu-fisher)
-![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20MacOS%20%7C%20Linux-purple.svg)
+![License](https://badgen.net/badge/License/MIT/red)
+![VSCode](https://badgen.net/badge/VSCode/1.82.0+/blue?icon=visualstudio)
+![Version](https://badgen.net/badge/Version/0.6.3/orange?icon=git)
+![Platform](https://badgen.net/badge/Platform/Windows|MacOS|Linux/purple?icon=windows)
 
-![Downloads](https://badgen.net/vs-marketplace/i/CrispyChicken.zhihu-fisher)
-![Rating](https://badgen.net/vs-marketplace/rating/CrispyChicken.zhihu-fisher)
-![Stars](https://img.shields.io/github/stars/crispyChicken999/zhihu-fisher-vscode?style=social)
+![Downloads](https://badgen.net/vs-marketplace/d/CrispyChicken.zhihu-fisher?label=Downloads&color=blue)
+![Installs](https://badgen.net/vs-marketplace/i/CrispyChicken.zhihu-fisher?label=Installs&color=green)
+![Rating](https://badgen.net/vs-marketplace/rating/CrispyChicken.zhihu-fisher?label=Rating&color=yellow)
+![Stars](https://badgen.net/github/stars/crispyChicken999/zhihu-fisher-vscode?icon=github&label=Stars&color=gray)
 
 </div>
 
