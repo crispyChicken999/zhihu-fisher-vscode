@@ -9,6 +9,7 @@ export class StylePanelComponent implements Component {
   private enableDisguise: boolean = true;
   private enableGrayscale: boolean = false;
   private sidebarDisguiseEnabled: boolean = false;
+  private hideFollowUpVotes: boolean = true;
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
@@ -20,6 +21,9 @@ export class StylePanelComponent implements Component {
     this.sidebarDisguiseEnabled = renderOptions.sidebarDisguiseEnabled !== undefined
       ? renderOptions.sidebarDisguiseEnabled
       : false;
+    this.hideFollowUpVotes = renderOptions.hideFollowUpVotes !== undefined
+      ? renderOptions.hideFollowUpVotes
+      : true;
     // 灰色模式从javaScript读取，不依赖renderOptions
     this.enableGrayscale = false;
   }
@@ -392,6 +396,42 @@ export class StylePanelComponent implements Component {
                   预览效果
                 </button>
               </div>
+            </div>
+
+            <div class="style-option-divider"></div>
+
+            <div class="style-option">
+              <label class="style-option-label-inline">
+                关注列表过滤
+                <span class="style-option-color-description">
+                  (只显示关注人的创作内容)
+                </span>
+              </label>
+
+              <div class="style-option-flex style-option-label-inline">
+                <label class="style-option-flex style-option-gap-8 style-option-cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="hide-follow-upvotes-toggle"
+                    ${this.hideFollowUpVotes ? "checked" : ""}
+                    onchange="toggleHideFollowUpVotes(this.checked)"
+                    class="style-option-transform-scale"
+                  >
+                  <span class="style-option-font-weight">隐藏赞同内容</span>
+                </label>
+              </div>
+
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">功能说明：</strong>隐藏关注列表中「关注的人赞同了xxx」类型的动态，只显示关注人自己创作的内容（回答了问题、发布了文章等）
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong">提示：</strong>修改后需重新加载关注列表生效
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 

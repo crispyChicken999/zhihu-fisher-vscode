@@ -213,9 +213,10 @@ export class sidebarFollowListDataProvider
       await this.scrollToLoadMore(page);
 
       const followList = await this.parseFollowList(page);
-      console.log(`成功解析出${followList.length}个关注项目`);
+      const filteredList = this.filterFollowItems(followList);
+      console.log(`成功解析出${followList.length}个关注项目，过滤后${filteredList.length}个`);
       console.log("关注列表解析完成，更新Store...");
-      Store.Zhihu.follow.list = followList; // 更新关注列表
+      Store.Zhihu.follow.list = filteredList; // 更新关注列表
     } catch (error) {
       console.error("获取关注列表失败:", error);
       // 处理错误
@@ -604,6 +605,28 @@ export class sidebarFollowListDataProvider
     return parsedList;
   }
 
+  // 过滤关注列表中的赞同/喜欢内容
+  private filterFollowItems(items: LinkItem[]): LinkItem[] {
+    const hideUpvotes = vscode.workspace
+      .getConfiguration("zhihu-fisher")
+      .get<boolean>("hideFollowUpVotes", true);
+    if (!hideUpvotes) {
+      return items;
+    }
+    return items.filter((item) => {
+      if (item.followInfo) {
+        const action = item.followInfo.followAction;
+        return (
+          action.includes("回答了问题") ||
+          action.includes("发布了文章") ||
+          action.includes("写了文章") ||
+          action.includes("回答了")
+        );
+      }
+      return true;
+    });
+  }
+
   // 滚动页面加载更多内容
   private async scrollToLoadMore(page: Puppeteer.Page) {
     let scrollAttempts = 3; // 滚动尝试次数
@@ -821,8 +844,9 @@ export class sidebarFollowListDataProvider
       // 解析新内容
       const newItems = await this.parseFollowList(page);
 
-      // 过滤出真正的新项目
-      const actualNewItems = newItems.filter(
+      // 过滤赞同/喜欢内容后再过滤已存在的项目
+      const filteredItems = this.filterFollowItems(newItems);
+      const actualNewItems = filteredItems.filter(
         (item) => !currentIds.includes(item.id)
       );
 

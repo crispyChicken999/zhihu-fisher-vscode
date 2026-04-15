@@ -589,6 +589,16 @@ function updateFakeProjectType(projectType) {
 }
 
 /**
+ * 切换隐藏关注列表赞同内容
+ */
+function toggleHideFollowUpVotes(enabled) {
+  vscode.postMessage({
+    command: "toggleHideFollowUpVotes",
+    enabled: enabled
+  });
+}
+
+/**
  * 设置样式面板 - 初始化伪装类型选择器
  */
 function initializeDisguiseTypesSelector() {
