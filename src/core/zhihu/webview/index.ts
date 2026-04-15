@@ -2126,6 +2126,11 @@ export class WebviewManager {
           await this.handleSyncSidebarDisguise(message.enabled);
           break;
 
+        case "toggleHideFollowUpVotes":
+          // 处理关注列表过滤赞同内容开关切换
+          await this.handleToggleHideFollowUpVotes(message.enabled);
+          break;
+
         case "manualDisguiseToggle":
           // 处理手动代码伪装切换
           await this.handleManualDisguiseToggle(webviewId, message.action);
@@ -2404,6 +2409,32 @@ export class WebviewManager {
       );
     } catch (error) {
       console.error("切换侧边栏伪装功能时出错:", error);
+      vscode.window.showErrorMessage(
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * 处理关注列表过滤赞同内容开关切换
+   * @param enabled 是否隐藏关注列表中的赞同内容
+   */
+  private static async handleToggleHideFollowUpVotes(
+    enabled: boolean,
+  ): Promise<void> {
+    try {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update(
+        "hideFollowUpVotes",
+        enabled,
+        vscode.ConfigurationTarget.Global,
+      );
+
+      vscode.window.showInformationMessage(
+        `关注列表已${enabled ? "隐藏" : "显示"}赞同内容，重新加载关注列表后生效`,
+      );
+    } catch (error) {
+      console.error("切换关注列表过滤设置时出错:", error);
       vscode.window.showErrorMessage(
         `设置失败: ${error instanceof Error ? error.message : String(error)}`,
       );

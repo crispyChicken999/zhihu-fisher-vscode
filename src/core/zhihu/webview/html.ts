@@ -152,6 +152,7 @@ export class HtmlRenderer {
       "sidebarDisguiseEnabled",
       true,
     );
+    const hideFollowUpVotes = config.get<boolean>("hideFollowUpVotes", true);
 
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];
@@ -166,6 +167,7 @@ export class HtmlRenderer {
       enableDisguise,
       selectedDisguiseTypes,
       sidebarDisguiseEnabled,
+      hideFollowUpVotes,
       isFirstAnswer: article.currentAnswerIndex === 0,
     };
 
