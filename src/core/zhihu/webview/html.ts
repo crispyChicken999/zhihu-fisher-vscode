@@ -150,9 +150,9 @@ export class HtmlRenderer {
     );
     const sidebarDisguiseEnabled = config.get<boolean>(
       "sidebarDisguiseEnabled",
-      true,
+      false,
     );
-    const hideFollowUpVotes = config.get<boolean>("hideFollowUpVotes", true);
+    const hideFollowUpVotes = config.get<boolean>("hideFollowUpVotes", false);
 
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];
