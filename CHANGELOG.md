@@ -2,6 +2,12 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.6.4] - 2026-04-16
+
+### Features
+
+- 调整关注列表过滤功能在设置面板中的位置，Readme、Walkthrough添加使用说明。(Merge PR[#67](https://github.com/crispyChicken999/zhihu-fisher-vscode/pull/67))
+
 ## [0.6.3] - 2026-04-15
 
 ### Features
