@@ -12,7 +12,7 @@ export function registerWebviewCommands(): vscode.Disposable[] {
   // 注册打开文章命令
   const openArticleCommand = vscode.commands.registerCommand(
     "zhihu-fisher.openArticle",
-    (item: LinkItem, sourceType?: "collection" | "recommend" | "hot" | "search", collectionId?: string) => {
+    (item: LinkItem, sourceType?: "collection" | "recommend" | "hot" | "search" | "follow", collectionId?: string) => {
       // 检查热榜列表是否正在加载中
       if (Store.Zhihu.hot.isLoading) {
         vscode.window.showInformationMessage(
@@ -54,7 +54,7 @@ export function registerWebviewCommands(): vscode.Disposable[] {
       }
 
       // 根据item的id推断来源类型
-      let inferredSourceType: "collection" | "recommend" | "hot" | "search" = "recommend";
+      let inferredSourceType: "collection" | "recommend" | "hot" | "search" | "follow" = "recommend";
       if (item.id.startsWith("collection-")) {
         inferredSourceType = "collection";
       } else if (item.id.startsWith("recommend-")) {
@@ -63,6 +63,8 @@ export function registerWebviewCommands(): vscode.Disposable[] {
         inferredSourceType = "hot";
       } else if (item.id.startsWith("search-")) {
         inferredSourceType = "search";
+      } else if (item.id.startsWith("follow-")) {
+        inferredSourceType = "follow";
       }
 
       const finalSourceType = sourceType || inferredSourceType;

@@ -24,7 +24,8 @@ export class WebviewManager {
       | "recommend"
       | "hot"
       | "search"
-      | "inner-link" = "recommend",
+      | "inner-link"
+      | "follow" = "recommend",
     collectionId?: string,
   ): Promise<void> {
     // 提取基础ID和内容类型
@@ -1216,7 +1217,7 @@ export class WebviewManager {
 
   /** 根据来源类型获取对应的列表 */
   private static getListBySourceType(
-    sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link",
+    sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link" | "follow",
     collectionId?: string,
   ): LinkItem[] | null {
     switch (sourceType) {
@@ -1226,6 +1227,8 @@ export class WebviewManager {
         return Store.Zhihu.recommend.list;
       case "search":
         return Store.Zhihu.search.list;
+      case "follow":
+        return Store.Zhihu.follow.list;
       case "collection":
         // 收藏夹的处理比较复杂，需要特殊处理
         return this.getCollectionItemsList(collectionId);
