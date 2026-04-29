@@ -25,12 +25,13 @@ export class WebviewManager {
       | "hot"
       | "search"
       | "inner-link"
-      | "follow" = "recommend",
+      | "follow"
+      | "thought" = "recommend",
     collectionId?: string,
   ): Promise<void> {
     // 提取基础ID和内容类型
     let baseId = item.id;
-    let contentType: "article" | "answer" =
+    let itemContentType: "article" | "answer" =
       item.type === "article" ? "article" : "answer";
     let answerId: string | undefined;
     let targetUrl = item.url;
@@ -60,7 +61,7 @@ export class WebviewManager {
     const webviewId = WebViewUtils.generateUniqueWebViewId(
       baseId,
       sourceType,
-      contentType,
+      itemContentType,
       answerId,
       collectionId,
       item.sortType, // 传递排序类型
@@ -195,10 +196,19 @@ export class WebviewManager {
     Store.webviewMap.set(webviewId, webviewItem);
 
     // 在WebView中显示正在加载状态
+    // 根据URL判断内容类型
+    let loadingContentType: "article" | "question" | "thought" = "question";
+    if (targetUrl.includes("zhuanlan.zhihu.com")) {
+      loadingContentType = "article";
+    } else if (sourceType === "thought" || targetUrl.includes("/pin/")) {
+      loadingContentType = "thought";
+    }
+
     panel.webview.html = HtmlRenderer.getLoadingHtml(
       item.title,
       item.excerpt,
       item.imgUrl,
+      loadingContentType,
     );
 
     // 设置消息处理
@@ -221,6 +231,8 @@ export class WebviewManager {
     // 根据内容类型调用不同的爬取方法
     if (item.type === "article") {
       this.crawlingArticleData(webviewId);
+    } else if (item.type === "thought") {
+      this.crawlingThoughtData(webviewId);
     } else {
       this.crawlingURLData(webviewId);
     }
@@ -270,6 +282,16 @@ export class WebviewManager {
     try {
       // 已经加载过内容并且正在加载中，避免重复请求
       if (webviewItem.isLoading) {
+        return;
+      }
+
+      // 检查是否是想法URL，如果是，调用想法爬取逻辑
+      if (
+        webviewItem.url.includes("/pin/") ||
+        webviewItem.sourceType === "thought"
+      ) {
+        console.log("检测到想法URL，调用想法爬取逻辑");
+        await this.crawlingThoughtData(webviewId);
         return;
       }
 
@@ -1022,6 +1044,435 @@ export class WebviewManager {
     }
   }
 
+  /** 从想法URL中爬取数据 */
+  private static async crawlingThoughtData(webviewId: string): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 已经加载过内容并且正在加载中，避免重复请求
+      if (webviewItem.isLoading) {
+        return;
+      }
+
+      webviewItem.isLoading = true;
+
+      // 显示状态栏加载提示
+      const statusBarItem = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Right,
+        100,
+      );
+      const shortTitle = this.getShortTitle(webviewItem.article.title);
+      statusBarItem.text = `$(sync~spin) 加载想法: ${shortTitle}`;
+      statusBarItem.show();
+
+      // 保存状态栏项目的引用
+      Store.statusBarMap.set(webviewId, statusBarItem);
+
+      // 使用 Puppeteer 来获取想法内容
+      const page = await PuppeteerManager.createPage();
+      PuppeteerManager.setPageInstance(webviewId, page);
+
+      // 前往想法页面
+      await page.goto(webviewItem.url, {
+        waitUntil: "domcontentloaded",
+        timeout: 60000,
+      });
+
+      console.log("想法页面加载完成，开始读取页面...");
+
+      // 立即检测知乎错误页面并禁用重定向（在5秒自动跳转之前）
+      const hasErrorPage = await this.checkAndHandleZhihuErrorPage(
+        webviewId,
+        page,
+        "article", // 想法页面使用与文章相同的错误检测
+      );
+      if (hasErrorPage) {
+        return;
+      }
+
+      // 等待网络空闲，但使用更短的超时和容错处理
+      try {
+        console.time("waitForNetworkIdle");
+        await page.waitForNetworkIdle({ timeout: 5000 });
+        console.log("页面网络空闲");
+      } catch (networkIdleError) {
+        // 网络空闲超时不是致命错误，继续处理
+        console.log("等待网络空闲超时，但继续处理页面内容");
+      } finally {
+        console.timeEnd("waitForNetworkIdle");
+      }
+
+      webviewItem.isLoading = false;
+      webviewItem.webviewPanel.title = shortTitle;
+
+      const isCookieExpired =
+        await CookieManager.checkIfPageHasLoginElement(page);
+      if (isCookieExpired) {
+        console.log("Cookie过期，请重新登录！");
+        webviewItem.webviewPanel.webview.html =
+          HtmlRenderer.getCookieExpiredHtml();
+        return;
+      }
+
+      // 解析想法内容
+      await this.parseThoughtContent(webviewId, page);
+
+      // 对于想法，我们可以直接显示内容，不需要分批加载
+      webviewItem.article.loadComplete = true;
+      webviewItem.isLoaded = true;
+
+      // 更新 webview 内容
+      this.updateWebview(webviewId);
+    } catch (error) {
+      const webviewItem = Store.webviewMap.get(webviewId);
+      if (webviewItem) {
+        webviewItem.isLoading = false;
+      }
+
+      console.error("加载想法内容时出错:", error);
+      throw new Error("加载想法内容时出错:" + error);
+    } finally {
+      // 隐藏状态栏加载提示
+      this.hideStatusBarItem(webviewId);
+    }
+  }
+
+  /** 解析想法内容 */
+  private static async parseThoughtContent(
+    webviewId: string,
+    page: Puppeteer.Page,
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 从URL中提取pinId
+      const pinId =
+        webviewItem.url.split("/pin/")[1] ||
+        webviewItem.originalItem.thoughtInfo?.pinId;
+      if (!pinId) {
+        throw new Error("无法从URL中提取想法ID");
+      }
+
+      console.log(`开始解析想法内容，pinId: ${pinId}`);
+
+      const thoughtData = await page.evaluate(() => {
+        // 获取想法主体内容
+        const contentElement = document.querySelector(
+          ".RichText.ztext.CopyrightRichText-richText",
+        );
+        let content = contentElement
+          ? contentElement.innerHTML
+          : "无法获取想法内容";
+
+        // 获取想法中的额外内容（如图片）
+        const remainContentElement = document.querySelector(
+          ".RichText.ztext.PinItem-remainContentRichText",
+        );
+        if (remainContentElement) {
+          // 提取图片列表
+          const imageElements = remainContentElement.querySelectorAll(
+            "img[data-thumbnail-image]",
+          );
+          if (imageElements.length > 0) {
+            let imagesHtml = '<div class="thought-images-container">';
+            imageElements.forEach((img) => {
+              const imgElement = img as HTMLImageElement;
+              const src =
+                imgElement.getAttribute("data-actualsrc") || imgElement.src;
+              const originalSrc =
+                imgElement.getAttribute("data-original") || src;
+              const width = imgElement.getAttribute("data-rawwidth") || "800";
+              const height = imgElement.getAttribute("data-rawheight") || "600";
+
+              imagesHtml += `<div class="thought-image-item">
+                <img src="${src}"
+                  data-original="${originalSrc}"
+                  data-rawwidth="${width}"
+                  data-rawheight="${height}"
+                  alt="想法图片"
+                  class="thought-image"
+                  loading="lazy" />
+              </div>`;
+            });
+            imagesHtml += "</div>";
+            content = content + imagesHtml;
+            console.log(`已添加 ${imageElements.length} 张图片到想法内容中`);
+          }
+        }
+
+        // 提取链接卡片信息（如果有）- LinkCard 在 .css-uu354a 容器中，不在 remainContentElement 内
+        let linkCardData: {
+          url: string;
+          title: string;
+          desc: string;
+          imageSrc: string;
+        } | null = null;
+
+        const linkCardContainer = document.querySelector(".css-uu354a");
+        if (linkCardContainer) {
+          const linkCardElement =
+            linkCardContainer.querySelector(".LinkCard.new");
+          if (linkCardElement) {
+            const cardUrl = (linkCardElement as HTMLAnchorElement).href || "";
+            const cardTitle =
+              linkCardElement
+                .querySelector(".LinkCard-title")
+                ?.textContent?.trim() || "";
+            const cardDesc =
+              linkCardElement
+                .querySelector(".LinkCard-desc")
+                ?.textContent?.trim() || "";
+            const cardImage = linkCardElement.querySelector(
+              ".LinkCard-image img",
+            );
+            const cardImageSrc = cardImage
+              ? (cardImage as HTMLImageElement).src
+              : "";
+
+            linkCardData = {
+              url: cardUrl,
+              title: cardTitle,
+              desc: cardDesc,
+              imageSrc: cardImageSrc,
+            };
+
+            console.log("已提取链接卡片信息:", linkCardData);
+          }
+        }
+
+        // 获取作者信息
+        const authorElement = document.querySelector(".AuthorInfo");
+
+        // 作者名称
+        const authorNameElement = authorElement?.querySelector(
+          "meta[itemprop='name']",
+        );
+        const authorName = authorNameElement
+          ? authorNameElement.getAttribute("content") || "未知作者"
+          : "未知作者";
+
+        // 作者头像
+        const authorAvatarElement = authorElement?.querySelector(
+          "meta[itemprop='image']",
+        );
+        const authorAvatar = authorAvatarElement
+          ? authorAvatarElement.getAttribute("content") || ""
+          : "";
+
+        // 作者URL
+        const authorUrlElement = authorElement?.querySelector(
+          "meta[itemprop='url']",
+        );
+        const authorUrl = authorUrlElement
+          ? authorUrlElement.getAttribute("content") || ""
+          : "";
+
+        // 作者签名
+        const authorSignatureElement = authorElement?.querySelector(
+          ".AuthorInfo-badgeText",
+        );
+        const authorHeadline = authorSignatureElement
+          ? authorSignatureElement.textContent?.trim() || ""
+          : "";
+
+        // 检测是否已关注该作者
+        let isFollowing = false;
+        const followButton = authorElement?.querySelector(
+          "button.FollowButton",
+        );
+        if (followButton) {
+          const buttonText = followButton.textContent?.trim() || "";
+          isFollowing = buttonText.includes("已关注");
+          console.log(
+            `作者的关注状态: ${
+              isFollowing ? "已关注" : "未关注"
+            } (按钮文字: "${buttonText}")`,
+          );
+        }
+
+        // 作者粉丝数
+        const authorFollowerElement = document.querySelector(
+          ".NumberBoard-item[data-za-detail-view-element_name='Follower'] .NumberBoard-itemValue",
+        );
+        let authorFollowerCount = 0;
+        if (authorFollowerElement) {
+          const followerText =
+            authorFollowerElement.getAttribute("title") || "0";
+          authorFollowerCount = parseInt(followerText) || 0;
+        }
+
+        // 获取发布时间
+        const timeElement = document.querySelector(".ContentItem-time a");
+        const publishTime = timeElement
+          ? timeElement.getAttribute("data-tooltip") ||
+            timeElement.textContent?.trim() ||
+            ""
+          : "";
+
+        // 获取点赞数
+        const likeElement = document.querySelector(".VoteButton");
+        const likeText = likeElement
+          ? likeElement.getAttribute("aria-label") || "0"
+          : "0";
+        const likeCount = parseInt(likeText.replace(/[^\d]/g, "") || "0", 10);
+
+        // 获取投票状态
+        let voteStatus: 1 | -1 | 0 = 0; // 默认为中立
+
+        // 查找投票按钮
+        const upVoteButton = document.querySelector(
+          ".VoteButton.is-active:not(.VoteButton--down)",
+        );
+        const downVoteButton = document.querySelector(
+          ".VoteButton--down.is-active",
+        );
+
+        if (upVoteButton) {
+          voteStatus = 1; // 已赞同
+          console.log("想法检测到赞同状态");
+        } else if (downVoteButton) {
+          voteStatus = -1; // 已不赞同
+          console.log("想法检测到不赞同状态");
+        } else {
+          console.log("想法检测到中立状态");
+        }
+
+        // 获取评论数
+        const commentElement = document.querySelector(
+          ".BottomActions-CommentBtn, .ContentItem-action[aria-label*='评论']",
+        );
+        const commentText = commentElement
+          ? commentElement.textContent?.trim() || "0"
+          : "0";
+        const commentCount = parseInt(
+          commentText.replace(/[^\d]/g, "") || "0",
+          10,
+        );
+
+        return {
+          content,
+          linkCardData,
+          author: {
+            url: authorUrl,
+            name: authorName,
+            avatar: authorAvatar,
+            signature: authorHeadline,
+            authorFollowerCount,
+            isFollowing,
+          },
+          publishTime,
+          likeCount,
+          commentCount,
+          voteStatus,
+        };
+      });
+
+      // 创建一个虚拟的 AnswerItem 来存储想法内容（复用现有的渲染逻辑）
+      const thoughtAnswer: AnswerItem = {
+        id: pinId,
+        url: webviewItem.url,
+        author: {
+          id: "thought-author",
+          url: thoughtData.author.url,
+          name: thoughtData.author.name,
+          avatar: thoughtData.author.avatar,
+          signature: thoughtData.author.signature,
+          followersCount: thoughtData.author.authorFollowerCount,
+          isFollowing: thoughtData.author.isFollowing,
+          isThoughtAuthor: true, // 标记为想法作者
+        },
+        likeCount: thoughtData.likeCount,
+        commentCount: thoughtData.commentCount,
+        voteStatus:
+          thoughtData.voteStatus === 1
+            ? "up"
+            : thoughtData.voteStatus === -1
+              ? "down"
+              : "neutral",
+        commentList: [],
+        commentStatus: "collapsed",
+        commentPaging: {
+          is_end: true,
+          is_start: true,
+          next: null,
+          previous: null,
+          totals: thoughtData.commentCount,
+          loadedTotals: 0,
+          current: 1,
+          limit: 20,
+        },
+        publishTime: thoughtData.publishTime,
+        updateTime: thoughtData.publishTime,
+        content: marked.parse(thoughtData.content) as string,
+      };
+
+      // 如果有链接卡片数据，添加到内容末尾
+      if (thoughtData.linkCardData && thoughtData.linkCardData.url) {
+        const cardData = thoughtData.linkCardData;
+        let linkCardHtml = '<div class="thought-link-card-container">';
+        linkCardHtml += `<a href="${cardData.url}" target="_blank" class="LinkCard new">`;
+
+        // 如果有图片，添加图片
+        if (cardData.imageSrc) {
+          linkCardHtml += `<span class="LinkCard-image" style="height: 66px;">`;
+          linkCardHtml += `<img class="thought-linkcard-image" src="${cardData.imageSrc}" alt="">`;
+          linkCardHtml += `</span>`;
+        }
+
+        // 添加内容区域
+        linkCardHtml += `<span class="LinkCard-contents">`;
+
+        // 添加标题
+        if (cardData.title) {
+          linkCardHtml += `<span class="LinkCard-title two-line">${cardData.title}</span>`;
+        }
+
+        // 添加描述
+        if (cardData.desc) {
+          linkCardHtml += `<span class="LinkCard-desc LinkCard-desc-wrapper">${cardData.desc}</span>`;
+        }
+
+        linkCardHtml += `</span>`;
+        linkCardHtml += `</a>`;
+        linkCardHtml += "</div>";
+
+        // 将链接卡片添加到内容末尾
+        thoughtAnswer.content = thoughtAnswer.content + linkCardHtml;
+
+        console.log("已将链接卡片添加到想法内容中");
+        console.log(`  - 标题: ${cardData.title}`);
+        console.log(`  - 描述: ${cardData.desc}`);
+        console.log(`  - URL: ${cardData.url}`);
+      }
+
+      // 为想法生成特殊的title：显示作者和发布时间信息
+      // 格式：作者名 发布了想法 · ⏰ 发布时间
+      const thoughtTitle = `${thoughtData.author.name} 发布了想法 · ⏰ ${thoughtData.publishTime}`;
+      webviewItem.article.title = thoughtTitle;
+
+      // 将想法内容作为单个"回答"存储
+      webviewItem.article.answerList = [thoughtAnswer];
+      webviewItem.article.loadedAnswerCount = 1;
+      webviewItem.article.totalAnswerCount = 1;
+      webviewItem.article.currentAnswerIndex = 0;
+
+      // 保存想法的投票状态信息
+      webviewItem.article.voteStatus = thoughtData.voteStatus;
+      webviewItem.article.likeCount = thoughtData.likeCount;
+
+      console.log("想法内容解析完成");
+    } catch (error) {
+      console.error("解析想法内容时出错:", error);
+      throw error;
+    }
+  }
+
   /** 加载上一个回答 */
   public static async loadPreviousAnswer(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
@@ -1217,7 +1668,14 @@ export class WebviewManager {
 
   /** 根据来源类型获取对应的列表 */
   private static getListBySourceType(
-    sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link" | "follow",
+    sourceType:
+      | "collection"
+      | "recommend"
+      | "hot"
+      | "search"
+      | "inner-link"
+      | "follow"
+      | "thought",
     collectionId?: string,
   ): LinkItem[] | null {
     switch (sourceType) {
@@ -1229,6 +1687,8 @@ export class WebviewManager {
         return Store.Zhihu.search.list;
       case "follow":
         return Store.Zhihu.follow.list;
+      case "thought":
+        return Store.Zhihu.follow.list; // 想法也来自关注列表
       case "collection":
         // 收藏夹的处理比较复杂，需要特殊处理
         return this.getCollectionItemsList(collectionId);
@@ -1964,10 +2424,21 @@ export class WebviewManager {
           // 处理更新Cookie的请求
           await vscode.commands.executeCommand("zhihu-fisher.setCookie"); // 刷新当前页面
           if (webviewItem) {
+            // 判断内容类型
+            let contentType: "article" | "question" | "thought" = "question";
+            if (webviewItem.url.includes("zhuanlan.zhihu.com")) {
+              contentType = "article";
+            } else if (
+              webviewItem.sourceType === "thought" ||
+              webviewItem.url.includes("/pin/")
+            ) {
+              contentType = "thought";
+            }
             webviewItem.webviewPanel.webview.html = HtmlRenderer.getLoadingHtml(
               webviewItem.article.title,
               webviewItem.article.excerpt,
               "", // 这里没有缩略图信息，传空字符串
+              contentType,
             );
           }
           break;
@@ -2013,11 +2484,22 @@ export class WebviewManager {
           // 处理错误页面的重新加载请求
           const webviewItemForReload = Store.webviewMap.get(webviewId);
           if (webviewItemForReload) {
+            // 判断内容类型
+            let contentType: "article" | "question" | "thought" = "question";
+            if (webviewItemForReload.url.includes("zhuanlan.zhihu.com")) {
+              contentType = "article";
+            } else if (
+              webviewItemForReload.sourceType === "thought" ||
+              webviewItemForReload.url.includes("/pin/")
+            ) {
+              contentType = "thought";
+            }
             webviewItemForReload.webviewPanel.webview.html =
               HtmlRenderer.getLoadingHtml(
                 webviewItemForReload.article.title,
                 webviewItemForReload.article.excerpt || "重新加载中...",
                 "",
+                contentType,
               );
             // 重新爬取数据
             await this.crawlingURLData(webviewId);
@@ -2029,11 +2511,22 @@ export class WebviewManager {
           await vscode.commands.executeCommand("zhihu-fisher.setCookie");
           const webviewItemForCookie = Store.webviewMap.get(webviewId);
           if (webviewItemForCookie) {
+            // 判断内容类型
+            let contentType: "article" | "question" | "thought" = "question";
+            if (webviewItemForCookie.url.includes("zhuanlan.zhihu.com")) {
+              contentType = "article";
+            } else if (
+              webviewItemForCookie.sourceType === "thought" ||
+              webviewItemForCookie.url.includes("/pin/")
+            ) {
+              contentType = "thought";
+            }
             webviewItemForCookie.webviewPanel.webview.html =
               HtmlRenderer.getLoadingHtml(
                 webviewItemForCookie.article.title,
                 webviewItemForCookie.article.excerpt || "正在重新加载...",
                 "",
+                contentType,
               );
           }
           break;
@@ -2901,8 +3394,16 @@ export class WebviewManager {
       // 从URL创建LinkItem
       const linkItem = this.createLinkItemFromUrl(url);
       if (linkItem) {
+        // 根据URL类型判断sourceType
+        let sourceType: "inner-link" | "thought" = "inner-link";
+
+        // 如果是想法链接，使用thought作为sourceType
+        if (url.includes("/pin/")) {
+          sourceType = "thought";
+        }
+
         // 调用openWebview方法在VSCode中打开
-        await this.openWebview(linkItem, "inner-link");
+        await this.openWebview(linkItem, sourceType);
       } else {
         vscode.window.showErrorMessage("无法解析知乎链接");
         // 如果无法解析链接，尝试直接在浏览器中打开
@@ -2935,6 +3436,22 @@ export class WebviewManager {
       let type: "question" | "article" = "question";
 
       if (hostname === "www.zhihu.com") {
+        // 处理想法页面
+        const pinMatch = pathname.match(/^\/pin\/(\d+)/);
+        if (pinMatch) {
+          id = pinMatch[1];
+          title = `知乎想法 ${id}`;
+          type = "question"; // 想法也使用question类型，通过sourceType区分
+
+          return {
+            id: `thought-${id}`,
+            url: url,
+            title: title,
+            excerpt: "正在加载想法中，请稍后~",
+            type: type,
+          };
+        }
+
         // 处理问题页面
         const questionMatch = pathname.match(/^\/question\/(\d+)/);
         const answerMatch = pathname.match(/^\/question\/\d+\/answer\/(\d+)/);

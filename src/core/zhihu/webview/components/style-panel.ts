@@ -346,7 +346,7 @@ export class StylePanelComponent implements Component {
                 <summary class="style-option-help-summary">功能说明</summary>
                 <div class="style-option-help-content">
                   <div class="style-option-help-margin-4">
-                    <strong class="style-option-help-strong">功能说明：</strong>隐藏关注列表中「关注的人赞同了xxx」类型的动态，只显示关注人自己创作的内容（回答了问题、发布了文章等）
+                    <strong class="style-option-help-strong">功能说明：</strong>隐藏关注列表中「关注的人赞同了xxx」类型的动态，只显示关注人自己创作的内容（回答了问题、发布了文章、发布了想法等）
                   </div>
                   <div>
                     <strong class="style-option-help-strong">提示：</strong>修改后需重新加载关注列表生效

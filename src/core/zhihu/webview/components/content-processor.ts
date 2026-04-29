@@ -94,12 +94,14 @@ export class ContentProcessor {
    * @param content 原始HTML内容
    * @param options 渲染选项
    * @param includeAdvancedFeatures 是否包含高级功能（如代码高亮、数学公式等）
+   * @param isThought 是否为想法内容（想法需要保留 LinkCard 的完整结构）
    * @returns 处理后的HTML内容
    */
   public static processContent(
     content: string,
     options: RenderOptions | null,
     includeAdvancedFeatures: boolean = true,
+    isThought: boolean = false,
   ): string {
     if (!content) {
       return `<div class="empty-content">
@@ -525,11 +527,18 @@ export class ContentProcessor {
 
       // 对LinkCard进行特殊处理
       if (link.hasClass("LinkCard")) {
-        const text = link.attr("data-text") || "";
-        // 清空原有内容并设置为简化链接
-        link.empty();
-        link.text(text || href);
-        link.addClass("zhihu-processed-link");
+        // 如果是想法内容，保留 LinkCard 的完整结构（包括图片、标题、描述）
+        if (isThought) {
+          // 想法中的 LinkCard 保持原样，不做简化处理
+          // 只需要确保已经添加了 VSCode 打开选项（上面已处理）
+          link.addClass("zhihu-processed-link");
+        } else {
+          // 非想法内容，简化为纯文本链接
+          const text = link.attr("data-text") || "";
+          link.empty();
+          link.text(text || href);
+          link.addClass("zhihu-processed-link");
+        }
       }
     });
 

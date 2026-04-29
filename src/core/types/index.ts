@@ -100,8 +100,8 @@ export interface LinkItem {
   hotValue?: string;
   /** 链接的缩略图 */
   imgUrl?: string;
-  /** 内容类型：问题或文章 */
-  type?: "question" | "article";
+  /** 内容类型：问题、文章或想法 */
+  type?: "question" | "article" | "thought";
   /** 内容token，用于不喜欢API */
   contentToken?: string;
   /** 回答的完整URL，用于浏览器打开特定回答 */
@@ -130,8 +130,34 @@ export interface LinkItem {
     upvoteCount: string;
     /** 评论数 */
     commentCount: string;
-    /** 原始内容类型：question(问题本身) | answer(回答) | article(文章) */
+    /** 原始内容类型：question(问题本身) | answer(回答) | article(文章) | thought(想法) */
     rawContentType?: string;
+  };
+  /** 想法信息（仅想法类型使用） */
+  thoughtInfo?: {
+    /** 想法ID (pinId) */
+    pinId: string;
+    /** 想法文本内容 */
+    content: string;
+    /** 发布时间 */
+    publishTime: string;
+    /** 链接卡片信息（如果有） */
+    linkCard?: {
+      /** 卡片标题 */
+      title: string;
+      /** 卡片描述 */
+      description: string;
+      /** 卡片链接 */
+      url: string;
+      /** 卡片缩略图 */
+      thumbnail: string;
+    };
+    /** 点赞数 */
+    likeCount: number;
+    /** 评论数 */
+    commentCount: number;
+    /** 是否已点赞 */
+    isLiked: boolean;
   };
 }
 
@@ -150,7 +176,7 @@ export interface WebViewItem {
   /** 是否已加载 */
   isLoaded: boolean;
   /** 来源类型 - 新增字段 */
-  sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link" | "follow";
+  sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link" | "follow" | "thought";
   /** 原始链接项数据 - 新增字段，用于查找列表位置 */
   originalItem: LinkItem;
   /** 收藏夹ID - 仅当sourceType为collection时有效 */
@@ -210,6 +236,34 @@ export interface ArticleInfo {
   currentSortType?: "default" | "updated";
   /** 是否支持按时间排序（某些问题不支持时间排序） */
   supportTimeSort?: boolean;
+  /** 想法内容（仅想法类型使用） */
+  thoughtContent?: {
+    /** 想法ID */
+    pinId: string;
+    /** 想法文本内容 */
+    content: string;
+    /** 发布时间 */
+    publishTime: string;
+    /** 链接卡片 */
+    linkCard?: {
+      /** 卡片标题 */
+      title: string;
+      /** 卡片描述 */
+      description: string;
+      /** 卡片链接 */
+      url: string;
+      /** 卡片缩略图 */
+      thumbnail: string;
+    };
+    /** 点赞数 */
+    likeCount: number;
+    /** 评论数 */
+    commentCount: number;
+    /** 是否已点赞 */
+    isLiked: boolean;
+    /** 用户对该想法的投票状态 */
+    voteStatus?: 1 | -1 | 0;
+  };
 }
 
 /** 相关问题数据结构 */
@@ -291,6 +345,8 @@ export interface AnswerAuthor {
   followersCount: number;
   /** 是否已关注该作者 */
   isFollowing?: boolean;
+  /** 是否为想法作者（用于区分想法和回答） */
+  isThoughtAuthor?: boolean;
 }
 
 /** 评论数据结构 */
@@ -421,6 +477,8 @@ export class TreeItem extends vscode.TreeItem {
       // 根据内容类型设置不同的默认图标
       if (listItem.type === "article") {
         this.iconPath = new vscode.ThemeIcon("remote-explorer-documentation");
+      } else if (listItem.type === "thought") {
+        this.iconPath = new vscode.ThemeIcon("comment-draft");
       } else {
         this.iconPath = new vscode.ThemeIcon("comment-discussion");
       }
@@ -429,6 +487,8 @@ export class TreeItem extends vscode.TreeItem {
     const typeLabel =
       listItem.type === "article"
         ? `**<span style="color:#2196F3;background-color:#2196F333;">&nbsp;文章&nbsp;</span>**`
+        : listItem.type === "thought"
+        ? `**<span style="color:#9C27B0;background-color:#9C27B033;">&nbsp;想法&nbsp;</span>**`
         : `**<span style="color:#f68b83;background-color:#f68b8333;">&nbsp;问题&nbsp;</span>**`;
 
     const link = listItem.answerUrl || listItem.url || "https://www.zhihu.com/";
@@ -486,7 +546,8 @@ export class TreeItem extends vscode.TreeItem {
         markdownTooltip.appendMarkdown("\n ___ \n\n");
       }
 
-      if (listItem.excerpt) {
+      // 对于想法类型，title和excerpt是相同的，不需要重复显示excerpt
+      if (listItem.excerpt && listItem.type !== "thought") {
         const excerpt = listItem.excerpt.replaceAll('~','-');
         markdownTooltip.appendMarkdown(`\n ${excerpt} \n\n`);
       }
@@ -565,7 +626,8 @@ export class TreeItem extends vscode.TreeItem {
 
       simpleTooltip.appendMarkdown("\n ___ \n\n");
 
-      if (listItem.excerpt) {
+      // 对于想法类型，title和excerpt是相同的，不需要重复显示excerpt
+      if (listItem.excerpt && listItem.type !== "thought") {
         const excerpt = listItem.excerpt.replaceAll('~','-');
         simpleTooltip.appendMarkdown(excerpt);
       }
@@ -591,7 +653,12 @@ export class TreeItem extends vscode.TreeItem {
     this.id = listItem.id;
 
     // 根据内容类型设置不同的命令标题
-    const commandTitle = listItem.type === "article" ? "打开文章" : "打开问题";
+    const commandTitle = 
+      listItem.type === "article" 
+        ? "打开文章" 
+        : listItem.type === "thought"
+        ? "打开想法"
+        : "打开问题";
 
     this.command = {
       command: "zhihu-fisher.openArticle",
@@ -603,6 +670,9 @@ export class TreeItem extends vscode.TreeItem {
     // 如果是关注的问题（只关注了问题，没有回答），使用特殊的contextValue，不显示收藏按钮
     if (isFollowedQuestionOnly) {
       this.contextValue = shouldShowImage ? "FollowedQuestionWithImage" : "FollowedQuestion";
+    } else if (listItem.type === "thought") {
+      // 想法类型使用特殊的 contextValue 以支持右键菜单
+      this.contextValue = shouldShowImage ? "ThoughtItemWithImage" : "ThoughtItem";
     } else {
       this.contextValue = shouldShowImage ? "TreeItemWithImage" : "TreeItem";
     }

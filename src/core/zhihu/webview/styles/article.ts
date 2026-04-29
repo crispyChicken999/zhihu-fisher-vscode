@@ -44,7 +44,7 @@ export const articleCss = `
   transition: transform 0.3s ease;
 }
 
-.article-content img:not(.formula):hover {
+.article-content img:not(.formula):not(.thought-linkcard-image):not(.thought-image):hover {
   transform: translateY(-2px);
 }
 

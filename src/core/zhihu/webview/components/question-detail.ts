@@ -8,12 +8,12 @@ import * as cheerio from "cheerio";
  */
 export class QuestionDetailComponent implements Component {
   private questionDetail: string;
-  private contentType: "article" | "question";
+  private contentType: "article" | "question" | "thought";
   private options: RenderOptions;
 
   constructor(
     questionDetail: string = "",
-    contentType: "article" | "question" = "question",
+    contentType: "article" | "question" | "thought" = "question",
     options: RenderOptions
   ) {
     this.questionDetail = questionDetail;
@@ -25,8 +25,8 @@ export class QuestionDetailComponent implements Component {
    * 渲染问题详情按钮（只在问题类型下显示）
    */
   public renderButton(): string {
-    // 如果是文章类型或没有问题详情，不显示按钮
-    if (this.contentType === "article") {
+    // 如果是文章类型或想法类型或没有问题详情，不显示按钮
+    if (this.contentType === "article" || this.contentType === "thought") {
       return "";
     }
 
@@ -43,8 +43,8 @@ export class QuestionDetailComponent implements Component {
    * 渲染问题详情弹窗
    */
   public renderModal(): string {
-    // 如果是文章类型或没有问题详情，不显示弹窗
-    if (this.contentType === "article") {
+    // 如果是文章类型或想法类型或没有问题详情，不显示弹窗
+    if (this.contentType === "article" || this.contentType === "thought") {
       return "";
     }
 

@@ -58,20 +58,31 @@ export class sidebarFollowListDataProvider
       if (isLoading) {
         this.treeView.title = "关注(加载中...)";
       } else if (list.length > 0) {
-        // 统计问题和文章的数量
+        // 统计问题、文章和想法的数量
         const questionCount = list.filter(
           (item) => item.type === "question" || !item.type
         ).length;
         const articleCount = list.filter(
           (item) => item.type === "article"
         ).length;
+        const thoughtCount = list.filter(
+          (item) => item.type === "thought"
+        ).length;
 
-        if (questionCount > 0 && articleCount > 0) {
-          this.treeView.title = `关注(${list.length}条: ${questionCount}条问题 | ${articleCount}篇文章)`;
-        } else if (questionCount > 0) {
-          this.treeView.title = `关注(${questionCount}条问题)`;
-        } else if (articleCount > 0) {
-          this.treeView.title = `关注(${articleCount}条文章)`;
+        // 构建标题
+        const parts: string[] = [];
+        if (questionCount > 0) {
+          parts.push(`${questionCount}条问题`);
+        }
+        if (articleCount > 0) {
+          parts.push(`${articleCount}篇文章`);
+        }
+        if (thoughtCount > 0) {
+          parts.push(`${thoughtCount}条想法`);
+        }
+
+        if (parts.length > 0) {
+          this.treeView.title = `关注(${list.length}条: ${parts.join(" | ")})`;
         } else {
           this.treeView.title = `关注(${list.length}条)`;
         }
@@ -333,7 +344,7 @@ export class sidebarFollowListDataProvider
             }
           }
 
-          // 判断是问题、回答还是文章
+          // 判断是问题、回答、文章还是想法
 
           // 关注的问题通过data-za-detail-view-path-module="QuestionItem"标识
           const hasQuestionItem = item.querySelector(
@@ -341,6 +352,7 @@ export class sidebarFollowListDataProvider
           );
           const hasAnswerItem = item.querySelector(".ContentItem.AnswerItem");
           const hasArticleItem = item.querySelector(".ContentItem.ArticleItem");
+          const hasPinItem = item.querySelector(".ContentItem.PinItem");
 
           let contentType = "";
           let contentElement: Element | null = null;
@@ -354,12 +366,141 @@ export class sidebarFollowListDataProvider
           } else if (hasArticleItem) {
             contentType = "article";
             contentElement = hasArticleItem;
+          } else if (hasPinItem) {
+            contentType = "pin";
+            contentElement = hasPinItem;
           } else {
             console.log(`Feed项 #${index + 1} 无法识别类型，跳过`);
             return;
           }
 
           console.log(`Feed项 #${index + 1} 类型: ${contentType}`);
+
+          // 想法类型的特殊处理
+          if (contentType === "pin") {
+            try {
+              console.log(`Feed项 #${index + 1} 开始解析想法...`);
+              
+              // 从 data-zop 属性提取 pinId
+              const zopAttr = contentElement?.getAttribute("data-zop");
+              console.log(`Feed项 #${index + 1} data-zop 属性:`, zopAttr);
+              
+              if (!zopAttr) {
+                console.log(`Feed项 #${index + 1} 想法缺少 data-zop 属性，跳过`);
+                return;
+              }
+
+              const zopData = JSON.parse(zopAttr);
+              const pinId = zopData.itemId;
+              console.log(`Feed项 #${index + 1} 解析出的 pinId:`, pinId);
+              
+              if (!pinId) {
+                console.log(`Feed项 #${index + 1} 想法缺少 itemId，跳过`);
+                return;
+              }
+
+              console.log(`Feed项 #${index + 1} 想法ID: ${pinId}`);
+              console.log(`Feed项 #${index + 1} followAction: "${followAction}"`);
+              console.log(`Feed项 #${index + 1} followerName: "${followerName}"`);
+              console.log(`Feed项 #${index + 1} followTime: "${followTime}"`);
+
+              // 提取想法文本内容
+              const contentTextElement = contentElement?.querySelector(
+                ".RichText.ztext.CopyrightRichText-richText"
+              );
+              const thoughtContent = contentTextElement
+                ? (contentTextElement as HTMLElement).innerHTML || ""
+                : "";
+
+              // 提取发布时间
+              const timeElement = contentElement?.querySelector(
+                ".ContentItem-time a[data-tooltip]"
+              );
+              const publishTime = timeElement
+                ? (timeElement as HTMLAnchorElement).getAttribute("data-tooltip") || ""
+                : "";
+
+              // 提取链接卡片（如果有）
+              let linkCard: any = undefined;
+              const linkCardElement = item.querySelector(".LinkCard.new");
+              if (linkCardElement) {
+                const cardTitle = linkCardElement.querySelector(".LinkCard-title");
+                const cardDesc = linkCardElement.querySelector(".LinkCard-desc");
+                const cardImage = linkCardElement.querySelector(".LinkCard-image img");
+                const cardUrl = (linkCardElement as HTMLAnchorElement).getAttribute("href");
+
+                linkCard = {
+                  title: cardTitle?.textContent?.trim() || "",
+                  description: cardDesc?.textContent?.trim() || "",
+                  url: cardUrl || "",
+                  thumbnail: (cardImage as HTMLImageElement)?.src || "",
+                };
+              }
+
+              // 提取点赞数（从按钮文本中提取）
+              let upvoteCount = "0";
+              const voteButton = contentElement?.querySelector(".VoteButton--up");
+              if (voteButton) {
+                const voteText = voteButton.textContent || "";
+                // 匹配 "赞同 1" 或 "赞同 123" 等格式
+                const voteMatch = voteText.match(/赞同\s*(\d+)/);
+                if (voteMatch) {
+                  upvoteCount = voteMatch[1];
+                }
+              }
+
+              // 构造想法的 LinkItem
+              const thoughtLinkItem: LinkItem = {
+                id: `follow-thought-${pinId}`,
+                url: `https://www.zhihu.com/pin/${pinId}`,
+                title: contentTextElement?.textContent?.trim().substring(0, 50) || "想法",
+                excerpt: contentTextElement?.textContent?.trim().substring(0, 100) || "",
+                type: "thought",
+                contentToken: pinId,
+                imgUrl: linkCard?.thumbnail || "",
+                followInfo: {
+                  followerName,
+                  followerUrl,
+                  followAction,
+                  followTime,
+                  authorName: followerName, // 想法的作者就是关注者
+                  authorAvatar: "",
+                  authorUrl: followerUrl,
+                  authorBadge: "",
+                  upvoteCount,
+                  commentCount: "0",
+                  rawContentType: "thought",
+                },
+                thoughtInfo: {
+                  pinId,
+                  content: thoughtContent,
+                  publishTime,
+                  linkCard,
+                  likeCount: parseInt(upvoteCount) || 0,
+                  commentCount: 0,
+                  isLiked: false,
+                },
+              };
+
+              // 检查是否已存在
+              if (items.some((existingItem) => existingItem.id === thoughtLinkItem.id)) {
+                console.log(`Feed项 #${index + 1} (${thoughtLinkItem.id}) 已存在，跳过...`);
+                return;
+              }
+
+              items.push(thoughtLinkItem);
+              console.log(`✅ 成功解析想法 Feed项 #${index + 1}:`);
+              console.log(`   - ID: ${thoughtLinkItem.id}`);
+              console.log(`   - 标题: ${thoughtLinkItem.title}`);
+              console.log(`   - followAction: ${thoughtLinkItem.followInfo?.followAction}`);
+              console.log(`   - 点赞数: ${upvoteCount}`);
+              console.log(`   - 链接卡片: ${linkCard ? '有' : '无'}`);
+              return; // 想法处理完成，直接返回
+            } catch (error) {
+              console.error(`❌ 解析想法 Feed项 #${index + 1} 时出错:`, error);
+              return;
+            }
+          }
 
           // 回答和文章需要获取作者信息
           let authorName = "";
@@ -610,21 +751,36 @@ export class sidebarFollowListDataProvider
     const hideUpvotes = vscode.workspace
       .getConfiguration("zhihu-fisher")
       .get<boolean>("hideFollowUpVotes", true);
+    
+    console.log(`过滤前共有 ${items.length} 个项目，hideUpvotes=${hideUpvotes}`);
+    
     if (!hideUpvotes) {
+      console.log("未启用过滤，返回全部项目");
       return items;
     }
-    return items.filter((item) => {
+    
+    const filtered = items.filter((item) => {
       if (item.followInfo) {
         const action = item.followInfo.followAction;
-        return (
+        const shouldKeep = (
           action.includes("回答了问题") ||
           action.includes("发布了文章") ||
           action.includes("写了文章") ||
-          action.includes("回答了")
+          action.includes("回答了") ||
+          action.includes("发布了想法")
         );
+        
+        if (!shouldKeep) {
+          console.log(`过滤掉项目: ${item.title.substring(0, 30)}... (action: "${action}")`);
+        }
+        
+        return shouldKeep;
       }
       return true;
     });
+    
+    console.log(`过滤后剩余 ${filtered.length} 个项目`);
+    return filtered;
   }
 
   // 滚动页面加载更多内容
@@ -640,7 +796,35 @@ export class sidebarFollowListDataProvider
         window.scrollTo(0, document.body.scrollHeight);
       });
 
-      await PuppeteerManager.delay(500); // 等待加载
+      // 增加等待时间，确保想法item完全加载
+      console.log("等待内容加载...");
+      await PuppeteerManager.delay(2000); // 从500ms增加到2000ms
+
+      // 额外等待：检查是否有加载中的元素
+      await page.evaluate(() => {
+        return new Promise<void>((resolve) => {
+          let checkCount = 0;
+          const maxChecks = 10; // 最多检查10次
+          
+          const checkInterval = setInterval(() => {
+            checkCount++;
+            
+            // 检查是否有加载中的spinner或skeleton
+            const loadingElements = document.querySelectorAll(
+              '.ContentItem-loading, .Skeleton, [class*="loading"], [class*="Loading"]'
+            );
+            
+            console.log(`检查加载状态 #${checkCount}: 找到 ${loadingElements.length} 个加载中元素`);
+            
+            // 如果没有加载中的元素，或者达到最大检查次数，则认为加载完成
+            if (loadingElements.length === 0 || checkCount >= maxChecks) {
+              clearInterval(checkInterval);
+              console.log(`加载检查完成 (检查了${checkCount}次)`);
+              resolve();
+            }
+          }, 300); // 每300ms检查一次
+        });
+      });
 
       const newScrollHeight = await page.evaluate(() => {
         return document.body.scrollHeight;
@@ -655,6 +839,10 @@ export class sidebarFollowListDataProvider
         console.log("没有更多内容可加载");
       }
     }
+    
+    // 最后再等待一段时间，确保所有想法item的DOM都已渲染完成
+    console.log("最后等待，确保所有内容渲染完成...");
+    await PuppeteerManager.delay(1500);
   }
 
   // 不喜欢指定内容
@@ -832,13 +1020,46 @@ export class sidebarFollowListDataProvider
         window.scrollTo(0, document.body.scrollHeight);
       });
 
-      await PuppeteerManager.delay(1500); // 等待内容加载
+      // 增加等待时间，确保想法item完全加载
+      console.log("等待内容加载...");
+      await PuppeteerManager.delay(2000); // 从1500ms增加到2000ms
+
+      // 额外等待：检查是否有加载中的元素
+      await page.evaluate(() => {
+        return new Promise<void>((resolve) => {
+          let checkCount = 0;
+          const maxChecks = 10; // 最多检查10次
+          
+          const checkInterval = setInterval(() => {
+            checkCount++;
+            
+            // 检查是否有加载中的spinner或skeleton
+            const loadingElements = document.querySelectorAll(
+              '.ContentItem-loading, .Skeleton, [class*="loading"], [class*="Loading"]'
+            );
+            
+            console.log(`检查加载状态 #${checkCount}: 找到 ${loadingElements.length} 个加载中元素`);
+            
+            // 如果没有加载中的元素，或者达到最大检查次数，则认为加载完成
+            if (loadingElements.length === 0 || checkCount >= maxChecks) {
+              clearInterval(checkInterval);
+              console.log(`加载检查完成 (检查了${checkCount}次)`);
+              resolve();
+            }
+          }, 300); // 每300ms检查一次
+        });
+      });
 
       // 再次滚动确保加载
+      console.log("再次滚动确保加载...");
       await page.evaluate(() => {
         window.scrollTo(0, document.body.scrollHeight);
       });
 
+      await PuppeteerManager.delay(2000); // 从1500ms增加到2000ms
+
+      // 最后等待，确保所有想法item的DOM都已渲染完成
+      console.log("最后等待，确保所有内容渲染完成...");
       await PuppeteerManager.delay(1500);
 
       // 解析新内容

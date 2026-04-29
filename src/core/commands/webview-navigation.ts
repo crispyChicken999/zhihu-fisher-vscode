@@ -20,9 +20,9 @@ export function registerWebviewNavigationCommands(): vscode.Disposable[] {
 
       const inputBox = await vscode.window.showInputBox({
         title: "浏览知乎链接",
-        prompt: "请输入知乎文章或问题的URL地址",
+        prompt: "请输入知乎文章、问题或想法的URL地址",
         placeHolder:
-          "例如: https://www.zhihu.com/question/123456 或 https://zhuanlan.zhihu.com/p/123456",
+          "https://zhuanlan.zhihu.com/p/123456 | www.zhihu.com/question/123 | www.zhihu.com/pin/123456",
         ignoreFocusOut: true,
         validateInput: (input) => {
           if (!input || input.trim() === "") {
@@ -44,7 +44,7 @@ export function registerWebviewNavigationCommands(): vscode.Disposable[] {
 
             // 使用现有的 isZhihuInternalLink 方法检查链接是否有效
             if (!CommentsUtils.isZhihuInternalLink(input.trim())) {
-              return "链接格式不正确，请输入有效的知乎文章或问题链接";
+              return "链接格式不正确，请输入有效的知乎文章、问题或想法链接";
             }
 
             return null; // 验证通过
