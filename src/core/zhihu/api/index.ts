@@ -101,12 +101,12 @@ export class ZhihuApiService {
   /**
    * 发送不喜欢请求到知乎
    * @param contentToken 内容token
-   * @param contentType 内容类型，文章为2，问题为1
+   * @param contentType 内容类型，文章为2，问题为1，想法为15
    * @returns Promise<boolean> 是否成功
    */
   static async sendDislikeRequest(
     contentToken: string,
-    contentType: 1 | 2
+    contentType: 1 | 2 | 15
   ): Promise<boolean> {
     try {
       const url = "https://www.zhihu.com/api/v4/zrec-feedback/uninterested";
@@ -143,12 +143,12 @@ export class ZhihuApiService {
   /**
    * 发送不再推荐作者请求到知乎
    * @param contentToken 内容token
-   * @param contentType 内容类型，文章为2，问题为1
+   * @param contentType 内容类型，文章为2，问题为1，想法为15
    * @returns Promise<boolean> 是否成功
    */
   static async sendDislikeAuthorRequest(
     contentToken: string,
-    contentType: 1 | 2
+    contentType: 1 | 2 | 15
   ): Promise<boolean> {
     try {
       const url = "https://www.zhihu.com/api/v4/zrec-feedback/uninterested";
@@ -185,14 +185,14 @@ export class ZhihuApiService {
   /**
    * 获取用户的收藏夹列表
    * @param contentId 内容ID
-   * @param contentType 内容类型 'answer' | 'article'
+   * @param contentType 内容类型 'answer' | 'article' | 'pin'
    * @param offset 分页偏移量，默认为0
    * @param limit 每页数量，默认为10
    * @returns Promise<any> 收藏夹列表
    */
   static async getUserCollections(
     contentId: string,
-    contentType: "answer" | "article",
+    contentType: "answer" | "article" | "pin",
     offset: number = 0,
     limit: number = 10
   ): Promise<any> {
@@ -218,13 +218,13 @@ export class ZhihuApiService {
    * 收藏内容到指定收藏夹
    * @param collectionId 收藏夹ID
    * @param contentId 内容ID
-   * @param contentType 内容类型 'answer' | 'article'
+   * @param contentType 内容类型 'answer' | 'article' | 'pin'
    * @returns Promise<boolean> 是否成功
    */
   static async addToCollection(
     collectionId: string,
     contentId: string,
-    contentType: "answer" | "article"
+    contentType: "answer" | "article" | "pin"
   ): Promise<boolean> {
     try {
       const url = `https://www.zhihu.com/api/v4/collections/${collectionId}/contents?content_id=${contentId}&content_type=${contentType}`;
@@ -249,13 +249,13 @@ export class ZhihuApiService {
    * 从收藏夹中取消收藏内容
    * @param collectionId 收藏夹ID
    * @param contentId 内容ID
-   * @param contentType 内容类型 'answer' | 'article'
+   * @param contentType 内容类型 'answer' | 'article' | 'pin'
    * @returns Promise<boolean> 是否成功
    */
   static async removeFromCollection(
     collectionId: string,
     contentId: string,
-    contentType: "answer" | "article"
+    contentType: "answer" | "article" | "pin"
   ): Promise<boolean> {
     try {
       const url = `https://www.zhihu.com/api/v4/collections/${collectionId}/contents/${contentId}?content_type=${contentType}`;
@@ -473,6 +473,37 @@ export class ZhihuApiService {
       return result;
     } catch (error) {
       console.error("取消关注用户时出错:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 对想法进行点赞
+   * @param pinId 想法ID
+   * @param isLike true=点赞, false=取消点赞
+   * @returns Promise<any> 点赞结果
+   */
+  static async voteThought(
+    pinId: string,
+    isLike: boolean = true
+  ): Promise<any> {
+    try {
+      const method = isLike ? "POST" : "DELETE";
+      const url = `https://www.zhihu.com/api/v4/pins/${pinId}/voters/up`;
+
+      const result = await this.makeRequest(
+        url,
+        {
+          method: method,
+          body: JSON.stringify({ not_sync_moments: true }),
+          contentType: "application/json",
+        },
+        `想法${isLike ? "点赞" : "取消点赞"}`
+      );
+
+      return result;
+    } catch (error) {
+      console.error("想法点赞时出错:", error);
       throw error;
     }
   }

@@ -1044,6 +1044,62 @@ export class WebviewManager {
     }
   }
 
+  /**
+   * 将时间字符串转换为相对时间格式
+   * @param timeStr 时间字符串，格式如 "2026-04-23 11:01" 或 "发布于 2026-04-23 11:01"
+   * @returns 相对时间字符串，如 "刚刚"、"5分钟前"、"2小时前"、"3天前"、"2026-04-23"
+   */
+  private static formatRelativeTime(timeStr: string): string {
+    try {
+      // 移除"发布于"前缀
+      const cleanTimeStr = timeStr.replace(/^发布于\s*/, "").trim();
+
+      // 解析时间字符串
+      const publishDate = new Date(cleanTimeStr);
+
+      // 检查日期是否有效
+      if (isNaN(publishDate.getTime())) {
+        console.warn("无法解析时间字符串:", timeStr);
+        return cleanTimeStr;
+      }
+
+      // 计算时间差（毫秒）
+      const now = new Date();
+      const diffMs = now.getTime() - publishDate.getTime();
+      const diffSeconds = Math.floor(diffMs / 1000);
+      const diffMinutes = Math.floor(diffSeconds / 60);
+      const diffHours = Math.floor(diffMinutes / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      // 根据时间差返回相对时间
+      if (diffSeconds < 60) {
+        return "刚刚";
+      } else if (diffMinutes < 60) {
+        return `${diffMinutes}分钟前`;
+      } else if (diffHours < 24) {
+        return `${diffHours}小时前`;
+      } else if (diffDays < 7) {
+        return `${diffDays}天前`;
+      } else {
+        // 超过7天，显示具体日期（不显示时间）
+        const year = publishDate.getFullYear();
+        const month = String(publishDate.getMonth() + 1).padStart(2, "0");
+        const day = String(publishDate.getDate()).padStart(2, "0");
+
+        // 如果是今年，不显示年份
+        const currentYear = now.getFullYear();
+        if (year === currentYear) {
+          return `${month}-${day}`;
+        } else {
+          return `${year}-${month}-${day}`;
+        }
+      }
+    } catch (error) {
+      console.error("格式化相对时间失败:", error);
+      return timeStr;
+    }
+  }
+
   /** 从想法URL中爬取数据 */
   private static async crawlingThoughtData(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
@@ -1343,9 +1399,11 @@ export class WebviewManager {
           console.log("想法检测到中立状态");
         }
 
-        // 获取评论数
-        const commentElement = document.querySelector(
-          ".BottomActions-CommentBtn, .ContentItem-action[aria-label*='评论']",
+        // 获取评论数 - 评论按钮是 ContentItem-actions 中的第一个 ContentItem-action 按钮
+        // 注意：点赞按钮的 class 是 VoteButton，不是 ContentItem-action
+        const actionsContainer = document.querySelector(".ContentItem-actions");
+        const commentElement = actionsContainer?.querySelector(
+          "button.ContentItem-action",
         );
         const commentText = commentElement
           ? commentElement.textContent?.trim() || "0"
@@ -1353,6 +1411,12 @@ export class WebviewManager {
         const commentCount = parseInt(
           commentText.replace(/[^\d]/g, "") || "0",
           10,
+        );
+        console.log(
+          "评论按钮文本:",
+          commentText,
+          "解析出的评论数量:",
+          commentCount,
         );
 
         return {
@@ -1452,8 +1516,9 @@ export class WebviewManager {
       }
 
       // 为想法生成特殊的title：显示作者和发布时间信息
-      // 格式：作者名 发布了想法 · ⏰ 发布时间
-      const thoughtTitle = `${thoughtData.author.name} 发布了想法 · ⏰ ${thoughtData.publishTime}`;
+      // 格式：作者名 发布了想法 · 相对时间（去掉闹钟emoji）
+      const relativeTime = this.formatRelativeTime(thoughtData.publishTime);
+      const thoughtTitle = `${thoughtData.author.name} 发布了想法 · ${relativeTime}`;
       webviewItem.article.title = thoughtTitle;
 
       // 将想法内容作为单个"回答"存储
@@ -2813,7 +2878,7 @@ export class WebviewManager {
   /** 处理收藏内容请求 */
   private static async handleFavoriteContent(
     contentToken: string,
-    contentType: "article" | "answer",
+    contentType: "article" | "answer" | "pin",
   ): Promise<void> {
     try {
       if (!contentToken) {
@@ -2843,14 +2908,22 @@ export class WebviewManager {
       );
 
       if (success) {
-        vscode.window.showInformationMessage(
-          `成功收藏${contentType === "article" ? "文章" : "回答"}！`,
-        );
+        const contentTypeText =
+          contentType === "article"
+            ? "文章"
+            : contentType === "pin"
+              ? "想法"
+              : "回答";
+        vscode.window.showInformationMessage(`成功收藏${contentTypeText}！`);
       } else {
+        const contentTypeText =
+          contentType === "article"
+            ? "文章"
+            : contentType === "pin"
+              ? "想法"
+              : "回答";
         vscode.window.showErrorMessage(
-          `收藏${
-            contentType === "article" ? "文章" : "回答"
-          }失败，可能是该收藏夹已有相同内容，换个收藏夹试试~`,
+          `收藏${contentTypeText}失败，可能是该收藏夹已有相同内容，换个收藏夹试试~`,
         );
       }
     } catch (error) {
@@ -3089,7 +3162,7 @@ export class WebviewManager {
     webviewId: string,
     contentId: string,
     voteValue: string | number,
-    contentType: "answer" | "article",
+    contentType: "answer" | "article" | "thought",
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
@@ -3160,6 +3233,60 @@ export class WebviewManager {
           vscode.window.showInformationMessage(`投票成功: ${voteText}`);
         } else {
           vscode.window.showErrorMessage("投票失败，请稍后重试");
+        }
+      } else if (contentType === "thought") {
+        // 处理想法点赞（想法只有点赞和取消点赞，没有不赞同）
+        const isLike = voteValue === 1 || voteValue === "up";
+
+        // 设置投票状态
+        webviewItem.article.isVoting = true;
+        this.updateWebview(webviewId);
+
+        // 调用API
+        const result = await ZhihuApiService.voteThought(contentId, isLike);
+
+        // 更新想法状态
+        if (result.success || result.reaction_state !== undefined) {
+          // 判断是否已点赞
+          const isLiked = result.is_liked || result.reaction_state || false;
+
+          // 更新点赞数量
+          let newLikeCount = webviewItem.article.likeCount || 0;
+          if (result.liked_count !== undefined) {
+            newLikeCount = result.liked_count;
+          } else if (result.up_count !== undefined) {
+            newLikeCount = result.up_count;
+          } else if (result.reaction_count !== undefined) {
+            newLikeCount = result.reaction_count;
+          } else {
+            // 如果API没有返回新的点赞数，手动计算
+            if (isLike && !isLiked) {
+              // 点赞失败，保持原值
+            } else if (isLike && isLiked) {
+              // 点赞成功，+1
+              newLikeCount = Math.max(0, newLikeCount + 1);
+            } else if (!isLike && !isLiked) {
+              // 取消点赞成功，-1
+              newLikeCount = Math.max(0, newLikeCount - 1);
+            }
+          }
+
+          // 更新投票状态：1表示已点赞，0表示未点赞
+          webviewItem.article.voteStatus = isLiked ? 1 : 0;
+          webviewItem.article.likeCount = newLikeCount;
+
+          // 同时更新answerList中的想法数据（因为想法被当作answer存储）
+          if (webviewItem.article.answerList.length > 0) {
+            const thoughtAnswer = webviewItem.article.answerList[0];
+            thoughtAnswer.voteStatus = isLiked ? "up" : "neutral";
+            thoughtAnswer.likeCount = newLikeCount;
+          }
+
+          vscode.window.showInformationMessage(
+            `${isLike ? "点赞" : "取消点赞"}成功`,
+          );
+        } else {
+          vscode.window.showErrorMessage("操作失败，请稍后重试");
         }
       }
     } catch (error: any) {

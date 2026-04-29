@@ -14,7 +14,7 @@ export class CollectionPickerUtils {
    */
   public static async showCollectionPicker(
     contentToken: string,
-    contentType: "article" | "answer"
+    contentType: "article" | "answer" | "pin"
   ): Promise<string | null> {
 
     let currentPage = 0;
@@ -181,7 +181,7 @@ export class CollectionPickerUtils {
           collectionItems,
           {
             placeHolder: "选择要收藏到的收藏夹",
-            title: `收藏${contentType === "article" ? "文章" : "回答"} (${allCollections.length}/${totalCount})`,
+            title: `收藏${contentType === "article" ? "文章" : contentType === "pin" ? "想法" : "回答"} (${allCollections.length}/${totalCount})`,
             matchOnDescription: true,
             matchOnDetail: true,
             ignoreFocusOut: false,

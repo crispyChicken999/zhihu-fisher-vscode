@@ -1391,6 +1391,24 @@ export class CommentsManager {
   }
 
   /**
+   * 获取想法评论的URL模板
+   * @param pinId 想法ID
+   * @param offset 起始偏移量
+   * @param limit 每页数量限制
+   * @param orderBy 排序方式
+   */
+  private static thoughtCommentRequestURL(
+    pinId: string,
+    offset: number = 0,
+    limit: number = 20,
+    orderBy: "score" | "ts" = "score"
+  ): string {
+    // 想法评论API要求：当offset为0时不传递offset参数
+    const offsetParam = offset > 0 ? `&offset=${offset}` : "";
+    return `https://www.zhihu.com/api/v4/comment_v5/pins/${pinId}/root_comment?order_by=${orderBy}&limit=${limit}${offsetParam}`;
+  }
+
+  /**
    * 获取子评论的URL模板
    * @param commentId 评论ID
    * @param offset 起始偏移量（分页用），可能是数字或字符串
@@ -1705,6 +1723,177 @@ export class CommentsManager {
       }
 
       throw new Error(`获取专栏评论失败: ${error}`);
+    }
+  }
+
+  /**
+   * 从知乎想法评论接口，获取评论列表，并返回处理后的数据
+   * @param pinId 想法ID
+   * @param offset 起始偏移量
+   * @param limit 每页数量限制
+   * @param orderBy 排序方式 'score' | 'ts'
+   */
+  public static async getThoughtCommentsFromApi(
+    pinId: string,
+    offset: number = 0,
+    limit: number = 20,
+    orderBy: "score" | "ts" = "score"
+  ): Promise<{
+    comments: CommentItem[];
+    paging: {
+      is_end: boolean;
+      is_start: boolean;
+      next: string | null;
+      previous: string | null;
+      totals: number;
+      current: number;
+    };
+  }> {
+    try {
+      const url = this.thoughtCommentRequestURL(pinId, offset, limit, orderBy);
+      console.log("想法评论获取API链接：", url);
+
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Cookie: CookieManager.getCookie(),
+        },
+      });
+
+      if (!response.ok) {
+        const error: any = new Error(`HTTP error! status: ${response.status}`);
+        try {
+          error.response = {
+            status: response.status,
+            data: await response.json(),
+          };
+        } catch (e) {
+          error.response = {
+            status: response.status,
+            data: await response.text(),
+          };
+        }
+        throw error;
+      }
+
+      const responseData = await response.json();
+      console.log("想法评论获取API返回数据：", responseData);
+
+      // 检查是否有数据
+      if (!responseData.data || !Array.isArray(responseData.data)) {
+        console.warn("想法评论API返回数据格式异常:", responseData);
+        return {
+          comments: [],
+          paging: {
+            is_end: true,
+            is_start: true,
+            next: null,
+            previous: null,
+            totals: 0,
+            current: 1,
+          },
+        };
+      }
+
+      // 判断是否为最后一页 - 使用API返回的paging.is_end字段
+      const is_end =
+        responseData.paging?.is_end === true ||
+        responseData.data.length < limit ||
+        responseData.data.length === 0;
+
+      return {
+        comments: responseData.data.map((comment: any) => {
+          // 提取IP地址信息（从comment_tag中）
+          const ipTag = comment.comment_tag?.find((tag: any) => tag.type === "ip_info");
+          
+          // 处理评论标签
+          const combinedCommentTags = comment.comment_tag || [];
+
+          return {
+            id: comment.id,
+            type: comment.type || "comment",
+            content: comment.content || "",
+            created_time: comment.created_time || 0,
+            author: {
+              id: comment.author?.id || "",
+              name: comment.author?.name || "匿名用户",
+              avatar_url: comment.author?.avatar_url || "",
+              headline: comment.author?.headline || "",
+              url: comment.author?.url || "",
+              role: comment.author?.role || "normal",
+            },
+            author_tag: comment.author_tag || [],
+            comment_tag: combinedCommentTags,
+            vote_count: comment.like_count || 0,
+            like_count: comment.like_count || 0,
+            liked: comment.liked || false,
+            is_liked: comment.liked || false,
+            child_comments: (comment.child_comments || []).map((child: any) => {
+              // 提取子评论的IP地址信息
+              const childIpTag = child.comment_tag?.find((tag: any) => tag.type === "ip_info");
+              
+              return {
+                id: child.id,
+                type: child.type || "comment",
+                content: child.content || "",
+                created_time: child.created_time || 0,
+                author: {
+                  id: child.author?.id || "",
+                  name: child.author?.name || "匿名用户",
+                  avatar_url: child.author?.avatar_url || "",
+                  headline: child.author?.headline || "",
+                  url: child.author?.url || "",
+                  role: child.author?.role || "normal",
+                },
+                author_tag: child.author_tag || [],
+                comment_tag: child.comment_tag || [],
+                vote_count: child.like_count || 0,
+                like_count: child.like_count || 0,
+                liked: child.liked || false,
+                is_liked: child.liked || false,
+                child_comments: [],
+                child_comment_count: 0,
+                total_child_comments: [],
+                commentPaging: {} as any,
+                reply_to_author: child.reply_to_author || undefined,
+              };
+            }),
+            child_comment_count: comment.child_comment_count || 0,
+            total_child_comments: [],
+            commentPaging: {} as any,
+            reply_to_author: comment.reply_to_author || undefined,
+          };
+        }),
+        paging: {
+          is_end: is_end,
+          is_start: responseData.paging?.is_start === true || offset === 0,
+          next: responseData.paging?.next || null,
+          previous: responseData.paging?.previous || null,
+          totals: responseData.paging?.totals || responseData.counts?.total_counts || responseData.data.length,
+          current: Math.floor(offset / limit) + 1,
+        },
+      };
+    } catch (error: any) {
+      console.error("获取想法评论失败:", error);
+
+      // 检查是否是评论区关闭的错误
+      if (error.response && error.response.status === 403) {
+        const errorData = error.response.data;
+        if (
+          errorData?.error?.code === 106 &&
+          errorData?.error?.name === "ForbiddenError"
+        ) {
+          // 抛出特定的评论关闭错误，便于上层处理
+          const commentClosedError = new Error("评论已关闭");
+          (commentClosedError as any).isCommentClosed = true;
+          (commentClosedError as any).originalMessage =
+            errorData.error.message || "评论已关闭";
+          throw commentClosedError;
+        }
+      }
+
+      throw new Error(`获取想法评论失败: ${error}`);
     }
   }
 
@@ -2093,6 +2282,131 @@ export class CommentsManager {
   }
 
   /**
+   * 加载想法评论（简化版本，直接根据paging URL加载）
+   * @param webviewId - WebView的ID
+   * @param pinId - 想法的ID
+   * @param direction - 分页方向：'previous' | 'next' | 'current'
+   * @param pagingUrl - 可选的完整分页URL
+   */
+  public static async loadThoughtComments(
+    webviewId: string,
+    pinId: string,
+    direction: "previous" | "next" | "current" = "current",
+    pagingUrl?: string
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    try {
+      // 获取当前回答（想法使用相同的结构）
+      const currentAnswerIndex = webviewItem.article.currentAnswerIndex;
+      const currentAnswer = webviewItem.article.answerList[currentAnswerIndex];
+
+      if (!currentAnswer) {
+        throw new Error("未找到当前想法");
+      }
+
+      let offset = 0;
+      const limit = 20;
+
+      // 根据direction计算offset
+      if (direction === "previous" && currentAnswer.commentPaging?.current) {
+        offset = Math.max(0, (currentAnswer.commentPaging.current - 2) * limit);
+      } else if (direction === "next" && currentAnswer.commentPaging?.current) {
+        offset = currentAnswer.commentPaging.current * limit;
+      } else if (direction === "current") {
+        offset = 0;
+      }
+
+      console.log(`加载想法评论 - pinId: ${pinId}, offset: ${offset}`);
+
+      // 获取想法评论数据
+      const commentsData = await this.getThoughtCommentsFromApi(pinId, offset, limit);
+      const { comments, paging } = commentsData;
+
+      // 直接替换评论列表，不做缓存
+      currentAnswer.commentList = comments;
+      currentAnswer.commentStatus = "expanded";
+
+      // 更新分页信息
+      currentAnswer.commentPaging = {
+        is_end: paging.is_end,
+        is_start: paging.is_start,
+        next: paging.next,
+        previous: paging.previous,
+        totals: paging.totals,
+        current: paging.current,
+        limit: limit,
+        loadedTotals: comments.length,
+      };
+
+      // 获取当前媒体显示模式配置
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+      const renderOptions = { mediaDisplayMode };
+
+      // 创建评论组件并生成HTML（使用article类型，因为想法评论和专栏评论结构类似）
+      const commentsComponent = this.createCommentsComponent(
+        comments,
+        pinId,
+        currentAnswer.commentPaging,
+        renderOptions,
+        "article"
+      );
+
+      const commentsHtml = commentsComponent.render();
+
+      // 更新Webview中的评论区
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateComments",
+        html: commentsHtml,
+      });
+    } catch (error: any) {
+      console.error("加载想法评论时出错:", error);
+
+      let errorHtml = "";
+
+      // 检查是否是评论关闭错误
+      if (error.isCommentClosed) {
+        const message =
+          error.originalMessage || "该想法的作者已关闭评论功能";
+        errorHtml = this.generateCommentClosedHtml(message);
+      } else if (error.response && error.response.status === 403) {
+        // 反爬检测
+        errorHtml = this.generateCommentClosedHtml(
+          "评论加载被限制，请稍后重试（可能触发了反爬机制）"
+        );
+      } else if (error.message && error.message.includes("验证码")) {
+        // 验证码要求
+        errorHtml = this.generateCommentClosedHtml(
+          "需要验证码验证，请在浏览器中完成验证后重试"
+        );
+      } else {
+        // 普通错误提示
+        errorHtml = `
+          <div class="zhihu-comments-container">
+            <h3>想法评论加载失败</h3>
+            <div style="text-align: center; padding: 20px; color: var(--vscode-errorForeground);">
+              ${error}
+            </div>
+            <button class="zhihu-load-comments-btn" onclick="loadComments('${pinId}')">
+              重新加载
+            </button>
+          </div>
+        `;
+      }
+
+      // 显示错误提示
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "updateComments",
+        html: errorHtml,
+      });
+    }
+  }
+
+  /**
    * 加载评论（包括获取数据，并通知页面更新，全流程）
    * @param webviewId - WebView的ID
    * @param answerId - 回答的ID
@@ -2105,6 +2419,38 @@ export class CommentsManager {
   ): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
+      return;
+    }
+
+    // 检查是否为想法（通过URL判断）
+    const isThought = webviewItem.url.includes("/pin/");
+
+    if (isThought) {
+      // 想法使用想法评论接口
+      // 需要从answerId中提取pinId
+      let pinId = answerId;
+
+      // 如果ID包含非数字字符，尝试提取数字部分
+      if (!/^\d+$/.test(answerId)) {
+        // 匹配字符串中的数字部分
+        const match = answerId.match(/\d+/);
+        if (match) {
+          pinId = match[0];
+        } else {
+          // 如果没有找到数字，尝试从URL中提取
+          const urlMatch = webviewItem.url.match(/\/pin\/(\d+)/);
+          if (urlMatch) {
+            pinId = urlMatch[1];
+          }
+        }
+      }
+
+      console.log(
+        `想法评论请求 - 原始ID: ${answerId}, 提取的pinId: ${pinId}`
+      );
+
+      // 调用想法评论加载方法
+      await this.loadThoughtComments(webviewId, pinId, "current");
       return;
     }
 

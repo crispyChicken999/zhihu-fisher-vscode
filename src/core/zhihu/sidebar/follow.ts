@@ -839,7 +839,7 @@ export class sidebarFollowListDataProvider
         console.log("没有更多内容可加载");
       }
     }
-    
+
     // 最后再等待一段时间，确保所有想法item的DOM都已渲染完成
     console.log("最后等待，确保所有内容渲染完成...");
     await PuppeteerManager.delay(1500);
@@ -854,8 +854,13 @@ export class sidebarFollowListDataProvider
         return;
       }
 
-      // 确定内容类型：文章为2，问题为1
-      const contentType = item.type === "article" ? 2 : 1;
+      // 确定内容类型：文章为2，问题为1，想法为15
+      let contentType: 1 | 2 | 15 = 1;
+      if (item.type === "article") {
+        contentType = 2;
+      } else if (item.type === "thought") {
+        contentType = 15;
+      }
 
       vscode.window.showInformationMessage("正在标记为不喜欢...");
 
@@ -899,8 +904,13 @@ export class sidebarFollowListDataProvider
         return;
       }
 
-      // 确定内容类型：文章为2，问题为1
-      const contentType = item.type === "article" ? 2 : 1;
+      // 确定内容类型：文章为2，问题为1，想法为15
+      let contentType: 1 | 2 | 15 = 1;
+      if (item.type === "article") {
+        contentType = 2;
+      } else if (item.type === "thought") {
+        contentType = 15;
+      }
 
       vscode.window.showInformationMessage("正在标记为不再推荐该作者...");
 
@@ -945,7 +955,12 @@ export class sidebarFollowListDataProvider
       }
 
       // 确定内容类型
-      const contentType = item.type === "article" ? "article" : "answer";
+      let contentType: "answer" | "article" | "pin" = "answer";
+      if (item.type === "article") {
+        contentType = "article";
+      } else if (item.type === "thought") {
+        contentType = "pin";
+      }
 
       // 使用工具类中的分页收藏夹选择器
       const selectedCollectionId =
@@ -969,9 +984,13 @@ export class sidebarFollowListDataProvider
       );
 
       if (success) {
+        const contentTypeText =
+          contentType === "article" ? "文章" :
+          contentType === "pin" ? "想法" : "回答";
+
         vscode.window
           .showInformationMessage(
-            `成功收藏${contentType === "article" ? "文章" : "回答"}！`,
+            `成功收藏${contentTypeText}！`,
             "查看收藏夹"
           )
           .then((selection) => {
@@ -981,10 +1000,12 @@ export class sidebarFollowListDataProvider
             }
           });
       } else {
+        const contentTypeText =
+          contentType === "article" ? "文章" :
+          contentType === "pin" ? "想法" : "回答";
+
         vscode.window.showErrorMessage(
-          `收藏${
-            contentType === "article" ? "文章" : "回答"
-          }失败，可能是该收藏夹已有相同内容，可以换个收藏夹试试。`
+          `收藏${contentTypeText}失败，可能是该收藏夹已有相同内容，可以换个收藏夹试试。`
         );
       }
     } catch (error) {

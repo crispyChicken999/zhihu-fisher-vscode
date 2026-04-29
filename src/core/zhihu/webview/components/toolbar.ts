@@ -26,7 +26,7 @@ export class ToolbarComponent implements Component {
   private answer: AnswerItem; // 当前回答
   private isArticle: boolean = false; // 是否为文章类型
   private contentToken: string = ""; // 内容ID，用于收藏功能
-  private contentType: "article" | "answer" = "answer"; // 内容类型
+  private contentType: "article" | "answer" | "pin" = "answer"; // 内容类型
   private toolbarConfig: ToolbarButtonConfig[] = []; // 工具栏按钮配置
   private sourceType: string = ""; // 内容来源类型
   private sortType: string = ""; // 当前排序类型
@@ -59,6 +59,17 @@ export class ToolbarComponent implements Component {
       if (articleIdMatch) {
         this.contentToken = articleIdMatch[1];
         this.contentType = "article";
+      }
+    } else if (url.includes("/pin/") || sourceType === "thought") {
+      // 想法类型，提取想法ID
+      const pinIdMatch = url.match(/\/pin\/(\d+)/);
+      if (pinIdMatch) {
+        this.contentToken = pinIdMatch[1];
+        this.contentType = "pin";
+      } else if (answer.id) {
+        // 如果URL中没有pinId，使用answer.id
+        this.contentToken = answer.id.toString();
+        this.contentType = "pin";
       }
     } else {
       // 回答类型，使用回答ID
