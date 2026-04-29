@@ -294,8 +294,14 @@ function initializeThoughtBadge() {
   const thoughtBadge = document.getElementById('thoughtBadge');
   if (!thoughtBadge) return;
 
-  // 检查sourceType是否为thought
-  if (sourceType === 'thought') {
+  // 检查是否为想法：
+  // 1. sourceType 为 'thought'（通过浏览指定链接打开）
+  // 2. 或者标题中包含"发布了想法"（从关注列表等其他来源打开）
+  const titleElement = document.querySelector('.zhihu-content-title');
+  const title = titleElement ? titleElement.textContent || '' : '';
+  const isThought = sourceType === 'thought' || title.includes('发布了想法');
+
+  if (isThought) {
     thoughtBadge.style.display = 'inline-block';
   } else {
     thoughtBadge.style.display = 'none';

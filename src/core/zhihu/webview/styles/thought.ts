@@ -101,9 +101,9 @@ export const thoughtCss = `
   /* 想法内容中的表情图片 */
   .article-content img.sticker {
     display: inline-block;
-    width: 1.25em;
-    height: 1.25em;
-    vertical-align: middle;
+    width: 1.25em !important;
+    height: 1.25em !important;
+    vertical-align: text-top;
     margin: 0 0.125em;
   }
 

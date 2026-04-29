@@ -69,7 +69,7 @@ export const articleTemplate = `
     \${DISGUISE_INTERFACE}
 
     <header>
-      <h4>
+      <h4 class="zhihu-content-title">
         <span id="sortModeTag" class="sort-mode-tag" style="display: none;">按时间排序</span>
         <span id="thoughtBadge" class="thought-badge" style="display: none;">想法</span>
         \${TITLE}
