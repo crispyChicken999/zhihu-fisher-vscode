@@ -6,7 +6,7 @@ import { Component } from "./base";
  */
 export class MetaComponent implements Component {
   private answer: AnswerItem;
-  private contentType?: "question" | "article";
+  private contentType?: "question" | "article" | "thought";
   private webviewItem?: WebViewItem;
   private immersiveAuthorHtml?: string;
   private isFirstAnswer?: boolean;
@@ -21,7 +21,7 @@ export class MetaComponent implements Component {
    */
   constructor(
     answer: AnswerItem,
-    contentType?: "question" | "article",
+    contentType?: "question" | "article" | "thought",
     webviewItem?: WebViewItem,
     immersiveAuthorHtml?: string,
     isFirstAnswer?: boolean,
@@ -143,14 +143,15 @@ export class MetaComponent implements Component {
 
     // 生成投票按钮HTML
     const generateVoteButtons = () => {
-      const isArticle = this.contentType === "article";
+      const isArticle = this.contentType === "article" || this.contentType === "thought";
       const contentId = isArticle
         ? (this.webviewItem?.url.match(/\/p\/(\d+)/) ||
+            this.webviewItem?.url.match(/\/pin\/(\d+)/) ||
             this.webviewItem?.url.match(/\/(\d+)/))?.[1] || this.answer.id
         : this.answer.id;
 
       if (isArticle) {
-        // 文章投票按钮（使用数字投票值）
+        // 文章/想法投票按钮（使用数字投票值）
         const voteStatus = this.webviewItem?.article.voteStatus || 0;
         const isVoting = this.webviewItem?.article.isVoting || false;
         const articleLikeCount =
@@ -160,12 +161,14 @@ export class MetaComponent implements Component {
         const upVoteValue = voteStatus === 1 ? 0 : 1;
         const downVoteValue = voteStatus === -1 ? 0 : -1;
 
+        const contentTypeLabel = this.contentType === "thought" ? "thought" : "article";
+
         return `
           <div class="vote-buttons">
             <button class="vote-button vote-up ${
               voteStatus === 1 ? "active" : ""
             }"
-              onclick="voteContent('${contentId}', ${upVoteValue}, 'article')"
+              onclick="voteContent('${contentId}', ${upVoteValue}, '${contentTypeLabel}')"
               ${isVoting ? "disabled" : ""}
               title="${voteStatus === 1 ? "取消赞同" : "赞同"}&#010(接口会有延迟，请勿频繁操作)">
               <svg xmlns="http://www.w3.org/2000/svg" width="min(1em,12px)" height="min(1em,12px)" viewBox="0 0 24 24">
@@ -175,8 +178,8 @@ export class MetaComponent implements Component {
             </button>
             <button class="vote-button vote-down ${
               voteStatus === -1 ? "active" : ""
-            }"
-              onclick="voteContent('${contentId}', ${downVoteValue}, 'article')"
+            }" style="display: ${this.contentType === "thought" ? "none" : "flex"};"
+              onclick="voteContent('${contentId}', ${downVoteValue}, '${contentTypeLabel}')"
               ${isVoting ? "disabled" : ""}
               title="${voteStatus === -1 ? "取消不赞同" : "不赞同"}&#010(接口会有延迟，请勿频繁操作)">
               <svg xmlns="http://www.w3.org/2000/svg" width="min(1em,12px)" height="min(1em,12px)" viewBox="0 0 24 24" style="transform: rotate(180deg);">

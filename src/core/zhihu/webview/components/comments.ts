@@ -2525,8 +2525,9 @@ export class CommentsUtils {
 
       // 检查路径模式
       if (hostname === "www.zhihu.com") {
-        // 匹配 /question/xxx 或 /question/xxx/answer/xxx
-        return /^\/question\/\d+(?:\/answer\/\d+)?(?:\/|$)/.test(pathname);
+        // 匹配 /question/xxx 或 /question/xxx/answer/xxx 或 /pin/xxx
+        return /^\/question\/\d+(?:\/answer\/\d+)?(?:\/|$)/.test(pathname) ||
+               /^\/pin\/\d+(?:\/|$)/.test(pathname);
       }
 
       if (hostname === "zhuanlan.zhihu.com") {

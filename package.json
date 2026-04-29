@@ -474,87 +474,87 @@
         },
         {
           "command": "zhihu-fisher.openZhihuUrl",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "abrowser@5"
         },
         {
           "submenu": "zhihu-fisher.smartDisguiseMenu",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "bmode@1"
         },
         {
           "submenu": "zhihu-fisher.mediaDisplayMenu",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "bmode@2"
         },
         {
           "command": "zhihu-fisher.configureBrowser",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@1"
         },
         {
           "command": "zhihu-fisher.setCookie",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@2"
         },
         {
           "command": "zhihu-fisher.clearCollectionCache",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@3"
         },
         {
           "command": "zhihu-fisher.setAnswersPerBatch",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@4"
         },
         {
           "submenu": "zhihu-fisher.followUpVotesMenu",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@5"
         },
         {
           "command": "zhihu-fisher.toggleDebugMode",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "troubleshoot@1"
         },
         {
           "command": "zhihu-fisher.restartExtension",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "troubleshoot@2"
         },
         {
           "command": "zhihu-fisher.showTroubleshootingGuide",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "troubleshoot@3"
         },
         {
           "command": "zhihu-fisher.openFeedback",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "ysupport@1"
         },
         {
           "command": "zhihu-fisher.buyMeCoffee",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "ysupport@2"
         },
         {
           "command": "zhihu-fisher.starOnGitHub",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "ysupport@3"
         },
         {
           "command": "zhihu-fisher.showGuide",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "zhelp@1"
         },
         {
           "command": "zhihu-fisher.showChangeLog",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "zhelp@2"
         },
         {
           "command": "zhihu-fisher.showAbout",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "zhelp@3"
         },
         {

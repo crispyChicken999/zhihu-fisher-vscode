@@ -7,17 +7,18 @@ import { Component } from "./base";
 export class NavigationComponent implements Component {
   private webview: WebViewItem;
   private article: ArticleInfo;
-  private contentType: "question" | "article";
+  private contentType: "question" | "article" | "thought";
 
   /**
    * 构造函数
    * @param webview Webview项
    * @param article 文章信息
+   * @param contentType 内容类型（可选）
    */
   constructor(
     webview: WebViewItem,
     article: ArticleInfo,
-    contentType?: "question" | "article"
+    contentType?: "question" | "article" | "thought"
   ) {
     this.webview = webview;
     this.article = article;
@@ -34,11 +35,11 @@ export class NavigationComponent implements Component {
    * @returns 导航组件HTML
    */
   public render(): string {
-    // 对于专栏类型，不显示导航组件
-    if (this.contentType === "article") {
+    // 对于专栏类型和想法类型，不显示导航组件
+    if (this.contentType === "article" || this.contentType === "thought") {
       return `
         <div class="navigation article-navigation" style="display: none;">
-          <!-- 专栏不显示分页导航 -->
+          <!-- 专栏和想法不显示分页导航 -->
         </div>
       `;
     }

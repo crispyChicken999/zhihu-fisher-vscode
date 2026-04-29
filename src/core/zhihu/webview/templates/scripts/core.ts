@@ -63,6 +63,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // 初始化排序模式标签显示
   initializeSortModeTag();
+  
+  // 初始化想法标签显示
+  initializeThoughtBadge();
 
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);
@@ -281,6 +284,21 @@ function initializeSortModeTag() {
     sortModeTag.style.display = 'inline-block';
   } else {
     sortModeTag.style.display = 'none';
+  }
+}
+
+/**
+ * 初始化想法标签显示
+ */
+function initializeThoughtBadge() {
+  const thoughtBadge = document.getElementById('thoughtBadge');
+  if (!thoughtBadge) return;
+
+  // 检查sourceType是否为thought
+  if (sourceType === 'thought') {
+    thoughtBadge.style.display = 'inline-block';
+  } else {
+    thoughtBadge.style.display = 'none';
   }
 }
 `;

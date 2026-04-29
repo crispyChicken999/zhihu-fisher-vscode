@@ -216,8 +216,8 @@ function updateMiniMediaScale(scale) {
   }
 
   styleElement.textContent = \`
-    .article-content.mini-media img:not(.formula),
-    .question-detail-content.mini-media img:not(.formula) {
+    .article-content.mini-media img:not(.formula):not(.thought-linkcard-image):not(.thought-image),
+    .question-detail-content.mini-media img:not(.formula):not(.thought-linkcard-image):not(.thought-image) {
       width: calc(\${scale}%) !important;
       height: auto !important;
     }

@@ -61,6 +61,7 @@ export const articleTemplate = `
       \${QUESTION_DETAIL_CSS}
       \${ANSWER_SORT_CSS}
       \${ZHIDA_PANEL_CSS}
+      \${THOUGHT_CSS}
     </style>
   </head>
   <body data-content-id="\${CONTENT_ID}" data-sort-type="\${SORT_TYPE}">
@@ -68,7 +69,14 @@ export const articleTemplate = `
     \${DISGUISE_INTERFACE}
 
     <header>
-      <h4><span id="sortModeTag" class="sort-mode-tag" style="display: none;">按时间排序</span>\${TITLE}\${QUESTION_DETAIL_COMPONENT_ICON}\${RELATED_QUESTION_COMPONENT_ICON}\${ANSWER_SORT_COMPONENT}</h4>
+      <h4>
+        <span id="sortModeTag" class="sort-mode-tag" style="display: none;">按时间排序</span>
+        <span id="thoughtBadge" class="thought-badge" style="display: none;">想法</span>
+        \${TITLE}
+        \${QUESTION_DETAIL_COMPONENT_ICON}
+        \${RELATED_QUESTION_COMPONENT_ICON}
+        \${ANSWER_SORT_COMPONENT}
+      </h4>
       <div class="article-meta \${MEDIA_MODE_CLASS}">
         \${AUTHOR_COMPONENT}
         <div class="article-meta-footer">

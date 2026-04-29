@@ -341,7 +341,7 @@ export const loadingTemplate = `
 <body>
   <div class="loading-container">
     <div class="loading-spinner"></div>
-    <h3>正在加载文章内容...</h3>
+    <h3>正在加载\${CONTENT_TYPE}...</h3>
     <!-- 缩略图容器 -->
     <div class="image-container \${MEDIA_DISPLAY_MODE}">
       <img id="previewImage" class="preview-image" src="\${IMG_URL}" alt="文章配图" onLoad="this.style.display='block';" onError="this.style.display='none';">

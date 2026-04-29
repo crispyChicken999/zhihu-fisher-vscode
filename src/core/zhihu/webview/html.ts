@@ -39,6 +39,7 @@ import { questionDetailCss } from "./styles/question-detail";
 import { relatedQuestionsCss } from "./styles/related-questions";
 import { answerSortCss } from "./styles/answer-sort";
 import { zhidaPanelCss } from "./styles/zhida-panel";
+import { thoughtCss } from "./styles/thought";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -66,12 +67,14 @@ export class HtmlRenderer {
    * @param title 文章标题
    * @param excerpt 文章摘要
    * @param imgUrl 可选的缩略图URL
+   * @param contentType 内容类型：'article' | 'question' | 'thought'
    * @returns 加载中的HTML字符串
    */
   public static getLoadingHtml(
     title: string,
     excerpt: string,
     imgUrl?: string,
+    contentType?: string,
   ): string {
     const excerptText = excerpt || "🐟无摘要🐟";
 
@@ -80,12 +83,23 @@ export class HtmlRenderer {
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
     const miniMediaScale = config.get<number>("miniMediaScale", 50);
 
+    // 根据内容类型确定加载文本
+    let contentTypeText = "内容";
+    if (contentType === "thought") {
+      contentTypeText = "想法";
+    } else if (contentType === "article") {
+      contentTypeText = "文章";
+    } else if (contentType === "question") {
+      contentTypeText = "问题";
+    }
+
     return loadingTemplate
       .replace(/\${TITLE}/g, this.escapeHtml(title))
       .replace("${EXCERPT}", this.escapeHtml(excerptText))
       .replace("${IMG_URL}", imgUrl || "")
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
-      .replace("${MINI_MEDIA_SCALE}", miniMediaScale.toString());
+      .replace("${MINI_MEDIA_SCALE}", miniMediaScale.toString())
+      .replace("${CONTENT_TYPE}", contentTypeText);
   }
 
   /**
@@ -157,7 +171,14 @@ export class HtmlRenderer {
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];
     if (!currentAnswer) {
-      return this.getLoadingHtml(article.title, article.excerpt || "", "");
+      // 判断内容类型
+      let contentType: "article" | "question" | "thought" = "question";
+      if (webview.url.includes("zhuanlan.zhihu.com")) {
+        contentType = "article";
+      } else if (webview.sourceType === "thought" || webview.url.includes("/pin/")) {
+        contentType = "thought";
+      }
+      return this.getLoadingHtml(article.title, article.excerpt || "", "", contentType);
     }
 
     // 构建页面组件
@@ -171,10 +192,13 @@ export class HtmlRenderer {
       isFirstAnswer: article.currentAnswerIndex === 0,
     };
 
-    // 判断内容类型：通过URL判断专栏文章
-    const contentType = webview.url.includes("zhuanlan.zhihu.com")
-      ? "article"
-      : "question";
+    // 判断内容类型：通过URL或sourceType判断
+    let contentType: "article" | "question" | "thought" = "question";
+    if (webview.url.includes("zhuanlan.zhihu.com")) {
+      contentType = "article";
+    } else if (webview.sourceType === "thought" || webview.url.includes("/pin/")) {
+      contentType = "thought";
+    }
 
     // 创建作者信息组件
     const authorComponent = new AuthorComponent(
@@ -231,8 +255,9 @@ export class HtmlRenderer {
 
     // 创建文章内容组件
     const contentComponent = new ArticleContentComponent(
-      currentAnswer?.content,
+      currentAnswer?.content || "",
       renderOptions,
+      contentType,
     );
 
     // 创建工具栏组件 - 侧边栏
@@ -279,8 +304,10 @@ export class HtmlRenderer {
     // 生成伪装界面控制脚本（如果启用）
     const disguiseControlScript = enableDisguise ? disguiseScript : "";
 
-    // 判断是否为文章类型，生成对应的键盘提示
+    // 判断是否为文章或想法类型，生成对应的键盘提示
     const isArticle =
+      contentType === "article" ||
+      contentType === "thought" ||
       webview.url.includes("zhuanlan.zhihu.com/p/") ||
       webview.url.includes("/p/");
     const keyboardTips = isArticle ? articleKeyboardTips : questionKeyboardTips;
@@ -319,6 +346,7 @@ export class HtmlRenderer {
       .replace("${QUESTION_DETAIL_CSS}", questionDetailCss)
       .replace("${ANSWER_SORT_CSS}", answerSortCss)
       .replace("${ZHIDA_PANEL_CSS}", zhidaPanelCss)
+      .replace("${THOUGHT_CSS}", thoughtCss)
       .replace("${ZHIDA_PANEL_MODAL}", ZhidaPanelComponent.renderModal())
       .replace(
         "${RELATED_QUESTION_COMPONENT_ICON}",
