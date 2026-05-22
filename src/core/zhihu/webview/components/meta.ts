@@ -1,4 +1,4 @@
-import { AnswerItem, ArticleInfo, WebViewItem } from "../../../types";
+import { AnswerItem, WebViewItem } from "../../../types";
 import { Component } from "./base";
 
 /**
@@ -9,7 +9,6 @@ export class MetaComponent implements Component {
   private contentType?: "question" | "article" | "thought";
   private webviewItem?: WebViewItem;
   private immersiveAuthorHtml?: string;
-  private isFirstAnswer?: boolean;
 
   /**
    * 构造函数
@@ -17,20 +16,17 @@ export class MetaComponent implements Component {
    * @param contentType 内容类型
    * @param webviewItem WebView项（用于文章投票和页码跳转）
    * @param immersiveAuthorHtml 沉浸模式作者信息HTML
-   * @param isFirstAnswer 是否为当前问题的首个回答
    */
   constructor(
     answer: AnswerItem,
     contentType?: "question" | "article" | "thought",
     webviewItem?: WebViewItem,
     immersiveAuthorHtml?: string,
-    isFirstAnswer?: boolean,
   ) {
     this.answer = answer;
     this.contentType = contentType;
     this.webviewItem = webviewItem;
     this.immersiveAuthorHtml = immersiveAuthorHtml;
-    this.isFirstAnswer = isFirstAnswer;
   }
 
   /**
@@ -140,6 +136,8 @@ export class MetaComponent implements Component {
     const isUpdated =
       this.answer.publishTime !== this.answer.updateTime &&
       this.answer.updateTime;
+    const showZhidaSummaryButton =
+      this.contentType === "question" && !!this.answer.id;
 
     // 生成投票按钮HTML
     const generateVoteButtons = () => {
@@ -254,15 +252,15 @@ export class MetaComponent implements Component {
           </div>
           ${this.immersiveAuthorHtml || ""}
           ${
-            this.isFirstAnswer
-              ? ""
-              : `
+            showZhidaSummaryButton
+              ? `
           <button class="zhida-summarize-btn" title="AI 总结此回答" onclick="requestZhidaSummary('${this.answer.id}')">
             <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
               <path d="M5.219 12.433.876 11.347a.722.722 0 0 1 0-1.402L5.219 8.86a3.228 3.228 0 0 0 2.348-2.348l1.086-4.343a.722.722 0 0 1 1.402 0l1.085 4.343a3.228 3.228 0 0 0 2.349 2.348l4.343 1.086a.722.722 0 0 1 0 1.402l-4.343 1.086a3.228 3.228 0 0 0-2.349 2.348l-1.085 4.343a.722.722 0 0 1-1.402 0L7.567 14.78a3.228 3.228 0 0 0-2.348-2.348ZM16.236.129a.361.361 0 0 1 .677 0l.607 1.64c.122.33.382.59.711.711l1.64.607a.361.361 0 0 1 0 .677l-1.64.607c-.33.122-.59.382-.711.711l-.607 1.64a.361.361 0 0 1-.677 0l-.607-1.64a1.203 1.203 0 0 0-.711-.71l-1.64-.608a.361.361 0 0 1 0-.677l1.64-.607c.33-.122.59-.381.711-.71l.607-1.641Z"/>
             </svg>
           </button>
           `
+              : ""
           }
         </div>
       </div>

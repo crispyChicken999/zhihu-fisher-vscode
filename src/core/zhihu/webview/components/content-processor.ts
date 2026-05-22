@@ -474,11 +474,6 @@ export class ContentProcessor {
 
       // 处理知乎直答链接（zhida.zhihu.com），拦截为 VSCode 内弹窗
       if (href.includes("zhida.zhihu.com")) {
-        // 如果是第一个回答页面，直答链接不做处理，以便用户跳转外部浏览器
-        if (options?.isFirstAnswer) {
-          return;
-        }
-
         // 从 URL q= 参数解析关键词，服务端（cheerio）阶段直接算好存属性
         let zhidaKeyword = "";
         try {

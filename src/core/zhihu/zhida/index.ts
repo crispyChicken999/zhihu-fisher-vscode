@@ -1,4 +1,5 @@
 import * as Puppeteer from "puppeteer";
+import { PuppeteerManager } from "../puppeteer";
 
 /**
  * 知乎直答 AI 回答结果
@@ -27,67 +28,31 @@ export class ZhidaManager {
   static async fetchZhidaAnswer(
     page: Puppeteer.Page,
     zhidaHref: string,
+    sourceUrl?: string,
   ): Promise<ZhidaResult> {
+    const keyword = ZhidaManager.parseKeywordFromHref(zhidaHref);
+
     try {
-      await ZhidaManager.closeExistingPanel(page);
+      const result = await ZhidaManager.fetchZhidaAnswerFromPage(
+        page,
+        zhidaHref,
+        keyword,
+      );
 
-      // 解析关键词（q= 参数）
-      let keyword = "";
-      try {
-        const urlObj = new URL(zhidaHref);
-        keyword = decodeURIComponent(urlObj.searchParams.get("q") || "");
-      } catch (_) {}
-
-      const clicked = await page.evaluate((href: string) => {
-        const links = Array.from(document.querySelectorAll("a"));
-
-        // 优先精确匹配
-        let target = links.find(
-          (a) => a.href === href || a.getAttribute("href") === href,
+      if (
+        !result.success &&
+        sourceUrl &&
+        ZhidaManager.shouldRetryOnSourcePage(result.error)
+      ) {
+        return await ZhidaManager.withTemporarySourcePage(sourceUrl, (tempPage) =>
+          ZhidaManager.fetchZhidaAnswerFromPage(tempPage, zhidaHref, keyword),
         );
-
-        // 如果没找到，尝试去除 URL 中的随机参数后匹配
-        if (!target) {
-          try {
-            const cleanHref = href.split("&zhida_source=")[0];
-            target = links.find((a) => {
-              const aHref = a.href || a.getAttribute("href") || "";
-              return aHref.includes(cleanHref);
-            });
-          } catch (_) {}
-        }
-
-        // 最后的兜底：通过 textContent 和 q= 匹配
-        if (!target && href.includes("q=")) {
-          const qParam = new URL(href).searchParams.get("q");
-          if (qParam) {
-            target = links.find((a) => {
-              const aHref = a.href || a.getAttribute("href") || "";
-              return aHref.includes(`q=${qParam}`);
-            });
-          }
-        }
-
-        if (target) {
-          (target as HTMLElement).click();
-          return true;
-        }
-        return false;
-      }, zhidaHref);
-
-      if (!clicked) {
-        return {
-          keyword,
-          answerHtml: "",
-          success: false,
-          error: "页面中未找到对应的知乎直答链接，请确认页面已完整加载",
-        };
       }
 
-      return await ZhidaManager.waitAndExtract(page, keyword);
+      return result;
     } catch (error: any) {
       return {
-        keyword: "",
+        keyword,
         answerHtml: "",
         success: false,
         error: `操作失败：${error?.message || String(error)}`,
@@ -101,62 +66,31 @@ export class ZhidaManager {
   static async fetchZhidaSummary(
     page: Puppeteer.Page,
     answerId: string,
+    sourceUrl?: string,
   ): Promise<ZhidaResult> {
     const keyword = "这篇内容讲了什么？";
     try {
-      await ZhidaManager.closeExistingPanel(page);
+      const result = await ZhidaManager.fetchZhidaSummaryFromPage(
+        page,
+        answerId,
+        keyword,
+      );
 
-      const clicked = await page.evaluate((id: string) => {
-        // 知乎回答容器用 name="{answerId}" 标识（DOM 分析确认）
-        // 同时兼容其他可能的 id/data 属性选择器
-        const selectors = [
-          `[name="${id}"]`, // 最精确，知乎实际的属性
-          `#answer-${id}`, // id 属性（部分场景）
-          `[data-answer-id="${id}"]`, // data 属性
-          `[data-record-id="${id}"]`, // data 属性备用
-        ];
-
-        let container: Element | null = null;
-        for (const sel of selectors) {
-          container = document.querySelector(sel);
-          if (container) {
-            break;
-          }
-        }
-
-        if (container) {
-          const btn = container.querySelector<HTMLElement>(
-            'button[data-tooltip="解释这篇内容"]',
-          );
-          if (btn) {
-            btn.click();
-            return true;
-          }
-        }
-
-        // 最终回退：第一个可见按钮
-        const allBtns = Array.from(
-          document.querySelectorAll<HTMLElement>(
-            'button[data-tooltip="解释这篇内容"]',
+      if (
+        !result.success &&
+        sourceUrl &&
+        ZhidaManager.shouldRetryOnSourcePage(result.error)
+      ) {
+        return await ZhidaManager.withTemporarySourcePage(sourceUrl, (tempPage) =>
+          ZhidaManager.fetchZhidaSummaryFromPage(
+            tempPage,
+            answerId,
+            keyword,
           ),
         );
-        if (allBtns.length > 0) {
-          allBtns[0].click();
-          return true;
-        }
-        return false;
-      }, answerId);
-
-      if (!clicked) {
-        return {
-          keyword,
-          answerHtml: "",
-          success: false,
-          error: '页面中未找到"解释这篇内容"按钮，请确认页面已完整加载',
-        };
       }
 
-      return await ZhidaManager.waitAndExtract(page, keyword);
+      return result;
     } catch (error: any) {
       return {
         keyword,
@@ -164,6 +98,187 @@ export class ZhidaManager {
         success: false,
         error: `操作失败：${error?.message || String(error)}`,
       };
+    }
+  }
+
+  private static parseKeywordFromHref(zhidaHref: string): string {
+    try {
+      const urlObj = new URL(zhidaHref);
+      return decodeURIComponent(urlObj.searchParams.get("q") || "");
+    } catch (_) {
+      return "";
+    }
+  }
+
+  private static async fetchZhidaAnswerFromPage(
+    page: Puppeteer.Page,
+    zhidaHref: string,
+    keyword: string,
+  ): Promise<ZhidaResult> {
+    await ZhidaManager.closeExistingPanel(page);
+
+    const clicked = await ZhidaManager.clickZhidaLink(page, zhidaHref);
+    if (!clicked) {
+      return {
+        keyword,
+        answerHtml: "",
+        success: false,
+        error: "页面中未找到对应的知乎直答链接，请确认页面已完整加载",
+      };
+    }
+
+    return await ZhidaManager.waitAndExtract(page, keyword);
+  }
+
+  private static async fetchZhidaSummaryFromPage(
+    page: Puppeteer.Page,
+    answerId: string,
+    keyword: string,
+  ): Promise<ZhidaResult> {
+    await ZhidaManager.closeExistingPanel(page);
+
+    const clicked = await ZhidaManager.clickZhidaSummaryButton(page, answerId);
+    if (!clicked) {
+      return {
+        keyword,
+        answerHtml: "",
+        success: false,
+        error: '页面中未找到"解释这篇内容"按钮，请确认页面已完整加载',
+      };
+    }
+
+    return await ZhidaManager.waitAndExtract(page, keyword);
+  }
+
+  private static async clickZhidaLink(
+    page: Puppeteer.Page,
+    zhidaHref: string,
+  ): Promise<boolean> {
+    return await page.evaluate((href: string) => {
+      const links = Array.from(document.querySelectorAll("a"));
+
+      // 优先精确匹配
+      let target = links.find(
+        (a) => a.href === href || a.getAttribute("href") === href,
+      );
+
+      // 如果没找到，尝试去除 URL 中的随机参数后匹配
+      if (!target) {
+        try {
+          const cleanHref = href.split("&zhida_source=")[0];
+          target = links.find((a) => {
+            const aHref = a.href || a.getAttribute("href") || "";
+            return aHref.includes(cleanHref);
+          });
+        } catch (_) {}
+      }
+
+      // 最后的兜底：通过 textContent 和 q= 匹配
+      if (!target && href.includes("q=")) {
+        try {
+          const qParam = new URL(href).searchParams.get("q");
+          if (qParam) {
+            target = links.find((a) => {
+              const aHref = a.href || a.getAttribute("href") || "";
+              return aHref.includes(`q=${qParam}`);
+            });
+          }
+        } catch (_) {}
+      }
+
+      if (target) {
+        (target as HTMLElement).click();
+        return true;
+      }
+      return false;
+    }, zhidaHref);
+  }
+
+  private static async clickZhidaSummaryButton(
+    page: Puppeteer.Page,
+    answerId: string,
+  ): Promise<boolean> {
+    return await page.evaluate((id: string) => {
+      const buttonSelector =
+        'button[data-tooltip="解释这篇内容"], button[aria-label="解释这篇内容"]';
+      const clickFirstVisibleButton = () => {
+        const buttons = Array.from(
+          document.querySelectorAll<HTMLElement>(buttonSelector),
+        );
+        const button = buttons.find((btn) => {
+          const style = window.getComputedStyle(btn);
+          const rect = btn.getBoundingClientRect();
+          return (
+            style.display !== "none" &&
+            style.visibility !== "hidden" &&
+            rect.width > 0 &&
+            rect.height > 0
+          );
+        });
+        if (!button) {
+          return false;
+        }
+        button.click();
+        return true;
+      };
+
+      // 知乎回答容器用 name="{answerId}" 标识（DOM 分析确认）
+      // 同时兼容其他可能的 id/data 属性选择器
+      const selectors = [
+        `[name="${id}"]`,
+        `#answer-${id}`,
+        `[data-answer-id="${id}"]`,
+        `[data-record-id="${id}"]`,
+      ];
+
+      for (const sel of selectors) {
+        const container = document.querySelector(sel);
+        const button = container?.querySelector<HTMLElement>(buttonSelector);
+        if (button) {
+          button.click();
+          return true;
+        }
+      }
+
+      if (id && location.href.includes(`/answer/${id}`)) {
+        return clickFirstVisibleButton();
+      }
+
+      return false;
+    }, answerId);
+  }
+
+  private static shouldRetryOnSourcePage(error?: string): boolean {
+    if (!error) {
+      return false;
+    }
+    return error.includes("未找到") || error.includes("未出现");
+  }
+
+  private static async withTemporarySourcePage<T>(
+    sourceUrl: string,
+    action: (page: Puppeteer.Page) => Promise<T>,
+  ): Promise<T> {
+    const page = await PuppeteerManager.createPage();
+    try {
+      await page.goto(sourceUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: 30000,
+      });
+
+      try {
+        await page.waitForNetworkIdle({ timeout: 5000 });
+      } catch (_) {
+        // 知乎页面经常长连接不断，DOM 已加载即可继续尝试点击 AI 入口。
+      }
+
+      return await action(page);
+    } finally {
+      try {
+        if (!page.isClosed()) {
+          await page.close();
+        }
+      } catch (_) {}
     }
   }
 

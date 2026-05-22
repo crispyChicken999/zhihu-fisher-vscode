@@ -4280,7 +4280,13 @@ export class WebviewManager {
     }
 
     try {
-      const result = await ZhidaManager.fetchZhidaAnswer(page, href);
+      const currentAnswer =
+        webviewItem.article.answerList[webviewItem.article.currentAnswerIndex];
+      const result = await ZhidaManager.fetchZhidaAnswer(
+        page,
+        href,
+        currentAnswer?.url,
+      );
       webviewItem.webviewPanel.webview.postMessage({
         command: "zhidaResult",
         state: result.success ? "success" : "error",
@@ -4328,7 +4334,14 @@ export class WebviewManager {
     }
 
     try {
-      const result = await ZhidaManager.fetchZhidaSummary(page, answerId);
+      const sourceAnswer =
+        webviewItem.article.answerList.find((answer) => answer.id === answerId) ||
+        webviewItem.article.answerList[webviewItem.article.currentAnswerIndex];
+      const result = await ZhidaManager.fetchZhidaSummary(
+        page,
+        answerId,
+        sourceAnswer?.url,
+      );
       webviewItem.webviewPanel.webview.postMessage({
         command: "zhidaResult",
         state: result.success ? "success" : "error",
