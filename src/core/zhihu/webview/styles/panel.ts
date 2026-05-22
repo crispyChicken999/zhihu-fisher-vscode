@@ -114,7 +114,6 @@ export const panelCss = `
   left: 50%;
   line-height: 1.5;
   transform: translate(-50%, -50%);
-  min-width: 450px;
   width: 75vw;
   max-width: 650px;
   font-size: 12px;
@@ -291,6 +290,7 @@ export const panelCss = `
   background: var(--vscode-editor-background);
   top: 0;
   z-index: 1;
+  overflow-x: auto;
 }
 
 .style-tab-button {
@@ -585,6 +585,7 @@ export const panelCss = `
 /* 快捷键配置样式 */
 .shortcut-config-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
@@ -605,11 +606,13 @@ export const panelCss = `
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .shortcut-config-item-title {
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .category-tag {
@@ -618,18 +621,21 @@ export const panelCss = `
   border-radius: 10px;
   color: white;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .shortcut-config-controls {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .shortcut-inputs-container {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .shortcut-input-row {
@@ -649,6 +655,7 @@ export const panelCss = `
   cursor: pointer;
   font-size: 12px;
   max-width: 100px;
+  width: 100%;
 }
 
 .shortcut-input-single {

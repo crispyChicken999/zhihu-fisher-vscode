@@ -2,6 +2,14 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.6.7] - 2026-05-22
+
+### Bug Fixes
+
+- 修复了 issue [#63](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues/63) 中提到的第一个回答无法使用知乎直答 AI 的问题。(Merge Pull Request [#72](https://github.com/crispyChicken999/zhihu-fisher-vscode/pull/72))
+- 现在首个回答也会正常拦截知乎直答链接并支持 AI 总结；当当前页面无法定位入口时，会基于原始回答页回源重试，提升首答场景的可用性。
+- 优化了详情页设置面板在小屏幕下的显示，自适应宽度和高度，避免部分元素被遮挡。
+
 ## [0.6.6] - 2026-04-29
 
 ### Features
