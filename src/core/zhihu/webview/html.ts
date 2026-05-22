@@ -189,7 +189,6 @@ export class HtmlRenderer {
       selectedDisguiseTypes,
       sidebarDisguiseEnabled,
       hideFollowUpVotes,
-      isFirstAnswer: article.currentAnswerIndex === 0,
     };
 
     // 判断内容类型：通过URL或sourceType判断
@@ -250,7 +249,6 @@ export class HtmlRenderer {
       contentType,
       webview,
       authorComponent.renderImmersive(),
-      article.currentAnswerIndex === 0,
     );
 
     // 创建文章内容组件
