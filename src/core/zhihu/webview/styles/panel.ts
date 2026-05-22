@@ -138,9 +138,10 @@ export const panelCss = `
 }
 
 .style-panel-content {
-  min-height: 300px;
-  max-height: 70vh;
+  min-height: 0;
+  max-height: 700px;
   overflow-y: auto;
+  height: calc(100vh - 160px);
   scroll-behavior: smooth;
   padding: 0px 15px;
 }
