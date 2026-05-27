@@ -29,6 +29,9 @@ const resourcesBasePath = "\${RESOURCES_BASE_PATH}";
 // 沉浸模式状态
 let isImmersiveMode = false;
 
+// 回答过滤模式
+const answerFilterMode = '\${HIDE_VOTED_ANSWERS}';
+
 // 固定工具栏展开状态
 let isFixedToolbarExpanded = false;
 
@@ -63,9 +66,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // 初始化排序模式标签显示
   initializeSortModeTag();
-  
+
   // 初始化想法标签显示
   initializeThoughtBadge();
+
+  // 初始化回答过滤标签显示
+  updateAnswerFilterTag(answerFilterMode);
 
   // 初始化媒体显示模式
   updateMediaDisplayClass(currentMediaMode);

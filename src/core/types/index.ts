@@ -159,6 +159,8 @@ export interface LinkItem {
     /** 是否已点赞 */
     isLiked: boolean;
   };
+  /** 投票状态：1(赞同), -1(反对), 0 或 undefined(未投票) */
+  voteStatus?: 1 | -1 | 0;
 }
 
 /** 页面数据结构 */

@@ -221,5 +221,65 @@ export function registerGeneralCommands(): vscode.Disposable[] {
     )
   );
 
+  // 回答内容过滤：全部展示
+  commands.push(
+    vscode.commands.registerCommand(
+      "zhihu-fisher.setAnswersFilterShowAll",
+      async () => {
+        const config = vscode.workspace.getConfiguration("zhihu-fisher");
+
+        await config.update(
+          "hideVotedAnswers",
+          "all",
+          vscode.ConfigurationTarget.Global
+        );
+
+        vscode.window.showInformationMessage(
+          "问题详情页已设置为全部展示回答。"
+        );
+      }
+    )
+  );
+
+  // 回答内容过滤：仅展示未读的
+  commands.push(
+    vscode.commands.registerCommand(
+      "zhihu-fisher.setAnswersFilterHideVoted",
+      async () => {
+        const config = vscode.workspace.getConfiguration("zhihu-fisher");
+
+        await config.update(
+          "hideVotedAnswers",
+          "unread",
+          vscode.ConfigurationTarget.Global
+        );
+
+        vscode.window.showInformationMessage(
+          "问题详情页已设置为仅展示未读的回答。重新打开问题详情页后生效。"
+        );
+      }
+    )
+  );
+
+  // 回答内容过滤：仅展示已读的
+  commands.push(
+    vscode.commands.registerCommand(
+      "zhihu-fisher.setAnswersFilterShowVoted",
+      async () => {
+        const config = vscode.workspace.getConfiguration("zhihu-fisher");
+
+        await config.update(
+          "hideVotedAnswers",
+          "read",
+          vscode.ConfigurationTarget.Global
+        );
+
+        vscode.window.showInformationMessage(
+          "问题详情页已设置为仅展示已读的回答。重新打开问题详情页后生效。"
+        );
+      }
+    )
+  );
+
   return commands;
 }

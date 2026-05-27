@@ -742,4 +742,25 @@ export const panelCss = `
   font-size: 13px;
   font-weight: 500;
 }
-`;
+
+/* 帮助文本中的列表样式 */
+.style-option-help-ul {
+  margin: 4px 0 0 0;
+  padding-left: 20px;
+}
+
+.style-option-help-ul li {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+/* 回答过滤标签样式 */
+.answer-filter-tag {
+  display: inline-block;
+  border: 1px solid var(--vscode-badge-background);
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.75em;
+  font-weight: bold;
+  vertical-align: text-bottom;
+}`;

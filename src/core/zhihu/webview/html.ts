@@ -167,6 +167,7 @@ export class HtmlRenderer {
       false,
     );
     const hideFollowUpVotes = config.get<boolean>("hideFollowUpVotes", false);
+    const hideVotedAnswers = config.get<string>("hideVotedAnswers", "all");
 
     // 当前回答
     const currentAnswer = article.answerList[article.currentAnswerIndex];
@@ -189,6 +190,7 @@ export class HtmlRenderer {
       selectedDisguiseTypes,
       sidebarDisguiseEnabled,
       hideFollowUpVotes,
+      hideVotedAnswers,
     };
 
     // 判断内容类型：通过URL或sourceType判断
@@ -322,6 +324,7 @@ export class HtmlRenderer {
       .replace("${ARTICLE_ID}", webview.id || "")
       .replace("${SOURCE_TYPE}", webview.sourceType)
       .replace("${RESOURCES_BASE_PATH}", resourcesUri)
+      .replace("${HIDE_VOTED_ANSWERS}", hideVotedAnswers)
       .replace(
         "${RELATED_QUESTIONS_DATA}",
         JSON.stringify(article.relatedQuestions || []),

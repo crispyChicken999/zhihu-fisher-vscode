@@ -599,6 +599,34 @@ function toggleHideFollowUpVotes(enabled) {
 }
 
 /**
+ * 设置回答内容过滤
+ */
+function setAnswersFilter(filterMode) {
+  vscode.postMessage({
+    command: "setAnswersFilter",
+    filterMode: filterMode
+  });
+  updateAnswerFilterTag(filterMode);
+}
+
+/**
+ * 更新回答过滤标签
+ * @param filterMode 过滤模式
+ */
+function updateAnswerFilterTag(filterMode) {
+  const tag = document.getElementById('answerFilterTag');
+  if (!tag) return;
+
+  if (filterMode === 'all') {
+    tag.style.display = 'none';
+  } else if (filterMode === 'unread') {
+    tag.textContent = '仅展示未读';
+    tag.title = '当前为仅展示未读模式。切换回答时会自动跳过已点赞/点踩的回答。';
+    tag.style.display = 'inline-block';
+  }
+}
+
+/**
  * 设置样式面板 - 初始化伪装类型选择器
  */
 function initializeDisguiseTypesSelector() {

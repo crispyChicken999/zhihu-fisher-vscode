@@ -1538,6 +1538,34 @@ export class WebviewManager {
     }
   }
 
+  /**
+   * 检查是否应该过滤某个回答
+   * @param answer 回答项
+   * @param hideVotedAnswers 过滤设置 ('all'|'unread'|'read')
+   * @returns true 表示应该过滤（隐藏）该回答，false 表示应该显示
+   */
+  private static shouldFilterAnswer(
+    answer: AnswerItem | undefined,
+    hideVotedAnswers: string,
+  ): boolean {
+    if (!answer || hideVotedAnswers === "all") {
+      return false; // 不过滤
+    }
+
+    const voteStatus = answer.voteStatus || "neutral";
+    const isRead = voteStatus !== "neutral"; // 点击过赞同或不赞同按钮就认为已读
+
+    if (hideVotedAnswers === "unread") {
+      // 仅展示未读的 - 过滤已读的（已点击过赞同/不赞同的）
+      return isRead;
+    } else if (hideVotedAnswers === "read") {
+      // 仅展示已读的 - 过滤未读的（两个按钮都没点过的）
+      return !isRead;
+    }
+
+    return false;
+  }
+
   /** 加载上一个回答 */
   public static async loadPreviousAnswer(webviewId: string): Promise<void> {
     const webviewItem = Store.webviewMap.get(webviewId);
@@ -1546,14 +1574,24 @@ export class WebviewManager {
     }
 
     try {
-      if (webviewItem.article.currentAnswerIndex > 0) {
-        webviewItem.article.currentAnswerIndex -= 1;
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const hideVotedAnswers = config.get<string>("hideVotedAnswers", "all");
 
-        // 更新webview内容
-        this.updateWebview(webviewId);
-      } else {
-        console.log("没有更多的回答可以加载了！");
+      // 向前查找未被过滤的回答
+      let newIndex = webviewItem.article.currentAnswerIndex - 1;
+      while (newIndex >= 0) {
+        const answer = webviewItem.article.answerList[newIndex];
+        if (!this.shouldFilterAnswer(answer, hideVotedAnswers)) {
+          // 找到了一个不需要过滤的回答
+          webviewItem.article.currentAnswerIndex = newIndex;
+          this.updateWebview(webviewId);
+          return;
+        }
+        newIndex--;
       }
+
+      // 没有找到未被过滤的回答
+      console.log("没有更多的回答可以加载了！");
     } catch (error) {
       console.error("加载上一个回答时出错:", error);
       vscode.window.showErrorMessage("加载上一个回答时出错:" + error);
@@ -1568,54 +1606,86 @@ export class WebviewManager {
     }
 
     try {
-      if (
-        webviewItem.article.currentAnswerIndex <
-        webviewItem.article.answerList.length - 1
-      ) {
-        webviewItem.article.currentAnswerIndex += 1;
-        // 更新WebView内容
-        this.updateWebview(webviewId);
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      const hideVotedAnswers = config.get<string>("hideVotedAnswers", "all");
 
-        // 这里的逻辑是：如果当前回答索引大于等于当前批次已加载回答数量-5，则加载更多回答
-        if (
-          webviewItem.article.currentAnswerIndex >=
-          webviewItem.article.loadedAnswerCount - 5
-        ) {
-          if (webviewItem.batchConfig.isLoadingBatch) {
-            console.log("批次正在加载中，跳过...");
-            return;
+      // 向后查找未被过滤的回答
+      let newIndex = webviewItem.article.currentAnswerIndex + 1;
+      while (newIndex < webviewItem.article.answerList.length) {
+        const answer = webviewItem.article.answerList[newIndex];
+        if (!this.shouldFilterAnswer(answer, hideVotedAnswers)) {
+          // 找到了一个不需要过滤的回答
+          webviewItem.article.currentAnswerIndex = newIndex;
+          // 更新WebView内容
+          this.updateWebview(webviewId);
+
+          // 这里的逻辑是：如果当前回答索引大于等于当前批次已加载回答数量-5，则加载更多回答
+          if (
+            webviewItem.article.currentAnswerIndex >=
+            webviewItem.article.loadedAnswerCount - 5
+          ) {
+            if (webviewItem.batchConfig.isLoadingBatch) {
+              console.log("批次正在加载中，跳过...");
+              return;
+            }
+
+            // 检查页面是否还存在，避免在获取页面实例前就已经被关闭了
+            // 这种情况可能发生在用户点击加载下一条回答后立即关闭了页面
+            if (!Store.webviewMap.has(webviewId)) {
+              console.log("页面已关闭，取消加载更多回答");
+              return;
+            }
+
+            const page = PuppeteerManager.getPageInstance(webviewId);
+            if (!page) {
+              console.log("无法获取页面实例，取消加载更多回答");
+              return;
+            }
+
+            // 初始化批次加载参数
+            webviewItem.batchConfig.beforeLoadCount =
+              webviewItem.batchConfig.afterLoadCount =
+                webviewItem.article.answerList.length;
+            webviewItem.batchConfig.isLoadingBatch = true; // 设置为正在加载批次
+            this.updateWebview(webviewId); // 更新WebView内容
+
+            // 再次检查页面是否存在
+            if (Store.webviewMap.has(webviewId)) {
+              await this.loadMoreAnswers(webviewId, page);
+            } else {
+              console.log("页面已关闭，中断加载更多回答");
+            }
           }
+          return;
+        }
+        newIndex++;
+      }
 
-          // 检查页面是否还存在，避免在获取页面实例前就已经被关闭了
-          // 这种情况可能发生在用户点击加载下一条回答后立即关闭了页面
-          if (!Store.webviewMap.has(webviewId)) {
-            console.log("页面已关闭，取消加载更多回答");
-            return;
-          }
-
-          const page = PuppeteerManager.getPageInstance(webviewId);
-          if (!page) {
-            console.log("无法获取页面实例，取消加载更多回答");
-            return;
-          }
-
-          // 初始化批次加载参数
+      // 没有找到更多的未被过滤的回答，尝试加载更多
+      if (!webviewItem.batchConfig.isLoadingBatch && !webviewItem.article.loadComplete) {
+        const page = PuppeteerManager.getPageInstance(webviewId);
+        if (page && Store.webviewMap.has(webviewId)) {
           webviewItem.batchConfig.beforeLoadCount =
             webviewItem.batchConfig.afterLoadCount =
               webviewItem.article.answerList.length;
-          webviewItem.batchConfig.isLoadingBatch = true; // 设置为正在加载批次
-          this.updateWebview(webviewId); // 更新WebView内容
+          webviewItem.batchConfig.isLoadingBatch = true;
+          await this.loadMoreAnswers(webviewId, page);
 
-          // 再次检查页面是否存在
-          if (Store.webviewMap.has(webviewId)) {
-            await this.loadMoreAnswers(webviewId, page);
-          } else {
-            console.log("页面已关闭，中断加载更多回答");
+          // 加载后再尝试找未被过滤的回答
+          newIndex = webviewItem.article.currentAnswerIndex + 1;
+          while (newIndex < webviewItem.article.answerList.length) {
+            const answer = webviewItem.article.answerList[newIndex];
+            if (!this.shouldFilterAnswer(answer, hideVotedAnswers)) {
+              webviewItem.article.currentAnswerIndex = newIndex;
+              this.updateWebview(webviewId);
+              return;
+            }
+            newIndex++;
           }
         }
-      } else {
-        console.log("没有更多的回答可以加载了！");
       }
+
+      console.log("没有更多的回答可以加载了！");
     } catch (error) {
       console.error("加载下一个回答时出错:", error);
       // 不显示错误消息，如果是因为页面关闭导致的错误
@@ -2692,6 +2762,11 @@ export class WebviewManager {
           await this.handleToggleHideFollowUpVotes(message.enabled);
           break;
 
+        case "setAnswersFilter":
+          // 处理回答内容过滤设置
+          await this.handleSetAnswersFilter(message.filterMode);
+          break;
+
         case "manualDisguiseToggle":
           // 处理手动代码伪装切换
           await this.handleManualDisguiseToggle(webviewId, message.action);
@@ -3004,6 +3079,39 @@ export class WebviewManager {
       );
     } catch (error) {
       console.error("切换关注列表过滤设置时出错:", error);
+      vscode.window.showErrorMessage(
+        `设置失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * 处理回答内容过滤设置
+   * @param filterMode 过滤模式 ('all'|'unread'|'read')
+   */
+  private static async handleSetAnswersFilter(
+    filterMode: string,
+  ): Promise<void> {
+    try {
+      const config = vscode.workspace.getConfiguration("zhihu-fisher");
+      await config.update(
+        "hideVotedAnswers",
+        filterMode,
+        vscode.ConfigurationTarget.Global,
+      );
+
+      const modeText =
+        {
+          all: "全部展示",
+          unread: "仅展示未读（点赞/点踩都未点击）",
+          read: "仅展示已读（点赞或点踩已点击）",
+        }[filterMode] || filterMode;
+
+      vscode.window.showInformationMessage(
+        `回答内容过滤已设置为：${modeText}。重新打开问题详情页后生效`,
+      );
+    } catch (error) {
+      console.error("设置回答内容过滤时出错:", error);
       vscode.window.showErrorMessage(
         `设置失败: ${error instanceof Error ? error.message : String(error)}`,
       );

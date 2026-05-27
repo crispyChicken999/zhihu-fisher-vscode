@@ -10,6 +10,7 @@ export class StylePanelComponent implements Component {
   private enableGrayscale: boolean = false;
   private sidebarDisguiseEnabled: boolean = false;
   private hideFollowUpVotes: boolean = false;
+  private hideVotedAnswers: string = "all";
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
@@ -26,6 +27,10 @@ export class StylePanelComponent implements Component {
       renderOptions.hideFollowUpVotes !== undefined
         ? renderOptions.hideFollowUpVotes
         : false;
+    this.hideVotedAnswers =
+      renderOptions.hideVotedAnswers !== undefined
+        ? renderOptions.hideVotedAnswers
+        : "all";
     // 灰色模式从javaScript读取，不依赖renderOptions
     this.enableGrayscale = false;
   }
@@ -350,6 +355,43 @@ export class StylePanelComponent implements Component {
                   </div>
                   <div>
                     <strong class="style-option-help-strong">提示：</strong>修改后需重新加载关注列表生效
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="style-option-divider"></div>
+
+            <div class="style-option">
+              <label class="style-option-label-inline">
+                回答内容过滤
+                <span class="style-option-color-description">
+                  (根据是否点赞过来过滤回答)
+                </span>
+              </label>
+
+              <div class="style-option-flex style-option-label-inline">
+                <select id="hide-voted-answers-select" onchange="setAnswersFilter(this.value)" class="style-option-select">
+                  <option value="all" ${this.hideVotedAnswers === "all" ? "selected" : ""}>全部展示</option>
+                  <option value="unread" ${this.hideVotedAnswers === "unread" ? "selected" : ""}>仅展示未读（点赞/点踩都未点击）</option>
+                </select>
+              </div>
+
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">功能说明：</strong>在问题详情页加载回答列表时，根据你是否点击过点赞/点踩按钮来自动过滤回答。用户点击任一按钮即视为已阅读
+                  </div>
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">选项说明：</strong>
+                    <ul class="style-option-help-ul">
+                      <li>全部展示：正常显示所有回答</li>
+                      <li>仅展示未读：只显示你点赞/点踩按钮都未点击过的回答（用于快速找到真正未读的内容）</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong">提示：</strong>修改后需重新打开问题详情页生效，导航回答时会自动跳过被过滤的回答
                   </div>
                 </div>
               </details>

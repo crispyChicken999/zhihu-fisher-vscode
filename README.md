@@ -8,7 +8,7 @@
 
 ![License](https://badgen.net/badge/License/MIT/red)
 ![VSCode](https://badgen.net/badge/VSCode/1.82.0+/blue?icon=visualstudio)
-![Version](https://badgen.net/badge/Version/0.6.7/orange?icon=git)
+![Version](https://badgen.net/badge/Version/0.6.8/orange?icon=git)
 ![Platform](https://badgen.net/badge/Platform/Windows|MacOS|Linux/purple?icon=windows)
 
 ![Downloads](https://badgen.net/vs-marketplace/d/CrispyChicken.zhihu-fisher?label=Downloads&color=blue)
@@ -91,6 +91,7 @@ _主要功能展示_
 22. 支持 `AI 总结回答` 功能，一键获取当前回答的核心内容摘要
 23. 支持 `过滤点赞内容`，现在可以通过配置来选择是否过滤关注的人的点赞内容，使阅读可以更加聚焦在创作内容上
 24. 支持 `想法（PinItem）`类型内容，可以在关注列表中查看、浏览想法详情，支持点赞、收藏、评论、不喜欢等完整交互功能
+25. 支持 `问题详情页回答过滤`，可以按已读/未读状态过滤回答内容，支持在侧边栏快速切换过滤模式（仅限问题详情页，文章和想法不可用）
 
 更多功能，敬请探索~
 

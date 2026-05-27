@@ -2,7 +2,7 @@
   "name": "zhihu-fisher",
   "displayName": "Zhihu Fisher",
   "description": "VSCode 刷知乎摸鱼插件 | 支持浏览知乎推荐、热榜、关注、搜索内容，提供沉浸模式、图片大小调整、灰色模式、智能伪装模式。支持评论区、收藏夹等功能。",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "author": "CrispyChicken",
   "engines": {
     "vscode": "^1.82.0"
@@ -340,6 +340,14 @@
       {
         "command": "zhihu-fisher.setFollowUpVotesHideVotes",
         "title": "仅展示创作内容"
+      },
+      {
+        "command": "zhihu-fisher.setAnswersFilterShowAll",
+        "title": "全部展示"
+      },
+      {
+        "command": "zhihu-fisher.setAnswersFilterHideVoted",
+        "title": "仅展示未读的回答（赞和踩都没点）"
       }
     ],
     "viewsContainers": {
@@ -426,7 +434,7 @@
     "submenus": [
       {
         "id": "zhihu-fisher.mediaDisplayMenu",
-        "label": "多媒体显示模式"
+        "label": "图片视频显示"
       },
       {
         "id": "zhihu-fisher.smartDisguiseMenu",
@@ -443,6 +451,10 @@
       {
         "id": "zhihu-fisher.followUpVotesMenu",
         "label": "关注列表过滤"
+      },
+      {
+        "id": "zhihu-fisher.answersFilterMenu",
+        "label": "回答内容过滤"
       }
     ],
     "menus": {
@@ -488,6 +500,16 @@
           "group": "bmode@2"
         },
         {
+          "submenu": "zhihu-fisher.followUpVotesMenu",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
+          "group": "bmode@3"
+        },
+        {
+          "submenu": "zhihu-fisher.answersFilterMenu",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
+          "group": "bmode@4"
+        },
+        {
           "command": "zhihu-fisher.configureBrowser",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@1"
@@ -506,11 +528,6 @@
           "command": "zhihu-fisher.setAnswersPerBatch",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@4"
-        },
-        {
-          "submenu": "zhihu-fisher.followUpVotesMenu",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
-          "group": "config@5"
         },
         {
           "command": "zhihu-fisher.toggleDebugMode",
@@ -737,6 +754,16 @@
           "command": "zhihu-fisher.setFollowUpVotesHideVotes",
           "group": "1_filter@2"
         }
+      ],
+      "zhihu-fisher.answersFilterMenu": [
+        {
+          "command": "zhihu-fisher.setAnswersFilterShowAll",
+          "group": "2_filter@1"
+        },
+        {
+          "command": "zhihu-fisher.setAnswersFilterHideVoted",
+          "group": "2_filter@2"
+        }
       ]
     },
     "walkthroughs": [
@@ -923,6 +950,19 @@
           "type": "boolean",
           "default": false,
           "description": "隐藏关注列表中\"赞同了\"类型的内容。开启后，关注列表只会显示关注人自己创作的内容（如回答了问题、发布了文章），不再显示关注人赞同/喜欢的内容。"
+        },
+        "zhihu-fisher.hideVotedAnswers": {
+          "type": "string",
+          "enum": [
+            "all",
+            "unread"
+          ],
+          "enumDescriptions": [
+            "全部展示",
+            "仅展示未读（点赞/点踩按钮都未点击过）"
+          ],
+          "default": "all",
+          "description": "回答内容过滤。根据是否点击过赞同/不赞同按钮来过滤回答。用户点击任一按钮即视为已读。用于快速找到真正未读过的回答。"
         }
       }
     }
