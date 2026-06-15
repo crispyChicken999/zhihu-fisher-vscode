@@ -371,6 +371,7 @@ export const commentsCss = `
 .zhihu-child-comment-content {
   margin-bottom: 0.5em;
   line-height: 1.4;
+  work-break: break-all;
 }
 
 .zhihu-child-comment-content p {
