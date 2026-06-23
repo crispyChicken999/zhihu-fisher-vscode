@@ -3209,7 +3209,9 @@ export class CommentsUtils {
   private static processTextEmojis($: cheerio.CheerioAPI): void {
     // 使用静态的表情包映射，避免重复创建
     const emojiMap = CommentsUtils.getEmojiMap();
-    if (emojiMap.size === 0) return;
+    if (emojiMap.size === 0) {
+      return;
+    };
 
     // 匹配 [表情名] 格式的文本
     const emojiRegex = /\[([^\]]+)\]/g;
@@ -3220,7 +3222,9 @@ export class CommentsUtils {
         const node = this as any;
         if (node.type === "text") {
           const text = node.data as string;
-          if (!emojiRegex.test(text)) return;
+          if (!emojiRegex.test(text)) {
+            return;
+          };
           emojiRegex.lastIndex = 0; // 重置 regex 状态
 
           let hasMatch = false;

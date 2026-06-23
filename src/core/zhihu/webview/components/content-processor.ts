@@ -272,7 +272,9 @@ export class ContentProcessor {
     // 处理图片元素
     $("img").each(function () {
       // 跳过 GifPlayer 内的图片（已在 GifPlayer 处理器中处理）
-      if ($(this).closest(".GifPlayer").length > 0) return;
+      if ($(this).closest(".GifPlayer").length > 0) {
+        return;
+      };
 
       // 处理图片源地址
       const actualSrc = $(this).attr("data-actualsrc");
