@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", function() {
   setupImageFancyBox();
   setupGrayscaleMode();
   setupToolbarConfig();
+  setupMediaPlaceholders();
 
   // 初始化工具栏配置（需要在沉浸模式状态设置好后）
   // setTimeout(() => {
@@ -117,6 +118,9 @@ window.addEventListener('message', event => {
     setTimeout(() => {
       if (typeof initializeFancyBox === 'function') {
         initializeFancyBox();
+      }
+      if (typeof setupMediaPlaceholders === 'function') {
+        setupMediaPlaceholders();
       }
 
       // focus，以便响应键盘上下箭头来滚动
@@ -201,6 +205,9 @@ window.addEventListener('message', event => {
       if (typeof initializeFancyBox === 'function') {
         initializeFancyBox();
       }
+      if (typeof setupMediaPlaceholders === 'function') {
+        setupMediaPlaceholders();
+      }
 
       // zhihu-comments-modal-child-comments focus
       const childCommentsList = document.querySelector('.zhihu-comments-modal-child-comments');
@@ -225,6 +232,9 @@ window.addEventListener('message', event => {
       setTimeout(() => {
         if (typeof initializeFancyBox === 'function') {
           initializeFancyBox();
+        }
+        if (typeof setupMediaPlaceholders === 'function') {
+          setupMediaPlaceholders();
         }
       }, 100);
 

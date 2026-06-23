@@ -165,27 +165,55 @@ export class FakeFileListDataProvider
         this.createTipsItem(),
         this.createSponsorItem(),
       ]),
-      // 主要项目结构
+      // 主要项目结构 — 扩充子目录和文件数量
       this.createExpandedFolder("src", [
         this.createExpandedFolder(
           "components",
-          this.generateFilesForExtensions(extensionsToUse, 3, 6)
+          this.generateFilesForExtensions(extensionsToUse, 5, 9)
         ),
         this.createExpandedFolder(
           "utils",
-          this.generateFilesForExtensions(extensionsToUse, 2, 4)
+          this.generateFilesForExtensions(extensionsToUse, 3, 6)
         ),
         this.createExpandedFolder(
           "services",
-          this.generateFilesForExtensions(extensionsToUse, 2, 3)
+          this.generateFilesForExtensions(extensionsToUse, 3, 5)
         ),
         this.createExpandedFolder(
           "hooks",
-          this.generateFilesForExtensions(extensionsToUse, 1, 3)
+          this.generateFilesForExtensions(extensionsToUse, 2, 5)
         ),
         this.createExpandedFolder(
           "types",
-          this.generateFilesForExtensions(extensionsToUse, 1, 2)
+          this.generateFilesForExtensions(extensionsToUse, 2, 4)
+        ),
+        this.createExpandedFolder(
+          "pages",
+          this.generateFilesForExtensions(extensionsToUse, 3, 5)
+        ),
+        this.createExpandedFolder(
+          "store",
+          this.generateFilesForExtensions(extensionsToUse, 2, 4)
+        ),
+        this.createExpandedFolder(
+          "api",
+          this.generateFilesForExtensions(extensionsToUse, 3, 5)
+        ),
+        this.createExpandedFolder(
+          "constants",
+          this.generateFilesForExtensions(extensionsToUse, 1, 3)
+        ),
+        this.createExpandedFolder(
+          "styles",
+          this.generateFilesForExtensions(extensionsToUse, 2, 4)
+        ),
+        this.createExpandedFolder(
+          "middleware",
+          this.generateFilesForExtensions(extensionsToUse, 1, 3)
+        ),
+        this.createExpandedFolder(
+          "models",
+          this.generateFilesForExtensions(extensionsToUse, 2, 4)
         ),
         ...this.generateMainFiles(extensionsToUse),
       ]),
@@ -198,19 +226,31 @@ export class FakeFileListDataProvider
         this.createFile("API.md", "md"),
         this.createFile("CHANGELOG.md", "md"),
         this.createFile("TODO.md", "md"),
+        this.createFile("CONTRIBUTING.md", "md"),
+        this.createFile("ARCHITECTURE.md", "md"),
+        this.createFile("SETUP.md", "md"),
       ]),
       this.createExpandedFolder("public", [
         this.createFile("index.html", "html"),
         this.createFile("style.css", "css"),
         this.createFile("main.js", "js"),
+        this.createFile("favicon.ico", "ico"),
+        this.createFile("robots.txt", "txt"),
+        this.createFile("manifest.json", "json"),
         this.createExpandedFolder("assets", [
           this.createFile("logo.svg", "svg"),
           this.createFile("icon.png", "png"),
           this.createFile("app.css", "css"),
+          this.createFile("logo-dark.svg", "svg"),
         ]),
         this.createExpandedFolder("images", [
           this.createFile("banner.jpg", "jpg"),
           this.createFile("avatar.png", "png"),
+          this.createFile("placeholder.svg", "svg"),
+        ]),
+        this.createExpandedFolder("fonts", [
+          this.createFile("Inter-Regular.woff2", "woff2"),
+          this.createFile("Inter-Bold.woff2", "woff2"),
         ]),
       ]),
       this.createExpandedFolder("config", [
@@ -218,11 +258,19 @@ export class FakeFileListDataProvider
         this.createFile("babel.config.js", "js"),
         this.createFile("tsconfig.json", "json"),
         this.createFile(".env.example", "env"),
+        this.createFile("eslint.config.js", "js"),
+        this.createFile("prettier.config.js", "js"),
+        this.createFile("vite.config.ts", "ts"),
+        this.createFile("jest.config.ts", "ts"),
+        this.createFile("docker-compose.yml", "yml"),
       ]),
       this.createExpandedFolder("scripts", [
         this.createFile("build.sh", "sh"),
         this.createFile("deploy.js", "js"),
         this.createFile("setup.py", "py"),
+        this.createFile("lint.sh", "sh"),
+        this.createFile("test.sh", "sh"),
+        this.createFile("ci.yml", "yml"),
       ]),
       ...this.generateOptionalFolders(extensionsToUse),
       ...this.generateConfigFiles(extensionsToUse),
@@ -408,13 +456,13 @@ export class FakeFileListDataProvider
    * 生成主要文件
    */
   private generateMainFiles(extensions: string[]): FakeFileItem[] {
-    const mainFiles = ["index", "main", "app", "server", "config"];
+    const mainFiles = ["index", "main", "app", "server", "config", "router", "bootstrap"];
     const files: FakeFileItem[] = [];
 
-    // 随机选择1-2个主文件
+    // 随机选择2-3个主文件
     const selectedMains = this.shuffleArray(mainFiles).slice(
       0,
-      1 + Math.floor(Math.random() * 2)
+      2 + Math.floor(Math.random() * 2)
     );
 
     selectedMains.forEach((baseName) => {
@@ -431,20 +479,22 @@ export class FakeFileListDataProvider
    */
   private generateTestFiles(extensions: string[]): FakeFileItem[] {
     const testExtensions = extensions.filter((ext) =>
-      ["js", "ts", "py", "java"].includes(ext)
+      ["js", "ts", "py", "java", "rs", "rb", "go", "php", "swift"].includes(ext)
     );
     if (testExtensions.length === 0) {
-      testExtensions.push("js"); // 默认JavaScript测试
+      testExtensions.push("js", "ts"); // 默认JavaScript/TypeScript测试
     }
 
     const testFiles: FakeFileItem[] = [];
-    const testCount = 1 + Math.floor(Math.random() * 3);
+    const testCount = 2 + Math.floor(Math.random() * 5); // 2-6个测试文件
 
     for (let i = 0; i < testCount; i++) {
       const ext =
         testExtensions[Math.floor(Math.random() * testExtensions.length)];
       const testName = this.generateRandomFileName();
-      const fileName = `${testName}.test.${ext}`;
+      const isSpec = Math.random() > 0.5;
+      const suffix = isSpec ? `.spec.${ext}` : `.test.${ext}`;
+      const fileName = `${testName}${suffix}`;
       testFiles.push(this.createFile(fileName, ext));
     }
 
@@ -457,23 +507,65 @@ export class FakeFileListDataProvider
   private generateOptionalFolders(extensions: string[]): FakeFileItem[] {
     const folders: FakeFileItem[] = [];
 
-    // docs文件夹 (80%概率)
-    if (Math.random() > 0.2) {
+    // database 文件夹 (70%概率)
+    if (Math.random() > 0.3) {
       folders.push(
-        this.createFolder("docs", [
-          this.createFile("README.md", "md"),
-          this.createFile("API.md", "md"),
+        this.createExpandedFolder("database", [
+          this.createExpandedFolder("migrations", [
+            this.createFile("001_init.sql", "sql"),
+            this.createFile("002_seed.sql", "sql"),
+            this.createFile(
+              `00${3 + Math.floor(Math.random() * 3)}_migration.sql`,
+              "sql"
+            ),
+          ]),
+          this.createFile("schema.sql", "sql"),
+          this.createFile("seed.ts", "ts"),
+          this.createFile("connection.ts", "ts"),
         ])
       );
     }
 
-    // public/assets文件夹 (60%概率)
+    // i18n 文件夹 (60%概率)
     if (Math.random() > 0.4) {
-      const folderName = Math.random() > 0.5 ? "public" : "assets";
       folders.push(
-        this.createFolder(folderName, [
-          this.createFile("style.css", "css"),
-          this.createFile("logo.svg", "svg"),
+        this.createExpandedFolder("i18n", [
+          this.createFile("en.json", "json"),
+          this.createFile("zh-CN.json", "json"),
+          this.createFile("ja.json", "json"),
+        ])
+      );
+    }
+
+    // vendor/lib 文件夹 (50%概率)
+    if (Math.random() > 0.5) {
+      const folderName = Math.random() > 0.5 ? "lib" : "vendor";
+      folders.push(
+        this.createExpandedFolder(folderName, [
+          this.createFile("bundle.js", "js"),
+          this.createFile("polyfill.min.js", "js"),
+        ])
+      );
+    }
+
+    // e2e 测试文件夹 (50%概率)
+    if (Math.random() > 0.5) {
+      folders.push(
+        this.createExpandedFolder("e2e", [
+          this.createFile("app.e2e-spec.ts", "ts"),
+          this.createFile("login.e2e-spec.ts", "ts"),
+          this.createFile("dashboard.e2e-spec.ts", "ts"),
+        ])
+      );
+    }
+
+    // docs 子文件夹 (原可选逻辑保留，80%概率)
+    if (Math.random() > 0.2) {
+      folders.push(
+        this.createFolder("docs-internal", [
+          this.createFile("roadmap.md", "md"),
+          this.createFile("decisions.md", "md"),
+          this.createFile("meeting-notes.md", "md"),
         ])
       );
     }
@@ -487,20 +579,31 @@ export class FakeFileListDataProvider
   private generateConfigFiles(extensions: string[]): FakeFileItem[] {
     const configFiles: FakeFileItem[] = [];
 
-    // 常见配置文件
+    // 常见配置文件 — 扩充种类
     const possibleConfigs = [
       "package.json",
+      "package-lock.json",
       "tsconfig.json",
       "webpack.config.js",
       ".env",
       ".gitignore",
       "README.md",
+      ".eslintrc.json",
+      ".prettierrc",
+      "docker-compose.yml",
+      "Dockerfile",
+      ".editorconfig",
+      "jest.config.ts",
+      "vitest.config.ts",
+      "tailwind.config.ts",
+      "pnpm-lock.yaml",
+      "Makefile",
     ];
 
-    // 随机选择2-4个配置文件
+    // 随机选择 3-5 个配置文件
     const selectedConfigs = this.shuffleArray(possibleConfigs).slice(
       0,
-      2 + Math.floor(Math.random() * 3)
+      3 + Math.floor(Math.random() * 3)
     );
 
     selectedConfigs.forEach((fileName) => {
@@ -539,6 +642,23 @@ export class FakeFileListDataProvider
       "menu",
       "nav",
       "content",
+      "dashboard",
+      "profile",
+      "settings",
+      "notifications",
+      "search",
+      "upload",
+      "download",
+      "export",
+      "import",
+      "validator",
+      "parser",
+      "handler",
+      "session",
+      "cache",
+      "logger",
+      "events",
+      "dispatch",
     ];
 
     return names[Math.floor(Math.random() * names.length)];

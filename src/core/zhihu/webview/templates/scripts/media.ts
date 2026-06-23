@@ -196,6 +196,9 @@ function updateMediaDisplayClass(mode) {
       if (typeof initializeFancyBox === 'function') {
         initializeFancyBox();
       }
+      if (typeof setupMediaPlaceholders === 'function') {
+        setupMediaPlaceholders();
+      }
     }, 100);
   }
 }
@@ -306,6 +309,13 @@ function changeMediaMode(mode) {
   currentMediaMode = mode;
   updateMediaDisplayClass(currentMediaMode);
 
+  // 重新初始化媒体占位符交互
+  setTimeout(function() {
+    if (typeof setupMediaPlaceholders === 'function') {
+      setupMediaPlaceholders();
+    }
+  }, 100);
+
   // 显示或隐藏mini缩放比例设置
   const miniScaleOption = document.getElementById('mini-scale-option');
   if (miniScaleOption) {
@@ -354,5 +364,442 @@ function updateMiniMediaScaleInputSpanValue(scale) {
   if (scaleValueElement) {
     scaleValueElement.textContent = scaleValue + '%';
   }
+}
+
+/**
+ * 关闭媒体弹窗
+ * @param {HTMLElement} popup 弹窗元素
+ */
+function closeMediaPopup(popup) {
+  if (!popup) return;
+  popup.classList.remove('visible');
+  setTimeout(function() {
+    popup.remove();
+  }, 150);
+}
+
+/**
+ * 为占位符添加hover缩略图弹窗的通用逻辑
+ * 支持鼠标移到popup上保持不关闭，支持点击popup内图片放大
+ * @param {HTMLElement} placeholder 占位符元素
+ * @param {number} delay 延迟时间(ms)
+ * @param {number} maxThumbWidth 缩略图最大宽度
+ * @param {number} maxThumbHeight 缩略图最大高度
+ * @param {string} caption 缩略图上方的提示文字（可选）
+ */
+function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHeight, caption) {
+  let popup = null;
+  let loadTimer = null;
+  let closeTimer = null;
+  let isHoveringPopup = false;
+
+  function scheduleClose() {
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = setTimeout(function() {
+      if (popup && !isHoveringPopup) {
+        closeMediaPopup(popup);
+        popup = null;
+        loadTimer = null;
+      }
+    }, 100);
+  }
+
+  function cancelClose() {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+  }
+
+  placeholder.addEventListener('mouseenter', function(e) {
+    const src = placeholder.getAttribute('data-src');
+    if (!src) return;
+
+    // 如果之前有popup残留，清理掉
+    if (popup) {
+      closeMediaPopup(popup);
+      popup = null;
+    }
+    cancelClose();
+
+    loadTimer = setTimeout(function() {
+      popup = document.createElement('div');
+      popup.className = 'media-placeholder-popup';
+
+      var imgHtml = '';
+
+      if (caption) {
+        imgHtml += '<div class="media-placeholder-popup-caption">' + caption + '</div>';
+      }
+
+      imgHtml += '<img src="' + src + '" referrerpolicy="no-referrer" loading="lazy" style="max-width:' + maxThumbWidth + 'px;max-height:' + maxThumbHeight + 'px;" />';
+
+      popup.innerHTML = imgHtml;
+      document.body.appendChild(popup);
+
+      // popup 自身 hover 时保持不关闭
+      popup.addEventListener('mouseenter', function() {
+        isHoveringPopup = true;
+        cancelClose();
+      });
+      popup.addEventListener('mouseleave', function() {
+        isHoveringPopup = false;
+        scheduleClose();
+      });
+
+      // 点击popup中的图片，触发FancyBox查看大图
+      var popupImg = popup.querySelector('img');
+      if (popupImg) {
+        popupImg.addEventListener('click', function(e) {
+          e.stopPropagation();
+          closeMediaPopup(popup);
+          popup = null;
+          if (typeof Fancybox !== 'undefined') {
+            Fancybox.show([{ src: src }], {
+              Toolbar: {
+                display: {
+                  left: ['infobar'],
+                  middle: [],
+                  right: ['slideshow', 'thumbs', 'close']
+                }
+              },
+              Thumbs: { showOnStart: false },
+              Images: { zoom: true }
+            });
+          } else {
+            window.open(src, '_blank');
+          }
+        });
+      }
+
+      requestAnimationFrame(function() {
+        // 使用实际渲染高度来精确定位
+        // 首次 hover 时图片未加载时 popup 仅有 border(~4px)，用阈值(>10)判断是否真正渲染完成
+        const rect = placeholder.getBoundingClientRect();
+        const popupRect = popup.getBoundingClientRect();
+        const actualHeight = popupRect.height > 10 ? popupRect.height : maxThumbHeight;
+        const actualWidth = popupRect.width > 10 ? popupRect.width : maxThumbWidth;
+        const gap = 8;
+
+        // 优先显示在占位符上方
+        let top = rect.top - actualHeight - gap;
+        let left = rect.left;
+
+        // 如果上方空间不够，显示在下方
+        if (top < gap) {
+          top = rect.bottom + gap;
+        }
+
+        // 防止右侧溢出
+        if (left + actualWidth > window.innerWidth - gap) {
+          left = window.innerWidth - actualWidth - gap;
+        }
+
+        // 防止左侧溢出
+        if (left < gap) {
+          left = gap;
+        }
+
+        popup.style.left = left + 'px';
+        popup.style.top = top + 'px';
+
+        popup.classList.add('visible');
+      });
+    }, delay);
+  });
+
+  placeholder.addEventListener('mouseleave', function() {
+    if (loadTimer) {
+      clearTimeout(loadTimer);
+      loadTimer = null;
+    }
+    scheduleClose();
+  });
+}
+
+/**
+ * 设置视频占位符的hover预览
+ * - mouseenter 时显示视频缩略预览（不自动播放）
+ * - 鼠标移到popup上保持不关闭
+ * - 点击popup中的视频开始播放
+ * - mouseleave 时关闭弹窗并暂停播放
+ * @param {HTMLElement} placeholder 视频占位符元素
+ */
+function addVideoPlaceholderHover(placeholder) {
+  let popup = null;
+  let loadTimer = null;
+  let closeTimer = null;
+  let clonedVideo = null;
+  let isHoveringPopup = false;
+
+  function scheduleClose() {
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = setTimeout(function() {
+      if (popup && !isHoveringPopup) {
+        if (clonedVideo) {
+          clonedVideo.pause();
+          clonedVideo = null;
+        }
+        closeMediaPopup(popup);
+        popup = null;
+        loadTimer = null;
+      }
+    }, 300);
+  }
+
+  function cancelClose() {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+  }
+
+  placeholder.addEventListener('mouseenter', function(e) {
+    // 找到占位符之前的 video 元素（通过 .after() 添加，video 在前）
+    var video = placeholder.previousElementSibling;
+    if (!video || video.tagName !== 'VIDEO') return;
+
+    // 清理残留popup
+    if (popup) {
+      if (clonedVideo) {
+        clonedVideo.pause();
+        clonedVideo = null;
+      }
+      closeMediaPopup(popup);
+      popup = null;
+    }
+    cancelClose();
+
+    loadTimer = setTimeout(function() {
+      // 深克隆video元素避免影响原DOM
+      clonedVideo = video.cloneNode(true);
+      clonedVideo.controls = true;
+      clonedVideo.muted = false;
+      clonedVideo.style.maxWidth = '220px';
+      clonedVideo.style.maxHeight = '140px';
+      clonedVideo.style.display = 'block';
+      clonedVideo.setAttribute('playsinline', '');
+
+      popup = document.createElement('div');
+      popup.className = 'media-placeholder-popup';
+
+      // 添加caption「点击播放视频」
+      var captionHtml = '<div class="media-placeholder-popup-caption">点击播放视频</div>';
+      popup.innerHTML = captionHtml;
+      popup.appendChild(clonedVideo);
+
+      document.body.appendChild(popup);
+
+      // popup 自身 hover 时保持不关闭
+      popup.addEventListener('mouseenter', function() {
+        isHoveringPopup = true;
+        cancelClose();
+      });
+      popup.addEventListener('mouseleave', function() {
+        isHoveringPopup = false;
+        scheduleClose();
+      });
+
+      // 点击视频开始播放（用户手势触发，不会被浏览器拦截）
+      clonedVideo.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        clonedVideo.currentTime = 0;
+        clonedVideo.play().catch(function(err) {
+          console.log('视频播放失败:', err);
+        });
+      });
+
+      requestAnimationFrame(function() {
+        // 使用实际渲染高度精确定位
+        const rect = placeholder.getBoundingClientRect();
+        const popupRect = popup.getBoundingClientRect();
+        const actualHeight = popupRect.height > 10 ? popupRect.height : 154;
+        const actualWidth = popupRect.width > 10 ? popupRect.width : 220;
+        const gap = 8;
+
+        let top = rect.top - actualHeight - gap;
+        let left = rect.left;
+
+        if (top < gap) {
+          top = rect.bottom + gap;
+        }
+
+        if (left + actualWidth > window.innerWidth - gap) {
+          left = window.innerWidth - actualWidth - gap;
+        }
+
+        if (left < gap) {
+          left = gap;
+        }
+
+        popup.style.left = left + 'px';
+        popup.style.top = top + 'px';
+
+        popup.classList.add('visible');
+      });
+    }, 300);
+  });
+
+  placeholder.addEventListener('mouseleave', function() {
+    if (loadTimer) {
+      clearTimeout(loadTimer);
+      loadTimer = null;
+    }
+    scheduleClose();
+  });
+
+  // 点击tag直接展示popup并播放视频
+  placeholder.addEventListener('click', function(e) {
+    e.stopPropagation();
+
+    var video = placeholder.previousElementSibling;
+    if (!video || video.tagName !== 'VIDEO') return;
+
+    // 如果已经有popup就清理掉
+    if (loadTimer) {
+      clearTimeout(loadTimer);
+      loadTimer = null;
+    }
+    cancelClose();
+
+    if (popup) {
+      if (clonedVideo) {
+        clonedVideo.pause();
+        clonedVideo = null;
+      }
+      closeMediaPopup(popup);
+      popup = null;
+    }
+
+    // 直接创建popup并播放（用户手势，不会被拦截）
+    clonedVideo = video.cloneNode(true);
+    clonedVideo.controls = true;
+    clonedVideo.muted = false;
+    clonedVideo.style.maxWidth = '220px';
+    clonedVideo.style.maxHeight = '140px';
+    clonedVideo.style.display = 'block';
+    clonedVideo.setAttribute('playsinline', '');
+
+    popup = document.createElement('div');
+    popup.className = 'media-placeholder-popup';
+
+    var captionHtml = '<div class="media-placeholder-popup-caption">点击播放视频</div>';
+    popup.innerHTML = captionHtml;
+    popup.appendChild(clonedVideo);
+
+    document.body.appendChild(popup);
+
+    popup.addEventListener('mouseenter', function() {
+      isHoveringPopup = true;
+      cancelClose();
+    });
+    popup.addEventListener('mouseleave', function() {
+      isHoveringPopup = false;
+      scheduleClose();
+    });
+
+    clonedVideo.addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      clonedVideo.currentTime = 0;
+      clonedVideo.play().catch(function(err) {
+        console.log('视频播放失败:', err);
+      });
+    });
+
+    var rect = placeholder.getBoundingClientRect();
+
+    requestAnimationFrame(function() {
+      // 使用实际渲染高度精确定位
+      const popupRect = popup.getBoundingClientRect();
+      const actualHeight = popupRect.height > 10 ? popupRect.height : 154;
+      const actualWidth = popupRect.width > 10 ? popupRect.width : 220;
+      const gap = 8;
+
+      let top = rect.top - actualHeight - gap;
+      let left = rect.left;
+
+      if (top < gap) {
+        top = rect.bottom + gap;
+      }
+
+      if (left + actualWidth > window.innerWidth - gap) {
+        left = window.innerWidth - actualWidth - gap;
+      }
+
+      if (left < gap) {
+        left = gap;
+      }
+
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+
+      popup.classList.add('visible');
+    });
+
+    // 点击tag直接播放视频
+    clonedVideo.currentTime = 0;
+    clonedVideo.play().catch(function(err) {
+      console.log('视频播放失败:', err);
+    });
+  });
+}
+
+/**
+ * 设置媒体占位符的交互功能
+ * - 图片/动图占位符：hover缩略图 + 点击查看大图（可在popup内点击）
+ * - 视频占位符：hover预览 + 点击播放
+ * - 表情占位符：仅hover缩略图预览（不支持点击放大）
+ */
+function setupMediaPlaceholders() {
+  // 图片和动图占位符：支持hover缩略图 + 点击查看大图
+  const clickSelectors = [
+    '.media-placeholder-image[data-src]:not([data-placeholder-initialized])',
+    '.media-placeholder-gif[data-src]:not([data-placeholder-initialized])'
+  ];
+
+  clickSelectors.forEach(function(selector) {
+    document.querySelectorAll(selector).forEach(function(placeholder) {
+      placeholder.setAttribute('data-placeholder-initialized', 'true');
+
+      // 添加hover缩略图弹窗，带"点击查看大图"提示
+      addPlaceholderHoverPopup(placeholder, 200, 160, 120, '点击查看大图');
+
+      // 点击查看大图（使用FancyBox）
+      placeholder.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const src = placeholder.getAttribute('data-src');
+        if (!src) return;
+
+        if (typeof Fancybox !== 'undefined') {
+          Fancybox.show([{ src: src }], {
+            Toolbar: {
+              display: {
+                left: ['infobar'],
+                middle: [],
+                right: ['slideshow', 'thumbs', 'close']
+              }
+            },
+            Thumbs: { showOnStart: false },
+            Images: { zoom: true }
+          });
+        } else {
+          window.open(src, '_blank');
+        }
+      });
+    });
+  });
+
+  // 视频占位符：hover预览 + 点击播放
+  document.querySelectorAll('.media-placeholder-video:not([data-placeholder-initialized])').forEach(function(placeholder) {
+    placeholder.setAttribute('data-placeholder-initialized', 'true');
+    addVideoPlaceholderHover(placeholder);
+  });
+
+  // 表情占位符：仅支持hover缩略图预览，不支持点击放大
+  document.querySelectorAll('.media-placeholder-emoji[data-src]:not([data-placeholder-initialized])').forEach(function(placeholder) {
+    placeholder.setAttribute('data-placeholder-initialized', 'true');
+    // 添加hover缩略图弹窗（较小尺寸，适合表情）
+    addPlaceholderHoverPopup(placeholder, 200, 50, 50);
+  });
 }
 `;

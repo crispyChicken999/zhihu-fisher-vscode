@@ -136,7 +136,7 @@ export class WebViewUtils {
         // 导航到回答页面
         console.log("正在加载回答页面...");
         await page.goto(answerUrl, {
-          waitUntil: "domcontentloaded", // 只等待DOM加载完成即可
+          waitUntil: "networkidle2", // 等待网络请求基本完成，确保 JS 渲染完视频等动态内容
           timeout: 30000,
         });
 

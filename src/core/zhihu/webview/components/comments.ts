@@ -2917,6 +2917,9 @@ export class CommentsUtils {
     // 使用Cheerio处理HTML内容
     const $ = cheerio.load(content);
 
+    // 先处理文本形式的表情包（必须在 sticker/image 处理之前，避免污染属性值）
+    CommentsUtils.processTextEmojis($);
+
     // 处理评论中的图片链接
     $("a.comment_img").each(function () {
       const link = $(this);
@@ -2926,11 +2929,6 @@ export class CommentsUtils {
 
       // 检查是否是知乎图片链接
       if (href && href.includes("pic") && href.includes(".zhimg.com")) {
-        // 无媒体模式时只显示链接
-        // if (mediaDisplayMode === "none") {
-        //   return;
-        // }
-
         // 获取原始尺寸信息
         const originalWidth = parseInt(dataWidth || "100");
         const originalHeight = parseInt(dataHeight || "100");
@@ -2943,8 +2941,9 @@ export class CommentsUtils {
           imageUrl = "https://" + imageUrl;
         }
 
-        // 创建新的图片元素，样式完全由CSS控制
+        // 创建占位符+图片容器（占位符默认隐藏，hide-media模式下显示）
         const imageContainer = $(`
+          <span class="media-placeholder media-placeholder-image" data-src="${imageUrl}">[图片]</span>
           <div class="comment-image-container">
             <img
               src="${imageUrl}"
@@ -2976,12 +2975,6 @@ export class CommentsUtils {
 
       // 检查是否是知乎动图链接
       if (href && href.includes("pic") && href.includes(".zhimg.com")) {
-        // 无媒体模式时移除动图链接
-        // if (mediaDisplayMode === "none") {
-        //   link.remove();
-        //   return;
-        // }
-
         // 获取原始尺寸信息
         const originalWidth = parseInt(dataWidth || "200");
         const originalHeight = parseInt(dataHeight || "120");
@@ -2994,8 +2987,9 @@ export class CommentsUtils {
           gifUrl = "https://" + gifUrl;
         }
 
-        // 创建新的动图元素，样式完全由CSS控制
+        // 创建占位符+动图容器（占位符默认隐藏，hide-media模式下显示）
         const gifContainer = $(`
+          <span class="media-placeholder media-placeholder-gif" data-src="${gifUrl}">[动图]</span>
           <div class="comment-gif-container">
             <img
               src="${gifUrl}"
@@ -3049,8 +3043,12 @@ export class CommentsUtils {
           originalHeight = 64;
         }
 
-        // 创建新的表情包元素，样式完全由CSS控制
+        // 表情包占位符文本（如 [吃瓜]、[狗头] 等）
+        const displayText = stickerText || title || "[表情]";
+
+        // 创建占位符+表情包元素（占位符默认隐藏，hide-media模式下显示）
         const stickerContainer = $(`
+          <span class="media-placeholder media-placeholder-emoji" data-src="${stickerUrl}">${displayText}</span>
           <span class="comment-sticker-container">
             <img
               src="${stickerUrl}"
@@ -3089,11 +3087,6 @@ export class CommentsUtils {
       ) {
         // 检查是否是知乎图片链接
         if (href.includes("pic") && href.includes(".zhimg.com")) {
-          // 无媒体模式时只保留文本
-          // if (mediaDisplayMode === "none") {
-          //   return;
-          // }
-
           // 确保图片URL是完整的HTTPS地址
           let imageUrl = href;
           if (imageUrl.startsWith("//")) {
@@ -3102,26 +3095,30 @@ export class CommentsUtils {
             imageUrl = "https://" + imageUrl;
           }
 
-          // 根据链接文本类型决定显示样式
-          let elementClass, indicator;
+          // 根据链接文本类型决定占位符和显示样式
+          let placeholderClass, placeholderText, elementClass, indicator;
 
           if (linkText === "[动图]") {
-            // 动图样式
+            placeholderClass = "media-placeholder-gif";
+            placeholderText = "[动图]";
             elementClass = "comment-gif";
-            indicator =
-              '<div class="gif-indicator">GIF</div>';
+            indicator = '<div class="gif-indicator">GIF</div>';
           } else if (linkText.match(/^\[.*\]$/) && linkText !== "[图片]") {
-            // 表情包样式
+            // 表情包：保留原始文本
+            placeholderClass = "media-placeholder-emoji";
+            placeholderText = linkText;
             elementClass = "comment-sticker";
             indicator = "";
           } else {
-            // 普通图片样式
+            placeholderClass = "media-placeholder-image";
+            placeholderText = "[图片]";
             elementClass = "comment-image";
             indicator = "";
           }
 
-          // 创建图片元素，样式完全由CSS控制
+          // 创建占位符+图片元素（占位符默认隐藏，hide-media模式下显示）
           const imageContainer = $(`
+            <span class="media-placeholder ${placeholderClass}" data-src="${imageUrl}">${placeholderText}</span>
             <div class="comment-image-container">
               <img
                 src="${imageUrl}"
@@ -3201,43 +3198,52 @@ export class CommentsUtils {
       }
     });
 
-    // 处理文本形式的表情包（如 [doge]、[感谢] 等）
-    let htmlContent = $.html();
-    htmlContent = CommentsUtils.processTextEmojis(htmlContent);
-
-    return htmlContent;
+    return $.html();
   }
 
   /**
-   * 处理文本形式的表情包
-   * @param content HTML内容
-   * @returns 处理后的内容
+   * 处理文本形式的表情包（在 cheerio 文本节点上操作，避免污染 HTML 属性）
+   * 必须在其他 DOM 处理（sticker/image）之前调用
+   * @param $ cheerio 实例
    */
-  private static processTextEmojis(content: string): string {
+  private static processTextEmojis($: cheerio.CheerioAPI): void {
     // 使用静态的表情包映射，避免重复创建
     const emojiMap = CommentsUtils.getEmojiMap();
+    if (emojiMap.size === 0) return;
 
     // 匹配 [表情名] 格式的文本
     const emojiRegex = /\[([^\]]+)\]/g;
 
-    return content.replace(emojiRegex, (match, emojiName) => {
-      const emojiUrl = emojiMap.get(emojiName);
+    // 递归遍历所有文本节点
+    function walkTextNodes($el: cheerio.Cheerio<any>) {
+      $el.contents().each(function () {
+        const node = this as any;
+        if (node.type === "text") {
+          const text = node.data as string;
+          if (!emojiRegex.test(text)) return;
+          emojiRegex.lastIndex = 0; // 重置 regex 状态
 
-      // 如果找到对应的表情包图片
-      if (emojiUrl) {
-        return `
-          <img src="${emojiUrl}"
-            alt="${match}"
-            title="${match}"
-            class="comment-text-emoji"
-            referrerpolicy="no-referrer"
-            loading="lazy" />
-        `;
-      }
+          let hasMatch = false;
+          const newHtml = text.replace(emojiRegex, (match, emojiName) => {
+            const emojiUrl = emojiMap.get(emojiName);
+            if (emojiUrl) {
+              hasMatch = true;
+              return `<span class="media-placeholder media-placeholder-emoji" data-src="${emojiUrl}">${match}</span><img src="${emojiUrl}" alt="${match}" title="${match}" class="comment-text-emoji" referrerpolicy="no-referrer" loading="lazy" />`;
+            }
+            return match;
+          });
 
-      // 如果没有找到对应的表情包，保持原文
-      return match;
-    });
+          if (hasMatch) {
+            const $this = $(this);
+            $this.replaceWith($(newHtml));
+          }
+        } else if (node.type === "tag" || node.type === "root") {
+          walkTextNodes($(this));
+        }
+      });
+    }
+
+    walkTextNodes($.root());
   }
 
   /**

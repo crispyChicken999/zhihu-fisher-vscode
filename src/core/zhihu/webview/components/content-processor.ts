@@ -136,9 +136,17 @@ export class ContentProcessor {
       const img = gifPlayer.find("img.ztext-gif");
 
       if (img.length > 0) {
-        // 获取原始src
-        let src = img.attr("src");
-        let dataThumbnail = img.attr("data-thumbnail");
+        let src = img.attr("src") || "";
+        let dataThumbnail = img.attr("data-thumbnail") || "";
+
+        // 计算gifSrc用于占位符的data-src
+        let gifSrc = src;
+        if (gifSrc && gifSrc.includes(".jpg")) {
+          gifSrc = gifSrc.replace(/\.jpg(\?.*)?$/, ".gif$1");
+        }
+
+        // 始终添加占位符（默认隐藏，hide-media模式下显示）
+        gifPlayer.append(`<span class="media-placeholder media-placeholder-gif" data-src="${gifSrc}">[动图]</span>`);
 
         // 将.jpg改为.gif
         if (src && src.includes(".jpg")) {
@@ -196,12 +204,6 @@ export class ContentProcessor {
       ) {
         // 这是一个不适内容图片
 
-        // 无媒体模式时直接移除整个figure
-        if (mediaDisplayMode === "none") {
-          figure.remove();
-          return;
-        }
-
         // 处理真实图片的src
         let realSrc = originalImg.attr("src");
         const dataOriginal = originalImg.attr("data-original");
@@ -222,6 +224,8 @@ export class ContentProcessor {
 
         const newStructure = `
           <div class="uncomfortable-image-container">
+            <!-- 媒体占位符（hide-media模式下显示） -->
+            <span class="media-placeholder media-placeholder-image" data-src="${realSrc || ""}">[图片]</span>
             <!-- 遮挡层 -->
             <div class="image-mask">
               <img src="${
@@ -267,17 +271,25 @@ export class ContentProcessor {
 
     // 处理图片元素
     $("img").each(function () {
+      // 跳过 GifPlayer 内的图片（已在 GifPlayer 处理器中处理）
+      if ($(this).closest(".GifPlayer").length > 0) return;
+
       // 处理图片源地址
       const actualSrc = $(this).attr("data-actualsrc");
       const originalSrc = $(this).attr("data-original");
 
       // 优先使用data-actualsrc，其次使用data-original
+      let finalSrc = "";
       if (actualSrc) {
+        finalSrc = actualSrc;
         $(this).attr("src", actualSrc);
         $(this).attr("data-actualsrc-processed", "true");
       } else if (originalSrc) {
+        finalSrc = originalSrc;
         $(this).attr("src", originalSrc);
         $(this).attr("data-original-processed", "true");
+      } else {
+        finalSrc = $(this).attr("src") || "";
       }
 
       // 添加no-referrer属性以避免跨域问题
@@ -292,16 +304,29 @@ export class ContentProcessor {
       } else {
         $(this).css("transform", "");
       }
+
+      // 始终添加占位符（默认隐藏，hide-media模式下显示）
+      // 检测是否为表情/贴纸小图
+      const width = $(this).attr("width");
+      const height = $(this).attr("height");
+      const imgClass = $(this).attr("class") || "";
+      const isEmoji =
+        imgClass.includes("emoji") ||
+        imgClass.includes("sticker") ||
+        imgClass.includes("ztext-emoji") ||
+        (width && parseInt(width) <= 36) ||
+        (height && parseInt(height) <= 36);
+
+      if (isEmoji) {
+        const altText = $(this).attr("alt") || $(this).attr("title") || "[表情]";
+        $(this).after(`<span class="media-placeholder media-placeholder-emoji" data-src="${finalSrc}">${altText}</span>`);
+      } else {
+        $(this).after(`<span class="media-placeholder media-placeholder-image" data-src="${finalSrc}">[图片]</span>`);
+      }
     });
 
     // 处理视频元素
     $("video").each(function () {
-      // 无媒体模式时直接移除
-      if (mediaDisplayMode === "none") {
-        $(this).remove();
-        return;
-      }
-
       // 设置父盒子div的对齐方式为center
       $(this)
         .parent()
@@ -318,6 +343,9 @@ export class ContentProcessor {
       } else {
         $(this).css("transform", "");
       }
+
+      // 始终添加占位符（默认隐藏，hide-media模式下显示）
+      $(this).after(`<span class="media-placeholder media-placeholder-video">[视频]</span>`);
     });
 
     // 高级功能处理（仅在需要时包含）
