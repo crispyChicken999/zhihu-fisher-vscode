@@ -185,7 +185,9 @@ figure {
   position: fixed;
   z-index: 9999;
   opacity: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   pointer-events: auto;
   transform: translateY(4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -203,6 +205,7 @@ figure {
   background-color: var(--vscode-editor-background);
   display: block;
   cursor: pointer;
+  order: 1;
 }
 
 .media-placeholder-popup video {
@@ -212,20 +215,26 @@ figure {
   background-color: #000;
   display: block;
   cursor: pointer;
+  order: 1;
 }
 
 .media-placeholder-popup-caption {
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 2px 5px;
+  order: 2;
+  padding: 2px 6px;
   font-size: 11px;
   color: #fff;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.75);
   border-radius: 3px;
   line-height: 1.6;
   white-space: nowrap;
   pointer-events: none;
+  margin-top: 4px;
+}
+
+/* popup 出现在 placeholder 上方时，caption 切换到图片/视频上方 */
+.media-placeholder-popup.caption-on-top .media-placeholder-popup-caption {
+  order: 0;
+  margin-top: 0;
+  margin-bottom: 4px;
 }
 `;

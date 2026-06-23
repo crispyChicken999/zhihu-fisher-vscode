@@ -426,13 +426,11 @@ function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHei
       popup = document.createElement('div');
       popup.className = 'media-placeholder-popup';
 
-      var imgHtml = '';
+      var imgHtml = '<img src="' + src + '" referrerpolicy="no-referrer" loading="lazy" style="max-width:' + maxThumbWidth + 'px;max-height:' + maxThumbHeight + 'px;" />';
 
       if (caption) {
         imgHtml += '<div class="media-placeholder-popup-caption">' + caption + '</div>';
       }
-
-      imgHtml += '<img src="' + src + '" referrerpolicy="no-referrer" loading="lazy" style="max-width:' + maxThumbWidth + 'px;max-height:' + maxThumbHeight + 'px;" />';
 
       popup.innerHTML = imgHtml;
       document.body.appendChild(popup);
@@ -473,11 +471,12 @@ function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHei
       }
 
       requestAnimationFrame(function() {
-        // 使用实际渲染高度来精确定位
-        // 首次 hover 时图片未加载时 popup 仅有 border(~4px)，用阈值(>10)判断是否真正渲染完成
         const rect = placeholder.getBoundingClientRect();
         const popupRect = popup.getBoundingClientRect();
-        const actualHeight = popupRect.height > 10 ? popupRect.height : maxThumbHeight;
+        // 如果有caption，弹窗高度会包含caption（约24px），用 >20 阈值排除仅有caption的情况
+        const heightThreshold = caption ? 40 : 10;
+        const defaultHeight = caption ? maxThumbHeight + 24 : maxThumbHeight;
+        const actualHeight = popupRect.height > heightThreshold ? popupRect.height : defaultHeight;
         const actualWidth = popupRect.width > 10 ? popupRect.width : maxThumbWidth;
         const gap = 8;
 
@@ -502,6 +501,13 @@ function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHei
 
         popup.style.left = left + 'px';
         popup.style.top = top + 'px';
+
+        // popup在上方 → caption放到图片上面（order:0）；popup在下方 → caption在图片下面（order:2）
+        if (top < rect.top) {
+          popup.classList.add('caption-on-top');
+        } else {
+          popup.classList.remove('caption-on-top');
+        }
 
         popup.classList.add('visible');
       });
@@ -583,7 +589,7 @@ function addVideoPlaceholderHover(placeholder) {
       popup = document.createElement('div');
       popup.className = 'media-placeholder-popup';
 
-      // 添加caption「点击播放视频」
+      // caption 放在 popup 内部，使用 flex order 控制位置
       var captionHtml = '<div class="media-placeholder-popup-caption">点击播放视频</div>';
       popup.innerHTML = captionHtml;
       popup.appendChild(clonedVideo);
@@ -610,10 +616,9 @@ function addVideoPlaceholderHover(placeholder) {
       });
 
       requestAnimationFrame(function() {
-        // 使用实际渲染高度精确定位
         const rect = placeholder.getBoundingClientRect();
         const popupRect = popup.getBoundingClientRect();
-        const actualHeight = popupRect.height > 10 ? popupRect.height : 154;
+        const actualHeight = popupRect.height > 40 ? popupRect.height : 178;
         const actualWidth = popupRect.width > 10 ? popupRect.width : 220;
         const gap = 8;
 
@@ -634,6 +639,13 @@ function addVideoPlaceholderHover(placeholder) {
 
         popup.style.left = left + 'px';
         popup.style.top = top + 'px';
+
+        // popup在上方 → caption放到视频上面（order:0）；popup在下方 → caption在视频下面（order:2）
+        if (top < rect.top) {
+          popup.classList.add('caption-on-top');
+        } else {
+          popup.classList.remove('caption-on-top');
+        }
 
         popup.classList.add('visible');
       });
@@ -709,9 +721,8 @@ function addVideoPlaceholderHover(placeholder) {
     var rect = placeholder.getBoundingClientRect();
 
     requestAnimationFrame(function() {
-      // 使用实际渲染高度精确定位
       const popupRect = popup.getBoundingClientRect();
-      const actualHeight = popupRect.height > 10 ? popupRect.height : 154;
+      const actualHeight = popupRect.height > 40 ? popupRect.height : 178;
       const actualWidth = popupRect.width > 10 ? popupRect.width : 220;
       const gap = 8;
 
@@ -732,6 +743,12 @@ function addVideoPlaceholderHover(placeholder) {
 
       popup.style.left = left + 'px';
       popup.style.top = top + 'px';
+
+      if (top < rect.top) {
+        popup.classList.add('caption-on-top');
+      } else {
+        popup.classList.remove('caption-on-top');
+      }
 
       popup.classList.add('visible');
     });
