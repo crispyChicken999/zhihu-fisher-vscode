@@ -64,26 +64,61 @@ export class ContentProcessor {
           <svg class="copyright-warning-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
           </svg>
-          <h3 class="copyright-warning-title">版权保护提醒</h3>
+          <h3 class="copyright-warning-title">知乎盐选免责声明</h3>
+          <span class="copyright-warning-badge">盐选付费</span>
         </div>
 
-        <div class="copyright-warning-content">
-          <p><strong>本内容为知乎盐选付费专栏</strong></p>
-          <p>• 内容受版权保护，仅供个人学习使用</p>
-          <p>• 完整内容需要在知乎平台付费购买</p>
-          <p>• 请尊重原作者和平台的知识产权</p>
-        </div>
-
-        <div class="copyright-warning-highlight">
-          <p>
-            <strong>获取完整内容：</strong>
-            请前往 <a href="https://www.zhihu.com/xen/market/vip-privileges" target="_blank">知乎盐选</a> 购买盐选会员或单独购买该专栏
+        <div class="copyright-warning-section">
+          <p class="copyright-warning-section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+            </svg>
+            知识产权归属
+          </p>
+          <p class="copyright-warning-section-text">
+            本内容为知乎盐选付费专栏，著作权归原作者及知乎平台所有。请通过 <a href="https://www.zhihu.com/xen/market/vip-privileges" target="_blank">知乎官方渠道</a> 购买会员或订阅以获取完整阅读权限。尚未购买访问权限的用户，请通过官方渠道购买后阅读，非盐选会员用户仅展示章节预览。
           </p>
         </div>
 
-        <div class="copyright-warning-footer">
-          <p><strong>隐私声明：</strong>本插件仅将浏览器中已展示的内容搬运至VSCode中展示，不会上传、收集、存储或分析任何付费内容、用户数据或隐私信息，不会用于任何营利行为。</p>
-          <p><strong>免责声明：</strong>插件不会绕过知乎的反爬机制，不会恶意破坏或影响原网站正常使用。知乎对盐选付费内容采用字体反爬技术，可能导致部分文字在插件中显示异常，盐选会员建议直接前往知乎官网查看，按键盘（B）浏览器打开。</p>
+        <div class="copyright-warning-section">
+          <p class="copyright-warning-section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+            </svg>
+            技术机制
+          </p>
+          <ul class="copyright-warning-list">
+            <li>本插件为本地阅读辅助工具，仅提取浏览器中已渲染的页面内容，搬运至 VSCode 中进行展示。</li>
+            <li><strong>不会对</strong>知乎字体反爬算法、DRM 技术或访问控制措施进行逆向、解码、破解或规避。</li>
+            <li><strong>不会恶意破坏或影响</strong>原网站的正常运行，受字体反爬影响，部分文字可能显示为错别字。</li>
+          </ul>
+        </div>
+
+        <div class="copyright-warning-section">
+          <p class="copyright-warning-section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+            隐私与使用
+          </p>
+          <ul class="copyright-warning-list">
+            <li>本插件<strong>仅在</strong>本地设备运行，供摸鱼阅读使用。所有数据均在本地处理，关闭页面后自动销毁。</li>
+            <li><strong>不会</strong>上传、收集、存储或分析任何付费内容、用户数据或隐私信息。</li>
+            <li>仅供个人学习与研究使用，严禁商业化转载、分发或用于任何营利行为。</li>
+            <li>代码完全开源，欢迎审查监督。
+              <a href="https://github.com/crispyChicken999/zhihu-fisher-vscode/" target="_blank">GitHub 查看源码</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="copyright-warning-tip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+          </svg>
+          <div>
+            <div>知乎对盐选付费内容采用字体反爬技术，可能导致部分文字在插件中显示异常。</div>
+            <div>盐选会员建议直接前往知乎官网查看，按键盘 <kbd>B</kbd> 键在浏览器打开。</div>
+          </div>
         </div>
       </div>
     `;

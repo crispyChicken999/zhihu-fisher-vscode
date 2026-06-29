@@ -336,19 +336,21 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--vscode-inputValidation-warningBorder, #d4c5a9);
   border-left: 4px solid var(--vscode-list-warningForeground, #bf8803);
   color: var(--vscode-editor-foreground, #333333);
-  padding: 12px;
-  margin: 12px 0;
-  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 14px 0;
+  border-radius: 8px;
   font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
   font-size: var(--vscode-font-size, 13px);
-  line-height: 1.4;
+  line-height: 1.6;
 }
 
 .copyright-warning-header {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-  gap: 6px;
+  margin-bottom: 12px;
+  gap: 7px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
 }
 
 .copyright-warning-icon {
@@ -363,52 +365,144 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--vscode-editor-foreground, #333333);
 }
 
-.copyright-warning-content {
-  margin-bottom: 8px;
+/* 盐选付费徽章 */
+.copyright-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  margin-left: auto;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #bf8803 0%, #d4a017 50%, #e8b830 100%);
+  color: #fff;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  user-select: none;
 }
 
-.copyright-warning-content p {
-  margin: 4px 0;
+/* 三个内容模块 */
+.copyright-warning-section {
+  margin-bottom: 12px;
+}
+
+.copyright-warning-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.copyright-warning-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px 0;
+  font-weight: 600;
   font-size: 12px;
+  color: var(--vscode-editor-foreground, #333333);
 }
 
-.copyright-warning-highlight {
-  background: var(--vscode-editor-selectionHighlightBackground, rgba(173, 214, 255, 0.15));
-  padding: 6px 8px;
-  border-radius: 3px;
-  margin: 8px 0;
-  border-left: 2px solid var(--vscode-textLink-foreground, #0066cc);
+.copyright-warning-section-title svg {
+  flex-shrink: 0;
+  color: var(--vscode-list-warningForeground, #bf8803);
+  opacity: 0.85;
 }
 
-.copyright-warning-highlight p {
+.copyright-warning-section-text {
   margin: 0;
   font-size: 12px;
+  color: var(--vscode-editor-foreground, #333333);
+  line-height: 1.6;
 }
 
-.copyright-warning-highlight a {
+.copyright-warning-section-text a {
   color: var(--vscode-textLink-foreground, #0066cc);
   text-decoration: none;
+  font-weight: 600;
 }
 
-.copyright-warning-highlight a:hover {
+.copyright-warning-section-text a:hover {
   text-decoration: underline;
 }
 
-.copyright-warning-footer {
-  font-size: 11px;
-  color: var(--vscode-descriptionForeground, #6c6c6c);
-  border-top: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
-  padding-top: 6px;
-  margin-top: 8px;
-}
-
-.copyright-warning-footer p {
+.copyright-warning-list {
   margin: 0;
-  line-height: 1.3;
+  padding: 0;
+  list-style: none;
 }
 
-.copyright-warning-footer p + p {
-  margin-top: 3px;
+.copyright-warning-list li {
+  position: relative;
+  padding-left: 14px;
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--vscode-editor-foreground, #333333);
+  line-height: 1.6;
+}
+
+.copyright-warning-list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 9px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--vscode-list-warningForeground, #bf8803);
+  opacity: 0.6;
+}
+
+.copyright-warning-list strong {
+  color: var(--vscode-list-warningForeground, #bf8803);
+  font-weight: 600;
+}
+
+.copyright-warning-list a {
+  color: var(--vscode-textLink-foreground, #0066cc);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.copyright-warning-list a:hover {
+  text-decoration: underline;
+}
+
+/* 操作提示条（按 B 键跳转） */
+.copyright-warning-tip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--vscode-textBlockQuote-background, rgba(128, 128, 128, 0.08));
+  border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground, #6c6c6c);
+  line-height: 1.5;
+}
+
+.copyright-warning-tip svg {
+  flex-shrink: 0;
+  color: var(--vscode-textLink-foreground, #0066cc);
+  opacity: 0.8;
+}
+
+.copyright-warning-tip kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 10px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--vscode-editor-font-family, monospace);
+  background: var(--vscode-input-background, #f5f5f5);
+  color: var(--vscode-editor-foreground, #333333);
+  border: 1px solid var(--vscode-panel-border, #c6c6c6);
+  border-bottom-width: 2.5px;
+  border-radius: 3px;
+  line-height: 1;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 1px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* 暗色主题版权警告样式兜底 */
@@ -427,18 +521,47 @@ body.vscode-dark .copyright-warning-title {
   color: var(--vscode-editor-foreground, #cccccc);
 }
 
-body.vscode-dark .copyright-warning-highlight {
-  background: var(--vscode-editor-selectionHighlightBackground, rgba(173, 214, 255, 0.08));
-  border-left-color: var(--vscode-textLink-foreground, #4daafc);
+body.vscode-dark .copyright-warning-badge {
+  background: linear-gradient(135deg, #a67c00 0%, #c49a1f 50%, #d9ad30 100%);
 }
 
-body.vscode-dark .copyright-warning-highlight a {
+body.vscode-dark .copyright-warning-section-title {
+  color: var(--vscode-editor-foreground, #cccccc);
+}
+
+body.vscode-dark .copyright-warning-section-title svg {
+  color: var(--vscode-list-warningForeground, #ffcc00);
+}
+
+body.vscode-dark .copyright-warning-section-text,
+body.vscode-dark .copyright-warning-list li {
+  color: var(--vscode-editor-foreground, #cccccc);
+}
+
+body.vscode-dark .copyright-warning-list strong {
+  color: var(--vscode-list-warningForeground, #ffcc00);
+}
+
+body.vscode-dark .copyright-warning-section-text a,
+body.vscode-dark .copyright-warning-list a {
   color: var(--vscode-textLink-foreground, #4daafc);
 }
 
-body.vscode-dark .copyright-warning-footer {
+body.vscode-dark .copyright-warning-tip {
+  background: var(--vscode-textBlockQuote-background, rgba(255, 255, 255, 0.06));
+  border-color: var(--vscode-panel-border, rgba(255, 255, 255, 0.12));
   color: var(--vscode-descriptionForeground, #999999);
-  border-top: 1px solid var(--vscode-panel-border, rgba(255, 255, 255, 0.15));
+}
+
+body.vscode-dark .copyright-warning-tip svg {
+  color: var(--vscode-textLink-foreground, #4daafc);
+}
+
+body.vscode-dark .copyright-warning-tip kbd {
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-editor-foreground, #cccccc);
+  border-color: var(--vscode-panel-border, #555555);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 1px 0 rgba(0, 0, 0, 0.2);
 }
 
 /* 高对比度主题兜底 */
@@ -450,17 +573,40 @@ body.vscode-high-contrast .copyright-warning {
 }
 
 body.vscode-high-contrast .copyright-warning-icon,
-body.vscode-high-contrast .copyright-warning-title {
+body.vscode-high-contrast .copyright-warning-title,
+body.vscode-high-contrast .copyright-warning-section-title {
   color: var(--vscode-focusBorder, #00ff00);
 }
 
-body.vscode-high-contrast .copyright-warning-highlight {
-  background: transparent;
-  border: 1px solid var(--vscode-focusBorder, #00ff00);
-  border-left: 2px solid var(--vscode-focusBorder, #00ff00);
+body.vscode-high-contrast .copyright-warning-section-title svg,
+body.vscode-high-contrast .copyright-warning-list strong {
+  color: var(--vscode-focusBorder, #00ff00);
 }
 
-body.vscode-high-contrast .copyright-warning-highlight a {
+body.vscode-high-contrast .copyright-warning-badge {
+  background: #00ff00;
+  color: #000000;
+}
+
+body.vscode-high-contrast .copyright-warning-section-text a,
+body.vscode-high-contrast .copyright-warning-list a {
   color: var(--vscode-textLink-foreground, #0099ff);
+}
+
+body.vscode-high-contrast .copyright-warning-tip {
+  background: transparent;
+  border: 1px solid var(--vscode-focusBorder, #00ff00);
+  color: var(--vscode-editor-foreground, #ffffff);
+}
+
+body.vscode-high-contrast .copyright-warning-tip svg {
+  color: var(--vscode-textLink-foreground, #0099ff);
+}
+
+body.vscode-high-contrast .copyright-warning-tip kbd {
+  background: var(--vscode-input-background, #000000);
+  color: var(--vscode-editor-foreground, #ffffff);
+  border-color: var(--vscode-focusBorder, #00ff00);
+  box-shadow: none;
 }
 `;

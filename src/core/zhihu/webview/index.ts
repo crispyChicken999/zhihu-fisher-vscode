@@ -2134,10 +2134,12 @@ export class WebviewManager {
               ".RichContent .RichContent-inner",
             );
 
-            // .KfeCollection-AnswerTopCard-Container 这个是盐选的标识，如果发现了则加到答案内容里
+            // 盐选付费内容的标识，兼容免费用户和付费会员两种DOM结构
+            // 免费用户：.KfeCollection-AnswerTopCard-Container
+            // 付费会员：.KfeCollection-AnswerTopCard-newContainer
             const isPaidAnswer =
               document.querySelector(
-                ".KfeCollection-AnswerTopCard-Container",
+                ".KfeCollection-AnswerTopCard-Container, .KfeCollection-AnswerTopCard-newContainer, .KfeCollection-PaidAnswerFooter",
               ) !== null;
 
             // 获取内容的HTML字符串
