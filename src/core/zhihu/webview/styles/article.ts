@@ -37,6 +37,12 @@ export const articleCss = `
 .article-content {
   margin: 10px 0;
 }
+
+.article-content h1,
+.article-content h2 {
+  border: none;
+}
+
 .article-content video,
 .article-content img {
   border-radius: 4px;
