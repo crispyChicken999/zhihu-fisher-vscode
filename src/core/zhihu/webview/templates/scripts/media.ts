@@ -67,10 +67,15 @@ function initializeFancyBox() {
         return;
       }
 
-      // 只处理评论内容中的图片
-      if (img.classList.contains('comment-image')) {
+      // 跳过表情包/贴纸图片（不支持点击放大）
+      if (img.classList.contains('comment-sticker') || img.classList.contains('comment-text-emoji')) {
+        return;
+      }
+
+      // 处理评论内容中的图片和动图
+      if (img.classList.contains('comment-image') || img.classList.contains('comment-gif')) {
         img.setAttribute('data-fancybox', 'comment-gallery');
-        img.setAttribute('data-caption', '评论图片');
+        img.setAttribute('data-caption', img.classList.contains('comment-gif') ? '评论动图' : '评论图片');
         img.classList.add('fancybox-processed');
         img.style.cursor = 'pointer';
         img.title = '点击查看大图';
@@ -341,7 +346,8 @@ function openFancyboxGallery(currentSrc) {
   });
 
   // 从占位符中收集（隐藏/迷你模式下图片不可见时的后备）
-  document.querySelectorAll('[data-src]').forEach(function(el) {
+  // 排除表情占位符，因为表情包不支持点击放大
+  document.querySelectorAll('[data-src]:not(.media-placeholder-emoji)').forEach(function(el) {
     var s = el.getAttribute('data-src');
     if (s && !seen.has(s)) {
       sources.push({ src: s });
@@ -538,8 +544,10 @@ function closeMediaPopup(popup) {
  * @param {number} maxThumbWidth 缩略图最大宽度
  * @param {number} maxThumbHeight 缩略图最大高度
  * @param {string} caption 缩略图上方的提示文字（可选）
+ * @param {boolean} enableGalleryClick 是否启用点击弹窗图片打开Fancybox画廊（默认true，表情包设为false）
  */
-function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHeight, caption) {
+function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHeight, caption, enableGalleryClick) {
+  if (enableGalleryClick === undefined) enableGalleryClick = true;
   let popup = null;
   let loadTimer = null;
   let closeTimer = null;
@@ -604,15 +612,17 @@ function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHei
         scheduleClose();
       });
 
-      // 点击popup中的图片，触发FancyBox查看大图
-      var popupImg = popup.querySelector('img');
-      if (popupImg) {
-        popupImg.addEventListener('click', function(e) {
-          e.stopPropagation();
-          closeMediaPopup(popup);
-          popup = null;
-          openFancyboxGallery(src);
-        });
+      // 点击popup中的图片，触发FancyBox查看大图（表情包不启用）
+      if (enableGalleryClick) {
+        var popupImg = popup.querySelector('img');
+        if (popupImg) {
+          popupImg.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeMediaPopup(popup);
+            popup = null;
+            openFancyboxGallery(src);
+          });
+        }
       }
 
       requestAnimationFrame(function() {
@@ -989,7 +999,8 @@ function setupMediaPlaceholders() {
   document.querySelectorAll('.media-placeholder-emoji[data-src]:not([data-placeholder-initialized])').forEach(function(placeholder) {
     placeholder.setAttribute('data-placeholder-initialized', 'true');
     // 添加hover缩略图弹窗，带"复制到剪贴板"按钮
-    addPlaceholderHoverPopup(placeholder, 200, 50, 50);
+    // 最后一个参数false表示禁用点击弹窗图片打开Fancybox画廊
+    addPlaceholderHoverPopup(placeholder, 200, 50, 50, undefined, false);
   });
 }
 `;

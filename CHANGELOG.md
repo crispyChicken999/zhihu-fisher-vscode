@@ -2,6 +2,16 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.7.3] - 2026-07-09
+
+### Bug Fixes
+
+- **评论区表情包不再被 Fancybox 画廊收录**：修复了 Fancybox 将评论区表情包/贴纸图片也纳入图片画廊的问题。
+  - 移除了表情包 `<img>` 元素上的 `data-fancybox` 属性，Fancybox 不再将表情包识别为可放大的图片。
+  - `initializeFancyBox()` 明确跳过 `comment-sticker` 和 `comment-text-emoji` 类图片，双重保障。
+  - `openFancyboxGallery()` 收集图片时使用 `:not(.media-placeholder-emoji)` 排除表情占位符。
+  - 表情包现在仅支持 hover 缩略图预览（复制/另存为），不再支持点击放大，与普通图片区分开。
+
 ## [0.7.2] - 2026-07-09
 
 ### Features
