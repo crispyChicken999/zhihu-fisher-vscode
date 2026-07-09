@@ -4500,7 +4500,9 @@ export class WebviewManager {
         filters: { "所有文件": ["*"] },
         title: `保存${type === "video" ? "视频" : "图片"}`,
       });
-      if (!saveUri) return;
+      if (!saveUri) {
+        return;
+      };
       const https = await import("https");
       const http = await import("http");
       const httpModule = url.startsWith("https") ? https : http;
