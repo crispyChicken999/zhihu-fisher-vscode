@@ -75,7 +75,8 @@ export function registerAboutCommands(): vscode.Disposable[] {
         }
       );
 
-      panel.webview.html = aboutTemplate;
+      const extensionVersion = (Store.context?.extension.packageJSON)?.version || "";
+      panel.webview.html = aboutTemplate(extensionVersion);
     }
   );
   commands.push(showAboutCommand);
@@ -98,7 +99,7 @@ export function registerAboutCommands(): vscode.Disposable[] {
     "zhihu-fisher.showChangeLog",
     async () => {
       const changeLogUrl =
-        "https://github.com/crispyChicken999/zhihu-fisher-vscode/blob/main/CHANGELOG.md";
+        "https://github.com/crispyChicken999/zhihu-fisher-vscode/blob/master/CHANGELOG.md";
       vscode.env.openExternal(vscode.Uri.parse(changeLogUrl));
       vscode.window.showInformationMessage(
         "已打开更新日志页面，查看最新功能和改进！"
