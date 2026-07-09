@@ -187,7 +187,7 @@ figure {
   opacity: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   pointer-events: auto;
   transform: translateY(4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -198,6 +198,15 @@ figure {
   transform: translateY(0);
 }
 
+/* 主体容器：左侧媒体 + 右侧操作按钮（垂直居中） */
+.popup-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  order: 1;
+}
+
 .media-placeholder-popup img {
   border-radius: 4px;
   border: 2px solid var(--vscode-panel-border);
@@ -205,7 +214,6 @@ figure {
   background-color: var(--vscode-editor-background);
   display: block;
   cursor: pointer;
-  order: 1;
 }
 
 .media-placeholder-popup video {
@@ -215,26 +223,66 @@ figure {
   background-color: #000;
   display: block;
   cursor: pointer;
-  order: 1;
 }
 
+/* 操作按钮容器（垂直排列在媒体右侧） */
+.popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+/* 操作按钮（仅图标） */
+.popup-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 11px;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 0.15s ease;
+  line-height: 1;
+}
+
+.popup-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.popup-action-btn:active {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* caption 提示文字 */
 .media-placeholder-popup-caption {
   order: 2;
-  padding: 2px 6px;
+  padding: 2px 4px;
   font-size: 11px;
   color: #fff;
   background-color: rgba(0, 0, 0, 0.75);
   border-radius: 3px;
   line-height: 1.6;
-  white-space: nowrap;
   pointer-events: none;
   margin-top: 4px;
+  min-height: 20px;
 }
 
-/* popup 出现在 placeholder 上方时，caption 切换到图片/视频上方 */
+/* popup 出现在 placeholder 上方时，caption 切换到媒体上方 */
 .media-placeholder-popup.caption-on-top .media-placeholder-popup-caption {
   order: 0;
   margin-top: 0;
   margin-bottom: 4px;
+}
+
+.media-placeholder-popup.caption-on-top .popup-body {
+  order: 2;
 }
 `;

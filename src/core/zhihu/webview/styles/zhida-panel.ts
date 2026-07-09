@@ -329,7 +329,7 @@ export const zhidaPanelCss = `
     border: none;
     color: inherit;
     cursor: pointer;
-    padding: 2px;
+    padding: 3px;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;

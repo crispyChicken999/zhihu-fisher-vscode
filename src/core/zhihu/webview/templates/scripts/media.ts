@@ -292,16 +292,168 @@ function showUncomfortableImage(maskOverlay) {
 }
 
 /**
- * 下载媒体文件
+ * 获取视频元素的播放地址（兼容 src 属性和 <source> 子元素）
+ * @param {HTMLVideoElement} video 视频元素
+ * @returns {string} 视频源URL
+ */
+function getVideoSrc(video) {
+  var src = video.getAttribute('src');
+  if (src) return src;
+  var source = video.querySelector('source');
+  return source ? source.getAttribute('src') || '' : '';
+}
+
+/**
+ * 下载/另存为媒体文件
  * @param {string} url 媒体文件URL
  * @param {string} type 媒体类型
  */
-function downloadMedia(url, type) {
+function mediaSaveAs(url, type) {
   vscode.postMessage({
     command: 'downloadMedia',
     url: url,
     type: type
   });
+}
+
+/**
+ * 打开Fancybox画廊，支持上一张/下一张导航
+ * 收集页面中所有图片（包括隐藏模式下占位符中的图片），
+ * 从当前点击的图片开始展示
+ * @param {string} currentSrc 当前点击的图片URL
+ */
+function openFancyboxGallery(currentSrc) {
+  if (typeof Fancybox === 'undefined') {
+    window.open(currentSrc, '_blank');
+    return;
+  }
+
+  var sources = [];
+  var seen = new Set();
+
+  // 从已处理的fancybox图片中收集
+  document.querySelectorAll('img[data-fancybox="article-gallery"]').forEach(function(img) {
+    var s = img.getAttribute('src');
+    if (s && !seen.has(s)) {
+      sources.push({ src: s });
+      seen.add(s);
+    }
+  });
+
+  // 从占位符中收集（隐藏/迷你模式下图片不可见时的后备）
+  document.querySelectorAll('[data-src]').forEach(function(el) {
+    var s = el.getAttribute('data-src');
+    if (s && !seen.has(s)) {
+      sources.push({ src: s });
+      seen.add(s);
+    }
+  });
+
+  // 找当前图片的起始索引
+  var startIndex = 0;
+  sources.forEach(function(item, index) {
+    if (item.src === currentSrc) {
+      startIndex = index;
+    }
+  });
+
+  if (sources.length === 0) {
+    // 没有收集到任何图片，直接打开当前图片
+    sources = [{ src: currentSrc }];
+  }
+
+  Fancybox.show(sources, {
+    startIndex: startIndex,
+    Toolbar: {
+      display: {
+        left: ['infobar'],
+        middle: [],
+        right: ['slideshow', 'thumbs', 'close']
+      }
+    },
+    Thumbs: { showOnStart: false },
+    Images: { zoom: true }
+  });
+}
+
+/**
+ * 复制媒体到剪贴板
+ * @param {string} url 媒体文件URL
+ */
+async function copyMediaToClipboard(url) {
+  // 检查是否是视频（通过URL扩展名判断，避免下载整个视频文件）
+  var videoExts = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.wmv', '.flv', '.mkv'];
+  var isVideo = videoExts.some(function(ext) {
+    return url.toLowerCase().indexOf(ext) !== -1;
+  });
+
+  if (isVideo) {
+    // 视频无法直接复制到剪贴板，改为复制视频链接
+    try {
+      await navigator.clipboard.writeText(url);
+      vscode.postMessage({
+        command: 'showNotification',
+        message: '视频链接已复制到剪贴板'
+      });
+    } catch (err) {
+      console.error('复制视频链接失败:', err);
+      vscode.postMessage({
+        command: 'showNotification',
+        message: '复制失败，请重试'
+      });
+    }
+    return;
+  }
+
+  // 图片类型：尝试复制图片到剪贴板
+  try {
+    const response = await fetch(url, { referrerPolicy: 'no-referrer' });
+    const blob = await response.blob();
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        [blob.type]: blob
+      })
+    ]);
+    vscode.postMessage({
+      command: 'showNotification',
+      message: '已复制到剪贴板'
+    });
+  } catch (err) {
+    console.error('复制到剪贴板失败:', err);
+    // 后备方案：用canvas复制图片
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise(function(resolve, reject) {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const blob = await new Promise(function(resolve) {
+        canvas.toBlob(resolve, 'image/png');
+      });
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': blob
+        })
+      ]);
+      vscode.postMessage({
+        command: 'showNotification',
+        message: '已复制到剪贴板'
+      });
+    } catch (fallbackErr) {
+      console.error('复制到剪贴板(后备)失败:', fallbackErr);
+      vscode.postMessage({
+        command: 'showNotification',
+        message: '复制失败，请重试'
+      });
+    }
+  }
 }
 
 // 初始化媒体相关功能
@@ -426,13 +578,20 @@ function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHei
       popup = document.createElement('div');
       popup.className = 'media-placeholder-popup';
 
-      var imgHtml = '<img src="' + src + '" referrerpolicy="no-referrer" loading="lazy" style="max-width:' + maxThumbWidth + 'px;max-height:' + maxThumbHeight + 'px;" />';
+      var escapedSrc = src.replace(/'/g, "\\'");
+      var popupHtml = '<div class="popup-body">'
+        + '<img src="' + src + '" referrerpolicy="no-referrer" loading="lazy" style="max-width:' + maxThumbWidth + 'px;max-height:' + maxThumbHeight + 'px;" />'
+        + '<div class="popup-actions">'
+          + '<button class="popup-action-btn" onclick="copyMediaToClipboard(&apos;' + escapedSrc + '&apos;)" title="复制到剪贴板"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm0-2h9V4H9zm-4 6q-.825 0-1.412-.587T3 20V6h2v14h11v2zm4-6V4z"/></svg></button>'
+          + '<button class="popup-action-btn" onclick="mediaSaveAs(&apos;' + escapedSrc + '&apos;, &apos;image&apos;)" title="另存为"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg></button>'
+        + '</div>'
+        + '</div>';
 
       if (caption) {
-        imgHtml += '<div class="media-placeholder-popup-caption">' + caption + '</div>';
+        popupHtml += '<div class="media-placeholder-popup-caption">' + caption + '</div>';
       }
 
-      popup.innerHTML = imgHtml;
+      popup.innerHTML = popupHtml;
       document.body.appendChild(popup);
 
       // popup 自身 hover 时保持不关闭
@@ -452,21 +611,7 @@ function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHei
           e.stopPropagation();
           closeMediaPopup(popup);
           popup = null;
-          if (typeof Fancybox !== 'undefined') {
-            Fancybox.show([{ src: src }], {
-              Toolbar: {
-                display: {
-                  left: ['infobar'],
-                  middle: [],
-                  right: ['slideshow', 'thumbs', 'close']
-                }
-              },
-              Thumbs: { showOnStart: false },
-              Images: { zoom: true }
-            });
-          } else {
-            window.open(src, '_blank');
-          }
+          openFancyboxGallery(src);
         });
       }
 
@@ -590,9 +735,31 @@ function addVideoPlaceholderHover(placeholder) {
       popup.className = 'media-placeholder-popup';
 
       // caption 放在 popup 内部，使用 flex order 控制位置
-      var captionHtml = '<div class="media-placeholder-popup-caption">点击播放视频</div>';
-      popup.innerHTML = captionHtml;
-      popup.appendChild(clonedVideo);
+    var videoSrc = getVideoSrc(video);
+      var escapedSrc = videoSrc.replace(/'/g, "\\'");
+
+      // 创建主体容器：左侧媒体 + 右侧操作按钮
+      var bodyDiv = document.createElement('div');
+      bodyDiv.className = 'popup-body';
+
+      clonedVideo.style.maxWidth = '220px';
+      clonedVideo.style.maxHeight = '140px';
+      clonedVideo.style.display = 'block';
+      clonedVideo.setAttribute('playsinline', '');
+      bodyDiv.appendChild(clonedVideo);
+
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'popup-actions';
+      actionsDiv.innerHTML = '<button class="popup-action-btn" onclick="copyMediaToClipboard(&apos;' + escapedSrc + '&apos;)" title="复制链接到剪贴板"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm0-2h9V4H9zm-4 6q-.825 0-1.412-.587T3 20V6h2v14h11v2zm4-6V4z"/></svg></button>'
+        + '<button class="popup-action-btn" onclick="mediaSaveAs(&apos;' + escapedSrc + '&apos;, &apos;video&apos;)" title="另存为"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg></button>';
+      bodyDiv.appendChild(actionsDiv);
+
+      popup.appendChild(bodyDiv);
+
+      var captionDiv = document.createElement('div');
+      captionDiv.className = 'media-placeholder-popup-caption';
+      captionDiv.textContent = '点击播放视频';
+      popup.appendChild(captionDiv);
 
       document.body.appendChild(popup);
 
@@ -694,10 +861,31 @@ function addVideoPlaceholderHover(placeholder) {
 
     popup = document.createElement('div');
     popup.className = 'media-placeholder-popup';
+    var videoSrc = getVideoSrc(video);
+    var escapedSrc = videoSrc.replace(/'/g, "\\'");
 
-    var captionHtml = '<div class="media-placeholder-popup-caption">点击播放视频</div>';
-    popup.innerHTML = captionHtml;
-    popup.appendChild(clonedVideo);
+    // 创建主体容器：左侧媒体 + 右侧操作按钮
+    var bodyDiv = document.createElement('div');
+    bodyDiv.className = 'popup-body';
+
+    clonedVideo.style.maxWidth = '220px';
+    clonedVideo.style.maxHeight = '140px';
+    clonedVideo.style.display = 'block';
+    clonedVideo.setAttribute('playsinline', '');
+    bodyDiv.appendChild(clonedVideo);
+
+    var actionsDiv = document.createElement('div');
+    actionsDiv.className = 'popup-actions';
+    actionsDiv.innerHTML = '<button class="popup-action-btn" onclick="copyMediaToClipboard(&apos;' + escapedSrc + '&apos;)" title="复制链接到剪贴板"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm0-2h9V4H9zm-4 6q-.825 0-1.412-.587T3 20V6h2v14h11v2zm4-6V4z"/></svg></button>'
+      + '<button class="popup-action-btn" onclick="mediaSaveAs(&apos;' + escapedSrc + '&apos;, &apos;video&apos;)" title="另存为"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg></button>';
+    bodyDiv.appendChild(actionsDiv);
+
+    popup.appendChild(bodyDiv);
+
+    var captionDiv = document.createElement('div');
+    captionDiv.className = 'media-placeholder-popup-caption';
+    captionDiv.textContent = '点击播放视频';
+    popup.appendChild(captionDiv);
 
     document.body.appendChild(popup);
 
@@ -786,22 +974,7 @@ function setupMediaPlaceholders() {
         e.stopPropagation();
         const src = placeholder.getAttribute('data-src');
         if (!src) return;
-
-        if (typeof Fancybox !== 'undefined') {
-          Fancybox.show([{ src: src }], {
-            Toolbar: {
-              display: {
-                left: ['infobar'],
-                middle: [],
-                right: ['slideshow', 'thumbs', 'close']
-              }
-            },
-            Thumbs: { showOnStart: false },
-            Images: { zoom: true }
-          });
-        } else {
-          window.open(src, '_blank');
-        }
+        openFancyboxGallery(src);
       });
     });
   });
@@ -812,10 +985,10 @@ function setupMediaPlaceholders() {
     addVideoPlaceholderHover(placeholder);
   });
 
-  // 表情占位符：仅支持hover缩略图预览，不支持点击放大
+  // 表情占位符：仅支持hover缩略图预览，不支持点击放大，带复制按钮
   document.querySelectorAll('.media-placeholder-emoji[data-src]:not([data-placeholder-initialized])').forEach(function(placeholder) {
     placeholder.setAttribute('data-placeholder-initialized', 'true');
-    // 添加hover缩略图弹窗（较小尺寸，适合表情）
+    // 添加hover缩略图弹窗，带"复制到剪贴板"按钮
     addPlaceholderHoverPopup(placeholder, 200, 50, 50);
   });
 }

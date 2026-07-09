@@ -2846,6 +2846,11 @@ export class WebviewManager {
           // 处理点击 AI 总结按钮
           await this.handleZhidaSummarize(webviewId, message.answerId);
           break;
+
+        case "downloadMedia":
+          // 处理下载/另存为媒体文件
+          await this.handleDownloadMedia(message.url, message.type);
+          break;
       }
     });
   }
@@ -4466,6 +4471,52 @@ export class WebviewManager {
         keyword: "AI 总结",
         error: `获取 AI 总结失败：${error?.message || String(error)}`,
       });
+    }
+  }
+
+
+  /**
+   * 处理下载/另存为媒体文件
+   */
+  private static async handleDownloadMedia(
+    url: string,
+    type: string,
+  ): Promise<void> {
+    try {
+      if (!url) {
+        vscode.window.showErrorMessage("下载失败：无效的文件URL");
+        return;
+      }
+      const uri = vscode.Uri.parse(url);
+      const pathParts = uri.path.split("/");
+      const rawFilename = pathParts[pathParts.length - 1] || `media.${type === "video" ? "mp4" : "png"}`;
+      const filename = rawFilename.split("?")[0];
+      const defaultUri = vscode.Uri.joinPath(
+        vscode.workspace.workspaceFolders?.[0]?.uri || vscode.Uri.file(""),
+        filename,
+      );
+      const saveUri = await vscode.window.showSaveDialog({
+        defaultUri,
+        filters: { "所有文件": ["*"] },
+        title: `保存${type === "video" ? "视频" : "图片"}`,
+      });
+      if (!saveUri) return;
+      const https = await import("https");
+      const http = await import("http");
+      const httpModule = url.startsWith("https") ? https : http;
+      const fileContent = await new Promise<Uint8Array>((resolve, reject) => {
+        httpModule.get(url, { headers: { Referer: "https://www.zhihu.com/" } }, (response) => {
+          const chunks: Buffer[] = [];
+          response.on("data", (chunk: Buffer) => chunks.push(chunk));
+          response.on("end", () => resolve(new Uint8Array(Buffer.concat(chunks))));
+          response.on("error", (err: Error) => reject(err));
+        }).on("error", (err: Error) => reject(err));
+      });
+      await vscode.workspace.fs.writeFile(saveUri, fileContent);
+      vscode.window.showInformationMessage(`文件已保存: ${saveUri.fsPath}`);
+    } catch (error: any) {
+      console.error("下载文件失败:", error);
+      vscode.window.showErrorMessage(`下载失败: ${error?.message || String(error)}`);
     }
   }
 }
