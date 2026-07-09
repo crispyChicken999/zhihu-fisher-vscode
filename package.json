@@ -550,12 +550,12 @@
           "group": "ysupport@1"
         },
         {
-          "command": "zhihu-fisher.buyMeCoffee",
+          "command": "zhihu-fisher.starOnGitHub",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "ysupport@2"
         },
         {
-          "command": "zhihu-fisher.starOnGitHub",
+          "command": "zhihu-fisher.buyMeCoffee",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "ysupport@3"
         },
