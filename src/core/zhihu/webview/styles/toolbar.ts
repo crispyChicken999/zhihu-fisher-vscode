@@ -121,7 +121,7 @@ body.immersive-mode header + * + .answer-meta {
 /* 沉浸模式下保持显示的元素（第二个 answer-meta） */
 body.immersive-mode .article-content + .answer-meta {
   display: flex !important;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 0;
   margin: min(0.9em, 10px) 0;
   background: none;

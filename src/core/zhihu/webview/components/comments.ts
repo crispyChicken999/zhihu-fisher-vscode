@@ -3234,7 +3234,15 @@ export class CommentsUtils {
 
           if (hasMatch) {
             const $this = $(this);
-            $this.replaceWith($(newHtml));
+            try {
+              // 用 div 包裹强制按 HTML 解析，避免 newHtml 以非 '<' 开头（如残缺表情片段
+              // ="media-placeholder..."）时被 cheerio 当成 CSS 选择器而抛 Unmatched selector
+              const $wrapper = $('<div></div>').html(newHtml);
+              $this.replaceWith($wrapper.contents());
+            } catch {
+              // 兜底：极端情况下放弃替换，保留原文本，避免整篇回答加载失败
+              $this.replaceWith(newHtml);
+            }
           }
         } else if (node.type === "tag" || node.type === "root") {
           walkTextNodes($(this));
