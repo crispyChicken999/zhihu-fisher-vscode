@@ -54,7 +54,7 @@ export function registerGeneralCommands(): vscode.Disposable[] {
         // 显示输入框让用户输入预加载数量
         const countInput = await vscode.window.showInputBox({
           title: "设置回答预加载数量",
-          prompt: "请输入每次预加载的回答数量 (5-50)",
+          prompt: "请输入每次预加载的回答数量 (5-50)，非必要请勿修改！！",
           value: currentCount.toString(),
           placeHolder: "建议设置为 5-20 之间的数值",
           validateInput: (value: string) => {
