@@ -437,15 +437,15 @@ export class sidebarFollowListDataProvider
                 };
               }
 
-              // 提取点赞数（从按钮文本中提取）
+              // 提取点赞数（从按钮文本中提取，支持"赞同 1 万"等中文单位）
               let upvoteCount = "0";
               const voteButton = contentElement?.querySelector(".VoteButton--up");
               if (voteButton) {
                 const voteText = voteButton.textContent || "";
-                // 匹配 "赞同 1" 或 "赞同 123" 等格式
-                const voteMatch = voteText.match(/赞同\s*(\d+)/);
+                const voteMatch = voteText.match(/赞同\s*([\d,]+(?:\.\d+)?)\s*(万?)/);
                 if (voteMatch) {
-                  upvoteCount = voteMatch[1];
+                  const num = parseFloat(voteMatch[1].replace(/,/g, ""));
+                  upvoteCount = String(voteMatch[2] === "万" ? Math.round(num * 10000) : num);
                 }
               }
 

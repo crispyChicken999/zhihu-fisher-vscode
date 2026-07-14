@@ -328,6 +328,13 @@ export class WebviewManager {
             webviewId,
             webviewItem.article.specificAnswerUrl,
           );
+
+          // 检查webview是否在加载过程中被切换/关闭
+          if (!webviewItem.isLoading || !Store.webviewMap.has(webviewId)) {
+            console.log("WebView在加载特定回答时被关闭，取消继续加载");
+            return;
+          }
+
           if (preloadedAnswer) {
             // 将预加载的回答转换为标准AnswerItem格式并放在第一位
             const preloadedAnswerItem: AnswerItem = {
@@ -427,6 +434,12 @@ export class WebviewManager {
           webviewItem.isLoading = false;
           return;
         }
+      }
+
+      // 检查webview是否在加载特定回答后被切换/关闭，避免继续导航到问题页面
+      if (!webviewItem.isLoading || !Store.webviewMap.has(webviewId)) {
+        console.log("WebView在加载特定回答后被关闭，跳过问题页面加载");
+        return;
       }
 
       // 关键步骤！
@@ -917,12 +930,17 @@ export class WebviewManager {
           ? timeElement.textContent?.trim() || ""
           : "";
 
-        // 获取点赞数
+        // 获取点赞数（支持"赞同 1 万"等中文单位）
         const likeElement = document.querySelector(".VoteButton");
         const likeText = likeElement
           ? likeElement.getAttribute("aria-label") || "0"
           : "0";
-        const likeCount = parseInt(likeText.replace(/[^\d]/g, "") || "0", 10);
+        const likeMatch = likeText.match(/赞同\s*([\d,]+(?:\.\d+)?)\s*(万?)/);
+        let likeCount = 0;
+        if (likeMatch) {
+          likeCount = parseFloat(likeMatch[1].replace(/,/g, ""));
+          if (likeMatch[2] === "万") likeCount = Math.round(likeCount * 10000);
+        }
 
         // 获取投票状态
         let voteStatus: 1 | -1 | 0 = 0; // 默认为中立
@@ -1371,12 +1389,17 @@ export class WebviewManager {
             ""
           : "";
 
-        // 获取点赞数
+        // 获取点赞数（支持"赞同 1 万"等中文单位）
         const likeElement = document.querySelector(".VoteButton");
         const likeText = likeElement
           ? likeElement.getAttribute("aria-label") || "0"
           : "0";
-        const likeCount = parseInt(likeText.replace(/[^\d]/g, "") || "0", 10);
+        const likeMatch = likeText.match(/赞同\s*([\d,]+(?:\.\d+)?)\s*(万?)/);
+        let likeCount = 0;
+        if (likeMatch) {
+          likeCount = parseFloat(likeMatch[1].replace(/,/g, ""));
+          if (likeMatch[2] === "万") likeCount = Math.round(likeCount * 10000);
+        }
 
         // 获取投票状态
         let voteStatus: 1 | -1 | 0 = 0; // 默认为中立
@@ -1898,6 +1921,92 @@ export class WebviewManager {
     });
   }
 
+  /**
+   * 从加载页面切换文章（关闭当前webview并打开上/下一篇）
+   * @param webviewId 当前webview的ID
+   * @param direction 切换方向：'prev' 或 'next'
+   */
+  private static async switchArticleFromLoading(
+    webviewId: string,
+    direction: "prev" | "next",
+  ): Promise<void> {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      console.log("switchArticleFromLoading: webview not found");
+      return;
+    }
+
+    try {
+      const sourceType = webviewItem.sourceType;
+
+      // inner-link 类型不支持上下篇切换
+      if (sourceType === "inner-link") {
+        vscode.window.showInformationMessage("内部链接不支持上下篇切换");
+        return;
+      }
+
+      // 1. 中断当前正在进行的加载操作
+      console.log("中断当前加载操作，准备切换" + (direction === "prev" ? "上一篇" : "下一篇"));
+      webviewItem.isLoading = false;
+      webviewItem.batchConfig.isLoadingBatch = false;
+      webviewItem.article.isLoading = false;
+
+      // 2. 获取列表和位置信息（在关闭webview之前获取）
+      const originalItem = webviewItem.originalItem;
+      const collectionId = webviewItem.collectionId;
+      const list = this.getListBySourceType(sourceType, collectionId);
+      if (!list) {
+        vscode.window.showErrorMessage("未找到对应的列表数据，列表可能已经刷新了");
+        return;
+      }
+
+      const currentIndex = this.findItemIndexInList(originalItem, list);
+      if (currentIndex === -1) {
+        vscode.window.showErrorMessage("未找到内容位置，列表可能已经刷新了");
+        return;
+      }
+
+      // 检查边界
+      if (direction === "prev" && currentIndex === 0) {
+        vscode.window.showInformationMessage("已经是第一篇了");
+        return;
+      }
+      if (direction === "next" && currentIndex === list.length - 1) {
+        vscode.window.showInformationMessage("已经是最后一篇了");
+        return;
+      }
+
+      // 获取目标内容
+      const targetItem = direction === "prev" ? list[currentIndex - 1] : list[currentIndex + 1];
+
+      // 3. 隐藏状态栏
+      this.hideStatusBarItem(webviewId);
+
+      // 4. 清理伪装缓存
+      DisguiseManager.clearDisguiseCache(webviewId);
+
+      // 5. 关闭Puppeteer页面
+      await PuppeteerManager.closePage(webviewId);
+
+      // 6. 关闭webview面板并从Store移除
+      Store.webviewMap.delete(webviewId);
+      webviewItem.webviewPanel.dispose();
+
+      // 7. 清理孤立页面和空白标签页
+      try {
+        await PuppeteerManager.cleanupOrphanedPages();
+      } catch (cleanupError) {
+        console.error("清理孤立页面时出错:", cleanupError);
+      }
+
+      // 8. 打开新的webview
+      await this.openWebview(targetItem, sourceType, collectionId);
+    } catch (error) {
+      console.error("从加载页面切换文章时出错:", error);
+      vscode.window.showErrorMessage("切换文章时出错: " + error);
+    }
+  }
+
   /** 跳转到指定回答 */
   public static async jumpToAnswer(
     webviewId: string,
@@ -1950,6 +2059,69 @@ export class WebviewManager {
       if (Store.webviewMap.has(webviewId)) {
         vscode.window.showErrorMessage("跳转到指定回答时出错:" + error);
       }
+    }
+  }
+
+  /**
+   * 检测并处理回答列表加载失败的情况
+   * 当页面出现"加载失败了"提示和"再试试"按钮时，自动点击重试
+   * @param page - Puppeteer的Page实例
+   */
+  private static async handleAnswerLoadFailure(
+    page: Puppeteer.Page,
+  ): Promise<void> {
+    try {
+      const hasFailure = await page.evaluate(() => {
+        // 在回答列表区域内查找"加载失败了"文本
+        const answerArea = document.querySelector(
+          ".AnswersNavWrapper, .QuestionAnswers-answers",
+        );
+        if (!answerArea) return false;
+
+        // 查找包含"加载失败了"的元素
+        let foundFailure = false;
+        const allTexts = answerArea.querySelectorAll("*");
+        allTexts.forEach((el) => {
+          if (
+            el.textContent?.trim() === "加载失败了" &&
+            el.children.length === 0
+          ) {
+            foundFailure = true;
+          }
+        });
+        return foundFailure;
+      });
+
+      if (!hasFailure) return;
+
+      console.log("检测到回答列表加载失败，尝试点击重试按钮...");
+
+      // 点击"再试试"按钮
+      const clicked = await page.evaluate(() => {
+        const answerArea = document.querySelector(
+          ".AnswersNavWrapper, .QuestionAnswers-answers",
+        );
+        if (!answerArea) return false;
+
+        // 查找文本为"再试试"的按钮
+        let clickedRetry = false;
+        const buttons = answerArea.querySelectorAll("button");
+        buttons.forEach((btn) => {
+          if (btn.textContent?.trim() === "再试试") {
+            (btn as HTMLButtonElement).click();
+            clickedRetry = true;
+          }
+        });
+        return clickedRetry;
+      });
+
+      if (clicked) {
+        console.log("已点击重试按钮，等待内容加载...");
+        // 等待内容加载（骨架屏消失或新内容出现）
+        await PuppeteerManager.delay(3000);
+      }
+    } catch (error) {
+      console.error("处理回答加载失败时出错:", error);
     }
   }
 
@@ -2396,6 +2568,9 @@ export class WebviewManager {
         );
       }
 
+      // 检测"加载失败了"状态，点击"再试试"按钮重试
+      await this.handleAnswerLoadFailure(page);
+
       // 滚动后再次检查页面是否已关闭
       if (!Store.webviewMap.has(webviewId)) {
         console.log("页面在滚动加载过程中已关闭，停止加载更多回答。");
@@ -2694,6 +2869,16 @@ export class WebviewManager {
 
         case "loadNextArticle":
           await this.loadNextArticle(webviewId);
+          break;
+
+        case "switchToPreviousArticle":
+          // 从加载页面触发的切换上一篇（关闭当前webview后打开上一篇）
+          await this.switchArticleFromLoading(webviewId, "prev");
+          break;
+
+        case "switchToNextArticle":
+          // 从加载页面触发的切换下一篇（关闭当前webview后打开下一篇）
+          await this.switchArticleFromLoading(webviewId, "next");
           break;
 
         case "jumpToAnswer":

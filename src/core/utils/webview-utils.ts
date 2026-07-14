@@ -223,14 +223,15 @@ export class WebViewUtils {
           );
           const content = isPaidAnswer ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' + contentElement?.innerHTML : contentElement?.innerHTML || "";
 
-          // 提取点赞数
+          // 提取点赞数（支持"赞同 1 万"等中文单位）
           const voteElement = answerElement.querySelector(".VoteButton");
           let voteCount = 0;
           if (voteElement) {
             const voteText = voteElement.textContent || "";
-            const match = voteText.match(/赞同\s*(\d+)/);
+            const match = voteText.match(/赞同\s*([\d,]+(?:\.\d+)?)\s*(万?)/);
             if (match) {
-              voteCount = parseInt(match[1]) || 0;
+              voteCount = parseFloat(match[1].replace(/,/g, ""));
+              if (match[2] === "万") voteCount = Math.round(voteCount * 10000);
             }
           }
 

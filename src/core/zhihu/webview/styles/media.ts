@@ -106,7 +106,7 @@ figure {
   cursor: pointer;
   user-select: none;
   text-underline-offset: 2px;
-  transition: all 0.3s;
+  transition: padding 0.3s;
   position: relative;
 }
 
@@ -124,7 +124,7 @@ figure {
   cursor: pointer;
   user-select: none;
   text-underline-offset: 2px;
-  transition: all 0.3s;
+  transition: padding 0.3s;
   position: relative;
   margin: 0 2px;
 }
@@ -143,7 +143,7 @@ figure {
   margin: 2px;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s;
+  transition: padding 0.3s;
   text-underline-offset: 2px;
 }
 

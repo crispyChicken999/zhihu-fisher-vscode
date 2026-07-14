@@ -125,16 +125,18 @@ export class sidebarRecommendListDataProvider
       this.updateTitle(); // 开始加载时更新标题为加载中
       this._onDidChangeTreeData.fire(); // 触发更新UI，显示加载状态
 
+      const startTime = Date.now();
       await this.getRecommendList();
+      const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
       const list = Store.Zhihu.recommend.list;
-      console.log(`加载完成，获取到${list.length}个推荐项目`);
+      console.log(`加载完成，获取到${list.length}个推荐项目，耗时 ${elapsedSeconds} 秒`);
       this.loadingStatusItem.hide();
       this.updateTitle(); // 更新标题显示条数
       this._onDidChangeTreeData.fire(); // 再次触发更新UI，显示加载结果
 
       if (list.length > 0) {
         vscode.window.showInformationMessage(
-          `已更新知乎推荐，共${list.length}个推荐话题`
+          `已更新知乎推荐，共${list.length}个推荐话题，耗时 ${elapsedSeconds} 秒`
         );
       }
     } catch (error) {
@@ -420,7 +422,7 @@ export class sidebarRecommendListDataProvider
 
   // 滚动页面加载更多内容
   private async scrollToLoadMore(page: Puppeteer.Page) {
-    let scrollAttempts = 3; // 滚动尝试次数
+    let scrollAttempts = 3; // 滚动尝试次数（遇到骨架屏会自动延长，上限7次）
     for (let i = 0; i < scrollAttempts; i++) {
       console.log(`执行页面滚动 #${i + 1}/${scrollAttempts}`);
       const scrollHeight = await page.evaluate(() => {
@@ -433,6 +435,26 @@ export class sidebarRecommendListDataProvider
 
       await PuppeteerManager.delay(500); // 等待加载
 
+      // 等待骨架屏元素消失，确保内容加载完成后才继续
+      await page.evaluate(() => {
+        return new Promise<void>((resolve) => {
+          let checkCount = 0;
+          const maxChecks = 20; // 最多检查20次（6秒）
+          const checkInterval = setInterval(() => {
+            checkCount++;
+            const skeletonElements = document.querySelectorAll("section.skeleton");
+            console.log(
+              `检查骨架屏状态 #${checkCount}: 找到 ${skeletonElements.length} 个骨架屏元素`
+            );
+            if (skeletonElements.length === 0 || checkCount >= maxChecks) {
+              clearInterval(checkInterval);
+              console.log(`骨架屏检查完成 (检查了${checkCount}次)`);
+              resolve();
+            }
+          }, 300);
+        });
+      });
+
       const newScrollHeight = await page.evaluate(() => {
         return document.body.scrollHeight;
       });
@@ -443,7 +465,16 @@ export class sidebarRecommendListDataProvider
         );
         console.log("成功加载更多内容");
       } else {
-        console.log("没有更多内容可加载");
+        // 高度没变，但检查是否还有骨架屏正在加载中
+        const hasSkeleton = await page.evaluate(() => {
+          return document.querySelectorAll("section.skeleton").length > 0;
+        });
+        if (hasSkeleton && scrollAttempts < 7) {
+          console.log("滚动高度未变化但仍存在骨架屏，增加一次滚动尝试...");
+          scrollAttempts++; // 延长滚动次数，避免漏掉正在加载的内容
+        } else {
+          console.log("没有更多内容可加载");
+        }
       }
     }
   }
