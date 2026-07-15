@@ -92,20 +92,21 @@ export const loadingTemplate = `
       50% { opacity: 0.4; }
     }
 
-    /* ===== Title Section ===== */
+    /* ===== Title Section (main visual focus) ===== */
     .title-section {
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .title-text {
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 17px;
+      font-weight: 700;
       color: var(--vscode-foreground);
       word-wrap: break-word;
-      line-height: 1.4;
-      margin-bottom: 12px;
+      line-height: 1.5;
+      margin-bottom: 14px;
       max-width: 100%;
+      letter-spacing: 0.02em;
     }
 
     .thumbnail-container {
@@ -137,12 +138,12 @@ export const loadingTemplate = `
     }
 
     .excerpt-text {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--vscode-descriptionForeground);
-      line-height: 1.5;
+      line-height: 1.6;
       max-width: 100%;
       word-wrap: break-word;
-      max-height: 120px;
+      max-height: 132px;
       overflow-y: auto;
       scroll-behavior: smooth;
       padding: 0 4px;
@@ -150,122 +151,128 @@ export const loadingTemplate = `
 
     /* ===== Divider ===== */
     .divider {
-      width: 60%;
+      width: 40%;
       height: 1px;
       background: var(--vscode-panel-border);
-      margin: 24px auto;
-      opacity: 0.5;
+      margin: 16px auto 12px;
+      opacity: 0.25;
     }
 
-    /* ===== Navigation Section ===== */
+    /* ===== Navigation Section (secondary control) ===== */
     .nav-section {
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
 
     .nav-section-label {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      font-size: 12px;
+      gap: 4px;
+      font-size: 11px;
       color: var(--vscode-descriptionForeground);
-      margin-bottom: 16px;
-      opacity: 0.8;
+      margin-bottom: 10px;
+      opacity: 0.45;
     }
 
     .nav-section-label svg {
-      opacity: 0.6;
+      width: 11px;
+      height: 11px;
+      opacity: 0.5;
     }
 
     .nav-buttons {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .nav-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border: 1px solid var(--vscode-button-border, var(--vscode-button-background));
-      border-radius: 6px;
-      background: var(--vscode-button-secondaryBackground);
-      color: var(--vscode-button-secondaryForeground);
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 5px;
+      background: transparent;
+      color: var(--vscode-descriptionForeground);
       cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 12px;
+      font-weight: 400;
       font-family: inherit;
       transition: all 0.15s ease;
       white-space: nowrap;
       width: fit-content;
+      opacity: 0.7;
     }
 
     .nav-btn:hover {
-      background: var(--vscode-button-secondaryHoverBackground);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      background: var(--vscode-list-hoverBackground);
+      opacity: 1;
+      color: var(--vscode-foreground);
     }
 
     .nav-btn:active {
-      transform: translateY(0);
-      box-shadow: none;
+      opacity: 0.6;
     }
 
     .nav-btn .shortcut-key {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 22px;
-      height: 20px;
-      padding: 0 6px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
       background: var(--vscode-badge-background);
       color: var(--vscode-badge-foreground);
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 500;
       font-family: var(--vscode-editor-font-family, monospace);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       line-height: 1;
+      opacity: 0.75;
     }
 
     .nav-btn .shortcut-separator {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--vscode-descriptionForeground);
-      opacity: 0.6;
+      opacity: 0.4;
       margin: 0 1px;
     }
 
     .nav-btn .arrow-icon {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       flex-shrink: 0;
+      opacity: 0.6;
     }
 
-    /* ===== Tips Section ===== */
+    /* ===== Tips Section (subtle hint) ===== */
     .tips-section {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
-      padding: 10px 16px;
-      background: var(--vscode-textBlockQuote-background);
-      border: 1px solid var(--vscode-textBlockQuote-border);
-      border-radius: 6px;
-      margin-bottom: 16px;
+      gap: 6px;
+      padding: 6px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 10px;
       max-width: 100%;
       text-align: left;
+      opacity: 0.5;
     }
 
     .tips-section .tips-icon {
       flex-shrink: 0;
       margin-top: 1px;
-      opacity: 0.7;
+      font-size: 11px;
+      opacity: 0.6;
     }
 
     .tips-section .tips-content {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--vscode-descriptionForeground);
       line-height: 1.5;
     }
@@ -284,23 +291,23 @@ export const loadingTemplate = `
     .browser-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 18px;
-      background: var(--vscode-button-background);
-      color: var(--vscode-button-foreground);
-      border: none;
+      gap: 5px;
+      padding: 5px 14px;
+      background: transparent;
+      color: var(--vscode-textLink-foreground);
+      border: 1px solid var(--vscode-panel-border);
       border-radius: 4px;
       cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 12px;
+      font-weight: 400;
       font-family: inherit;
       transition: all 0.15s ease;
+      opacity: 0.65;
     }
 
     .browser-btn:hover {
-      background: var(--vscode-button-hoverBackground);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      background: var(--vscode-list-hoverBackground);
+      opacity: 1;
     }
 
     /* ===== Toast Message (like fisher-welcome-message) ===== */
@@ -523,26 +530,26 @@ export const loadingTemplate = `
       }
 
       .loading-container {
-        padding: 24px 16px;
+        padding: 20px 14px;
         max-width: 100%;
       }
 
       .loading-spinner {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         border-width: 2px;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
       }
 
       .content-type-badge {
         font-size: 11px;
         padding: 3px 10px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
       }
 
       .title-text {
-        font-size: 13px;
-        margin-bottom: 8px;
+        font-size: 15px;
+        margin-bottom: 10px;
         max-height: none;
         overflow: visible;
       }
@@ -553,55 +560,55 @@ export const loadingTemplate = `
       }
 
       .excerpt-text {
-        font-size: 12px;
+        font-size: 13px;
         max-height: 80px;
       }
 
       .divider {
-        margin: 16px auto;
+        margin: 12px auto 10px;
       }
 
+      /* Small screen: only keep the action buttons */
       .nav-section-label {
-        font-size: 11px;
-        margin-bottom: 10px;
-      }
-
-      .nav-section-label svg {
-        width: 12px;
-        height: 12px;
+        display: none;
       }
 
       .nav-buttons {
-        flex-direction: column;
-        gap: 8px;
+        flex-direction: row;
+        gap: 10px;
         width: 100%;
       }
 
       .nav-btn {
         justify-content: center;
-        padding: 10px 16px;
-        font-size: 13px;
+        padding: 6px 14px;
+        font-size: 12px;
+        gap: 6px;
       }
 
-      .nav-btn .shortcut-key {
-        font-size: 10px;
-        min-width: 18px;
-        height: 18px;
-        padding: 0 5px;
+      .nav-btn .shortcut-key,
+      .nav-btn .shortcut-separator {
+        display: none;
+      }
+
+      .nav-btn .arrow-icon {
+        width: 14px;
+        height: 14px;
+        opacity: 0.7;
       }
 
       .tips-section {
-        padding: 8px 12px;
-        margin-bottom: 12px;
-      }
-
-      .tips-section .tips-content {
-        font-size: 11px;
+        display: none;
       }
 
       .browser-btn {
         font-size: 12px;
-        padding: 8px 14px;
+        padding: 6px 14px;
+        opacity: 0.5;
+      }
+
+      .nav-buttons + .browser-btn {
+        margin-top: 8px;
       }
 
       .switch-toast {
@@ -615,17 +622,13 @@ export const loadingTemplate = `
     /* ===== Responsive: Medium Screens (480px - 768px) ===== */
     @media (min-width: 481px) and (max-width: 768px) {
       .loading-container {
-        padding: 32px 24px;
+        padding: 28px 20px;
         max-width: 90%;
       }
 
-      .nav-buttons {
-        gap: 12px;
-      }
-
       .nav-btn {
-        padding: 10px 16px;
-        font-size: 13px;
+        padding: 6px 12px;
+        font-size: 12px;
       }
     }
 
@@ -1030,7 +1033,6 @@ export const loadingTemplate = `
       if (savedStyles) {
         document.body.style.fontSize = savedStyles.fontSize;
         document.body.style.lineHeight = savedStyles.lineHeight;
-        document.body.style.maxWidth = savedStyles.maxWidth;
         document.body.style.fontFamily = savedStyles.fontFamily;
 
         // 获取透明度设置
