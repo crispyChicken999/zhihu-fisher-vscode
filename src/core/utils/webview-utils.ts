@@ -17,11 +17,18 @@ export class WebViewUtils {
    */
   public static generateUniqueWebViewId(
     baseId: string,
-    sourceType: "collection" | "recommend" | "hot" | "search" | "inner-link" | "follow" | "thought",
+    sourceType:
+      | "collection"
+      | "recommend"
+      | "hot"
+      | "search"
+      | "inner-link"
+      | "follow"
+      | "thought",
     contentType: "article" | "answer",
     answerId?: string,
     collectionId?: string,
-    sortType?: string
+    sortType?: string,
   ): string {
     // 提取纯净的ID，避免重复前缀
     let cleanBaseId = baseId;
@@ -124,7 +131,7 @@ export class WebViewUtils {
    */
   public static async fetchSpecificAnswerContent(
     webviewId: string,
-    answerUrl: string
+    answerUrl: string,
   ): Promise<any | null> {
     try {
       console.log(`开始获取特定回答内容: ${answerUrl}`);
@@ -150,7 +157,7 @@ export class WebViewUtils {
         // 提取回答数据
         const answerData = await page.evaluate(() => {
           const answerElement = document.querySelector(
-            ".ContentItem.AnswerItem"
+            ".ContentItem.AnswerItem",
           );
           if (!answerElement) {
             return null;
@@ -193,7 +200,7 @@ export class WebViewUtils {
 
           // 作者签名 AuthorInfo-badgeText
           const authorSignatureElement = authorElement?.querySelector(
-            ".AuthorInfo-badgeText"
+            ".AuthorInfo-badgeText",
           );
           const authorHeadline = authorSignatureElement
             ? authorSignatureElement.textContent?.trim() || ""
@@ -201,11 +208,12 @@ export class WebViewUtils {
 
           // 作者的关注数量 <meta itemprop="zhihu:followerCount" content="787">
           const authorFollowerElement = document.querySelector(
-            "meta[itemprop='zhihu:followerCount']"
+            "meta[itemprop='zhihu:followerCount']",
           );
           let authorFollowerCount = 0;
           if (authorFollowerElement) {
-            const followerText = authorFollowerElement.getAttribute("content") || "0";
+            const followerText =
+              authorFollowerElement.getAttribute("content") || "0";
             authorFollowerCount = parseInt(followerText.replace(/,/g, "")) || 0;
           }
 
@@ -214,14 +222,17 @@ export class WebViewUtils {
           // 付费会员：.KfeCollection-AnswerTopCard-newContainer
           const isPaidAnswer =
             document.querySelector(
-              ".KfeCollection-AnswerTopCard-Container, .KfeCollection-AnswerTopCard-newContainer, .KfeCollection-PaidAnswerFooter"
+              ".KfeCollection-AnswerTopCard-Container, .KfeCollection-AnswerTopCard-newContainer, .KfeCollection-PaidAnswerFooter",
             ) !== null;
 
           // 提取回答内容
           const contentElement = answerElement.querySelector(
-            ".RichContent .RichContent-inner"
+            ".RichContent .RichContent-inner",
           );
-          const content = isPaidAnswer ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' + contentElement?.innerHTML : contentElement?.innerHTML || "";
+          const content = isPaidAnswer
+            ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' +
+              contentElement?.innerHTML
+            : contentElement?.innerHTML || "";
 
           // 提取点赞数（支持"赞同 1 万"等中文单位）
           const voteElement = answerElement.querySelector(".VoteButton");
@@ -231,7 +242,9 @@ export class WebViewUtils {
             const match = voteText.match(/赞同\s*([\d,]+(?:\.\d+)?)\s*(万?)/);
             if (match) {
               voteCount = parseFloat(match[1].replace(/,/g, ""));
-              if (match[2] === "万") voteCount = Math.round(voteCount * 10000);
+              if (match[2] === "万") {
+                voteCount = Math.round(voteCount * 10000);
+              }
             }
           }
 
@@ -240,24 +253,24 @@ export class WebViewUtils {
 
           // 查找投票按钮区域
           const contentItemActions = answerElement.querySelector(
-            ".ContentItem-actions"
+            ".ContentItem-actions",
           );
           if (contentItemActions) {
             // 先检查所有投票相关的按钮
             const allVoteButtons = contentItemActions.querySelectorAll(
-              "[class*='VoteButton']"
+              "[class*='VoteButton']",
             );
             console.log(
-              `特定回答 ${answerId} 找到 ${allVoteButtons.length} 个投票按钮`
+              `特定回答 ${answerId} 找到 ${allVoteButtons.length} 个投票按钮`,
             );
 
             // 更精确地查找赞同按钮：VoteButton + is-active，但不包含 VoteButton--down
             const upVoteButton = contentItemActions.querySelector(
-              ".VoteButton.is-active:not(.VoteButton--down)"
+              ".VoteButton.is-active:not(.VoteButton--down)",
             );
             // 查找不赞同按钮：VoteButton--down + is-active
             const downVoteButton = contentItemActions.querySelector(
-              ".VoteButton--down.is-active"
+              ".VoteButton--down.is-active",
             );
 
             // 输出调试信息
@@ -282,7 +295,7 @@ export class WebViewUtils {
 
           // 提取评论数
           const commentElement = answerElement.querySelector(
-            ".ContentItem-action"
+            ".ContentItem-action",
           );
           let commentCount = 0;
           if (commentElement) {
@@ -295,7 +308,7 @@ export class WebViewUtils {
 
           // 提取发布时间
           const timeElement = answerElement.querySelector(
-            ".ContentItem-time a"
+            ".ContentItem-time a",
           );
           const publishTime =
             timeElement?.getAttribute("data-tooltip") ||
@@ -323,7 +336,7 @@ export class WebViewUtils {
 
         if (answerData && answerData.id) {
           console.log(
-            `成功获取回答内容: ID=${answerData.id}, 作者=${answerData.authorName}`
+            `成功获取回答内容: ID=${answerData.id}, 作者=${answerData.authorName}`,
           );
           return answerData;
         } else {

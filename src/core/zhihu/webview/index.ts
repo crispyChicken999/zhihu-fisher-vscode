@@ -939,7 +939,9 @@ export class WebviewManager {
         let likeCount = 0;
         if (likeMatch) {
           likeCount = parseFloat(likeMatch[1].replace(/,/g, ""));
-          if (likeMatch[2] === "万") likeCount = Math.round(likeCount * 10000);
+          if (likeMatch[2] === "万") {
+            likeCount = Math.round(likeCount * 10000);
+          }
         }
 
         // 获取投票状态
@@ -1398,7 +1400,9 @@ export class WebviewManager {
         let likeCount = 0;
         if (likeMatch) {
           likeCount = parseFloat(likeMatch[1].replace(/,/g, ""));
-          if (likeMatch[2] === "万") likeCount = Math.round(likeCount * 10000);
+          if (likeMatch[2] === "万") {
+            likeCount = Math.round(likeCount * 10000);
+          }
         }
 
         // 获取投票状态
@@ -1685,7 +1689,10 @@ export class WebviewManager {
       }
 
       // 没有找到更多的未被过滤的回答，尝试加载更多
-      if (!webviewItem.batchConfig.isLoadingBatch && !webviewItem.article.loadComplete) {
+      if (
+        !webviewItem.batchConfig.isLoadingBatch &&
+        !webviewItem.article.loadComplete
+      ) {
         const page = PuppeteerManager.getPageInstance(webviewId);
         if (page && Store.webviewMap.has(webviewId)) {
           webviewItem.batchConfig.beforeLoadCount =
@@ -1946,7 +1953,10 @@ export class WebviewManager {
       }
 
       // 1. 中断当前正在进行的加载操作
-      console.log("中断当前加载操作，准备切换" + (direction === "prev" ? "上一篇" : "下一篇"));
+      console.log(
+        "中断当前加载操作，准备切换" +
+          (direction === "prev" ? "上一篇" : "下一篇"),
+      );
       webviewItem.isLoading = false;
       webviewItem.batchConfig.isLoadingBatch = false;
       webviewItem.article.isLoading = false;
@@ -1956,7 +1966,9 @@ export class WebviewManager {
       const collectionId = webviewItem.collectionId;
       const list = this.getListBySourceType(sourceType, collectionId);
       if (!list) {
-        vscode.window.showErrorMessage("未找到对应的列表数据，列表可能已经刷新了");
+        vscode.window.showErrorMessage(
+          "未找到对应的列表数据，列表可能已经刷新了",
+        );
         return;
       }
 
@@ -1977,7 +1989,8 @@ export class WebviewManager {
       }
 
       // 获取目标内容
-      const targetItem = direction === "prev" ? list[currentIndex - 1] : list[currentIndex + 1];
+      const targetItem =
+        direction === "prev" ? list[currentIndex - 1] : list[currentIndex + 1];
 
       // 3. 隐藏状态栏
       this.hideStatusBarItem(webviewId);
@@ -2076,7 +2089,9 @@ export class WebviewManager {
         const answerArea = document.querySelector(
           ".AnswersNavWrapper, .QuestionAnswers-answers",
         );
-        if (!answerArea) return false;
+        if (!answerArea) {
+          return false;
+        }
 
         // 查找包含"加载失败了"的元素
         let foundFailure = false;
@@ -2092,7 +2107,9 @@ export class WebviewManager {
         return foundFailure;
       });
 
-      if (!hasFailure) return;
+      if (!hasFailure) {
+        return; // 没有检测到加载失败的提示，直接返回
+      }
 
       console.log("检测到回答列表加载失败，尝试点击重试按钮...");
 
@@ -2101,7 +2118,9 @@ export class WebviewManager {
         const answerArea = document.querySelector(
           ".AnswersNavWrapper, .QuestionAnswers-answers",
         );
-        if (!answerArea) return false;
+        if (!answerArea) {
+          return false;
+        }
 
         // 查找文本为"再试试"的按钮
         let clickedRetry = false;
@@ -4635,7 +4654,9 @@ export class WebviewManager {
 
     try {
       const sourceAnswer =
-        webviewItem.article.answerList.find((answer) => answer.id === answerId) ||
+        webviewItem.article.answerList.find(
+          (answer) => answer.id === answerId,
+        ) ||
         webviewItem.article.answerList[webviewItem.article.currentAnswerIndex];
       const result = await ZhidaManager.fetchZhidaSummary(
         page,
@@ -4659,7 +4680,6 @@ export class WebviewManager {
     }
   }
 
-
   /**
    * 处理下载/另存为媒体文件
    */
@@ -4674,7 +4694,9 @@ export class WebviewManager {
       }
       const uri = vscode.Uri.parse(url);
       const pathParts = uri.path.split("/");
-      const rawFilename = pathParts[pathParts.length - 1] || `media.${type === "video" ? "mp4" : "png"}`;
+      const rawFilename =
+        pathParts[pathParts.length - 1] ||
+        `media.${type === "video" ? "mp4" : "png"}`;
       const filename = rawFilename.split("?")[0];
       const defaultUri = vscode.Uri.joinPath(
         vscode.workspace.workspaceFolders?.[0]?.uri || vscode.Uri.file(""),
@@ -4682,28 +4704,38 @@ export class WebviewManager {
       );
       const saveUri = await vscode.window.showSaveDialog({
         defaultUri,
-        filters: { "所有文件": ["*"] },
+        filters: { 所有文件: ["*"] },
         title: `保存${type === "video" ? "视频" : "图片"}`,
       });
       if (!saveUri) {
         return;
-      };
+      }
       const https = await import("https");
       const http = await import("http");
       const httpModule = url.startsWith("https") ? https : http;
       const fileContent = await new Promise<Uint8Array>((resolve, reject) => {
-        httpModule.get(url, { headers: { Referer: "https://www.zhihu.com/" } }, (response) => {
-          const chunks: Buffer[] = [];
-          response.on("data", (chunk: Buffer) => chunks.push(chunk));
-          response.on("end", () => resolve(new Uint8Array(Buffer.concat(chunks))));
-          response.on("error", (err: Error) => reject(err));
-        }).on("error", (err: Error) => reject(err));
+        httpModule
+          .get(
+            url,
+            { headers: { Referer: "https://www.zhihu.com/" } },
+            (response) => {
+              const chunks: Buffer[] = [];
+              response.on("data", (chunk: Buffer) => chunks.push(chunk));
+              response.on("end", () =>
+                resolve(new Uint8Array(Buffer.concat(chunks))),
+              );
+              response.on("error", (err: Error) => reject(err));
+            },
+          )
+          .on("error", (err: Error) => reject(err));
       });
       await vscode.workspace.fs.writeFile(saveUri, fileContent);
       vscode.window.showInformationMessage(`文件已保存: ${saveUri.fsPath}`);
     } catch (error: any) {
       console.error("下载文件失败:", error);
-      vscode.window.showErrorMessage(`下载失败: ${error?.message || String(error)}`);
+      vscode.window.showErrorMessage(
+        `下载失败: ${error?.message || String(error)}`,
+      );
     }
   }
 }
