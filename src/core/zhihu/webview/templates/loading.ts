@@ -38,12 +38,10 @@ export const loadingTemplate = `
 
     /* ===== Main Container ===== */
     .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       max-width: 600px;
       width: 100%;
+      margin: auto 0;
+      max-height: 100%;
       padding: 40px 32px;
       text-align: center;
     }
@@ -56,7 +54,7 @@ export const loadingTemplate = `
       border-top-color: var(--vscode-progressBar-background);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 24px;
+      margin: 0 auto;
       flex-shrink: 0;
     }
 
@@ -75,7 +73,7 @@ export const loadingTemplate = `
       border-radius: 12px;
       font-size: 12px;
       font-weight: 500;
-      margin-bottom: 16px;
+      margin: 16px 0;
       letter-spacing: 0.3px;
     }
 
@@ -95,7 +93,6 @@ export const loadingTemplate = `
     /* ===== Title Section (main visual focus) ===== */
     .title-section {
       width: 100%;
-      margin-bottom: 24px;
     }
 
     .title-text {
@@ -154,7 +151,7 @@ export const loadingTemplate = `
       width: 40%;
       height: 1px;
       background: var(--vscode-panel-border);
-      margin: 16px auto 12px;
+      margin: 16px auto;
       opacity: 0.25;
     }
 
@@ -252,7 +249,7 @@ export const loadingTemplate = `
     /* ===== Tips Section (subtle hint) ===== */
     .tips-section {
       display: flex;
-      align-items: flex-start;
+      justify-content: center;
       gap: 6px;
       padding: 6px 12px;
       background: transparent;
@@ -260,7 +257,7 @@ export const loadingTemplate = `
       border-radius: 4px;
       margin-bottom: 10px;
       max-width: 100%;
-      text-align: left;
+      text-align: center;
       opacity: 0.5;
     }
 
@@ -303,6 +300,7 @@ export const loadingTemplate = `
       font-family: inherit;
       transition: all 0.15s ease;
       opacity: 0.65;
+      margin-bottom: 10px;
     }
 
     .browser-btn:hover {
@@ -521,11 +519,10 @@ export const loadingTemplate = `
       color: var(--vscode-descriptionForeground);
     }
 
-    /* ===== Responsive: Small Screens (width < 480px) ===== */
-    @media (max-width: 480px) {
+    /* ===== Responsive: Small Screens (width < 640px) ===== */
+    @media (max-width: 640px) {
       body {
         padding: 0;
-        justify-content: flex-start;
         overflow-y: auto;
       }
 
@@ -538,7 +535,6 @@ export const loadingTemplate = `
         width: 26px;
         height: 26px;
         border-width: 2px;
-        margin-bottom: 14px;
       }
 
       .content-type-badge {
@@ -561,11 +557,10 @@ export const loadingTemplate = `
 
       .excerpt-text {
         font-size: 13px;
-        max-height: 80px;
       }
 
       .divider {
-        margin: 12px auto 10px;
+        margin: 8px auto;
       }
 
       /* Small screen: only keep the action buttons */
@@ -619,8 +614,12 @@ export const loadingTemplate = `
       }
     }
 
-    /* ===== Responsive: Medium Screens (480px - 768px) ===== */
-    @media (min-width: 481px) and (max-width: 768px) {
+    /* ===== Responsive: Medium Screens (640px - 768px) ===== */
+    @media (min-width: 641px) and (max-width: 768px) {
+      body {
+        overflow-y: auto;
+      }
+
       .loading-container {
         padding: 28px 20px;
         max-width: 90%;
