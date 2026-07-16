@@ -8,7 +8,7 @@
 
 ![License](https://badgen.net/badge/License/MIT/red)
 ![VSCode](https://badgen.net/badge/VSCode/1.82.0+/blue?icon=visualstudio)
-![Version](https://badgen.net/badge/Version/0.7.4/orange?icon=git)
+![Version](https://badgen.net/badge/Version/0.7.5/orange?icon=git)
 ![Platform](https://badgen.net/badge/Platform/Windows|MacOS|Linux/purple?icon=windows)
 
 ![Downloads](https://badgen.net/vs-marketplace/d/CrispyChicken.zhihu-fisher?label=Downloads&color=blue)
@@ -294,6 +294,36 @@ _Cookie 获取示例图_
 - **内容获取**：插件通过本地浏览器内核（Puppeteer）加载知乎网页，所有内容均为用户本人已登录状态下可见的内容，**不绕过任何付费墙、不破解任何反爬机制、不盗用他人账户凭证**。
 - **交互操作**：点赞、评论等功能由**用户手动触发**，每次操作对应一次真实的浏览器交互，**不存在自动、批量、预设脚本行为**。
 - **数据安全**：用户的知乎 Cookie 仅存储在本地 VSCode 配置文件中，不会被上传或共享给任何第三方。所有代码完全开源，欢迎审查源码验证安全性。
+
+<details>
+<summary>📱 扫码登录隐私说明 (点击展开)</summary>
+
+本插件自 v0.7.5 起新增扫码登录功能。我们理解您可能对扫码登录的安全性和隐私存在顾虑，以下是详细的技术说明：
+
+1. **技术原理**
+   - 插件通过 Puppeteer 在本地启动一个**沙箱浏览器实例**，访问知乎官方的登录页面（`https://www.zhihu.com/signin`）。
+   - 知乎官方页面会生成一个**临时二维码**，插件仅对该二维码区域进行**截图**并在 VSCode 中展示给您。
+   - 您使用知乎 App 扫码后，知乎服务器会直接向该浏览器实例下发登录态 Cookie，插件**自动捕获并保存**到本地配置中。
+
+2. **隐私保障**
+   - ✅ **二维码由知乎官方生成**：二维码内容由知乎官方服务器生成并控制，插件仅负责截图展示，**不做任何篡改、替换或重定向**。
+   - ✅ **本地无痕浏览**：扫码登录使用独立的**无痕浏览器上下文**，与您的日常浏览数据完全隔离，不会读取或修改您已有的知乎 Cookie。
+   - ✅ **Cookie 仅存本地**：登录成功后获取的 Cookie **仅保存到您本地的 VSCode 配置文件**（与手动设置 Cookie 保存位置完全相同），**不会以任何形式上传或发送到任何第三方服务器**。
+   - ✅ **临时会话自动清理**：扫码完成后，用于登录的浏览器实例和临时上下文会被**立即关闭并清理**，不会留下任何残留数据。
+   - ✅ **代码完全开源**：扫码登录的完整逻辑均在 [`src/core/commands/qr-login.ts`](https://github.com/crispyChicken999/zhihu-fisher-vscode/blob/master/src/core/commands/qr-login.ts) 中实现，欢迎审查源码验证上述描述。
+
+3. **为什么不直接使用账号密码登录？**
+   - 插件**不提供**账号密码登录方式，原因如下：
+     - 账号密码登录需要将您的凭证发送到知乎服务器进行验证，这可能被恶意利用。
+     - 扫码登录是 OAuth 标准的授权模式，您直接与知乎官方交互，插件全程不接触您的账号密码。
+     - 二维码具有**一次性**和**时效性**（通常 2-5 分钟），即使被截获也难以被重放利用。
+
+4. **使用建议**
+   - 请确保从**官方 VS Marketplace** 或 **GitHub Releases** 渠道安装本插件，避免使用来路不明的修改版本。
+   - 扫码时请确认 VSCode 中显示的二维码是知乎官方登录页内容（建议核对域名是否为 `zhihu.com`）。
+   - 如遇到任何安全问题，请通过 [GitHub Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 反馈。
+
+</details>
 
 > 🐟 **请合理使用，文明摸鱼！尊重知识产权，遵守平台规则！**
 
