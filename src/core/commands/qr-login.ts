@@ -89,7 +89,9 @@ async function handleQRLogin(
   // 设置消息处理器（必须在 panel 创建后尽早设置，以捕获 webview 发来的消息）
   panel.webview.onDidReceiveMessage(async (message) => {
     if (message.command === "retryQRLogin") {
-      if (isProcessingRetry) return;
+      if (isProcessingRetry) {
+        return;
+      }
       isProcessingRetry = true;
 
       // 清理当前页面资源
@@ -238,7 +240,11 @@ async function handleQRLogin(
       clip: qrCodeClip,
       type: "png",
     });
-    if (!qrCodeScreenshot || (typeof qrCodeScreenshot !== "string" && (qrCodeScreenshot as Buffer).length === 0)) {
+    if (
+      !qrCodeScreenshot ||
+      (typeof qrCodeScreenshot !== "string" &&
+        (qrCodeScreenshot as Buffer).length === 0)
+    ) {
       console.error("二维码截图数据为空");
       panel.webview.html = getErrorHtml("无法获取二维码", [
         "二维码截图数据为空",
@@ -303,7 +309,10 @@ async function handleQRLogin(
         );
 
         // 如果URL不再是signin页面，说明登录成功了
-        if (!currentUrl.includes("signin") && !currentUrl.includes("zhihu.com/signup")) {
+        if (
+          !currentUrl.includes("signin") &&
+          !currentUrl.includes("zhihu.com/signup")
+        ) {
           console.log("检测到URL变更，登录成功！当前URL:", currentUrl);
           isLoginSuccess = true;
           clearInterval(pollingTimer!);
@@ -390,14 +399,11 @@ async function handleQRLogin(
   } catch (error: any) {
     console.error("扫码登录出错:", error);
     if (!isDisposed) {
-      panel.webview.html = getErrorHtml(
-        "扫码登录失败",
-        [
-          `错误信息: ${error.message || "未知错误"}`,
-          "请检查网络连接后重试",
-          "或使用手动设置Cookie方式",
-        ],
-      );
+      panel.webview.html = getErrorHtml("扫码登录失败", [
+        `错误信息: ${error.message || "未知错误"}`,
+        "请检查网络连接后重试",
+        "或使用手动设置Cookie方式",
+      ]);
     }
     cleanupPage(context, page);
   }
@@ -656,7 +662,9 @@ function getErrorHtml(title: string, reasons: string[]): string {
  * HTML转义
  */
 function escapeHtml(unsafe: string): string {
-  if (!unsafe) return "";
+  if (!unsafe) {
+    return "";
+  }
   return unsafe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
