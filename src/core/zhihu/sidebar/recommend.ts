@@ -685,7 +685,16 @@ export class sidebarRecommendListDataProvider
       // 如果没有设置cookie，显示需要设置cookie的提示
       return [
         new StatusTreeItem(
-          "需要设置知乎Cookie才能获取推荐",
+          "扫码登录知乎（推荐）",
+          new vscode.ThemeIcon("device-mobile"),
+          {
+            command: "zhihu-fisher.loginViaQRCode",
+            title: "扫码登录知乎",
+          },
+          TooltipContents.getCookieRequiredTooltip()
+        ),
+        new StatusTreeItem(
+          "手动设置Cookie",
           new vscode.ThemeIcon("key"),
           {
             command: "zhihu-fisher.setCookie",

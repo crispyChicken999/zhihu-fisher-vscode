@@ -2751,6 +2751,11 @@ export class WebviewManager {
           await this.crawlingURLData(webviewId);
           break;
 
+        case "loginViaQRCode":
+          // 处理扫码登录的请求
+          await vscode.commands.executeCommand("zhihu-fisher.loginViaQRCode");
+          break;
+
         case "updateCookie":
           // 处理更新Cookie的请求
           await vscode.commands.executeCommand("zhihu-fisher.setCookie"); // 刷新当前页面

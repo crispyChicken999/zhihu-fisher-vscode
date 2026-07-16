@@ -721,7 +721,7 @@ export const loadingTemplate = `
         <div class="solution-item">
           <div class="solution-title">1. Cookie失效</div>
           <div class="solution-desc">原因：知乎Cookie过期或失效，被重定向到登录页，无法抓取数据</div>
-          <div class="solution-desc">解决：点击【更新Cookie】重新设置知乎登录信息</div>
+          <div class="solution-desc">解决：点击【扫码登录】用知乎App扫码自动获取，或【更新Cookie】手动设置</div>
         </div>
         <div class="solution-item">
           <div class="solution-title">2. 网络连接问题</div>
@@ -746,7 +746,7 @@ export const loadingTemplate = `
         <div class="recommendation-steps">
           <h4>💡 推荐操作顺序：</h4>
           <ol>
-            <li>首先尝试【更新Cookie】</li>
+            <li>首先尝试【扫码登录】或【更新Cookie】
             <li>如果还是不行，检查【配置浏览器】</li>
             <li>如果问题依然存在，点击【重启扩展】</li>
             <li>还不行？点击【重启VSCode】</li>
@@ -755,6 +755,7 @@ export const loadingTemplate = `
         </div>
       </div>
       <div class="modal-footer">
+        <button class="modal-btn" onclick="loginViaQRCode()">📱 扫码登录</button>
         <button class="modal-btn" onclick="updateCookie()">🔑 更新Cookie</button>
         <button class="modal-btn" onclick="configureBrowser()">🎯 配置浏览器</button>
         <button class="modal-btn" onclick="restartExtension()">🔄 重启扩展</button>
@@ -1095,6 +1096,10 @@ export const loadingTemplate = `
     // ===== Utility Functions =====
     function openInBrowser() {
       vscode.postMessage({ command: 'openInBrowser' });
+    }
+
+    function loginViaQRCode() {
+      vscode.postMessage({ command: 'loginViaQRCode' });
     }
 
     function updateCookie() {

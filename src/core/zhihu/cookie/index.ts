@@ -34,10 +34,10 @@ export class CookieManager {
     }
   }
 
-  // 保存cookie
-  private static saveCookie(): void {
+  // 保存cookie到配置
+  static async saveCookie(): Promise<void> {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
-    config.update(
+    await config.update(
       "cookie",
       Store.Zhihu.cookie,
       vscode.ConfigurationTarget.Global
@@ -54,7 +54,7 @@ export class CookieManager {
 
     if (result) {
       Store.Zhihu.cookie = result;
-      CookieManager.saveCookie();
+      await CookieManager.saveCookie();
       vscode.window.showInformationMessage("知乎Cookie设置成功");
       return true;
     }
@@ -76,6 +76,23 @@ export class CookieManager {
     vscode.commands.executeCommand("zhihu-fisher.resetCollectionsList");
   }
 
+  /**
+   * 直接保存cookie字符串（用于扫码登录等场景）
+   * @param cookieString 完整的cookie字符串
+   */
+  static async saveCookieString(cookieString: string): Promise<void> {
+    if (!cookieString) {
+      console.warn("保存cookie失败：cookie字符串为空");
+      return;
+    }
+    // 去除BEC等可能导致请求异常的cookie参数
+    const cleanedCookie = CookieManager.removeBECFromCookie(cookieString);
+    Store.Zhihu.cookie = cleanedCookie;
+    await CookieManager.saveCookie();
+    console.log("Cookie已通过扫码登录自动保存");
+    vscode.window.showInformationMessage("知乎Cookie已通过扫码登录自动设置成功");
+  }
+
   // 获取当前 cookie
   static getCookie(): string {
     return Store.Zhihu.cookie;
@@ -83,6 +100,10 @@ export class CookieManager {
 
   // 查看vscode配置看看cookie有没有设置，isCookieSet
   static isCookieSet(): boolean {
+    // 优先检查运行时Store中的cookie（可能刚刚通过扫码登录设置，配置尚未写入完成）
+    if (Store.Zhihu.cookie) {
+      return true;
+    }
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const cookie = config.get<string>("cookie") || "";
     return !!cookie;

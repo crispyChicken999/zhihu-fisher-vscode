@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
+import * as Puppeteer from "puppeteer";
 import { Store } from "../../stores";
 import { CookieManager } from "../cookie";
 import { PuppeteerManager } from "../puppeteer";
@@ -137,156 +138,143 @@ export class sidebarHotListDataProvider
     }
   }
 
-  /** 实际获取热榜的方法 */
+  /** 实际获取热榜的方法（使用 Puppeteer 加载，避免 fetch 403） */
   async getHotList() {
     // 设置加载状态
     Store.Zhihu.hot.isLoading = true;
     this.updateTitle(); // 设置加载状态后更新标题
 
-    // 构建请求头
-    const headers: Record<string, string> = {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36",
-      Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-      "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-      "Accept-Encoding": "gzip, deflate, br",
-      "Cache-Control": "max-age=0",
-      Connection: "keep-alive",
-      "Sec-Ch-Ua":
-        '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
-      "Sec-Ch-Ua-Mobile": "?0",
-      "Sec-Ch-Ua-Platform": '"Windows"',
-      "Sec-Fetch-Dest": "document",
-      "Sec-Fetch-Mode": "navigate",
-      "Sec-Fetch-Site": "none",
-      "Sec-Fetch-User": "?1",
-      Dnt: "1",
-      "Upgrade-Insecure-Requests": "1",
-    };
-
     const cookie = Store.Zhihu.cookie;
-    if (cookie) {
-      headers["Cookie"] = cookie;
-      console.log("使用已保存的Cookie进行请求");
-    } else {
+    if (!cookie) {
       CookieManager.promptForNewCookie("需要知乎Cookie才能获取热榜，请设置");
       throw new Error("需要设置知乎Cookie才能访问");
     }
 
-    let response = await fetch("https://www.zhihu.com/hot", {
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    console.log("成功获取知乎热榜HTML，开始解析...");
-
-    const responseData = await response.text();
-    const $ = cheerio.load(responseData);
-
-    // 检查是否有登录墙或验证码
-    const isNeedLogin = !!$(".SignFlow-submitButton").length;
-
-    if (isNeedLogin) {
-      console.log("检测到登录墙或验证码");
-      if (cookie) {
-        // 如果已经有cookie但仍然被拦截，可能是cookie过期
-        console.log("Cookie可能已失效，需要更新");
-        CookieManager.promptForNewCookie("您的知乎Cookie可能已过期，请更新");
-        throw new Error("知乎Cookie已失效，请更新");
-      } else {
-        // 如果没有cookie且被拦截
-        console.log("需要设置Cookie才能访问");
-        CookieManager.promptForNewCookie("需要知乎Cookie才能获取热榜，请设置");
-        throw new Error("需要设置知乎Cookie才能访问");
-      }
-    }
-
-    const hotList: LinkItem[] = [];
-
+    let page: Puppeteer.Page | null = null;
     try {
-      console.log("尝试定位热榜列表容器 HotList-list...");
-      const hotListContainer = $(".HotList-list");
+      // 通过 Puppeteer 加载热榜页面，自动处理 cookie 匹配（避免 fetch 直接发送完整 cookie 导致的 403）
+      console.log("通过 Puppeteer 加载热榜页面...");
+      page = await PuppeteerManager.createPage();
 
-      if (hotListContainer.length > 0) {
-        console.log("找到热榜列表容器，开始解析热榜项...");
-        const items = hotListContainer.find("section.HotItem");
-        console.log(`找到${items.length}个热榜项目`);
+      await page.goto("https://www.zhihu.com/hot", {
+        waitUntil: "networkidle0",
+        timeout: 30000,
+      });
 
-        items.each((index, element) => {
-          try {
-            // 从每个HotItem中提取信息
-            const titleElement = $(element).find(".HotItem-title");
-            const linkElement = $(element).find(".HotItem-content a");
+      console.log("热榜页面加载完成，开始解析...");
 
-            const title = titleElement.text().trim();
-            const url = linkElement.attr("href") || "";
-            const id = `hot-${url.split("/").pop()}` || `hot-${index}`;
+      const responseData = await page.content();
+      const $ = cheerio.load(responseData);
 
-            const excerpt = `${
-              $(element).find(".HotItem-excerpt").text().trim()
-                ? $(element).find(".HotItem-excerpt").text().trim()
-                : "🐟无摘要🐟"
-            }`;
-            const hotValue = $(element).find(".HotItem-metrics").text().trim();
-            let imgUrl = $(element).find(".HotItem-img img").attr("src") || "";
+      // 检查是否有登录墙或验证码
+      const isNeedLogin = !!$(".SignFlow-submitButton").length;
 
-            // 确保图片 URL 是完整的 HTTPS URL
-            if (imgUrl && !imgUrl.startsWith("http")) {
-              if (imgUrl.startsWith("//")) {
-                imgUrl = "https:" + imgUrl;
-              } else if (imgUrl.startsWith("/")) {
-                imgUrl = "https://www.zhihu.com" + imgUrl;
-              }
-            }
-
-            if (title && url) {
-              hotList.push({
-                id,
-                title,
-                url: url.startsWith("http")
-                  ? url
-                  : `https://www.zhihu.com${url}`,
-                excerpt,
-                hotValue: hotValue
-                  ? hotValue.includes("}")
-                    ? hotValue.split("}")[1]
-                    : hotValue
-                  : undefined, // 如果热度为空，则设为 undefined
-                imgUrl: imgUrl || undefined,
-              });
-              console.log(
-                `成功解析热榜项 #${index + 1}: ${title}${
-                  hotValue ? ` (${hotValue})` : ""
-                }${imgUrl ? " [有图]" : ""}`
-              );
-            }
-          } catch (itemError) {
-            console.error(`解析第${index + 1}个热榜项目失败:`, itemError);
-          }
-        });
-      } else {
-        console.log("未找到热榜列表容器");
-        throw new Error("未找到热榜列表容器");
+      if (isNeedLogin) {
+        console.log("检测到登录墙或验证码");
+        if (cookie) {
+          // 如果已经有cookie但仍然被拦截，可能是cookie过期
+          console.log("Cookie可能已失效，需要更新");
+          CookieManager.promptForNewCookie("您的知乎Cookie可能已过期，请更新");
+          throw new Error("知乎Cookie已失效，请更新");
+        } else {
+          // 如果没有cookie且被拦截
+          console.log("需要设置Cookie才能访问");
+          CookieManager.promptForNewCookie("需要知乎Cookie才能获取热榜，请设置");
+          throw new Error("需要设置知乎Cookie才能访问");
+        }
       }
 
-      console.log(`成功解析出${hotList.length}个热榜项目`);
+      const hotList: LinkItem[] = [];
 
-      Store.Zhihu.hot.list = hotList;
+      try {
+        console.log("尝试定位热榜列表容器 HotList-list...");
+        const hotListContainer = $(".HotList-list");
+
+        if (hotListContainer.length > 0) {
+          console.log("找到热榜列表容器，开始解析热榜项...");
+          const items = hotListContainer.find("section.HotItem");
+          console.log(`找到${items.length}个热榜项目`);
+
+          items.each((index, element) => {
+            try {
+              // 从每个HotItem中提取信息
+              const titleElement = $(element).find(".HotItem-title");
+              const linkElement = $(element).find(".HotItem-content a");
+
+              const title = titleElement.text().trim();
+              const url = linkElement.attr("href") || "";
+              const id = `hot-${url.split("/").pop()}` || `hot-${index}`;
+
+              const excerpt = `${
+                $(element).find(".HotItem-excerpt").text().trim()
+                  ? $(element).find(".HotItem-excerpt").text().trim()
+                  : "🐟无摘要🐟"
+              }`;
+              const hotValue = $(element).find(".HotItem-metrics").text().trim();
+              let imgUrl = $(element).find(".HotItem-img img").attr("src") || "";
+
+              // 确保图片 URL 是完整的 HTTPS URL
+              if (imgUrl && !imgUrl.startsWith("http")) {
+                if (imgUrl.startsWith("//")) {
+                  imgUrl = "https:" + imgUrl;
+                } else if (imgUrl.startsWith("/")) {
+                  imgUrl = "https://www.zhihu.com" + imgUrl;
+                }
+              }
+
+              if (title && url) {
+                hotList.push({
+                  id,
+                  title,
+                  url: url.startsWith("http")
+                    ? url
+                    : `https://www.zhihu.com${url}`,
+                  excerpt,
+                  hotValue: hotValue
+                    ? hotValue.includes("}")
+                      ? hotValue.split("}")[1]
+                      : hotValue
+                    : undefined, // 如果热度为空，则设为 undefined
+                  imgUrl: imgUrl || undefined,
+                });
+                console.log(
+                  `成功解析热榜项 #${index + 1}: ${title}${
+                    hotValue ? ` (${hotValue})` : ""
+                  }${imgUrl ? " [有图]" : ""}`
+                );
+              }
+            } catch (itemError) {
+              console.error(`解析第${index + 1}个热榜项目失败:`, itemError);
+            }
+          });
+        } else {
+          console.log("未找到热榜列表容器");
+          throw new Error("未找到热榜列表容器");
+        }
+
+        console.log(`成功解析出${hotList.length}个热榜项目`);
+
+        Store.Zhihu.hot.list = hotList;
+      } catch (error) {
+        Store.Zhihu.hot.list = []; // 清空热榜列表
+        console.error("获取知乎热榜失败:", error);
+        throw new Error(
+          `获取知乎热榜失败: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      } finally {
+        // 重置加载状态
+        Store.Zhihu.hot.isLoading = false;
+      }
     } catch (error) {
-      Store.Zhihu.hot.list = []; // 清空热榜列表
-      console.error("获取知乎热榜失败:", error);
-      throw new Error(
-        `获取知乎热榜失败: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    } finally {
-      // 重置加载状态
+      Store.Zhihu.hot.list = [];
       Store.Zhihu.hot.isLoading = false;
+      throw error;
+    } finally {
+      if (page && !page.isClosed()) {
+        await page.close().catch(() => {});
+      }
     }
   }
 
@@ -346,7 +334,16 @@ export class sidebarHotListDataProvider
       // 如果没有设置cookie，显示需要设置cookie的提示
       return [
         new StatusTreeItem(
-          "需要设置知乎Cookie才能获取热榜",
+          "扫码登录知乎（推荐）",
+          new vscode.ThemeIcon("device-mobile"),
+          {
+            command: "zhihu-fisher.loginViaQRCode",
+            title: "扫码登录知乎",
+          },
+          TooltipContents.getCookieRequiredTooltip()
+        ),
+        new StatusTreeItem(
+          "手动设置Cookie",
           new vscode.ThemeIcon("key"),
           {
             command: "zhihu-fisher.setCookie",

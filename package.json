@@ -146,8 +146,13 @@
         "icon": "$(zoom-in)"
       },
       {
+        "command": "zhihu-fisher.loginViaQRCode",
+        "title": "扫码登录知乎",
+        "icon": "$(device-mobile)"
+      },
+      {
         "command": "zhihu-fisher.setCookie",
-        "title": "设置Cookie",
+        "title": "设置知乎Cookie",
         "icon": "$(key)"
       },
       {
@@ -408,7 +413,7 @@
     "viewsWelcome": [
       {
         "view": "zhihuRecommendList",
-        "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[设置Cookie](command:zhihu-fisher.setCookie)\n\n如果遇到浏览器问题，可以尝试：\n[安装浏览器](command:zhihu-fisher.configureBrowser)\n[自定义浏览器路径](command:zhihu-fisher.setCustomChromePath)"
+        "contents": "加载知乎推荐中...\n[刷新](command:zhihu-fisher.refreshHotList)\n[扫码登录](command:zhihu-fisher.loginViaQRCode)\n[设置Cookie](command:zhihu-fisher.setCookie)\n\n如果遇到浏览器问题，可以尝试：\n[安装浏览器](command:zhihu-fisher.configureBrowser)\n[自定义浏览器路径](command:zhihu-fisher.setCustomChromePath)"
       },
       {
         "view": "zhihuFollowList",
@@ -490,24 +495,34 @@
           "group": "abrowser@5"
         },
         {
+          "command": "zhihu-fisher.loginViaQRCode",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
+          "group": "bcookiemgr@1"
+        },
+        {
+          "command": "zhihu-fisher.setCookie",
+          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
+          "group": "bcookiemgr@2"
+        },
+        {
           "submenu": "zhihu-fisher.smartDisguiseMenu",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
-          "group": "bmode@1"
+          "group": "cmode@1"
         },
         {
           "submenu": "zhihu-fisher.mediaDisplayMenu",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
-          "group": "bmode@2"
+          "group": "cmode@2"
         },
         {
           "submenu": "zhihu-fisher.followUpVotesMenu",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
-          "group": "bmode@3"
+          "group": "cmode@3"
         },
         {
           "submenu": "zhihu-fisher.answersFilterMenu",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
-          "group": "bmode@4"
+          "group": "cmode@4"
         },
         {
           "command": "zhihu-fisher.configureBrowser",
@@ -515,19 +530,14 @@
           "group": "config@1"
         },
         {
-          "command": "zhihu-fisher.setCookie",
+          "command": "zhihu-fisher.clearCollectionCache",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
           "group": "config@2"
         },
         {
-          "command": "zhihu-fisher.clearCollectionCache",
-          "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
-          "group": "config@3"
-        },
-        {
           "command": "zhihu-fisher.setAnswersPerBatch",
           "when": "view == zhihuHotList || view == zhihuRecommendList || view == zhihuFollowList || view == zhihuSearchList || view == zhihuCollectionsList || view == fakeFileList",
-          "group": "config@4"
+          "group": "config@3"
         },
         {
           "command": "zhihu-fisher.toggleDebugMode",
@@ -796,12 +806,13 @@
           {
             "id": "setup-cookie",
             "title": "第二步：设置知乎Cookie",
-            "description": "设置知乎Cookie可以访问更多内容，包括需要登录才能查看的文章和完整的评论。\n\n**快速设置：**\n1. 浏览器登录知乎，按F12打开开发者工具\n2. Network标签页找到知乎请求，复制Cookie值\n\n[设置知乎Cookie](command:zhihu-fisher.setCookie)\n\n**🔒 隐私说明：** Cookie仅本地存储，不会上传或分享。\n",
+            "description": "设置知乎Cookie可以访问更多内容，包括需要登录才能查看的文章和完整的评论。\n\n**方式一：扫码登录（推荐）**\n1. 在侧边栏标题右键菜单中选择【扫码登录知乎】\n2. 使用知乎App扫描二维码完成登录\n3. Cookie将自动配置，无需手动复制\n\n[扫码登录知乎](command:zhihu-fisher.loginViaQRCode)\n\n**方式二：手动设置**\n1. 浏览器登录知乎，按F12打开开发者工具\n2. Network标签页找到知乎请求，复制Cookie值\n\n[设置知乎Cookie](command:zhihu-fisher.setCookie)\n\n**🔒 隐私说明：** Cookie仅本地存储，不会上传或分享。\n",
             "media": {
               "image": "https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250424143443844-967882670.webp",
               "altText": "设置知乎Cookie"
             },
             "completionEvents": [
+              "onCommand:zhihu-fisher.loginViaQRCode",
               "onCommand:zhihu-fisher.setCookie"
             ]
           },

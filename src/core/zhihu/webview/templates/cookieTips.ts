@@ -199,11 +199,21 @@ export const cookieTipsTemplate = `
     </div>
 
     <div class="button-group">
-      <button class="button primary" onclick="setCookie()">
+      <button class="button primary" onclick="loginViaQRCode()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="8" height="8" rx="1"/>
+          <rect x="14" y="2" width="8" height="8" rx="1"/>
+          <rect x="2" y="14" width="8" height="8" rx="1"/>
+          <rect x="14" y="14" width="8" height="8" rx="1"/>
+        </svg>
+        扫码登录
+      </button>
+
+      <button class="button secondary" onclick="setCookie()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
         </svg>
-        设置Cookie
+        手动设置Cookie
       </button>
 
       <button class="button secondary" onclick="openZhihu()">
@@ -232,12 +242,11 @@ export const cookieTipsTemplate = `
         如何获取Cookie？
       </h3>
       <ul>
-        <li>在浏览器中登录知乎网站</li>
-        <li>按F12打开开发者工具</li>
-        <li>切换到Network（网络）标签页</li>
-        <li>刷新页面，找到知乎的请求</li>
-        <li>在请求头中复制Cookie值</li>
-        <li>使用"设置Cookie"按钮粘贴Cookie</li>
+        <li><strong>推荐：</strong>点击上方「扫码登录」使用知乎 App 扫码自动获取</li>
+        <li>在浏览器中登录知乎网站，按F12打开开发者工具</li>
+        <li>切换到Network（网络）标签页，刷新页面</li>
+        <li>在请求头中找到Cookie字段，复制完整值</li>
+        <li>使用「手动设置Cookie」按钮粘贴</li>
       </ul>
     </div>
 
@@ -263,6 +272,12 @@ export const cookieTipsTemplate = `
 
   <script>
     const vscode = acquireVsCodeApi();
+
+    function loginViaQRCode() {
+      vscode.postMessage({
+        command: 'loginViaQRCode'
+      });
+    }
 
     function setCookie() {
       vscode.postMessage({

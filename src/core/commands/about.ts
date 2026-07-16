@@ -144,7 +144,7 @@ export function registerAboutCommands(): vscode.Disposable[] {
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
         "1. Cookie失效\n" +
         "   原因：知乎Cookie过期或失效\n" +
-        "   解决：点击【更新Cookie】重新设置知乎登录信息\n\n" +
+        "   解决：推荐使用【扫码登录】让知乎App扫码自动获取，或点击【更新Cookie】手动设置\n\n" +
         "2. 网络连接问题\n" +
         "   原因：网络不稳定或速度过慢\n" +
         "   解决：检查网络连接，稍后重试，或切换网络环境\n\n" +
@@ -159,11 +159,12 @@ export function registerAboutCommands(): vscode.Disposable[] {
         "   解决：稍后重试，或直接在浏览器中打开链接\n\n" +
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
         "★ 推荐操作顺序 ★\n" +
-        "1. 首先尝试【更新Cookie】\n" +
+        "1. 首先尝试【扫码登录】或【更新Cookie】\n" +
         "2. 如果还是不行，检查【配置浏览器】\n" +
         "3. 如果问题依然存在，点击【重启扩展】\n" +
         "4. 最后可以尝试【重启VSCode】";
 
+      const loginViaQRCodeAction = "扫码登录";
       const updateCookieAction = "更新Cookie";
       const configureBrowserAction = "配置浏览器";
       const restartExtensionAction = "重启扩展";
@@ -175,6 +176,7 @@ export function registerAboutCommands(): vscode.Disposable[] {
           modal: true,
           detail: message,
         },
+        loginViaQRCodeAction,
         updateCookieAction,
         configureBrowserAction,
         restartExtensionAction,
@@ -182,6 +184,9 @@ export function registerAboutCommands(): vscode.Disposable[] {
       );
 
       switch (selection) {
+        case loginViaQRCodeAction:
+          await vscode.commands.executeCommand("zhihu-fisher.loginViaQRCode");
+          break;
         case updateCookieAction:
           await vscode.commands.executeCommand("zhihu-fisher.setCookie");
           break;

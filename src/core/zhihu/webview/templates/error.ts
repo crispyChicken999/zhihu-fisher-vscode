@@ -198,9 +198,9 @@ export const errorTemplate = `
       </ul>
     </div>
 
-    <div class="error-actions">
-      \${ERROR_ACTIONS}
-    </div>
+    <div class="error-actions">        \${ERROR_ACTIONS}
+        <button class="action-button" onclick="loginViaQRCode()" style="margin-top: 12px;">📱 扫码登录</button>
+      </div>
 
     <div class="footer-note">
       如果问题持续存在，请检查网络连接或稍后重试
@@ -222,6 +222,13 @@ export const errorTemplate = `
     function reloadPage() {
       vscode.postMessage({
         command: 'reloadPage'
+      });
+    }
+
+    // 扫码登录
+    function loginViaQRCode() {
+      vscode.postMessage({
+        command: 'loginViaQRCode'
       });
     }
 

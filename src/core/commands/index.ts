@@ -12,6 +12,7 @@ import { registerRecommendCommands } from './recommend';
 import { registerFollowCommands } from './follow';
 import { registerCollectionCommands } from './collection';
 import { registerWebviewNavigationCommands } from './webview-navigation';
+import { registerQRLoginCommands } from './qr-login';
 import { sidebarHotListDataProvider } from '../zhihu/sidebar/hot';
 import { sidebarSearchListDataProvider } from '../zhihu/sidebar/search';
 import { sidebarCollectionsDataProvider } from '../zhihu/sidebar/collections';
@@ -45,6 +46,7 @@ export function registerAllCommands(
     ...registerBrowserCommands(),
     ...registerWebviewCommands(),
     ...registerWebviewNavigationCommands(),
+    ...registerQRLoginCommands(sidebarHot, sidebarRecommend, sidebarFollow, sidebarSearch, sidebarCollections),
     ...registerCookieCommands(zhihuService, sidebarHot, sidebarRecommend, sidebarFollow, sidebarSearch, sidebarCollections),
     ...registerCollectionCommands(sidebarCollections),
     ...registerRecommendCommands(sidebarRecommend),

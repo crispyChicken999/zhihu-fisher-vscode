@@ -61,6 +61,14 @@ export class SidebarDisguiseManager {
       }
     });
 
+    // 初始化完成后，确保上下文状态正确
+    // 避免重启后 VSCode 仍显示上一次的 fakeFileList 视图
+    await vscode.commands.executeCommand(
+      "setContext",
+      "zhihu-fisher.sidebarDisguised",
+      false
+    );
+
     console.log(
       `侧边栏伪装管理器初始化完成，功能状态: ${
         this.isDisguiseEnabled ? "启用" : "禁用"
