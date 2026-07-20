@@ -2,6 +2,26 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.7.6] - 2026-07-20
+
+### Features
+
+- **Puppeteer 升级到 v25.2.0**：将 Puppeteer 从 v24.6.1 升级到 v25.2.0，同步更新相关依赖（@puppeteer/browsers、chromium-bidi、devtools-protocol 等），获得更好的性能和兼容性。
+
+- **浏览器安装指引优化**：配置浏览器弹窗文案重构，提供更清晰的版本兼容说明和操作指引。
+
+- **浏览器下载完整性检测增强**：在 `canCreateBrowser` 和 `getBrowserInstance` 中均增加浏览器下载完整性检查。
+  - 当 `chrome.exe` 不存在时，通过判断版本目录（`versionDir`）是否存在来区分"未下载"和"下载未完全"两种场景。
+  - 如果版本目录存在但缺少 chrome.exe，提示用户删除目录后重新安装。
+  - 如果版本目录不存在，提示用户先安装浏览器。
+
+- **无头模式窗口位置优化**：无头模式下浏览器窗口移动到屏幕外（`--window-position=-10000,-10000`），避免窗口闪烁干扰用户。
+  > 其实是一个hack操作，有概率会显示一个白色的窗口，直接给它挪到屏幕外就看不到了，暂时先这样😂，因为原因是Chromium 129引入的新特性（？）导致的，在最新版的Chrome 150也会这样，只能等待官方修复了。
+
+### Build
+
+- **TypeScript 配置升级**：`tsconfig.json` 中 `module` 更新为 `ES2022`，`moduleResolution` 更新为 `bundler`，适配现代模块解析要求。
+
 ## [0.7.5] - 2026-07-16
 
 ### Features
