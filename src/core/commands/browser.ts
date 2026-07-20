@@ -17,40 +17,54 @@ export function registerBrowserCommands(): vscode.Disposable[] {
       const currentSystem = PuppeteerManager.getOSType();
       const examplePath = PuppeteerManager.getChromeExamplePath();
       const message =
-        "插件提供了配置浏览器的两种方式：\n" +
-        "1. 安装Puppeteer的默认浏览器\n" +
-        "2. 设置自定义Chrome路径\n" +
+        "插件支持两种浏览器配置方式：\n" +
         "\n" +
         "===================================\n" +
         "\n" +
-        "方法一：【安装默认的浏览器】(￣▽￣)ノ\n" +
-        "1. 请在终端中运行以下命令来安装浏览器：\n" +
-        "   npx puppeteer browsers install chrome@135.0.7049.84\n" +
-        "2. 或者点击【安装浏览器】按钮会自动开始安装\n" +
+        "🟢 方法一：【安装默认浏览器】（推荐）\n" +
+        `Puppeteer 自带一个「Chrome for Testing」浏览器，` +
+        `版本与当前插件严格匹配，保证 100% 兼容。` +
+        "\n" +
+        "📌 优势：版本配套、自动管理、无需手动更新\n" +
+        "📌 适合：绝大多数用户\n" +
+        "\n" +
+        "安装方式：\n" +
+        "  1. 点击下方【安装浏览器】按钮自动安装\n" +
+        "  2. 或者在终端中手动运行：\n" +
+        "     npx puppeteer browsers install chrome\n" +
         "\n" +
         "【安装目录】" +
         `${currentSystem}：${examplePath.default}\n` +
         "\n" +
         "【可能遇到的问题】(っ °Д °;)っ\n" +
-        "1. 如果提示 npx 指令运行失败：请检查是否安装了 Node.js（v18及以上） 和 NPM \n" +
-        "   如果没有安装，请点击【安装Node.js】按钮自动安装\n" +
-        "2. Node.js 和 npm 已安装，但仍然提示 npx 指令运行失败：那么可以使用\n" +
-        "   npm install -g npx 来安装 NPX，点击【安装NPX】自动安装\n" +
+        "1. 如果提示 npx 指令运行失败：请检查是否安装了 Node.js（v22及以上）\n" +
+        "   如果没有安装，请点击【安装Node.js】按钮\n" +
+        "2. Node.js 已安装但仍提示 npx 失败：可尝试 npm install -g npx\n" +
+        "   点击【安装NPX】自动安装\n" +
         "\n" +
         "===================================\n" +
         "\n" +
-        "方法二：【设置自定义Chrome路径】(╯‵□′)╯︵┻━┻\n" +
-        "1. 如果你已经安装了谷歌官方的 Chrome 浏览器，并且想要使用自己的浏览器\n" +
-        "2. 请点击【自定义路径】按钮\n" +
-        "3. 然后输入 Chrome 浏览器的可执行文件路径，例如：\n" +
+        "🟡 方法二：【设置自定义Chrome路径】（高级）\n" +
+        "使用你本机已安装的 Chrome 浏览器（如 Chrome 正式版、Dev 版等）。\n" +
+        "\n" +
+        "⚠️ 兼容性风险：\n" +
+        "  · 自定义 Chrome 版本可能与 Puppeteer 的 CDP 协议不匹配\n" +
+        "  · 新版 Chrome（如 v150+）可能出现白色窗口、无法关闭等异常\n" +
+        "  · 旧版 Chrome 可能缺少新特性，导致页面加载失败\n" +
+        "  · 如果遇到奇怪问题，请先用方法一安装默认浏览器排查\n" +
+        "\n" +
+        "📌 适合：不想额外下载浏览器的高级用户\n" +
+        "📌 注意：设置后如遇异常，请优先切回默认浏览器\n" +
+        "\n" +
+        "使用方式：点击下方【自定义路径】按钮，输入 Chrome 路径，例如：\n" +
         `   ${examplePath.custom}\n` +
         "\n" +
         "===================================\n" +
         "\n" +
-        "【注意】\n" +
-        "🎉设置完成后，请重启VSCode。🎉\n";
-      const installBrowserAction = "安装浏览器";
+        "💡 提示：设置完成后，建议重启 VSCode。";
+      const installBrowserAction = "安装默认浏览器";
       const setCustomChromePathAction = "自定义路径";
+      const reloadAction = "重启VSCode";
       const installNodeAction = "安装Node.js";
       const installNpxAction = "安装NPX";
 
@@ -62,6 +76,7 @@ export function registerBrowserCommands(): vscode.Disposable[] {
         },
         installBrowserAction,
         setCustomChromePathAction,
+        reloadAction,
         installNodeAction,
         installNpxAction
       );
@@ -71,7 +86,7 @@ export function registerBrowserCommands(): vscode.Disposable[] {
         const terminal = vscode.window.createTerminal("Puppeteer");
         terminal.show();
         terminal.sendText(
-          "npx puppeteer browsers install chrome@135.0.7049.84"
+          "npx puppeteer browsers install chrome"
         );
 
         setTimeout(() => {
@@ -116,6 +131,8 @@ export function registerBrowserCommands(): vscode.Disposable[] {
               // 这里可以添加其他操作，比如刷新列表等
             });
         });
+      } else if (selection === reloadAction) {
+        vscode.commands.executeCommand("workbench.action.reloadWindow");
       }
     }
   );
@@ -132,7 +149,7 @@ export function registerBrowserCommands(): vscode.Disposable[] {
       const options: vscode.InputBoxOptions = {
         title: "设置自定义Chrome路径",
         prompt:
-          "请输入本地谷歌浏览器Chrome.exe的绝对路径【想清空设置请按 ESC 退出即可】",
+          "请输入 Chrome 可执行文件的绝对路径（按 ESC 可清空设置恢复默认）。⚠️ 注意：自定义 Chrome 版本与 Puppeteer 可能不兼容，遇到异常请切回默认浏览器。",
         placeHolder: `(${currentSystem})例如: ${examplePath.custom}`,
         ignoreFocusOut: true,
         validateInput: async (input) => {
@@ -169,8 +186,8 @@ export function registerBrowserCommands(): vscode.Disposable[] {
         await PuppeteerManager.setUserChromePath("");
         // 用户取消输入
         const cancelMessage =
-          "已清除自定义Chrome路径，将使用爬虫的默认浏览器，如果没安装请安装";
-        const installBrowserAction = "安装浏览器";
+          "已清除自定义Chrome路径，将使用默认浏览器（推荐）。默认浏览器版本与插件严格匹配，兼容性最佳。";
+        const installBrowserAction = "安装默认浏览器";
 
         vscode.window
           .showInformationMessage(cancelMessage, installBrowserAction)

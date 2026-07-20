@@ -1008,6 +1008,6 @@
   "dependencies": {
     "cheerio": "^1.0.0",
     "marked": "^15.0.8",
-    "puppeteer": "^24.6.1"
+    "puppeteer": "^25.2.0"
   }
 }

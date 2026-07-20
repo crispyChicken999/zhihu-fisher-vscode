@@ -46,20 +46,20 @@ export class PuppeteerManager {
       case "Windows":
         return {
           default:
-            "C:\\Users\\[用户名]\\.cache\\puppeteer\\chrome\\win64-135.0.7049.84\\chrome-win64\\chrome.exe",
+            "C:\\Users\\[用户名]\\.cache\\puppeteer\\chrome\\win64-[版本号]\\chrome-win64\\chrome.exe",
           custom: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         };
       case "MacOS":
         return {
           default:
-            "/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-135.0.7049.84/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Users/[用户名]/Library/Caches/puppeteer/chrome/mac-x64-[版本号]/chrome-mac-x64/Google Chrome.app/Contents/MacOS/Google Chrome",
           custom:
             "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         };
       case "Linux":
         return {
           default:
-            "/home/[用户名]/.cache/puppeteer/chrome/linux-135.0.7049.84/chrome-linux64/chrome【我猜的，我也不知道是不是这个路径，有问题请反馈😂】",
+            "/home/[用户名]/.cache/puppeteer/chrome/linux-[版本号]/chrome-linux64/chrome【我猜的，我也不知道是不是这个路径，有问题请反馈😂】",
           custom: "/usr/bin/google-chrome",
         };
       default:
@@ -87,7 +87,7 @@ export class PuppeteerManager {
     await config.update(
       "customChromePath",
       path,
-      vscode.ConfigurationTarget.Global
+      vscode.ConfigurationTarget.Global,
     );
     if (!path) {
       console.log("已清除自定义Chrome路径设置");
@@ -133,12 +133,55 @@ export class PuppeteerManager {
     if (!Store.browserInstance) {
       console.log("创建新的浏览器实例...");
 
-      try {
-        // 优先获取用户配置的Chrome路径
-        const userChromePath = PuppeteerManager.getUserChromePath();
-        const executablePath = userChromePath || Puppeteer.executablePath();
+      // 优先获取用户配置的Chrome路径
+      const userChromePath = PuppeteerManager.getUserChromePath();
+      let executablePath = userChromePath;
 
-        // 检查路径是否存在
+      if (!executablePath) {
+        executablePath = await Puppeteer.executablePath();
+        // 如果 chrome.exe 不存在，判断是未下载还是下载未完全
+        if (
+          os.platform() === "win32" &&
+          executablePath.toLowerCase().endsWith("chrome.exe") &&
+          !fs.existsSync(executablePath)
+        ) {
+          // executablePath 形如: C:\Users\xxx\.cache\puppeteer\chrome\win64-xxx\chrome-win64\chrome.exe
+          // versionDir 为版本目录: C:\Users\xxx\.cache\puppeteer\chrome\win64-xxx
+          const versionDir = path.dirname(path.dirname(executablePath));
+          if (fs.existsSync(versionDir)) {
+            // 版本目录存在但缺少 chrome.exe → 下载未完全
+            const openFolder = "打开文件夹删除";
+            const reinstall = "重新安装";
+            const selection = await vscode.window.showErrorMessage(
+              `Puppeteer 自带的Bundled 浏览器下载不完整；\n缺少必需的浏览器可执行文件。\n请删除以下目录后重新安装：\n${versionDir}`,
+              { modal: false },
+              openFolder,
+              reinstall,
+            );
+            if (selection === openFolder) {
+              await vscode.env.openExternal(vscode.Uri.file(versionDir));
+            } else if (selection === reinstall) {
+              vscode.commands.executeCommand("zhihu-fisher.configureBrowser");
+            }
+            throw new Error("浏览器下载不完整，请删除版本目录后重新安装");
+          } else {
+            // 版本目录不存在 → 未下载
+            const installAction = "配置浏览器";
+            const selection = await vscode.window.showErrorMessage(
+              "浏览器尚未下载，请先安装浏览器，或指定自定义浏览器路径后重试。",
+              { modal: false },
+              installAction,
+            );
+            if (selection === installAction) {
+              vscode.commands.executeCommand("zhihu-fisher.configureBrowser");
+            }
+            throw new Error("浏览器尚未下载，请先安装浏览器，或指定自定义浏览器路径后重试。");
+          }
+        }
+      }
+
+      try {
+        // 检查自定义路径是否存在
         if (userChromePath && !fs.existsSync(userChromePath)) {
           throw new Error(`自定义Chrome路径不存在: ${userChromePath}`);
         }
@@ -150,11 +193,22 @@ export class PuppeteerManager {
 
             // 检查是否启用调试模式
             const isDebugMode = PuppeteerManager.isDebugModeEnabled();
-            const headlessMode = !isDebugMode; // 调试模式下设置为false，即显示浏览器
+            const headlessMode = !isDebugMode;
+
+            // 根据是否调试模式构建不同的启动参数
+            const puppeteerArgs = [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-features=UseEcoQoSForBackgroundProcess", // 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
+            ];
 
             if (isDebugMode) {
+              // 调试模式（有头）：窗口默认大小即可，不需要指定尺寸
               console.log("调试模式已启用，浏览器将以可见模式运行");
             } else {
+              // 无头模式：指定窗口尺寸用于视口，并用窗口位置 hack 兜底隐藏可能的窗口
+              puppeteerArgs.push("--window-size=800,600");
+              puppeteerArgs.push("--window-position=-10000,-10000"); // 将窗口移动到屏幕外，避免干扰用户
               console.log("浏览器将在后台运行（headless模式）");
             }
 
@@ -162,12 +216,7 @@ export class PuppeteerManager {
             Store.browserInstance = await Puppeteer.launch({
               executablePath: executablePath,
               headless: headlessMode,
-              args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--window-size=1000,700",
-                "--disable-features=UseEcoQoSForBackgroundProcess", // 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
-              ],
+              args: puppeteerArgs,
               pipe: true,
               protocolTimeout: 240000, // 设置协议超时时间为240秒 / 4分钟
             });
@@ -176,16 +225,20 @@ export class PuppeteerManager {
             console.log(
               `第${i + 1}次尝试后，成功启动浏览器！${
                 isDebugMode ? "（调试模式）" : "（后台模式）"
-              }`
+              }`,
             );
             break; // 成功启动后跳出循环
           } catch (error) {
             console.error("尝试启动浏览器失败:", error);
 
             const browser = Store.browserInstance;
-            if (browser && browser.connected) {
-              console.error("正在关闭已启动的浏览器...");
-              await browser.close();
+            if (browser) {
+              try {
+                console.error("正在关闭已启动的浏览器...");
+                await browser.close();
+              } catch {
+                // 浏览器可能已经关闭，忽略错误
+              }
             }
 
             Store.browserInstance = null;
@@ -193,7 +246,7 @@ export class PuppeteerManager {
             if (i === browserStartAttempts - 1) {
               console.error("5次尝试启动浏览器均失败，请稍候重试");
               throw new Error(
-                "5次尝试启动浏览器均失败，请稍候重试，可能是网络问题"
+                "5次尝试启动浏览器均失败，请稍候重试，可能是网络问题",
               );
             }
             console.log("等待5秒后重试...");
@@ -216,7 +269,7 @@ export class PuppeteerManager {
             message,
             { modal: true },
             useDefault,
-            changeCustomPath
+            changeCustomPath,
           );
 
           if (selection === useDefault) {
@@ -227,7 +280,8 @@ export class PuppeteerManager {
             vscode.commands.executeCommand("zhihu-fisher.setCustomChromePath");
           }
         } else {
-          const message = "无法创建爬虫浏览器，可能是找不到浏览器的Chrome路径";
+          const message =
+            "无法创建爬虫浏览器，浏览器文件可能尚未下载或下载不完整。请尝试重装默认浏览器。";
           const installAction = "安装默认浏览器";
           const useCustomAction = "自定义浏览器路径";
 
@@ -235,7 +289,7 @@ export class PuppeteerManager {
             message,
             { modal: true },
             installAction,
-            useCustomAction
+            useCustomAction,
           );
 
           // 根据用户选择执行操作
@@ -247,7 +301,7 @@ export class PuppeteerManager {
         }
 
         throw new Error(
-          "无法创建浏览器实例，请设置有效的Chrome浏览器路径或安装Puppeteer浏览器"
+          "无法创建浏览器实例，请设置有效的Chrome浏览器路径或安装Puppeteer浏览器",
         );
       }
     }
@@ -275,14 +329,63 @@ export class PuppeteerManager {
     }
 
     // 如果没有自定义路径，检查Puppeteer默认路径
-    const executablePath = Puppeteer.executablePath();
-    const normalizedPath = path.normalize(executablePath);
+    try {
+      const executablePath = await Puppeteer.executablePath();
 
-    if (fs.existsSync(normalizedPath)) {
+      // 如果 chrome.exe 不存在，判断是未下载还是下载未完全
+      if (
+        os.platform() === "win32" &&
+        executablePath.toLowerCase().endsWith("chrome.exe") &&
+        !fs.existsSync(executablePath)
+      ) {
+        // executablePath 形如: C:\Users\xxx\.cache\puppeteer\chrome\win64-xxx\chrome-win64\chrome.exe
+        // versionDir 为版本目录: C:\Users\xxx\.cache\puppeteer\chrome\win64-xxx
+        const versionDir = path.dirname(path.dirname(executablePath));
+        if (fs.existsSync(versionDir)) {
+          // 版本目录存在但缺少 chrome.exe → 下载未完全
+          console.error(
+            "浏览器下载不完整，版本目录存在但缺少可执行文件:",
+            versionDir,
+          );
+          const openFolder = "打开文件夹删除";
+          const reinstall = "重新安装";
+          const selection = await vscode.window.showErrorMessage(
+            `Puppeteer 自带的Bundled 浏览器下载不完整；\n缺少必需的浏览器可执行文件。\n请删除以下目录后重新安装：\n${versionDir}`,
+            { modal: false },
+            openFolder,
+            reinstall,
+          );
+          if (selection === openFolder) {
+            const lastDir = path.dirname(versionDir);
+            await vscode.env.openExternal(vscode.Uri.file(lastDir));
+          } else if (selection === reinstall) {
+            vscode.commands.executeCommand("zhihu-fisher.configureBrowser");
+          }
+        } else {
+          // 版本目录不存在 → 未下载
+          console.error("浏览器尚未下载，请先安装浏览器，或指定自定义浏览器路径后重试。");
+          const installAction = "配置浏览器";
+          const selection = await vscode.window.showErrorMessage(
+            "浏览器尚未下载，请先安装浏览器，或指定自定义浏览器路径后重试。",
+            { modal: false },
+            installAction,
+          );
+          if (selection === installAction) {
+            vscode.commands.executeCommand("zhihu-fisher.configureBrowser");
+          }
+        }
+        return false;
+      }
+
+      if (!fs.existsSync(executablePath)) {
+        console.error("浏览器尚未下载，请先安装浏览器，或指定自定义浏览器路径后重试。");
+        return false;
+      }
+
       console.log("可以创建浏览器实例");
       return true;
-    } else {
-      console.error("无法创建浏览器实例，浏览器路径不存在:", normalizedPath);
+    } catch (e) {
+      console.error("获取 Puppeteer 浏览器路径失败，浏览器可能尚未下载:", e);
       return false;
     }
   }
@@ -302,7 +405,7 @@ export class PuppeteerManager {
    */
   static async setPageInstance(
     key: string,
-    page: Puppeteer.Page
+    page: Puppeteer.Page,
   ): Promise<void> {
     Store.pagesInstance.set(key, page);
   }
@@ -328,7 +431,7 @@ export class PuppeteerManager {
 
     // 设置User-Agent
     await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36",
     );
 
     // 如果有cookie，设置到页面，并去除BEC参数
@@ -357,7 +460,7 @@ export class PuppeteerManager {
    */
   static async addCookiesToPage(
     cookiesStr: string,
-    domain: string = "www.zhihu.com"
+    domain: string = "www.zhihu.com",
   ): Promise<void> {
     const cookies = cookiesStr.split(";").map((pair) => {
       let name = pair.trim().slice(0, pair.trim().indexOf("="));
@@ -368,7 +471,7 @@ export class PuppeteerManager {
     await Promise.all(
       cookies.map((pair) => {
         return Store.browserInstance!.setCookie(pair);
-      })
+      }),
     );
   }
 
