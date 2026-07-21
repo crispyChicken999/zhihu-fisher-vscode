@@ -2,6 +2,28 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.7.7] - 2026-07-21
+
+### Bug Fixes
+
+- **Cookie 过滤系统**：新增 `filterZhihuOnlyCookies()` 方法，自动过滤百度统计（`HMACCOUNT`、`Hm_lvt_*`、`Hm_lpvt_*`）、百度搜索（`BAIDUID`、`BDUSS`、`BIDUPSID`、`PSTM`、`MCITY`、`ZFY`、`H_PS_PSSID`、`H_WISE_SIDS`、`ab_sr`、`__bid_n`、`_sp_id`、`ploganondeg`）及 Google Analytics（`_ga`、`_gid`、`_gat`）等第三方 cookie，避免发送到知乎导致 403。
+  - `loadCookie()` 启动时自动清洗旧 cookie 并更新保存。
+  - `setCookie()` 手动粘贴时也自动过滤。
+  - `saveCookieString()` 扫码登录保存时自动过滤。
+
+- **扫码登录 Cookie 获取修复**：修复了扫码登录后 `__zse_ck`（知乎请求签名所需的 secure cookie）未被捕获的问题。
+  - 登录成功后跳转到 `zhihu.com/hot` 页面，触发知乎 JS 设置 `__zse_ck` 签名 cookie。
+  - 改用 `context.cookies()` 获取完整 cookie（替代已弃用的 `page.cookies()`），按知乎域名过滤后保存。
+  - 保存前检查 `__zse_ck` 和 `z_c0` 是否存在，缺失时提示用户重新登录。
+
+- **Cookie 完整性兼容检查**：新增 `parseCookieKeys()` 和 `isCookieComplete()` 辅助方法。`loadCookie()` 加载旧 cookie 时自动检查是否缺少关键安全项（`__zse_ck` + `z_c0`），缺失时弹出「扫码登录」或「手动设置Cookie」的操作入口。
+
+- **热榜请求方式优化**：热榜加载从 Puppeteer 改回 `fetch` + `cheerio`，使用模拟浏览器导航的请求头（`Sec-Fetch-Dest: document`、`Sec-Fetch-Mode: navigate`），发送前自动清洗 cookie 中的第三方项。避免与推荐列表的 Puppeteer 页面冲突（两个页面同时加载时 inactive tab 不加载数据的问题）。
+
+### Build
+
+- **Puppeteer API 弃用修复**：将 `page.cookies()` 替换为 `context.cookies()`，适配 Puppeteer v25+ 的 API 变更。
+
 ## [0.7.6] - 2026-07-20
 
 ### Features

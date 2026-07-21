@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as Puppeteer from "puppeteer";
-import { Store } from "../stores";
 import { CookieManager } from "../zhihu/cookie";
 import { PuppeteerManager } from "../zhihu/puppeteer";
 import { qrLoginTemplate } from "../zhihu/webview/templates/qr-login";
@@ -325,14 +324,47 @@ async function handleQRLogin(
             // 忽略超时
           }
 
-          // 提取cookie
-          const cookies = await page.cookies();
-          const cookieString = cookies
+          // 导航到热榜页面，触发知乎 JS 设置 __zse_ck 等签名 cookie
+          console.log("导航到热榜页面以触发签名 cookie 设置...");
+          await page.goto("https://www.zhihu.com/hot", {
+            waitUntil: "networkidle2",
+            timeout: 30000,
+          });
+
+          // 从 context 获取所有 cookie，只保留知乎域名
+          const allCookies = context ? await context.cookies() : [];
+          const zhihuCookies = allCookies.filter(
+            (c) => c.domain === ".zhihu.com" || c.domain === "www.zhihu.com"
+          );
+          const cookieString = zhihuCookies
             .map((c) => `${c.name}=${c.value}`)
             .join("; ");
 
+          const cookieKeys = zhihuCookies.map((c) => c.name);
+          console.log(
+            `context.cookies() 共 ${allCookies.length} 个，过滤出 ${zhihuCookies.length} 个知乎域cookie，key列表: ${cookieKeys.join(", ")}`
+          );
+
+          // 检查是否包含关键 cookie
+          const hasZseCk = cookieKeys.includes("__zse_ck");
+          const hasZC0 = cookieKeys.includes("z_c0");
+          if (!hasZseCk || !hasZC0) {
+            const missing = [];
+            if (!hasZseCk) { missing.push("__zse_ck"); }
+            if (!hasZC0) { missing.push("z_c0"); }
+            console.warn(`Cookie 缺少关键的安全项: ${missing.join(", ")}，请重新登录`);
+            if (!isDisposed) {
+              panel.webview.html = getErrorHtml("Cookie不完整", [
+                `缺少关键的安全Cookie: ${missing.join(", ")}`,
+                "请重新扫码登录，或使用手动设置Cookie方式",
+              ]);
+            }
+            cleanupPage(context, page);
+            return;
+          }
+
           if (cookieString) {
-            console.log(`成功获取到 ${cookies.length} 个cookie`);
+            console.log(`成功获取到 ${cookieKeys.length} 个cookie`);
             await CookieManager.saveCookieString(cookieString);
 
             // 登录成功后，确保浏览器可用后再刷新侧边栏列表（与手动setCookie逻辑对齐）

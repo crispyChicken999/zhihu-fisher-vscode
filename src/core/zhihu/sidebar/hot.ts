@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as cheerio from "cheerio";
-import * as Puppeteer from "puppeteer";
 import { Store } from "../../stores";
 import { CookieManager } from "../cookie";
 import { PuppeteerManager } from "../puppeteer";
@@ -81,10 +80,9 @@ export class sidebarHotListDataProvider
   // 加载热榜内容
   private async getSideBarHotList(): Promise<void> {
     /**
-     * 虽然这个是通过axios和cheerio来加载列表的，但是呢，最好还是等待puppeteer能正常启动再去加载。
+     * 虽然热榜是用 fetch + cheerio 来加载列表的，但最好还是等待 puppeteer 能正常启动再去加载。
      * 不然就容易出现困惑，明明热榜加载出来了，但是点不开文章啥的。
-     * 因为其他地方用到puppeteer那么如果，puppeteer启动失败的话，也不让热榜加载出来。
-     * 因为加载文章也需要puppeteer，只加载了热榜列表却点不开，加载列表就没意义了。
+     * 因为加载文章也需要 puppeteer，只加载了热榜列表却点不开，加载列表就没意义了。
      * 那么这里也做一下判断。
      */
     this.canCreateBrowser = await PuppeteerManager.canCreateBrowser();
@@ -138,7 +136,7 @@ export class sidebarHotListDataProvider
     }
   }
 
-  /** 实际获取热榜的方法（使用 Puppeteer 加载，避免 fetch 403） */
+  /** 实际获取热榜的方法（使用 fetch 请求代替 Puppeteer，避免与推荐页面冲突） */
   async getHotList() {
     // 设置加载状态
     Store.Zhihu.hot.isLoading = true;
@@ -150,20 +148,56 @@ export class sidebarHotListDataProvider
       throw new Error("需要设置知乎Cookie才能访问");
     }
 
-    let page: Puppeteer.Page | null = null;
-    try {
-      // 通过 Puppeteer 加载热榜页面，自动处理 cookie 匹配（避免 fetch 直接发送完整 cookie 导致的 403）
-      console.log("通过 Puppeteer 加载热榜页面...");
-      page = await PuppeteerManager.createPage();
+    // 过滤掉第三方cookie（百度统计等），避免发送到知乎导致403
+    const cleanCookie = CookieManager.filterZhihuOnlyCookies(
+      CookieManager.removeBECFromCookie(cookie)
+    );
 
-      await page.goto("https://www.zhihu.com/hot", {
-        waitUntil: "networkidle0",
-        timeout: 30000,
+    // 如果过滤后cookie有变化，自动更新存储的cookie
+    if (cleanCookie !== cookie) {
+      console.log("检测到cookie中含有第三方cookie，自动清洗并更新");
+      Store.Zhihu.cookie = cleanCookie;
+      await CookieManager.saveCookie();
+    }
+
+    try {
+      console.log("通过 fetch 请求加载热榜页面...");
+      const response = await fetch("https://www.zhihu.com/hot", {
+        method: "GET",
+        headers: {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+          "Cache-Control": "no-cache",
+          Cookie: cleanCookie,
+          DNT: "1",
+          Pragma: "no-cache",
+          Referer: "https://www.zhihu.com/",
+          "Sec-Ch-Ua":
+            '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+          "Sec-Ch-Ua-Mobile": "?0",
+          "Sec-Ch-Ua-Platform": '"Windows"',
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "same-origin",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36",
+        },
       });
 
-      console.log("热榜页面加载完成，开始解析...");
+      console.log(`热榜页面请求状态: ${response.status}`);
 
-      const responseData = await page.content();
+      if (response.status === 403) {
+        console.log("热榜请求被403拦截，Cookie可能已失效");
+        CookieManager.promptForNewCookie("您的知乎Cookie可能已失效，请更新");
+        throw new Error("知乎Cookie存在问题，请求被拦截(403)");
+      }
+
+      if (!response.ok) {
+        throw new Error(`请求热榜页面失败: ${response.status} ${response.statusText}`);
+      }
+
+      const responseData = await response.text();
       const $ = cheerio.load(responseData);
 
       // 检查是否有登录墙或验证码
@@ -172,12 +206,10 @@ export class sidebarHotListDataProvider
       if (isNeedLogin) {
         console.log("检测到登录墙或验证码");
         if (cookie) {
-          // 如果已经有cookie但仍然被拦截，可能是cookie过期
           console.log("Cookie可能已失效，需要更新");
           CookieManager.promptForNewCookie("您的知乎Cookie可能已过期，请更新");
           throw new Error("知乎Cookie已失效，请更新");
         } else {
-          // 如果没有cookie且被拦截
           console.log("需要设置Cookie才能访问");
           CookieManager.promptForNewCookie("需要知乎Cookie才能获取热榜，请设置");
           throw new Error("需要设置知乎Cookie才能访问");
@@ -197,7 +229,6 @@ export class sidebarHotListDataProvider
 
           items.each((index, element) => {
             try {
-              // 从每个HotItem中提取信息
               const titleElement = $(element).find(".HotItem-title");
               const linkElement = $(element).find(".HotItem-content a");
 
@@ -234,7 +265,7 @@ export class sidebarHotListDataProvider
                     ? hotValue.includes("}")
                       ? hotValue.split("}")[1]
                       : hotValue
-                    : undefined, // 如果热度为空，则设为 undefined
+                    : undefined,
                   imgUrl: imgUrl || undefined,
                 });
                 console.log(
@@ -256,7 +287,7 @@ export class sidebarHotListDataProvider
 
         Store.Zhihu.hot.list = hotList;
       } catch (error) {
-        Store.Zhihu.hot.list = []; // 清空热榜列表
+        Store.Zhihu.hot.list = [];
         console.error("获取知乎热榜失败:", error);
         throw new Error(
           `获取知乎热榜失败: ${
@@ -264,17 +295,12 @@ export class sidebarHotListDataProvider
           }`
         );
       } finally {
-        // 重置加载状态
         Store.Zhihu.hot.isLoading = false;
       }
     } catch (error) {
       Store.Zhihu.hot.list = [];
       Store.Zhihu.hot.isLoading = false;
       throw error;
-    } finally {
-      if (page && !page.isClosed()) {
-        await page.close().catch(() => {});
-      }
     }
   }
 

@@ -29,6 +29,40 @@ export class CookieManager {
         // JSON解析失败，说明已经是新格式的纯字符串
         Store.Zhihu.cookie = cookie;
       }
+
+      // 自动过滤第三方cookie（百度统计等），已有cookie直接清洗并更新
+      const cleaned = CookieManager.filterZhihuOnlyCookies(Store.Zhihu.cookie);
+      if (cleaned !== Store.Zhihu.cookie) {
+        console.log("检测到已有cookie中包含第三方cookie，已自动清洗并更新");
+        Store.Zhihu.cookie = cleaned;
+        CookieManager.saveCookie();
+      }
+
+      // 检查是否缺少关键的安全 cookie（__zse_ck 是请求签名必需，z_c0 是登录凭证）
+      if (Store.Zhihu.cookie && !CookieManager.isCookieComplete(Store.Zhihu.cookie)) {
+        const keys = CookieManager.parseCookieKeys(Store.Zhihu.cookie);
+        const hasZseCk = keys.includes("__zse_ck");
+        const hasZC0 = keys.includes("z_c0");
+        const missing: string[] = [];
+        if (!hasZseCk) { missing.push("__zse_ck"); }
+        if (!hasZC0) { missing.push("z_c0"); }
+        console.warn(
+          `当前Cookie缺少关键安全项: ${missing.join(", ")}，建议重新扫码登录或手动设置完整Cookie`
+        );
+        vscode.window
+          .showWarningMessage(
+            `检测到Cookie不完整（缺少 ${missing.join(", ")}），之前扫码登录流程有bug，导致部分Cookie缺失，现已修复，建议重新扫码登录或手动设置完整Cookie`,
+            "扫码登录",
+            "手动设置Cookie"
+          )
+          .then((selection) => {
+            if (selection === "扫码登录") {
+              vscode.commands.executeCommand("zhihu-fisher.loginViaQRCode");
+            } else if (selection === "手动设置Cookie") {
+              vscode.commands.executeCommand("zhihu-fisher.setCookie");
+            }
+          });
+      }
     } else {
       Store.Zhihu.cookie = "";
     }
@@ -53,7 +87,8 @@ export class CookieManager {
     });
 
     if (result) {
-      Store.Zhihu.cookie = result;
+      // 过滤掉第三方cookie（百度统计等），确保干净存储
+      Store.Zhihu.cookie = CookieManager.filterZhihuOnlyCookies(result);
       await CookieManager.saveCookie();
       vscode.window.showInformationMessage("知乎Cookie设置成功");
       return true;
@@ -85,8 +120,8 @@ export class CookieManager {
       console.warn("保存cookie失败：cookie字符串为空");
       return;
     }
-    // 去除BEC等可能导致请求异常的cookie参数
-    const cleanedCookie = CookieManager.removeBECFromCookie(cookieString);
+    // 过滤掉第三方cookie（百度统计等，BEC等），只保留知乎域名相关cookie
+    const cleanedCookie = CookieManager.filterZhihuOnlyCookies(cookieString);
     Store.Zhihu.cookie = cleanedCookie;
     await CookieManager.saveCookie();
     console.log("Cookie已通过扫码登录自动保存");
@@ -126,6 +161,25 @@ export class CookieManager {
   }
 
   /**
+   * 解析cookie字符串，返回所有key列表
+   */
+  static parseCookieKeys(cookie: string): string[] {
+    if (!cookie) { return []; }
+    return cookie
+      .split(";")
+      .map((c) => c.trim().split("=")[0])
+      .filter(Boolean);
+  }
+
+  /**
+   * 检查cookie是否包含必需的关键项（__zse_ck 签名 + z_c0 登录凭证）
+   */
+  static isCookieComplete(cookie: string): boolean {
+    const keys = CookieManager.parseCookieKeys(cookie);
+    return keys.includes("__zse_ck") && keys.includes("z_c0");
+  }
+
+  /**
    * 去除cookie中的BEC参数
    * @param cookie 原始cookie字符串
    * @returns 去除BEC参数后的cookie字符串
@@ -146,6 +200,69 @@ export class CookieManager {
 
     // 重新组合cookie字符串
     return filteredCookies.join("; ");
+  }
+
+  /**
+   * 过滤掉非知乎域名的第三方cookie（如百度统计等）
+   * 这些第三方cookie如果一起发送到知乎会导致403
+   * @param cookie 原始cookie字符串
+   * @returns 过滤后的cookie字符串（只保留知乎相关cookie）
+   */
+  static filterZhihuOnlyCookies(cookie: string): string {
+    if (!cookie) {
+      return cookie;
+    }
+
+    // 已知的第三方cookie前缀（百度统计、Google Analytics等）
+    const thirdPartyPrefixes = [
+      // 百度统计
+      "HMACCOUNT",
+      "Hm_lvt",
+      "Hm_lpvt",
+      // 百度搜索
+      "BAIDU",        // BAIDU_WISE_UID
+      "BAIDUID",      // BAIDUID, BAIDUID_BFESS
+      "BDUSS",        // BDUSS, BDUSS_BFESS
+      "BDORZ",
+      "BIDUPSID",
+      "PSTM",
+      "MCITY",
+      "ZFY",
+      "H_PS_PSSID",
+      "H_WISE_SIDS",  // H_WISE_SIDS, H_WISE_SIDS_BFESS
+      "ab_sr",
+      "__bid_n",
+      "_sp_id",       // _sp_id.cbae 等
+      "ploganondeg",
+      "BEC",
+      // Google Analytics
+      "_ga",
+      "_gid",
+      "_gat",
+    ];
+
+    const cookies = cookie.split(/;\s*/);
+    const filteredCookies = cookies.filter((c) => {
+      const key = c.split("=")[0]?.trim();
+      if (!key) {
+        return false;
+      }
+      // 检查是否匹配已知的第三方cookie前缀（支持 _ 和 . 分隔符）
+      return !thirdPartyPrefixes.some(
+        (prefix) =>
+          key === prefix ||
+          key.startsWith(prefix + "_") ||
+          key.startsWith(prefix + ".")
+      );
+    });
+
+    const result = filteredCookies.join("; ");
+    if (result !== cookie) {
+      console.log(
+        `过滤第三方cookie: 从 ${cookies.length} 个减少到 ${filteredCookies.length} 个`
+      );
+    }
+    return result;
   }
 
   /**
