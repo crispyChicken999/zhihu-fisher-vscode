@@ -3060,6 +3060,35 @@ export class WebviewManager {
           // 处理下载/另存为媒体文件
           await this.handleDownloadMedia(message.url, message.type);
           break;
+
+        case "syncWebviewStorage":
+          // 将 webview 的 localStorage 数据同步到 VSCode 用户配置
+          if (message.data && typeof message.data === "object") {
+            const config = vscode.workspace.getConfiguration("zhihu-fisher");
+            await config.update(
+              "webviewStorage",
+              JSON.stringify(message.data),
+              vscode.ConfigurationTarget.Global,
+            );
+          }
+          break;
+
+        case "requestStorageSync":
+          // webview 请求恢复已保存的 localStorage 数据
+          {
+            const config = vscode.workspace.getConfiguration("zhihu-fisher");
+            const saved = config.get<string>("webviewStorage", "{}");
+            try {
+              const data = JSON.parse(saved);
+              webviewItem.webviewPanel.webview.postMessage({
+                command: "restoreWebviewStorage",
+                data: data,
+              });
+            } catch (e) {
+              // JSON 解析失败，忽略
+            }
+          }
+          break;
       }
     });
   }
@@ -4103,12 +4132,9 @@ export class WebviewManager {
       });
 
       if (questionDetail) {
-        const processedQuestionDetail = ContentProcessor.processContent(
-          questionDetail,
-          null,
-          false,
-        ); // 处理内容中的多媒体元素
-        webviewItem.article.questionDetail = processedQuestionDetail;
+        // 存储原始问题详情内容，后续渲染时会由 QuestionDetailComponent.renderModal() 统一处理
+        // 避免在此处预先处理导致后续 renderModal() 二次处理产生重复的占位符和图标
+        webviewItem.article.questionDetail = questionDetail;
         console.log("成功提取问题详情内容");
 
         // 通过 postMessage 更新前端的问题详情内容

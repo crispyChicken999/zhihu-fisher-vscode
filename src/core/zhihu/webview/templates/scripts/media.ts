@@ -39,11 +39,7 @@ function initializeFancyBox() {
   try {
     // 为文章内容中的图片添加fancybox属性
     const contentImags = document.querySelectorAll('.article-content img:not(.formula):not(.fancybox-processed)');
-    // question-detail-content
-    const detailImages = document.querySelectorAll('.question-detail-content img:not(.formula):not(.fancybox-processed)');
-
-    const allImages = [...contentImags, ...detailImages];
-    allImages.forEach(function(img) {
+    contentImags.forEach(function(img) {
       // 跳过公式图片
       if (img.classList.contains('formula')) {
         return;
@@ -55,6 +51,20 @@ function initializeFancyBox() {
       img.classList.add('fancybox-processed');
 
       // 添加鼠标样式提示
+      img.style.cursor = 'pointer';
+      img.title = '点击查看大图';
+    });
+
+    // 为问题详情中的图片添加独立的fancybox画廊组
+    const detailImages = document.querySelectorAll('.question-detail-content img:not(.formula):not(.fancybox-processed)');
+    detailImages.forEach(function(img) {
+      if (img.classList.contains('formula')) {
+        return;
+      }
+
+      img.setAttribute('data-fancybox', 'question-detail-gallery');
+      img.setAttribute('data-caption', img.alt || img.title || '图片');
+      img.classList.add('fancybox-processed');
       img.style.cursor = 'pointer';
       img.title = '点击查看大图';
     });
@@ -336,24 +346,61 @@ function openFancyboxGallery(currentSrc) {
   var sources = [];
   var seen = new Set();
 
-  // 从已处理的fancybox图片中收集
-  document.querySelectorAll('img[data-fancybox="article-gallery"]').forEach(function(img) {
-    var s = img.getAttribute('src');
-    if (s && !seen.has(s)) {
-      sources.push({ src: s });
-      seen.add(s);
+  // 判断当前图片属于哪个画廊组
+  var isQuestionDetail = false;
+  // 使用 CSS.escape 安全转义 src 值，防止 URL 中的特殊字符破坏选择器
+  var escapedSrc = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(currentSrc) : currentSrc.replace(/"/g, '\\"');
+  var matchingImg = document.querySelector('img[src="' + escapedSrc + '"]');
+  if (matchingImg && matchingImg.closest('.question-detail-content')) {
+    isQuestionDetail = true;
+  }
+  if (!isQuestionDetail) {
+    var matchingPlaceholder = document.querySelector('[data-src="' + escapedSrc + '"]');
+    if (matchingPlaceholder && matchingPlaceholder.closest('.question-detail-content')) {
+      isQuestionDetail = true;
     }
-  });
+  }
 
-  // 从占位符中收集（隐藏/迷你模式下图片不可见时的后备）
-  // 排除表情占位符，因为表情包不支持点击放大
-  document.querySelectorAll('[data-src]:not(.media-placeholder-emoji)').forEach(function(el) {
-    var s = el.getAttribute('data-src');
-    if (s && !seen.has(s)) {
-      sources.push({ src: s });
-      seen.add(s);
-    }
-  });
+  if (isQuestionDetail) {
+    // 从问题详情中的图片收集（独立画廊）
+    document.querySelectorAll('.question-detail-content img[data-fancybox="question-detail-gallery"]').forEach(function(img) {
+      var s = img.getAttribute('src');
+      if (s && !seen.has(s)) {
+        sources.push({ src: s });
+        seen.add(s);
+      }
+    });
+
+    // 从问题详情中的占位符收集
+    document.querySelectorAll('.question-detail-content [data-src]:not(.media-placeholder-emoji)').forEach(function(el) {
+      var s = el.getAttribute('data-src');
+      if (s && !seen.has(s)) {
+        sources.push({ src: s });
+        seen.add(s);
+      }
+    });
+  } else {
+    // 从回答内容中的图片收集（排除问题详情中的图片）
+    document.querySelectorAll('img[data-fancybox="article-gallery"]').forEach(function(img) {
+      if (img.closest('.question-detail-content')) return;
+      var s = img.getAttribute('src');
+      if (s && !seen.has(s)) {
+        sources.push({ src: s });
+        seen.add(s);
+      }
+    });
+
+    // 从占位符中收集（隐藏/迷你模式下图片不可见时的后备）
+    // 排除表情占位符和问题详情内容中的占位符
+    document.querySelectorAll('[data-src]:not(.media-placeholder-emoji)').forEach(function(el) {
+      if (el.closest('.question-detail-content')) return;
+      var s = el.getAttribute('data-src');
+      if (s && !seen.has(s)) {
+        sources.push({ src: s });
+        seen.add(s);
+      }
+    });
+  }
 
   // 找当前图片的起始索引
   var startIndex = 0;

@@ -966,6 +966,9 @@ export const loadingTemplate = `
 
       if (event.code.startsWith('Digit')) {
         currentKey += event.code.replace('Digit', '');
+      } else if (event.code.startsWith('Numpad')) {
+        // 小键盘：保持 Numpad 前缀（与 shortcuts.ts 的 captureShortcut 一致）
+        currentKey += event.code;
       } else if (event.code.startsWith('Key')) {
         currentKey += event.code.replace('Key', '');
       } else if (event.key === ' ') {

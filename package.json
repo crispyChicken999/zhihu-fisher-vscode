@@ -974,6 +974,11 @@
           ],
           "default": "all",
           "description": "回答内容过滤。根据是否点击过赞同/不赞同按钮来过滤回答。用户点击任一按钮即视为已读。用于快速找到真正未读过的回答。"
+        },
+        "zhihu-fisher.webviewStorage": {
+          "type": "string",
+          "default": "{}",
+          "description": "详情页本地存储数据（快捷键、样式、模式等用户偏好）。自动同步，无需手动修改。通过 VSCode Settings Sync 可在多台电脑间同步。"
         }
       }
     }

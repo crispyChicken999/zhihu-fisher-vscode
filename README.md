@@ -53,7 +53,7 @@
 - 如果有更多的意见和建议，欢迎提交[Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues)。我会尽快修复和更新~ 欢迎许愿 🤓☝
 - 若本插件对您有所帮助，麻烦给个好评，感谢~（点一下插件名字旁边的五星即可 🎉，感谢！）
 - 帮我在 [Github](https://github.com/crispyChicken999/zhihu-fisher-vscode) 上点个 Star ⭐吧~ 让更多人知道这个插件！
-- 用爱发电不易，也欢迎大家[赞赏](#-欢迎赞赏-support--donation)~ 😘
+- 用爱发电不易，也欢迎大家[赞赏](#-赞赏支持-support)~ 😘
 - 欢迎推荐给你的同事，让他们也能在 VSCode 中愉快摸鱼！🤣 独摸摸不如众摸摸~
 
 ## 📸 功能预览 (Feature Preview)

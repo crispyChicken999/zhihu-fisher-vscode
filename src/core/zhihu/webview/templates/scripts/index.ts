@@ -18,6 +18,7 @@ import { authorScript } from "./author";
 import { answerSortScript } from "./answer-sort";
 import { exportScript } from "./export";
 import { zhidaScript } from "./zhida";
+import { storageSyncScript } from "./storage-sync";
 
 /**
  * 完整的脚本模板 - 拼接所有功能模块
@@ -54,4 +55,6 @@ ${answerSortScript}
 ${exportScript}
 
 ${zhidaScript}
+
+${storageSyncScript}
 `;
