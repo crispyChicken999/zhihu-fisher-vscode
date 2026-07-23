@@ -2,6 +2,24 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.7.8] - 2026-07-23
+
+### Bug Fixes
+
+- **问题详情双重处理修复**：修复了 `parseQuestionDetail()` 预先把问题详情用 `ContentProcessor.processContent()` 处理后再存储，导致 `QuestionDetailComponent.renderModal()` 二次处理产生重复的图片占位符和 `zhihu-link-vscode` 图标的问题。现在存储原始内容，仅由 `renderModal()` 统一处理一次。
+
+- **问题详情图片画廊独立化**：修复了 FancyBox 画廊将问题详情图片与回答图片混在同一个 `article-gallery` 组的问题。问题详情图片现在拥有独立的 `question-detail-gallery` 画廊组，点击问题详情图片仅浏览问题详情自己的图片，与回答图片完全隔离。
+
+- **Loading 页 Numpad 快捷键修复**：修复了 loading 页面键盘检测缺少 `Numpad` 分支，导致用户在设置面板绑定的 Numpad2/Numpad8 快捷键无法在 loading 界面切换上/下篇内容的问题。新增 `event.code.startsWith('Numpad')` 分支，与 `shortcuts.ts` 行为保持一致。
+
+### Features
+
+- **详情页 localStorage 跨设备同步**：新增 `storage-sync.ts` 脚本，将详情页的本地存储（快捷键配置、样式设置、模式偏好等所有 `zhihu-fisher-*` 项）自动同步到 VSCode 用户配置 `zhihu-fisher.webviewStorage` 中。
+  - **自动同步**：用户调整设置时，通过 `localStorage.setItem` 猴子补丁自动检测变更，防抖 500ms 后同步到 VSCode 配置。
+  - **智能恢复**：打开详情页时从 VSCode 配置恢复 localStorage，逐项比对（缺失→复制、不同→覆盖、相同→跳过），避免重复写入。
+  - **跨设备无缝**：通过 VSCode Settings Sync，换电脑后所有快捷键、样式、模式偏好自动恢复，无需重新设置。
+  - **配置注册**：`zhihu-fisher.webviewStorage` 已在 `package.json` 中注册为字符串类型配置项，确保被 Settings Sync 正确同步。
+
 ## [0.7.7] - 2026-07-21
 
 ### Bug Fixes
