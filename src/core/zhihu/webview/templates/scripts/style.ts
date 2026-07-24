@@ -285,6 +285,12 @@ function setupStylePanel() {
         grayscaleToggle.checked = false;
       }
 
+      // 重置滚动切换
+      const scrollNavToggle = document.getElementById('scroll-navigation-toggle');
+      if (scrollNavToggle) {
+        scrollNavToggle.checked = true;
+      }
+
       // 重置控件值
       if (fontSizeSlider && fontSizeValue) {
         fontSizeSlider.value = defaultStyles.fontSize.replace('px', '');
@@ -624,6 +630,13 @@ function updateAnswerFilterTag(filterMode) {
     tag.title = '当前为仅展示未读模式。切换回答时会自动跳过已点赞/点踩的回答。';
     tag.style.display = 'inline-block';
   }
+}
+
+/**
+ * 切换滚动导航功能
+ */
+function toggleScrollNavigation(enabled) {
+  localStorage.setItem('zhihu-fisher-scroll-navigation-enabled', enabled.toString());
 }
 
 /**

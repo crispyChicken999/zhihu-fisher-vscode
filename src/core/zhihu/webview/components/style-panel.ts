@@ -288,6 +288,45 @@ export class StylePanelComponent implements Component {
 
             <div class="style-option">
               <label class="style-option-label-inline">
+                滚动切换
+                <span class="style-option-color-description">
+                  (滚动到页底/页顶继续滚动切换回答)
+                </span>
+              </label>
+
+              <div class="style-option-flex style-option-label-inline">
+                <label class="style-option-flex style-option-gap-8 style-option-cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="scroll-navigation-toggle"
+                    checked
+                    onchange="toggleScrollNavigation(this.checked)"
+                    class="style-option-transform-scale"
+                  >
+                  <span class="style-option-font-weight">启用滚动切换</span>
+                </label>
+              </div>
+
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">功能说明：</strong>在问题详情页滚动到页面底部/顶部后，继续滚动即可切换下一个/上一个回答
+                  </div>
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">使用方法：</strong>滚动到页底后继续向下滚，出现提示条，继续滚动累计达阈值后自动切换回答
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong">提示：</strong>仅在问题详情页生效，文章和想法页不启用此功能
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="style-option-divider"></div>
+
+            <div class="style-option">
+              <label class="style-option-label-inline">
                 智能伪装功能
                 <span class="style-option-color-description">
                   (避免被老板or同事发现摸鱼)

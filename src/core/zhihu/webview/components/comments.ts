@@ -347,7 +347,7 @@ export class CommentsContainerComponent implements Component {
         // 如果评论区是收起状态，则显示展开按钮
         commentsContainer = `
           <div class="comments-container ${this.modalContainerClass}" data-answer-id="${this.answerId}">
-            <button class="zhihu-load-comments-btn" onclick="toggleCommentStatus('${this.answerId}')" data-answer-id="${this.answerId}" tooltip="按(，)展开/收起评论" placement="right">
+            <button class="zhihu-load-comments-btn" onclick="toggleCommentStatus('${this.answerId}')" data-answer-id="${this.answerId}" tooltip="按(，)展开/收起评论" placement="top">
               展开评论 (${this.commentCount})
             </button>
           </div>
@@ -2826,7 +2826,7 @@ export class CommentsManager {
     } else {
       // 如果是收起状态，显示展开按钮
       commentsHtml = `
-        <button class="zhihu-expand-comments-btn" onclick="toggleCommentStatus('${answerId}')" data-answer-id="${answerId}" tooltip="按(，)展开/收起评论" placement="right">
+        <button class="zhihu-expand-comments-btn" onclick="toggleCommentStatus('${answerId}')" data-answer-id="${answerId}" tooltip="按(，)展开/收起评论" placement="top">
           展开评论 (${currentAnswer.commentPaging?.totals || 0})
         </button>
       `;

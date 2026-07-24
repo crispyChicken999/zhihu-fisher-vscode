@@ -62,6 +62,7 @@ export const articleTemplate = `
       \${ANSWER_SORT_CSS}
       \${ZHIDA_PANEL_CSS}
       \${THOUGHT_CSS}
+      \${SCROLL_NAVIGATION_CSS}
     </style>
   </head>
   <body data-content-id="\${CONTENT_ID}" data-sort-type="\${SORT_TYPE}">

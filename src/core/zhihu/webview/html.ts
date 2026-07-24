@@ -40,6 +40,7 @@ import { relatedQuestionsCss } from "./styles/related-questions";
 import { answerSortCss } from "./styles/answer-sort";
 import { zhidaPanelCss } from "./styles/zhida-panel";
 import { thoughtCss } from "./styles/thought";
+import { scrollNavigationCss } from "./styles/scroll-navigation";
 
 /**
  * HTML渲染工具类，用于生成各种视图的HTML内容
@@ -348,6 +349,7 @@ export class HtmlRenderer {
       .replace("${ANSWER_SORT_CSS}", answerSortCss)
       .replace("${ZHIDA_PANEL_CSS}", zhidaPanelCss)
       .replace("${THOUGHT_CSS}", thoughtCss)
+      .replace("${SCROLL_NAVIGATION_CSS}", scrollNavigationCss)
       .replace("${ZHIDA_PANEL_MODAL}", ZhidaPanelComponent.renderModal())
       .replace(
         "${RELATED_QUESTION_COMPONENT_ICON}",

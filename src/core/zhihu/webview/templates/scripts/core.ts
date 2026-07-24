@@ -46,6 +46,7 @@ document.addEventListener("DOMContentLoaded", function() {
   setupGrayscaleMode();
   setupToolbarConfig();
   setupMediaPlaceholders();
+  setupScrollNavigation();
 
   // 初始化工具栏配置（需要在沉浸模式状态设置好后）
   // setTimeout(() => {

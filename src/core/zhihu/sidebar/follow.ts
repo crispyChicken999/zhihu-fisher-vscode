@@ -1166,7 +1166,7 @@ export class sidebarFollowListDataProvider
       // 如果不能创建浏览器，显示提示
       return [
         new StatusTreeItem(
-          "爬虫无法创建浏览器，点我去配置浏览器",
+          "点我配置爬虫浏览器",
           new vscode.ThemeIcon("error"),
           {
             command: "zhihu-fisher.configureBrowser",
