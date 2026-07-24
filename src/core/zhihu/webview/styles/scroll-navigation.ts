@@ -33,7 +33,7 @@ export const scrollNavigationCss = `
 
 /* 底部 Toast — 从屏幕底端蹦上来 */
 .scroll-nav-toast.bottom {
-  bottom: 20px;
+  bottom: 8px;
   top: auto;
 }
 
@@ -43,7 +43,7 @@ export const scrollNavigationCss = `
 
 /* 顶部 Toast — 从屏幕顶端蹦下来 */
 .scroll-nav-toast.top {
-  top: 20px;
+  top: 8px;
   bottom: auto;
 }
 
