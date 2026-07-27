@@ -454,7 +454,7 @@ export class CommentsComponent implements Component {
       <div class="zhihu-comments-container" data-answer-id="${this.answerId}">
         <div class="zhihu-comments-header">
           <h3>全部评论 (${this.paging.totals})</h3>
-          <button class="zhihu-comments-collapse-btn" onclick="toggleCommentStatus('${this.answerId}')" tooltip="收起评论区（快捷键 ，）" placement="bottom">
+          <button class="zhihu-comments-collapse-btn" onclick="toggleCommentStatus('${this.answerId}')" tooltip="收起评论区（快捷键 ，）" placement="left">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
               <path fill="currentColor" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
             </svg>
