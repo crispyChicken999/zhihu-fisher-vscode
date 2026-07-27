@@ -55,6 +55,15 @@ function scrollNavShouldDisable() {
   if (sp && sp.classList.contains('visible')) return true;
   var cm = document.querySelector('.comments-modal-container');
   if (cm && cm.innerHTML.trim() !== '') return true;
+  var zm = document.getElementById('zhidaModal');
+  if (zm && zm.classList.contains('is-open')) return true;
+  if (document.querySelector('.related-questions-modal')) return true;
+  var qdm = document.getElementById('questionDetailModal');
+  if (qdm && qdm.style.display === 'flex') return true;
+  var asp = document.getElementById('answerSortPopover');
+  if (asp && asp.classList.contains('show')) return true;
+  var iap = document.querySelector('.immersive-author-popover');
+  if (iap && iap.classList.contains('show')) return true;
   return false;
 }
 
