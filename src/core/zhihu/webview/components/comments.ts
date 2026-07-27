@@ -430,13 +430,12 @@ export class CommentsComponent implements Component {
       <div class="zhihu-comments-container" data-answer-id="${this.answerId}">
         <div class="zhihu-comments-header">
           <span style="font-weight: 700;">全部评论 (${this.paging.totals})</span>
-          <div class="zhihu-comments-tips">
-            <span>默认键盘</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                <path fill="currentColor" d="m10 17l2-4H9V7h6v6l-2 4zM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 2v14h14V5z"/>
-              </svg>
-            <span>快速展开/收起评论</span>
-          </div>
+          <button class="zhihu-comments-collapse-btn" onclick="toggleCommentStatus('${this.answerId}')" tooltip="收起评论区（快捷键 ，）" placement="left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+            </svg>
+            <span>收起评论区</span>
+          </button>
         </div>
         ${paginationHtml}
         <div class="zhihu-comments-list">
@@ -455,13 +454,12 @@ export class CommentsComponent implements Component {
       <div class="zhihu-comments-container" data-answer-id="${this.answerId}">
         <div class="zhihu-comments-header">
           <h3>全部评论 (${this.paging.totals})</h3>
-          <div class="zhihu-comments-tips">
-            <span>默认键盘</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                <path fill="currentColor" d="m10 17l2-4H9V7h6v6l-2 4zM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 2v14h14V5z"/>
-              </svg>
-            <span>快速展开/收起评论</span>
-          </div>
+          <button class="zhihu-comments-collapse-btn" onclick="toggleCommentStatus('${this.answerId}')" tooltip="收起评论区（快捷键 ，）" placement="bottom">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+            </svg>
+            <span>收起评论区</span>
+          </button>
         </div>
         ${paginationHtml}
         <div class="zhihu-comments-list">

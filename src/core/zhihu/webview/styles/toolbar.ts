@@ -99,7 +99,6 @@ body.immersive-mode .article-meta,
 body.immersive-mode .toolbar,
 body.immersive-mode .zhihu-load-comments-btn,
 body.immersive-mode .zhihu-expand-comments-btn,
-body.immersive-mode .zhihu-comments-tips,
 body.immersive-mode .navigation .navigation-buttons,
 body.immersive-mode .related-questions-section {
   display: none !important;

@@ -26,14 +26,25 @@ export const commentsCss = `
   font-weight: 600;
 }
 
-.zhihu-comments-header .zhihu-comments-tips {
+/* 收起评论区按钮 — 一直可见，VSCode secondary 低调风格 */
+.zhihu-comments-collapse-btn {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 5px;
-  font-size: 1em;
+  gap: 4px;
+  font-size: 0.85em;
+  padding: 2px 8px;
+  background-color: transparent;
   color: var(--vscode-descriptionForeground);
-  background-color: var(--vscode-editor-background);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.zhihu-comments-collapse-btn:hover {
+  background-color: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+  border-color: var(--vscode-panel-border);
 }
 
 /* 加载评论按钮 */
