@@ -437,7 +437,7 @@ export function aboutTemplate(version: string = "") {
           <span class="badge">/ 切换媒体</span>
           <span class="badge">F 收藏</span>
           <span class="badge">B 浏览器打开</span>
-          <span class="badge">C 复制链接</span>
+          <span class="badge">Alt+Shift+C 复制链接</span>
           <span class="badge">V 回到顶部</span>
           <span class="badge">T 切换工具栏</span>
         </div>

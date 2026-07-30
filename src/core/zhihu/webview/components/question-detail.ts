@@ -53,32 +53,41 @@ export class QuestionDetailComponent implements Component {
       '<p style="color: var(--vscode-descriptionForeground); text-align: center; padding: 1em;">该问题暂无简介（描述）</p>';
 
     if (this.questionDetail && this.questionDetail.trim()) {
-      // 使用 ContentProcessor 处理问题详情内容，不包含高级功能
-      processedContent = ContentProcessor.processContent(
-        this.questionDetail,
-        this.options,
-        false
-      );
+      // 检查内容是否已经在 parseQuestionDetail 中处理过
+      // 处理后的内容会包含 media-placeholder 标记
+      const isAlreadyProcessed = this.questionDetail.includes("media-placeholder");
 
-      // 使用 cheerio 进一步处理内容，移除不必要的元素
-      const $ = cheerio.load(processedContent);
+      if (isAlreadyProcessed) {
+        // 内容已在 parseQuestionDetail 中处理，直接使用
+        processedContent = this.questionDetail;
+      } else {
+        // 使用 ContentProcessor 处理问题详情内容，不包含高级功能
+        processedContent = ContentProcessor.processContent(
+          this.questionDetail,
+          this.options,
+          false
+        );
 
-      // LinkCard 是一个a标签，清空里面的内容，并设置其内容为 其data-text
-      $("a.LinkCard").each((_, elem) => {
-        const dataText = $(elem).attr("data-text") || "";
-        $(elem).empty().text(dataText);
-      });
+        // 使用 cheerio 进一步处理内容，移除不必要的元素
+        const $ = cheerio.load(processedContent);
 
-      // p标签如果里面没有内容，删除该p标签
-      $("p").each((_, elem) => {
-        const dataText = $(elem).text().trim();
-        if (!dataText) {
-          $(elem).remove();
-        }
-      });
+        // LinkCard 是一个a标签，清空里面的内容，并设置其内容为 其data-text
+        $("a.LinkCard").each((_, elem) => {
+          const dataText = $(elem).attr("data-text") || "";
+          $(elem).empty().text(dataText);
+        });
 
-      // 最终输出
-      processedContent = $.html();
+        // p标签如果里面没有内容，删除该p标签
+        $("p").each((_, elem) => {
+          const dataText = $(elem).text().trim();
+          if (!dataText) {
+            $(elem).remove();
+          }
+        });
+
+        // 最终输出
+        processedContent = $.html();
+      }
     }
 
     // 媒体模式类

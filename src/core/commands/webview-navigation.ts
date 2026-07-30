@@ -3,6 +3,14 @@ import { Store } from "../stores";
 import { WebviewManager } from "../zhihu/webview";
 import { CommentsUtils } from "../zhihu/webview/components/comments";
 
+/** 从粘贴的文本中提取知乎 URL（支持分享格式：标题+URL） */
+function extractZhihuUrl(text: string): string | null {
+  const match = text.match(
+    /https?:\/\/(?:www\.)?zhihu\.com\/\S+|https?:\/\/zhuanlan\.zhihu\.com\/\S+/,
+  );
+  return match ? match[0].replace(/[。，、；！？）\)\]">'']+$/, "") : null;
+}
+
 /**
  * 注册WebView导航相关命令
  */
@@ -22,16 +30,22 @@ export function registerWebviewNavigationCommands(): vscode.Disposable[] {
         title: "浏览知乎链接",
         prompt: "请输入知乎文章、问题或想法的URL地址",
         placeHolder:
-          "https://zhuanlan.zhihu.com/p/123456 | www.zhihu.com/question/123 | www.zhihu.com/pin/123456",
+          "支持纯URL或知乎分享格式（标题+URL），例如：https://www.zhihu.com/question/123456789",
         ignoreFocusOut: true,
         validateInput: (input) => {
           if (!input || input.trim() === "") {
             return "请输入有效的URL地址";
           }
 
+          const trimmed = input.trim();
+
+          // 尝试从粘贴的文本中提取知乎 URL（支持分享格式：标题+URL）
+          const extractedUrl = extractZhihuUrl(trimmed);
+          const urlToValidate = extractedUrl || trimmed;
+
           // 检查URL格式
           try {
-            const url = new URL(input.trim());
+            const url = new URL(urlToValidate);
 
             // 检查是否是知乎域名
             const hostname = url.hostname.toLowerCase();
@@ -43,7 +57,7 @@ export function registerWebviewNavigationCommands(): vscode.Disposable[] {
             }
 
             // 使用现有的 isZhihuInternalLink 方法检查链接是否有效
-            if (!CommentsUtils.isZhihuInternalLink(input.trim())) {
+            if (!CommentsUtils.isZhihuInternalLink(urlToValidate)) {
               return "链接格式不正确，请输入有效的知乎文章、问题或想法链接";
             }
 
@@ -58,7 +72,8 @@ export function registerWebviewNavigationCommands(): vscode.Disposable[] {
         return; // 用户取消输入
       }
 
-      const url = inputBox.trim();
+      // 从粘贴的文本中提取知乎 URL（支持分享格式：标题+URL）
+      const url = extractZhihuUrl(inputBox.trim()) || inputBox.trim();
 
       try {
         // 使用WebviewManager的公共方法打开链接

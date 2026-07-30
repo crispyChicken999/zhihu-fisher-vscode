@@ -343,6 +343,9 @@ export class ContentProcessor {
       }
 
       // 始终添加占位符（默认隐藏，hide-media模式下显示）
+      // 检测是否为视频缩略图（父元素的前一个兄弟 div 中包含 video 元素）
+      const isVideoThumbnail = $(this).parent().prev().find("video").length > 0;
+
       // 检测是否为表情/贴纸小图
       const width = $(this).attr("width");
       const height = $(this).attr("height");
@@ -354,7 +357,9 @@ export class ContentProcessor {
         (width && parseInt(width) <= 36) ||
         (height && parseInt(height) <= 36);
 
-      if (isEmoji) {
+      if (isVideoThumbnail) {
+        $(this).after(`<span class="media-placeholder media-placeholder-image" data-src="${finalSrc}">[视频缩略图]</span>`);
+      } else if (isEmoji) {
         const altText = $(this).attr("alt") || $(this).attr("title") || "[表情]";
         $(this).after(`<span class="media-placeholder media-placeholder-emoji" data-src="${finalSrc}">${altText}</span>`);
       } else {

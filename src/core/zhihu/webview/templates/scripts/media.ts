@@ -432,8 +432,9 @@ function openFancyboxGallery(currentSrc) {
 /**
  * 复制媒体到剪贴板
  * @param {string} url 媒体文件URL
+ * @param {boolean} isGif 是否为GIF动图（GIF 不用 canvas 回退，避免丢失动画）
  */
-async function copyMediaToClipboard(url) {
+async function copyMediaToClipboard(url, isGif) {
   // 检查是否是视频（通过URL扩展名判断，避免下载整个视频文件）
   var videoExts = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.wmv', '.flv', '.mkv'];
   var isVideo = videoExts.some(function(ext) {
@@ -453,6 +454,24 @@ async function copyMediaToClipboard(url) {
       vscode.postMessage({
         command: 'showNotification',
         message: '复制失败，请重试'
+      });
+    }
+    return;
+  }
+
+  // GIF 动图：直接复制链接（Chromium 剪贴板不支持 image/gif）
+  if (isGif) {
+    try {
+      await navigator.clipboard.writeText(url);
+      vscode.postMessage({
+        command: 'showNotification',
+        message: 'GIF 链接已复制到剪贴板，可直接拖拽图片到聊天窗口分享动图'
+      });
+    } catch (err) {
+      console.error('复制GIF链接失败:', err);
+      vscode.postMessage({
+        command: 'showNotification',
+        message: '复制失败，请直接拖拽图片到聊天窗口分享'
       });
     }
     return;
@@ -592,9 +611,11 @@ function closeMediaPopup(popup) {
  * @param {number} maxThumbHeight 缩略图最大高度
  * @param {string} caption 缩略图上方的提示文字（可选）
  * @param {boolean} enableGalleryClick 是否启用点击弹窗图片打开Fancybox画廊（默认true，表情包设为false）
+ * @param {boolean} isGif 是否为GIF动图（默认false）
  */
-function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHeight, caption, enableGalleryClick) {
+function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHeight, caption, enableGalleryClick, isGif) {
   if (enableGalleryClick === undefined) enableGalleryClick = true;
+  if (isGif === undefined) isGif = false;
   let popup = null;
   let loadTimer = null;
   let closeTimer = null;
@@ -637,7 +658,7 @@ function addPlaceholderHoverPopup(placeholder, delay, maxThumbWidth, maxThumbHei
       var popupHtml = '<div class="popup-body">'
         + '<img src="' + src + '" referrerpolicy="no-referrer" loading="lazy" style="max-width:' + maxThumbWidth + 'px;max-height:' + maxThumbHeight + 'px;" />'
         + '<div class="popup-actions">'
-          + '<button class="popup-action-btn" onclick="copyMediaToClipboard(&apos;' + escapedSrc + '&apos;)" title="复制到剪贴板"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm0-2h9V4H9zm-4 6q-.825 0-1.412-.587T3 20V6h2v14h11v2zm4-6V4z"/></svg></button>'
+          + '<button class="popup-action-btn" onclick="copyMediaToClipboard(&apos;' + escapedSrc + '&apos;, ' + isGif + ')" title="复制到剪贴板"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm0-2h9V4H9zm-4 6q-.825 0-1.412-.587T3 20V6h2v14h11v2zm4-6V4z"/></svg></button>'
           + '<button class="popup-action-btn" onclick="mediaSaveAs(&apos;' + escapedSrc + '&apos;, &apos;image&apos;)" title="另存为"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg></button>'
         + '</div>'
         + '</div>';
@@ -1023,8 +1044,11 @@ function setupMediaPlaceholders() {
     document.querySelectorAll(selector).forEach(function(placeholder) {
       placeholder.setAttribute('data-placeholder-initialized', 'true');
 
+      // 判断是否为GIF动图占位符
+      var isGif = placeholder.classList.contains('media-placeholder-gif');
+
       // 添加hover缩略图弹窗，带"点击查看大图"提示
-      addPlaceholderHoverPopup(placeholder, 200, 160, 120, '点击查看大图');
+      addPlaceholderHoverPopup(placeholder, 200, 160, 120, '点击查看大图', true, isGif);
 
       // 点击查看大图（使用FancyBox）
       placeholder.addEventListener('click', function(e) {

@@ -125,7 +125,8 @@ export const questionDetailCss = `
     line-height: inherit;
   }
 
-  .question-detail-content.hide-media img {
+  .question-detail-content.hide-media img,
+  .question-detail-content.hide-media video {
     display: none;
   }
 

@@ -21,8 +21,7 @@ import { articleTemplate } from "./templates/article";
 import { loadingTemplate } from "./templates/loading";
 import { scriptsTemplate } from "./templates/scripts/index";
 import { cookieTipsTemplate } from "./templates/cookieTips";
-import { articleKeyboardTips } from "./templates/keyboardTips";
-import { questionKeyboardTips } from "./templates/keyboardTips";
+import { keyboardTips } from "./templates/keyboardTips";
 
 // 导入样式文件
 import { mainCss } from "./styles/main";
@@ -305,13 +304,12 @@ export class HtmlRenderer {
     // 生成伪装界面控制脚本（如果启用）
     const disguiseControlScript = enableDisguise ? disguiseScript : "";
 
-    // 判断是否为文章或想法类型，生成对应的键盘提示
+    // 判断是否为文章或想法类型（用于控制相关问题/排序组件的显示）
     const isArticle =
       contentType === "article" ||
       contentType === "thought" ||
       webview.url.includes("zhuanlan.zhihu.com/p/") ||
       webview.url.includes("/p/");
-    const keyboardTips = isArticle ? articleKeyboardTips : questionKeyboardTips;
 
     // 填充脚本模板
     const scriptContent = scriptsTemplate

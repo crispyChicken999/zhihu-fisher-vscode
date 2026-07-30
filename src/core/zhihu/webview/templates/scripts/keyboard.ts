@@ -124,12 +124,9 @@ function setupKeyboardNavigation() {
       toggleImmersiveMode();
     }
 
-    // C - 复制文章链接
-    if (event.key.toLowerCase() === 'c') {
-      // Ctrl、Meta、Shift、Alt键被按下时不响应
-      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
-        return;
-      }
+    // Alt + Shift + C - 复制文章链接
+    if (event.altKey && event.shiftKey && event.key.toLowerCase() === 'c') {
+      event.preventDefault();
 
       const copyButton = document.querySelector('.copy-button');
       if (copyButton) {

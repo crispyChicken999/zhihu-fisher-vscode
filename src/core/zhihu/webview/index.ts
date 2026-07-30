@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import * as vscode from "vscode";
+import * as cheerio from "cheerio";
 import { Store } from "../../stores";
 import { HtmlRenderer } from "./html";
 import * as Puppeteer from "puppeteer";
@@ -4132,16 +4133,38 @@ export class WebviewManager {
       });
 
       if (questionDetail) {
-        // 存储原始问题详情内容，后续渲染时会由 QuestionDetailComponent.renderModal() 统一处理
-        // 避免在此处预先处理导致后续 renderModal() 二次处理产生重复的占位符和图标
-        webviewItem.article.questionDetail = questionDetail;
-        console.log("成功提取问题详情内容");
+        // 使用 ContentProcessor 统一处理问题详情内容，与 question-detail.ts renderModal() 保持一致
+        const config = vscode.workspace.getConfiguration("zhihu-fisher");
+        const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+        let processedDetail = ContentProcessor.processContent(
+          questionDetail,
+          { mediaDisplayMode },
+          false
+        );
 
-        // 通过 postMessage 更新前端的问题详情内容
+        // 额外的 cheerio 后处理（与 question-detail.ts renderModal() 保持一致）
+        const $ = cheerio.load(processedDetail);
+        $("a.LinkCard").each((_, elem) => {
+          const dataText = $(elem).attr("data-text") || "";
+          $(elem).empty().text(dataText);
+        });
+        $("p").each((_, elem) => {
+          const dataText = $(elem).text().trim();
+          if (!dataText) {
+            $(elem).remove();
+          }
+        });
+        processedDetail = $.html();
+
+        // 存储处理后的内容
+        webviewItem.article.questionDetail = processedDetail;
+        console.log("成功提取并处理问题详情内容");
+
+        // 通过 postMessage 更新前端的问题详情内容（发送处理后的版本）
         webviewItem.webviewPanel.webview.postMessage({
           command: "updateQuestionDetail",
           data: {
-            questionDetail: questionDetail,
+            questionDetail: processedDetail,
           },
         });
       } else {
