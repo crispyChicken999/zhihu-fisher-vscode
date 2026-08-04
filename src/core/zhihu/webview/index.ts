@@ -47,13 +47,14 @@ export class WebviewManager {
         answerId = extractedAnswerId;
         isSpecificAnswer = true;
 
-        // 跳转到问题页面，用于后续加载全部回答
+        // 提取问题ID，后续导航到全部回答页面时使用
         const questionId = WebViewUtils.extractQuestionIdFromUrl(
           item.answerUrl,
         );
         if (questionId) {
-          targetUrl = WebViewUtils.buildQuestionAllAnswersUrl(questionId);
-          console.log(`特定回答模式，将跳转到问题页面: ${targetUrl}`);
+          // 直接使用特定回答URL，后续在同一Puppeteer页面中点击"查看全部"跳转到问题页面，避免创建额外页面
+          targetUrl = item.answerUrl;
+          console.log(`特定回答模式，将直接加载回答页面: ${targetUrl}`);
         }
       }
     }
@@ -316,135 +317,8 @@ export class WebviewManager {
       // 保存状态栏项目的引用
       Store.statusBarMap.set(webviewId, statusBarItem);
 
-      // 如果是特定回答模式，先获取特定回答内容
-      if (
-        webviewItem.article.isSpecificAnswer &&
-        webviewItem.article.specificAnswerUrl
-      ) {
-        console.log(
-          `特定回答模式，先获取回答内容: ${webviewItem.article.specificAnswerUrl}`,
-        );
-        try {
-          const preloadedAnswer = await WebViewUtils.fetchSpecificAnswerContent(
-            webviewId,
-            webviewItem.article.specificAnswerUrl,
-          );
-
-          // 检查webview是否在加载过程中被切换/关闭
-          if (!webviewItem.isLoading || !Store.webviewMap.has(webviewId)) {
-            console.log("WebView在加载特定回答时被关闭，取消继续加载");
-            return;
-          }
-
-          if (preloadedAnswer) {
-            // 将预加载的回答转换为标准AnswerItem格式并放在第一位
-            const preloadedAnswerItem: AnswerItem = {
-              id: preloadedAnswer.id,
-              url: preloadedAnswer.url,
-              author: {
-                id: preloadedAnswer.authorUrl?.split("/").pop() || "",
-                name: preloadedAnswer.authorName,
-                url: preloadedAnswer.authorUrl,
-                signature: preloadedAnswer.authorHeadline || "",
-                avatar: preloadedAnswer.authorAvatar,
-                followersCount: preloadedAnswer.authorFollowerCount || 0,
-              },
-              likeCount: preloadedAnswer.voteCount || 0,
-              commentCount: preloadedAnswer.commentCount || 0,
-              voteStatus: preloadedAnswer.voteStatus || "neutral", // 添加投票状态
-              publishTime: preloadedAnswer.publishTime,
-              updateTime: preloadedAnswer.publishTime,
-              content: marked.parse(preloadedAnswer.content) as string,
-              commentList: [],
-              commentStatus: "collapsed",
-              commentPaging: {
-                current: 0,
-                limit: 20,
-                is_end: false,
-                is_start: true,
-                next: null,
-                previous: null,
-                totals: 0,
-                loadedTotals: 0,
-              },
-            };
-
-            // 将预加载的回答放在第一位
-            webviewItem.article.answerList.push(preloadedAnswerItem);
-            webviewItem.article.loadedAnswerCount = 1;
-            webviewItem.article.totalAnswerCount = 1;
-
-            // 更新WebView显示特定回答
-            this.updateWebview(webviewId);
-
-            webviewItem.isLoaded = true; // 关键步骤，标记为已加载
-            console.log(`成功预加载特定回答: ${preloadedAnswer.id}`);
-          } else {
-            // 如果没有获取到内容，显示错误页面
-            console.error("特定回答内容为空");
-
-            // 隐藏状态栏加载提示
-            this.hideStatusBarItem(webviewId);
-
-            // 显示错误页面
-            const errorTitle = "特定回答不存在";
-            const errorDescription = "无法找到指定的回答内容";
-            const errorReasons = [
-              "该回答可能已被作者删除",
-              "该回答可能已被知乎管理员删除",
-              "回答URL可能不正确",
-              "该回答可能仅对部分用户可见",
-              "网络问题导致无法获取内容",
-            ];
-
-            webviewItem.webviewPanel.webview.html = HtmlRenderer.getErrorHtml(
-              errorTitle,
-              errorDescription,
-              webviewItem.article.specificAnswerUrl || webviewItem.url,
-              errorReasons,
-            );
-
-            webviewItem.isLoading = false;
-            webviewItem.isLoaded = true;
-            return;
-          }
-        } catch (error) {
-          console.error("预加载特定回答失败:", error);
-
-          // 隐藏状态栏加载提示
-          this.hideStatusBarItem(webviewId);
-
-          // 显示错误页面
-          const errorTitle = "特定回答加载失败";
-          const errorDescription = "无法获取指定的回答内容";
-          const errorReasons = [
-            "该回答可能已被删除或隐藏",
-            "回答URL格式不正确",
-            "网络连接问题导致内容加载失败",
-            "知乎反爬机制阻止了内容获取",
-            "Cookie可能已过期，需要重新登录",
-          ];
-
-          webviewItem.webviewPanel.webview.html = HtmlRenderer.getErrorHtml(
-            errorTitle,
-            errorDescription,
-            webviewItem.article.specificAnswerUrl || webviewItem.url,
-            errorReasons,
-          );
-
-          webviewItem.isLoading = false;
-          return;
-        }
-      }
-
-      // 检查webview是否在加载特定回答后被切换/关闭，避免继续导航到问题页面
-      if (!webviewItem.isLoading || !Store.webviewMap.has(webviewId)) {
-        console.log("WebView在加载特定回答后被关闭，跳过问题页面加载");
-        return;
-      }
-
       // 关键步骤！
-      // 这里使用 Puppeteer来获取文章内容
+      // 创建 Puppeteer 页面（特定回答模式下，复用同一页面提取回答 + 加载全部回答）
       const page = await PuppeteerManager.createPage();
       PuppeteerManager.setPageInstance(webviewId, page); // 设置页面实例
 
@@ -507,6 +381,300 @@ export class WebviewManager {
         } else {
           // 其他类型的错误，直接抛出
           throw gotoError;
+        }
+      }
+
+      // 如果是特定回答模式，从当前页面提取特定回答内容（复用同一页面，无需额外创建）
+      if (
+        webviewItem.article.isSpecificAnswer &&
+        webviewItem.article.specificAnswerUrl
+      ) {
+        console.log(
+          `特定回答模式，从当前页面提取回答内容: ${webviewItem.article.specificAnswerUrl}`,
+        );
+        try {
+          const answerData = await page.evaluate(() => {
+            const answerElement = document.querySelector(
+              ".ContentItem.AnswerItem",
+            );
+            if (!answerElement) {
+              return null;
+            }
+
+            // 提取回答ID
+            let answerId = answerElement.getAttribute("name");
+            if (!answerId) {
+              const dataZop = answerElement.getAttribute("data-zop");
+              if (dataZop) {
+                try {
+                  const zopData = JSON.parse(dataZop);
+                  answerId = zopData.itemId;
+                } catch (e) {
+                  console.error("解析data-zop失败:", e);
+                }
+              }
+            }
+
+            // 提取作者信息
+            const authorElement = answerElement.querySelector(".AuthorInfo");
+            const authorName =
+              authorElement
+                ?.querySelector("meta[itemprop='name']")
+                ?.getAttribute("content") || "匿名用户";
+            const authorAvatar =
+              authorElement
+                ?.querySelector("meta[itemprop='image']")
+                ?.getAttribute("content") || "";
+            const authorUrl =
+              authorElement
+                ?.querySelector("meta[itemprop='url']")
+                ?.getAttribute("content") || "";
+            const authorSignatureElement = authorElement?.querySelector(
+              ".AuthorInfo-badgeText",
+            );
+            const authorHeadline = authorSignatureElement
+              ? authorSignatureElement.textContent?.trim() || ""
+              : "";
+
+            // 作者的关注数量
+            const authorFollowerElement = document.querySelector(
+              "meta[itemprop='zhihu:followerCount']",
+            );
+            let authorFollowerCount = 0;
+            if (authorFollowerElement) {
+              const followerText =
+                authorFollowerElement.getAttribute("content") || "0";
+              authorFollowerCount =
+                parseInt(followerText.replace(/,/g, "")) || 0;
+            }
+
+            // 盐选付费内容的标识，兼容免费用户和付费会员两种DOM结构
+            // 免费用户：.KfeCollection-AnswerTopCard-Container
+            // 付费会员：.KfeCollection-AnswerTopCard-newContainer
+            const isPaidAnswer =
+              document.querySelector(
+                ".KfeCollection-AnswerTopCard-Container, .KfeCollection-AnswerTopCard-newContainer, .KfeCollection-PaidAnswerFooter",
+              ) !== null;
+
+            // 提取回答内容
+            const contentElement = answerElement.querySelector(
+              ".RichContent .RichContent-inner",
+            );
+
+            // 提取回答内容
+            const content = isPaidAnswer
+              ? '<span class="zhihu-fisher-content-is-paid-needed"></span>' +
+                contentElement?.innerHTML
+              : contentElement?.innerHTML || "";
+
+            // 提取点赞数（支持"赞同 1 万"等中文单位）
+            const voteElement = answerElement.querySelector(".VoteButton");
+            let voteCount = 0;
+            if (voteElement) {
+              const voteText = voteElement.textContent || "";
+              const match = voteText.match(/赞同\s*([\d,]+(?:\.\d+)?)\s*(万?)/);
+              if (match) {
+                voteCount = parseFloat(match[1].replace(/,/g, ""));
+                if (match[2] === "万") {
+                  voteCount = Math.round(voteCount * 10000);
+                }
+              }
+            }
+
+            // 检测用户的投票状态
+            let voteStatus: "up" | "down" | "neutral" = "neutral";
+            const contentItemActions = answerElement.querySelector(
+              ".ContentItem-actions",
+            );
+            if (contentItemActions) {
+              const upVoteButton = contentItemActions.querySelector(
+                ".VoteButton.is-active:not(.VoteButton--down)",
+              );
+              const downVoteButton = contentItemActions.querySelector(
+                ".VoteButton--down.is-active",
+              );
+              if (upVoteButton) {
+                voteStatus = "up";
+              } else if (downVoteButton) {
+                voteStatus = "down";
+              }
+            }
+
+            // 提取评论数
+            const commentElement = answerElement.querySelector(
+              ".ContentItem-action",
+            );
+            let commentCount = 0;
+            if (commentElement) {
+              const commentText = commentElement.textContent || "";
+              const match = commentText.match(/(\d+)\s*条评论/);
+              if (match) {
+                commentCount = parseInt(match[1]) || 0;
+              }
+            }
+
+            // 提取发布时间
+            const timeElement = answerElement.querySelector(
+              ".ContentItem-time a",
+            );
+            const publishTime =
+              timeElement?.getAttribute("data-tooltip") ||
+              timeElement?.textContent ||
+              "";
+
+            return {
+              id: answerId,
+              authorName,
+              authorAvatar,
+              authorUrl,
+              authorHeadline,
+              authorFollowerCount,
+              content,
+              voteCount,
+              commentCount,
+              publishTime,
+              url: window.location.href,
+              voteStatus,
+            };
+          });
+
+          // 检查webview是否在加载过程中被切换/关闭
+          if (!webviewItem.isLoading || !Store.webviewMap.has(webviewId)) {
+            console.log("WebView在加载特定回答时被关闭，取消继续加载");
+            return;
+          }
+
+          if (answerData && answerData.id) {
+            // 将提取的回答转换为标准AnswerItem格式并放在第一位
+            const preloadedAnswerItem: AnswerItem = {
+              id: answerData.id,
+              url: answerData.url,
+              author: {
+                id: answerData.authorUrl?.split("/").pop() || "",
+                name: answerData.authorName,
+                url: answerData.authorUrl,
+                signature: answerData.authorHeadline || "",
+                avatar: answerData.authorAvatar,
+                followersCount: answerData.authorFollowerCount || 0,
+              },
+              likeCount: answerData.voteCount || 0,
+              commentCount: answerData.commentCount || 0,
+              voteStatus: answerData.voteStatus || "neutral",
+              publishTime: answerData.publishTime,
+              updateTime: answerData.publishTime,
+              content: marked.parse(answerData.content) as string,
+              commentList: [],
+              commentStatus: "collapsed",
+              commentPaging: {
+                current: 0,
+                limit: 20,
+                is_end: false,
+                is_start: true,
+                next: null,
+                previous: null,
+                totals: 0,
+                loadedTotals: 0,
+              },
+            };
+
+            // 将提取的回答放在第一位
+            webviewItem.article.answerList.push(preloadedAnswerItem);
+            webviewItem.article.loadedAnswerCount = 1;
+            webviewItem.article.totalAnswerCount = 1;
+
+            // 更新WebView显示特定回答
+            this.updateWebview(webviewId);
+
+            webviewItem.isLoaded = true; // 标记为已加载
+            console.log(`成功提取特定回答: ${answerData.id}`);
+          } else {
+            // 如果没有获取到内容，显示错误页面
+            console.error("特定回答内容为空");
+
+            // 隐藏状态栏加载提示
+            this.hideStatusBarItem(webviewId);
+
+            // 显示错误页面
+            const errorTitle = "特定回答不存在";
+            const errorDescription = "无法找到指定的回答内容";
+            const errorReasons = [
+              "该回答可能已被作者删除",
+              "该回答可能已被知乎管理员删除",
+              "回答URL可能不正确",
+              "该回答可能仅对部分用户可见",
+              "网络问题导致无法获取内容",
+            ];
+
+            webviewItem.webviewPanel.webview.html = HtmlRenderer.getErrorHtml(
+              errorTitle,
+              errorDescription,
+              webviewItem.article.specificAnswerUrl || webviewItem.url,
+              errorReasons,
+            );
+
+            webviewItem.isLoading = false;
+            webviewItem.isLoaded = true;
+            return;
+          }
+        } catch (error) {
+          console.error("提取特定回答失败:", error);
+
+          // 隐藏状态栏加载提示
+          this.hideStatusBarItem(webviewId);
+
+          // 显示错误页面
+          const errorTitle = "特定回答加载失败";
+          const errorDescription = "无法获取指定的回答内容";
+          const errorReasons = [
+            "该回答可能已被删除或隐藏",
+            "回答URL格式不正确",
+            "网络连接问题导致内容加载失败",
+            "知乎反爬机制阻止了内容获取",
+            "Cookie可能已过期，需要重新登录",
+          ];
+
+          webviewItem.webviewPanel.webview.html = HtmlRenderer.getErrorHtml(
+            errorTitle,
+            errorDescription,
+            webviewItem.article.specificAnswerUrl || webviewItem.url,
+            errorReasons,
+          );
+
+          webviewItem.isLoading = false;
+          return;
+        }
+
+        // 检查webview是否在加载特定回答后被切换/关闭，避免继续导航到问题页面
+        if (!webviewItem.isLoading || !Store.webviewMap.has(webviewId)) {
+          console.log("WebView在加载特定回答后被关闭，跳过问题页面加载");
+          return;
+        }
+
+        // 复用当前Puppeteer页面，导航到问题的全部回答页面（不创建额外页面）
+        const questionId = WebViewUtils.extractQuestionIdFromUrl(
+          webviewItem.article.specificAnswerUrl!,
+        );
+        const questionUrl = questionId
+          ? WebViewUtils.buildQuestionAllAnswersUrl(questionId)
+          : webviewItem.article.specificAnswerUrl!;
+
+        console.log(`特定回答模式，导航到全部回答页面: ${questionUrl}`);
+        try {
+          await page.goto(questionUrl, {
+            waitUntil: "domcontentloaded",
+            timeout: 30000,
+          });
+          console.log("问题页面DOM加载完成");
+          // 等待网络空闲
+          try {
+            await page.waitForNetworkIdle({ timeout: 5000 });
+            console.log("问题页面网络空闲");
+          } catch (_) {
+            console.log("问题页等待网络空闲超时，继续处理");
+          }
+        } catch (gotoError: any) {
+          console.error("导航到问题页面失败:", gotoError.message);
+          // 不中断，继续使用已有的特定回答内容
         }
       }
 
@@ -4135,11 +4303,14 @@ export class WebviewManager {
       if (questionDetail) {
         // 使用 ContentProcessor 统一处理问题详情内容，与 question-detail.ts renderModal() 保持一致
         const config = vscode.workspace.getConfiguration("zhihu-fisher");
-        const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
+        const mediaDisplayMode = config.get<string>(
+          "mediaDisplayMode",
+          "normal",
+        );
         let processedDetail = ContentProcessor.processContent(
           questionDetail,
           { mediaDisplayMode },
-          false
+          false,
         );
 
         // 额外的 cheerio 后处理（与 question-detail.ts renderModal() 保持一致）

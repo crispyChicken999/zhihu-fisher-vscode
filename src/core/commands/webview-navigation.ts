@@ -22,7 +22,7 @@ export function registerWebviewNavigationCommands(): vscode.Disposable[] {
     "zhihu-fisher.openZhihuUrl",
     async () => {
       if( Store.Zhihu.recommend.isLoading) {
-        vscode.window.showWarningMessage("当前正在加载推荐内容，请稍后再试...");
+        vscode.window.showInformationMessage("当前正在加载推荐内容，请稍后再试...");
         return;
       }
 

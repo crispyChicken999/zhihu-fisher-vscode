@@ -2,6 +2,30 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.8.2] - 2026-08-04
+
+### Bug Fixes
+
+- **知乎直答看山面板兼容与内容截断修复**：全面适配知乎新版看山（Kanshan）AI 面板的 DOM 结构变更，修复了多项导致 AI 回答无法正确提取或内容被截断的问题。
+  - **面板识别兼容**：新增对看山面板类名（`.KanshanPanel-enter-done`、`[data-kanshan-panel="true"]`）的支持，与旧版 `.AIPanel-enter-done` 并存兼容，确保新旧版本面板均能被正确检测和操作。
+  - **按钮选择器升级**：「解释这篇内容」按钮新增 `data-testid="Button:zhida_summarize_btn"` 选择器，兼容看山面板的新按钮标识。
+  - **面板打开/关闭兼容**：面板打开检测轮询和关闭逻辑均适配看山面板结构，关闭按钮兼容 `aria-label="收起对话"`。
+  - **答案提取范围限定**：将 `.Render-markdown` 内容的 DOM 查询从全局 `document` 限定到面板容器内部，防止误提取页面正文中的同名元素（如仅含 `·` 的占位块）。
+  - **完成信号优化**：答案完成检测从依赖 `searchDoneBtn` 文本判断（"搜索完成"出现早但内容仍在打字机输出）改为检测 `Button:ai_assistant_chat_like_button` 和 `<span data-phase="End">`，确保仅在答案完整渲染后才提取。
+  - **内容稳定性轮询**：新增 `waitForContentStable()` 方法，在检测到完成信号后轮询 `.Render-markdown` 内容长度，连续 2 次不变（间隔 300ms）才视为稳定并提取，替代固定延迟方案，自适应不同长度的回答，根除内容被截断问题。
+  - **提取逻辑复用**：新增 `extractAnswerFromPanel()` 私有方法统一面板答案提取逻辑，消除 poll evaluate、settled 提取、partial evaluate 三处重复代码。
+  - **CSS 选择器常量化**：提取 `PANEL_SELECTOR_ALL`、`PANEL_SELECTOR_BASE`、`KANSHAN_SELECTOR`、`PANEL_CLOSE_SELECTORS` 四个类常量，避免全文件 14 处硬编码选择器字符串。
+
+### Optimized
+
+- **特定回答加载性能优化**：从推荐列表等场景打开特定回答时，无需再创建两个 Puppeteer 页面。改为直接加载特定回答页，在当前页面内联提取回答内容后，复用同一页面导航到问题全部回答页，减少一次页面创建/关闭开销，加载更快。
+  - 废弃 `WebViewUtils.fetchSpecificAnswerContent()` 方法（及其冗余的 `PuppeteerManager`、`RelatedQuestionsManager` 依赖），提取逻辑已内联到 `crawlingURLData` 中。
+  - 同时消除了旧代码中 `parseRelatedQuestions` 被重复调用两次的冗余问题。
+
+### Refactored
+
+- **ZhidaManager 代码结构优化**：`zhida/index.ts` 中知乎直答面板逻辑全面重构，选择器常量化、提取逻辑模块化、加载检测分层化，可维护性大幅提升。
+
 ## [0.8.1] - 2026-07-30
 
 ### Features

@@ -198,6 +198,7 @@ export class PuppeteerManager {
             // 根据是否调试模式构建不同的启动参数
             const puppeteerArgs = [
               "--no-sandbox",
+              "--window-size=800,600", // 还是限制一下window的大小，因为createPage的时候，已经设置了viewPort为800x600，如果不限制的话，会有一大段空白不好看。
               "--disable-setuid-sandbox",
               "--disable-features=UseEcoQoSForBackgroundProcess", // 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
             ];
@@ -207,7 +208,6 @@ export class PuppeteerManager {
               console.log("调试模式已启用，浏览器将以可见模式运行");
             } else {
               // 无头模式：指定窗口尺寸用于视口，并用窗口位置 hack 兜底隐藏可能的窗口
-              puppeteerArgs.push("--window-size=800,600");
               puppeteerArgs.push("--window-position=-10000,-10000"); // 将窗口移动到屏幕外，避免干扰用户
               console.log("浏览器将在后台运行（headless模式）");
             }
