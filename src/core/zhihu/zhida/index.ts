@@ -34,16 +34,16 @@ export class ZhidaManager {
     '.KanshanPanel-enter-done, .AIPanel-enter-done, [data-kanshan-panel="true"], [class*="KanshanPanel"]';
   /** Puppeteer waitForSelector 用基础选择器 */
   private static readonly PANEL_SELECTOR_BASE =
-    '.KanshanPanel-enter-done, .AIPanel-enter-done';
+    ".KanshanPanel-enter-done, .AIPanel-enter-done";
   /** 仅新版看山面板选择器 */
   private static readonly KANSHAN_SELECTOR =
     '.KanshanPanel-enter-done, [data-kanshan-panel="true"]';
   /** 关闭面板时使用的选择器数组 */
   private static readonly PANEL_CLOSE_SELECTORS = [
-    '.KanshanPanel-enter-done',
+    ".KanshanPanel-enter-done",
     '[data-kanshan-panel="true"]',
     '[class*="KanshanPanel"]',
-    '.AIPanel-enter-done',
+    ".AIPanel-enter-done",
     '[class*="AIPanel"]',
     'div[style*="z-index: 202"]',
   ];
@@ -70,8 +70,10 @@ export class ZhidaManager {
         sourceUrl &&
         ZhidaManager.shouldRetryOnSourcePage(result.error)
       ) {
-        return await ZhidaManager.withTemporarySourcePage(sourceUrl, (tempPage) =>
-          ZhidaManager.fetchZhidaAnswerFromPage(tempPage, zhidaHref, keyword),
+        return await ZhidaManager.withTemporarySourcePage(
+          sourceUrl,
+          (tempPage) =>
+            ZhidaManager.fetchZhidaAnswerFromPage(tempPage, zhidaHref, keyword),
         );
       }
 
@@ -107,12 +109,10 @@ export class ZhidaManager {
         sourceUrl &&
         ZhidaManager.shouldRetryOnSourcePage(result.error)
       ) {
-        return await ZhidaManager.withTemporarySourcePage(sourceUrl, (tempPage) =>
-          ZhidaManager.fetchZhidaSummaryFromPage(
-            tempPage,
-            answerId,
-            keyword,
-          ),
+        return await ZhidaManager.withTemporarySourcePage(
+          sourceUrl,
+          (tempPage) =>
+            ZhidaManager.fetchZhidaSummaryFromPage(tempPage, answerId, keyword),
         );
       }
 
@@ -266,7 +266,9 @@ export class ZhidaManager {
 
       for (const containerSel of containerSelectors) {
         const container = document.querySelector(containerSel);
-        if (!container) continue;
+        if (!container) {
+          continue;
+        }
         for (const btnSel of buttonSelectors) {
           const button = container.querySelector<HTMLElement>(btnSel);
           if (button) {
@@ -348,47 +350,51 @@ export class ZhidaManager {
 
     // 阶段3：轮询等待"搜索完成"或"完成回答"
     while (Date.now() - startTime < ZhidaManager.MAX_WAIT_MS) {
-      const result = await page.evaluate((_kw: string, panelSel: string) => {
-        // ---- 先定位面板容器，所有查询限定在面板内部，防止误提取页面正文内容 ----
-        const panel = document.querySelector(panelSel) || document;
+      const result = await page.evaluate(
+        (_kw: string, panelSel: string) => {
+          // ---- 先定位面板容器，所有查询限定在面板内部，防止误提取页面正文内容 ----
+          const panel = document.querySelector(panelSel) || document;
 
-        // ---- 新版（看山 Kanshan）：回答完成 = 点赞按钮出现 ----
-        // 看山面板的打字机效果：searchDoneBtn 出现得早但内容还在输出中，
-        // 只有 like_button 出现才表示回答已完整渲染
-        const likeBtn = panel.querySelector(
-          '[data-testid="Button:ai_assistant_chat_like_button"]',
-        );
-        // data-phase="End" 是更明确的结束标记
-        const endMarker = panel.querySelector('[data-phase="End"]');
-
-        if (likeBtn || endMarker) {
-          // 新版答案在面板内任意 [data-testid="Block"] 中的 .Render-markdown
-          const blocks = panel.querySelectorAll('[data-testid="Block"]');
-          const found = Array.from(blocks).find((block) => {
-            const md = block.querySelector('.Render-markdown');
-            return md && md.innerHTML.trim();
-          });
-          if (found) {
-            return found.querySelector('.Render-markdown')!.innerHTML;
-          }
-        }
-
-        // ---- 旧版（知乎直答 AI）：thinking_node 完成按钮 ----
-        const thinkingBtn = panel.querySelector(
-          '[data-testid="Button:thinking_node"]',
-        );
-        if (thinkingBtn?.textContent?.includes("完成回答")) {
-          const answerBlock = panel.querySelector(
-            '[data-testid="Block:zhida_answer_result_block"]',
+          // ---- 新版（看山 Kanshan）：回答完成 = 点赞按钮出现 ----
+          // 看山面板的打字机效果：searchDoneBtn 出现得早但内容还在输出中，
+          // 只有 like_button 出现才表示回答已完整渲染
+          const likeBtn = panel.querySelector(
+            '[data-testid="Button:ai_assistant_chat_like_button"]',
           );
-          const markdownDiv = answerBlock?.querySelector(".Render-markdown");
-          if (markdownDiv && markdownDiv.innerHTML.trim()) {
-            return markdownDiv.innerHTML;
-          }
-        }
+          // data-phase="End" 是更明确的结束标记
+          const endMarker = panel.querySelector('[data-phase="End"]');
 
-        return null;
-      }, keyword, ZhidaManager.PANEL_SELECTOR_ALL);
+          if (likeBtn || endMarker) {
+            // 新版答案在面板内任意 [data-testid="Block"] 中的 .Render-markdown
+            const blocks = panel.querySelectorAll('[data-testid="Block"]');
+            const found = Array.from(blocks).find((block) => {
+              const md = block.querySelector(".Render-markdown");
+              return md && md.innerHTML.trim();
+            });
+            if (found) {
+              return found.querySelector(".Render-markdown")!.innerHTML;
+            }
+          }
+
+          // ---- 旧版（知乎直答 AI）：thinking_node 完成按钮 ----
+          const thinkingBtn = panel.querySelector(
+            '[data-testid="Button:thinking_node"]',
+          );
+          if (thinkingBtn?.textContent?.includes("完成回答")) {
+            const answerBlock = panel.querySelector(
+              '[data-testid="Block:zhida_answer_result_block"]',
+            );
+            const markdownDiv = answerBlock?.querySelector(".Render-markdown");
+            if (markdownDiv && markdownDiv.innerHTML.trim()) {
+              return markdownDiv.innerHTML;
+            }
+          }
+
+          return null;
+        },
+        keyword,
+        ZhidaManager.PANEL_SELECTOR_ALL,
+      );
 
       if (result !== null && result.trim()) {
         // 完成信号出现后，轮询等待内容稳定（打字机效果彻底结束）
@@ -438,16 +444,16 @@ export class ZhidaManager {
       // 新版：查找面板内 [data-testid="Block"] 中的 .Render-markdown
       const blocks = panel.querySelectorAll('[data-testid="Block"]');
       const found = Array.from(blocks).find((block) => {
-        const md = block.querySelector('.Render-markdown');
+        const md = block.querySelector(".Render-markdown");
         return md?.innerHTML?.trim();
       });
       if (found) {
-        return found.querySelector('.Render-markdown')!.innerHTML;
+        return found.querySelector(".Render-markdown")!.innerHTML;
       }
       // 旧版
       const markdownDiv = panel
         .querySelector('[data-testid="Block:zhida_answer_result_block"]')
-        ?.querySelector('.Render-markdown');
+        ?.querySelector(".Render-markdown");
       if (markdownDiv?.innerHTML?.trim()) {
         return markdownDiv.innerHTML;
       }
@@ -570,7 +576,7 @@ export class ZhidaManager {
         }
 
         // ---- 旧版（知乎直答 AIPanel）----
-        const aiPanel = document.querySelector('.AIPanel-enter-done');
+        const aiPanel = document.querySelector(".AIPanel-enter-done");
         if (aiPanel) {
           const btn = aiPanel.querySelector(
             '[data-testid="Button:thinking_node"]',
@@ -600,7 +606,9 @@ export class ZhidaManager {
         let panel: Element | null = null;
         for (const sel of panelSelectors) {
           panel = document.querySelector(sel);
-          if (panel) break;
+          if (panel) {
+            break;
+          }
         }
 
         if (!panel) {
@@ -618,7 +626,9 @@ export class ZhidaManager {
         let closeBtn: HTMLElement | null = null;
         for (const sel of closeBtnSelectors) {
           closeBtn = panel.querySelector<HTMLElement>(sel);
-          if (closeBtn) break;
+          if (closeBtn) {
+            break;
+          }
         }
 
         if (closeBtn) {
@@ -638,7 +648,9 @@ export class ZhidaManager {
         const stillHere = await page.evaluate((closeSels: string[]) => {
           const selectors = closeSels;
           for (const sel of selectors) {
-            if (document.querySelector(sel)) return true;
+            if (document.querySelector(sel)) {
+              return true;
+            }
           }
           return false;
         }, ZhidaManager.PANEL_CLOSE_SELECTORS);
