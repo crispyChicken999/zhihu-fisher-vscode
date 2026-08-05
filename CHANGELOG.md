@@ -2,6 +2,32 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.8.3] - 2026-08-05
+
+### Bug Fixes
+
+- **代理/VPN 环境下扫码登录卡在"等待扫码"（Issue [#78](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues/78)）**：修复了开启代理（尤其是 Clash 等 fake-ip 模式）时扫码登录无法完成的问题。
+  - **根因**：代理的 fake-ip 模式将 `static.zhihu.com` 等静态资源解析到"本地地址空间"，而新版 Chrome 默认启用了 Private Network Access（PNA，Chromium feature 名 `LocalNetworkAccessChecks`）安全机制，直接拦截了公共网站向本地地址空间发起的跨域请求（日志中的 `Permission was denied ... 'local' address space`）。
+  - **连锁后果**：`zse-ck` 签名脚本被拦截 → `__zse_ck` 签名 cookie 永远无法生成（提示"Cookie 缺少关键的安全项"）；大量资源加载失败导致页面异常，登录后导航热榜时出现 `Session closed`，流程中断，面板一直卡在"等待扫码"。
+  - **修复**：浏览器启动参数中新增 `--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights,PrivateNetworkAccessPermissionPrompt,LocalNetworkAccessChecks` 禁用 PNA 检查（兼容新旧版 Chrome，不存在的 feature 名会被自动忽略，不影响用户日常浏览器安全）。同时重构扫码登录成功后的处理流程：页面自动关闭或渲染进程异常（`Session closed`）时自动在同一浏览器上下文中新建页面继续获取 Cookie；轮询等待 `__zse_ck` 签名 cookie 生成（最长 20 秒）；`context.cookies()` 读取异常容错；超时未生成时给出代理/VPN 相关诊断提示。
+
+- **二维码模糊扫不出来**：修复了扫码登录二维码模糊、难以扫描的问题。
+  - 截图分辨率从 1 倍提升到 **2 倍**（`clip.scale = 2`），截图前等待二维码绘制完成，避免截到刷新中的画面。
+  - 移除展示时的 `image-rendering: pixelated`（最近邻采样导致缩小时锯齿、模块丢失），改用平滑缩放。
+  - 二维码展示尺寸 172px → 200px（小屏 140px → 160px），更大更清晰。
+
+### Features
+
+- **扫码登录进度实时反馈**：扫码成功后不再停留在"等待扫码..."状态，面板会实时展示当前处理进度。
+  - 状态栏动态显示当前步骤文案：「扫码成功！正在获取登录凭据...」→「正在加载热榜页面以生成签名信息...」→「正在等待签名 cookie 生成（已等待 N 秒）...」→「正在保存 Cookie 并刷新侧边栏...」。
+  - 新增三步进度指示器：`扫码确认 → 获取凭据 → 保存Cookie`，已完成步骤变绿、当前步骤高亮脉冲动画、未开始步骤置灰。
+
+- **状态页图标改为 SVG**：登录成功/超时/错误页面移除 emoji（✅/⏰/❌），统一由 SVG 图标呈现，与整体设计风格保持一致。
+
+### Refactored
+
+- 统一部分代码中选择器字符串的引号风格，优化代码可读性。
+
 ## [0.8.2] - 2026-08-04
 
 ### Bug Fixes

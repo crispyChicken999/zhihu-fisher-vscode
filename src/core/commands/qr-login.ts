@@ -205,6 +205,9 @@ async function handleQRLogin(
       return;
     }
 
+    // 等待二维码绘制完成，避免截到尚未绘制完成或刷新过程中的画面
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     // 提取二维码图片数据
     // 使用 page.screenshot() + clip 截取 canvas 元素的像素区域，
     // 避免 canvas 跨域图片导致的 SecurityError (Tainted canvases)
@@ -236,7 +239,8 @@ async function handleQRLogin(
 
     console.log("正在截取二维码图片...");
     const qrCodeScreenshot = await page.screenshot({
-      clip: qrCodeClip,
+      // 以2倍分辨率截取，保证二维码清晰（解决放大显示时模糊、扫不出来的问题）
+      clip: { ...qrCodeClip, scale: 2 },
       type: "png",
     });
     if (
@@ -275,6 +279,227 @@ async function handleQRLogin(
 
     // 显示二维码页面
     panel.webview.html = getQRDisplayHtml(qrCodeBase64, wechatTip);
+
+    // 更新面板中的登录进度状态（扫码成功后的处理步骤），避免用户误以为流程卡住
+    const updateStatus = (status: string, text: string, step: number): void => {
+      if (isDisposed) {
+        return;
+      }
+      try {
+        panel.webview.postMessage({
+          command: "updateStatus",
+          status,
+          text,
+          step,
+        });
+      } catch (error) {
+        console.warn("更新登录状态失败，面板可能已关闭:", error);
+      }
+    };
+
+    /**
+     * 登录成功后的处理流程：
+     * 1. 等待页面加载稳定
+     * 2. 导航到热榜页面，触发知乎 JS 设置 __zse_ck 等签名 cookie
+     *    （若页面在扫码成功后自动关闭 window.close() 或渲染进程异常导致
+     *    "Session closed"，则在同一个 context 中新建页面继续获取 cookie）
+     * 3. 等待 __zse_ck 签名 cookie 生成（由页面上的 zse-ck 脚本异步设置）后收集并保存 cookie
+     * 每步都通过 updateStatus 实时反馈进度
+     */
+    const handleLoginSuccess = async (): Promise<void> => {
+      // 新建页面时应用的统一设置（与主登录页面保持一致）
+      const prepareNewPage = async (newPage: Puppeteer.Page): Promise<void> => {
+        await newPage.setUserAgent(
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36",
+        );
+        // 防反爬虫设置
+        await newPage.evaluateOnNewDocument(() => {
+          Object.defineProperty(navigator, "webdriver", {
+            get: () => undefined,
+          });
+        });
+      };
+
+      // 安全获取 context 中的 cookie（面板关闭触发 cleanupPage 后 context 可能已关闭）
+      const getContextCookies = async () => {
+        if (!context || isDisposed) {
+          return [];
+        }
+        try {
+          return await context.cookies();
+        } catch (error) {
+          console.warn("获取context cookies失败，context可能已关闭:", error);
+          return [];
+        }
+      };
+
+      try {
+        // 扫码已成功，进入凭据获取阶段
+        updateStatus("processing", "扫码成功！正在获取登录凭据...", 2);
+
+        // 等待页面完全加载，确保cookie已设置
+        if (page && !page.isClosed()) {
+          try {
+            await page.waitForNetworkIdle({ timeout: 8000 });
+          } catch {
+            // 忽略超时
+          }
+        }
+
+        // 导航到热榜页面，触发知乎 JS 设置 __zse_ck 等签名 cookie
+        // 若原页面已关闭（扫码成功后 window.close() 或渲染进程异常），则新建页面继续
+        let livePage: Puppeteer.Page | null =
+          page && !page.isClosed() ? page : null;
+        if (!livePage && context && !isDisposed) {
+          console.log("原页面已关闭，创建新页面导航到热榜...");
+          try {
+            livePage = await context.newPage();
+            await prepareNewPage(livePage);
+          } catch (createError) {
+            console.error("创建新页面失败:", createError);
+            livePage = null;
+          }
+        }
+
+        if (livePage) {
+          try {
+            console.log("导航到热榜页面以触发签名 cookie 设置...");
+            updateStatus(
+              "processing",
+              "正在加载热榜页面以生成签名信息...",
+              2,
+            );
+            await livePage.goto("https://www.zhihu.com/hot", {
+              waitUntil: "networkidle2",
+              timeout: 30000,
+            });
+            page = livePage;
+          } catch (error: any) {
+            // 页面可能在扫码成功后自动关闭（window.close()）或渲染进程异常，
+            // 导致 Protocol error (Page.navigate): Session closed。
+            // 此时在同一个 context 中新建页面继续获取 cookie。
+            console.warn(
+              "导航热榜页面失败，尝试在新建页面中获取cookie:",
+              error?.message || error
+            );
+            if (isDisposed || !context) {
+              return;
+            }
+            try {
+              const newPage = await context.newPage();
+              await prepareNewPage(newPage);
+              await newPage.goto("https://www.zhihu.com/hot", {
+                waitUntil: "domcontentloaded",
+                timeout: 30000,
+              });
+              page = newPage;
+            } catch (navError) {
+              console.error("新建页面导航热榜也失败:", navError);
+            }
+          }
+        } else {
+          console.warn("没有可用的页面导航到热榜，将直接从context中读取已有cookie");
+        }
+
+        // 等待 __zse_ck 签名 cookie 生成（由页面上的 zse-ck 脚本异步设置）
+        console.log("等待签名 cookie __zse_ck 生成...");
+        updateStatus("processing", "正在等待签名 cookie 生成...", 2);
+        const zseCkWaitMs = 20000;
+        const zseCkStartTime = Date.now();
+        while (!isDisposed && Date.now() - zseCkStartTime < zseCkWaitMs) {
+          const cookies = await getContextCookies();
+          if (cookies.some((c) => c.name === "__zse_ck")) {
+            break;
+          }
+          // 每秒刷新等待进度，让用户知道流程仍在进行
+          const waitedSeconds = Math.floor((Date.now() - zseCkStartTime) / 1000);
+          updateStatus(
+            "processing",
+            `正在等待签名 cookie 生成（已等待 ${waitedSeconds} 秒）...`,
+            2,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        // 从 context 获取所有 cookie，只保留知乎域名
+        const allCookies = await getContextCookies();
+        const zhihuCookies = allCookies.filter(
+          (c) => c.domain === ".zhihu.com" || c.domain === "www.zhihu.com"
+        );
+        const cookieString = zhihuCookies
+          .map((c) => `${c.name}=${c.value}`)
+          .join("; ");
+
+        const cookieKeys = zhihuCookies.map((c) => c.name);
+        console.log(
+          `context.cookies() 共 ${allCookies.length} 个，过滤出 ${zhihuCookies.length} 个知乎域cookie，key列表: ${cookieKeys.join(", ")}`
+        );
+
+        // 检查是否包含关键 cookie
+        const hasZseCk = cookieKeys.includes("__zse_ck");
+        const hasZC0 = cookieKeys.includes("z_c0");
+        if (!hasZseCk || !hasZC0) {
+          const missing = [];
+          if (!hasZseCk) { missing.push("__zse_ck"); }
+          if (!hasZC0) { missing.push("z_c0"); }
+          console.warn(`Cookie 缺少关键的安全项: ${missing.join(", ")}，请重新登录`);
+          if (!isDisposed) {
+            const reasons = [
+              `缺少关键的安全Cookie: ${missing.join(", ")}`,
+              "请重新扫码登录，或使用手动设置Cookie方式",
+            ];
+            // __zse_ck 长时间未生成时，多半是代理/VPN 的网络策略拦截了知乎签名脚本
+            if (!hasZseCk && Date.now() - zseCkStartTime >= zseCkWaitMs) {
+              reasons.push(
+                "提示：若开启了代理/VPN，其网络策略可能拦截了知乎的签名脚本，请尝试关闭代理或更换节点后重试"
+              );
+            }
+            panel.webview.html = getErrorHtml("Cookie不完整", reasons);
+          }
+          return;
+        }
+
+        if (cookieString) {
+          console.log(`成功获取到 ${cookieKeys.length} 个cookie`);
+          updateStatus("processing", "正在保存 Cookie 并刷新侧边栏...", 3);
+          await CookieManager.saveCookieString(cookieString);
+
+          // 登录成功后，确保浏览器可用后再刷新侧边栏列表（与手动setCookie逻辑对齐）
+          try {
+            await PuppeteerManager.canCreateBrowser();
+            console.log("浏览器可用，开始刷新侧边栏列表...");
+            sidebarHot.refresh();
+            sidebarRecommend.refresh();
+            sidebarSearch.reset();
+            sidebarCollections.reset();
+          } catch (error) {
+            console.error("创建爬虫浏览器失败，跳过自动刷新:", error);
+          }
+
+          // 显示成功页面后关闭
+          if (!isDisposed) {
+            panel.webview.html = getSuccessHtml();
+            // 2秒后自动关闭
+            setTimeout(() => {
+              if (!isDisposed) {
+                panel.dispose();
+              }
+            }, 2000);
+          }
+        } else {
+          console.error("登录成功但未能获取到cookie");
+          if (!isDisposed) {
+            panel.webview.html = getErrorHtml("登录成功但获取Cookie失败", [
+              "请尝试使用手动设置Cookie方式",
+              "或重新扫码登录",
+            ]);
+          }
+        }
+      } finally {
+        // 清理页面资源
+        cleanupPage(context, page);
+      }
+    };
 
     // 开始轮询检测登录状态
     let pollCount = 0;
@@ -317,90 +542,7 @@ async function handleQRLogin(
           clearInterval(pollingTimer!);
           pollingTimer = null;
 
-          // 等待页面完全加载，确保cookie已设置
-          try {
-            await page.waitForNetworkIdle({ timeout: 8000 });
-          } catch {
-            // 忽略超时
-          }
-
-          // 导航到热榜页面，触发知乎 JS 设置 __zse_ck 等签名 cookie
-          console.log("导航到热榜页面以触发签名 cookie 设置...");
-          await page.goto("https://www.zhihu.com/hot", {
-            waitUntil: "networkidle2",
-            timeout: 30000,
-          });
-
-          // 从 context 获取所有 cookie，只保留知乎域名
-          const allCookies = context ? await context.cookies() : [];
-          const zhihuCookies = allCookies.filter(
-            (c) => c.domain === ".zhihu.com" || c.domain === "www.zhihu.com"
-          );
-          const cookieString = zhihuCookies
-            .map((c) => `${c.name}=${c.value}`)
-            .join("; ");
-
-          const cookieKeys = zhihuCookies.map((c) => c.name);
-          console.log(
-            `context.cookies() 共 ${allCookies.length} 个，过滤出 ${zhihuCookies.length} 个知乎域cookie，key列表: ${cookieKeys.join(", ")}`
-          );
-
-          // 检查是否包含关键 cookie
-          const hasZseCk = cookieKeys.includes("__zse_ck");
-          const hasZC0 = cookieKeys.includes("z_c0");
-          if (!hasZseCk || !hasZC0) {
-            const missing = [];
-            if (!hasZseCk) { missing.push("__zse_ck"); }
-            if (!hasZC0) { missing.push("z_c0"); }
-            console.warn(`Cookie 缺少关键的安全项: ${missing.join(", ")}，请重新登录`);
-            if (!isDisposed) {
-              panel.webview.html = getErrorHtml("Cookie不完整", [
-                `缺少关键的安全Cookie: ${missing.join(", ")}`,
-                "请重新扫码登录，或使用手动设置Cookie方式",
-              ]);
-            }
-            cleanupPage(context, page);
-            return;
-          }
-
-          if (cookieString) {
-            console.log(`成功获取到 ${cookieKeys.length} 个cookie`);
-            await CookieManager.saveCookieString(cookieString);
-
-            // 登录成功后，确保浏览器可用后再刷新侧边栏列表（与手动setCookie逻辑对齐）
-            try {
-              await PuppeteerManager.canCreateBrowser();
-              console.log("浏览器可用，开始刷新侧边栏列表...");
-              sidebarHot.refresh();
-              sidebarRecommend.refresh();
-              sidebarSearch.reset();
-              sidebarCollections.reset();
-            } catch (error) {
-              console.error("创建爬虫浏览器失败，跳过自动刷新:", error);
-            }
-
-            // 显示成功页面后关闭
-            if (!isDisposed) {
-              panel.webview.html = getSuccessHtml();
-              // 2秒后自动关闭
-              setTimeout(() => {
-                if (!isDisposed) {
-                  panel.dispose();
-                }
-              }, 2000);
-            }
-          } else {
-            console.error("登录成功但未能获取到cookie");
-            if (!isDisposed) {
-              panel.webview.html = getErrorHtml("登录成功但获取Cookie失败", [
-                "请尝试使用手动设置Cookie方式",
-                "或重新扫码登录",
-              ]);
-            }
-          }
-
-          // 清理页面资源
-          cleanupPage(context, page);
+          await handleLoginSuccess();
           return;
         }
 
@@ -537,8 +679,24 @@ function getQRDisplayHtml(qrCodeData: string, wechatTip: string): string {
       </div>
       <div id="qrStatus" class="status-bar">
         <span class="status-dot"></span>
-        <span>等待扫码...</span>
+        <span id="statusText">等待扫码...</span>
         <span id="elapsedTime">已等待 0秒</span>
+      </div>
+      <div id="qrSteps" class="qr-steps">
+        <div class="step active" data-step="1">
+          <span class="step-dot"></span>
+          <span>扫码确认</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" data-step="2">
+          <span class="step-dot"></span>
+          <span>获取凭据</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" data-step="3">
+          <span class="step-dot"></span>
+          <span>保存Cookie</span>
+        </div>
       </div>
     `,
     )
@@ -546,17 +704,38 @@ function getQRDisplayHtml(qrCodeData: string, wechatTip: string): string {
       "${STATUS_SCRIPT}",
       `
     <script>
+      // 更新登录步骤指示器：activeStep 之前的步骤标记为完成，当前步骤高亮
+      function updateSteps(activeStep) {
+        const steps = document.querySelectorAll('#qrSteps .step');
+        steps.forEach(function(step, index) {
+          step.classList.remove('done', 'active');
+          const stepNo = index + 1;
+          if (stepNo < activeStep) {
+            step.classList.add('done');
+          } else if (stepNo === activeStep) {
+            step.classList.add('active');
+          }
+        });
+      }
+
       // 监听来自扩展的消息
       window.addEventListener('message', function(event) {
         const message = event.data;
         if (message.command === 'updateStatus') {
           const statusBar = document.getElementById('qrStatus');
+          const statusText = document.getElementById('statusText');
           const timeEl = document.getElementById('elapsedTime');
-          if (statusBar) {
+          if (statusBar && message.status) {
             statusBar.className = 'status-bar ' + message.status;
           }
+          if (statusText && message.text) {
+            statusText.textContent = message.text;
+          }
           if (timeEl) {
-            timeEl.textContent = '已等待 ' + message.time;
+            timeEl.textContent = message.time ? ('已等待 ' + message.time) : '';
+          }
+          if (message.step) {
+            updateSteps(message.step);
           }
         }
       });
@@ -578,7 +757,7 @@ function getQRDisplayHtml(qrCodeData: string, wechatTip: string): string {
  */
 function getSuccessHtml(): string {
   return qrLoginTemplate
-    .replace("${PAGE_TITLE}", "✅ 登录成功")
+    .replace("${PAGE_TITLE}", "登录成功")
     .replace("${QR_CODE_DATA}", "")
     .replace("${WECHAT_TIP}", "")
     .replace(
@@ -591,7 +770,7 @@ function getSuccessHtml(): string {
             <path d="M8 12l3 3 5-5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <div class="status-text success-text">✅ 登录成功！</div>
+        <div class="status-text success-text">登录成功！</div>
         <div class="status-desc">Cookie已自动保存，页面即将关闭...</div>
       </div>
     `,
@@ -604,7 +783,7 @@ function getSuccessHtml(): string {
  */
 function getTimeoutHtml(): string {
   return qrLoginTemplate
-    .replace("${PAGE_TITLE}", "⏰ 扫码超时")
+    .replace("${PAGE_TITLE}", "扫码超时")
     .replace("${QR_CODE_DATA}", "")
     .replace("${WECHAT_TIP}", "")
     .replace(
@@ -617,7 +796,7 @@ function getTimeoutHtml(): string {
             <path d="M12 6v6l4 2" stroke-linecap="round"/>
           </svg>
         </div>
-        <div class="status-text">⏰ 扫码超时</div>
+        <div class="status-text">扫码超时</div>
         <div class="status-desc">二维码已过期，请重试或使用手动设置Cookie方式</div>
         <div class="action-buttons">
           <button class="action-btn primary" onclick="retryQRLogin()">重新扫码</button>
@@ -650,7 +829,7 @@ function getErrorHtml(title: string, reasons: string[]): string {
     .join("");
 
   return qrLoginTemplate
-    .replace("${PAGE_TITLE}", "❌ " + title)
+    .replace("${PAGE_TITLE}", title)
     .replace("${QR_CODE_DATA}", "")
     .replace("${WECHAT_TIP}", "")
     .replace(
@@ -663,7 +842,7 @@ function getErrorHtml(title: string, reasons: string[]): string {
             <path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round"/>
           </svg>
         </div>
-        <div class="status-text">❌ ${escapeHtml(title)}</div>
+        <div class="status-text">${escapeHtml(title)}</div>
         <ul class="error-reasons">
           ${reasonsHtml}
         </ul>

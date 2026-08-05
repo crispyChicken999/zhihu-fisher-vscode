@@ -83,15 +83,15 @@ export const qrLoginTemplate = `
     }
 
     .qrcode-image {
-      width: 172px;
-      height: 172px;
+      width: 200px;
+      height: 200px;
       border-radius: 4px;
       border: 1px solid var(--vscode-panel-border);
       padding: 8px;
       background-color: #ffffff;
       opacity: 0;
       transition: opacity 0.3s ease;
-      image-rendering: pixelated;
+      /* 2倍分辨率截图源图足够清晰，使用平滑缩放避免最近邻采样导致二维码边缘锯齿、模糊 */
     }
 
     .qrcode-image.qrcode-visible {
@@ -120,6 +120,7 @@ export const qrLoginTemplate = `
     .status-bar {
       margin-top: 16px;
       padding: 10px 16px;
+      border: 1px solid transparent;
       background-color: var(--vscode-editor-inactiveSelectionBackground);
       border-radius: 4px;
       display: flex;
@@ -135,6 +136,10 @@ export const qrLoginTemplate = `
       border: 1px solid transparent;
     }
 
+    .status-bar.processing {
+      border: 1px solid var(--vscode-progressBar-background);
+    }
+
     .status-dot {
       width: 8px;
       height: 8px;
@@ -147,6 +152,59 @@ export const qrLoginTemplate = `
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }
+    }
+
+    .qr-steps {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--vscode-descriptionForeground);
+      opacity: 0.55;
+      transition: opacity 0.2s ease, color 0.2s ease;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--vscode-descriptionForeground);
+      flex-shrink: 0;
+      transition: background-color 0.2s ease;
+    }
+
+    .step.active {
+      opacity: 1;
+      color: var(--vscode-editor-foreground);
+      font-weight: 500;
+    }
+
+    .step.active .step-dot {
+      background-color: var(--vscode-progressBar-background);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .step.done {
+      opacity: 0.85;
+      color: var(--vscode-testing-iconPassed, #4caf50);
+    }
+
+    .step.done .step-dot {
+      background-color: var(--vscode-testing-iconPassed, #4caf50);
+    }
+
+    .step-line {
+      width: 28px;
+      height: 1px;
+      background-color: var(--vscode-panel-border);
+      margin: 0 8px;
     }
 
     .status-container {
@@ -301,8 +359,8 @@ export const qrLoginTemplate = `
       }
 
       .qrcode-image {
-        width: 140px;
-        height: 140px;
+        width: 160px;
+        height: 160px;
       }
 
       .header h1 {

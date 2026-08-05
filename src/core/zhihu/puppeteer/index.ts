@@ -200,7 +200,15 @@ export class PuppeteerManager {
               "--no-sandbox",
               "--window-size=800,600", // 还是限制一下window的大小，因为createPage的时候，已经设置了viewPort为800x600，如果不限制的话，会有一大段空白不好看。
               "--disable-setuid-sandbox",
-              "--disable-features=UseEcoQoSForBackgroundProcess", // 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
+              // 1. 禁用效能模式，确保在win11系统中流畅运行（todo: test needed）
+              // 2. 禁用 Private Network Access / Local Network Access 检查（BlockInsecurePrivateNetworkRequests、
+              //    PrivateNetworkAccessSendPreflights、PrivateNetworkAccessPermissionPrompt 为旧版Chrome的feature名，
+              //    LocalNetworkAccessChecks 为2025+新版Chrome的feature名）。
+              //    开启代理/VPN（如Clash等fake-ip模式）时，static.zhihu.com 等资源会被解析到本地地址空间，
+              //    新版Chrome会拦截这些跨域请求（CORS policy: Permission was denied ... 'local' address space），
+              //    导致 __zse_ck 等签名cookie无法生成、登录流程失败。
+              //    注：--disable-features 支持逗号分隔多个feature，Chrome会自动忽略不存在的feature名。
+              "--disable-features=UseEcoQoSForBackgroundProcess,BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights,PrivateNetworkAccessPermissionPrompt,LocalNetworkAccessChecks",
             ];
 
             if (isDebugMode) {
