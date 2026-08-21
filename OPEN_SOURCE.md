@@ -53,7 +53,7 @@ npm run watch
 #### 赞赏码
 
 <div align="center">
-  <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg" alt="微信赞赏码" width="200" height="200">
+  <img src="https://img2024.cnblogs.com/blog/3085939/202608/3085939-20260821165003738-804671332.jpg" alt="微信赞赏码" width="200" height="200">
 </div>
 
 <div align="center">

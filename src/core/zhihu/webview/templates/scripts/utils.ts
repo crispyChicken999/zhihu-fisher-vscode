@@ -100,7 +100,7 @@ function showDonateModal() {
 
         <div class="donate-qr-container">
           <div class="qr-wrapper">
-            <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg" alt="微信赞赏码" class="donate-qr-code">
+            <img src="https://img2024.cnblogs.com/blog/3085939/202608/3085939-20260821165003738-804671332.jpg" alt="微信赞赏码" class="donate-qr-code">
             <div class="qr-overlay">
               <span class="scan-text">扫码赞赏</span>
             </div>

@@ -213,10 +213,10 @@ _主要功能展示_
 <details>
 <summary>方式一：扫码登录（推荐）</summary>
 
-无需手动复制 Cookie，使用知乎 App 扫码即可自动登录。
+无需手动复制 Cookie，使用`知乎 App` 扫码即可自动登录。
 
-1. 在侧边栏标题右键菜单中选择 **【扫码登录知乎】**
-2. 使用知乎 App 扫描显示的二维码
+1. 在侧边栏 `...` 的更多菜单中选择 **【扫码登录知乎】**
+2. 使用 `知乎 App` 扫描显示的二维码
 3. 确认登录后，Cookie 将自动配置完成
 
 > 💡 扫码登录使用**独立的无痕浏览器上下文**，与您的日常浏览数据完全隔离，不会读取或修改您已有的知乎 Cookie。
@@ -240,7 +240,7 @@ _Cookie 获取示例图_
 
 </details>
 
-> 🔒 **隐私说明**：Cookie 仅存储在您的本地 VSCode 配置文件中，插件不会上传或分享您的 Cookie 信息。插件仅使用 Cookie 来模拟登录状态，获取知乎推荐和热榜内容。所有代码完全开源，欢迎审查源码验证安全性。
+> 🔒 **隐私说明**：Cookie 仅存储在您的本地 VSCode 配置文件中，插件不会上传或分享您的 Cookie 信息。插件仅使用 Cookie 来模拟登录状态，获取知乎推荐和热榜内容。说白了，我就是写来自己摸鱼用的，我不会收集Cookie，要来也没用😂。说白了，我就是写来自己摸鱼用的，我不会收集Cookie，要来也没用😂。所有代码完全开源，欢迎审查源码验证安全性。
 
 ---
 
@@ -267,7 +267,8 @@ _Cookie 获取示例图_
 - [ ] ...
 
 > 💡 欢迎在 [Issues](https://github.com/crispyChicken999/zhihu-fisher-vscode/issues) 中提出您的功能建议！
-> **注意**：本插件**不计划支持**任何绕过付费墙、破解会员限制或去广告功能。
+
+> **注意**：本插件**不计划支持**任何绕过付费墙、破解会员限制或去广告功能。（避免请喝茶）
 
 ## ❓ 常见问题 (FAQ)
 
@@ -416,11 +417,11 @@ npm run watch
 - **这是完全自愿的赠与行为，与插件功能无关，不构成任何形式的购买或对价关系**。
 - 你的支持是我更新的动力~ ❤️ 看到这里，帮忙给个 Star ⭐️ 支持一下吧！
 
-![赞赏码](https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg)
+![赞赏码](https://img2024.cnblogs.com/blog/3085939/202608/3085939-20260821165003738-804671332.jpg)
 
 > 如果帮到你，也欢迎给个好评 ⭐（点一下插件名字旁边的五星即可 🎉），或者在 [GitHub](https://github.com/crispyChicken999/zhihu-fisher-vscode) 上点个 Star 支持一下！
 
-## Star History
+## ⭐ Star History
 
 <a href="https://www.star-history.com/?type=date&legend=top-left&repos=crispyChicken999%2Fzhihu-fisher-vscode">
  <picture>

@@ -558,7 +558,7 @@ export function aboutTemplate(version: string = "") {
       <div class="section donate-section">
         <h2>☕ 支持开发者</h2>
         <p>如果这个插件对您有帮助，欢迎请开发者喝杯咖啡，您的支持是我持续开发的动力！❤️</p>
-        <img src="https://img2024.cnblogs.com/blog/3085939/202504/3085939-20250425153014632-145153684.jpg" alt="微信赞赏码" class="donate-qr">
+        <img src="https://img2024.cnblogs.com/blog/3085939/202608/3085939-20260821165003738-804671332.jpg" alt="微信赞赏码" class="donate-qr">
         <p style="color: var(--vscode-descriptionForeground); font-size: 13px;">微信扫码打开赞赏</p>
         <p style="font-size:13px;color:var(--vscode-descriptionForeground);margin-top:16px;">
           同时也欢迎在 <a href="https://github.com/crispyChicken999/zhihu-fisher-vscode" class="link">GitHub</a> 上点颗 ⭐️，或提交 <a href="https://github.com/crispyChicken999/zhihu-fisher-vscode/issues" class="link">Issue/PR</a> 来帮助改进插件！
