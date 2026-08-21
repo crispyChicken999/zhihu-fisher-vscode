@@ -422,4 +422,10 @@ npm run watch
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/chart?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left&sealed_token=_P9zjk6YKG1xlFA1aMwxg2TDNBTNDKWH3213zGZAij8AAKiMm-k1Jotl8sGuziof-0FPQYlddianjS9R5phbnOANQ-VXwuN4uDh12pVpC2vLaAFnx8IIvJ-bQUFj_cwyq9K3acADaduJ67A07Coa0wh2iMyi1dtoQKeEq8Q9a3juWjSVErf2qtrSDNJ_)](https://www.star-history.com/?type=date&legend=top-left&repos=crispyChicken999%2Fzhihu-fisher-vscode)
+<a href="https://www.star-history.com/?type=date&legend=top-left&repos=crispyChicken999%2Fzhihu-fisher-vscode">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=crispyChicken999/zhihu-fisher-vscode&type=date&theme=dark&legend=top-left&sealed_token=_P9zjk6YKG1xlFA1aMwxg2TDNBTNDKWH3213zGZAij8AAKiMm-k1Jotl8sGuziof-0FPQYlddianjS9R5phbnOANQ-VXwuN4uDh12pVpC2vLaAFnx8IIvJ-bQUFj_cwyq9K3acADaduJ67A07Coa0wh2iMyi1dtoQKeEq8Q9a3juWjSVErf2qtrSDNJ_" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left&sealed_token=_P9zjk6YKG1xlFA1aMwxg2TDNBTNDKWH3213zGZAij8AAKiMm-k1Jotl8sGuziof-0FPQYlddianjS9R5phbnOANQ-VXwuN4uDh12pVpC2vLaAFnx8IIvJ-bQUFj_cwyq9K3acADaduJ67A07Coa0wh2iMyi1dtoQKeEq8Q9a3juWjSVErf2qtrSDNJ_" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left&sealed_token=_P9zjk6YKG1xlFA1aMwxg2TDNBTNDKWH3213zGZAij8AAKiMm-k1Jotl8sGuziof-0FPQYlddianjS9R5phbnOANQ-VXwuN4uDh12pVpC2vLaAFnx8IIvJ-bQUFj_cwyq9K3acADaduJ67A07Coa0wh2iMyi1dtoQKeEq8Q9a3juWjSVErf2qtrSDNJ_" />
+ </picture>
+</a>
