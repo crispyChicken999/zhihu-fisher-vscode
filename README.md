@@ -420,6 +420,6 @@ npm run watch
 
 > 如果帮到你，也欢迎给个好评 ⭐（点一下插件名字旁边的五星即可 🎉），或者在 [GitHub](https://github.com/crispyChicken999/zhihu-fisher-vscode) 上点个 Star 支持一下！
 
-## ⭐ Star History
+## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)](https://www.star-history.com/#crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/chart?repos=crispyChicken999/zhihu-fisher-vscode&type=date&legend=top-left&sealed_token=_P9zjk6YKG1xlFA1aMwxg2TDNBTNDKWH3213zGZAij8AAKiMm-k1Jotl8sGuziof-0FPQYlddianjS9R5phbnOANQ-VXwuN4uDh12pVpC2vLaAFnx8IIvJ-bQUFj_cwyq9K3acADaduJ67A07Coa0wh2iMyi1dtoQKeEq8Q9a3juWjSVErf2qtrSDNJ_)](https://www.star-history.com/?type=date&legend=top-left&repos=crispyChicken999%2Fzhihu-fisher-vscode)
