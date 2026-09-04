@@ -101,56 +101,13 @@ export class WebviewManager {
     );
 
     // 当面板失去焦点的时候，使用智能伪装系统
+    // 具体的伪装/恢复逻辑抽成静态方法，供 onDidChangeWindowState
+    // （Alt+Tab 切到其他应用时）复用，避免两处重复实现
     panel.onDidChangeViewState((e) => {
-      // 获取伪装配置
-      const config = vscode.workspace.getConfiguration("zhihu-fisher");
-      const enableDisguise = config.get<boolean>("enableDisguise", false);
-      const enableSideBarDisguise = config.get<boolean>(
-        "sidebarDisguiseEnabled",
-        false,
-      );
-
       if (e.webviewPanel.active) {
-        // 激活时恢复原始标题和图标
-        const currentWebviewItem = Store.webviewMap.get(webviewId);
-        const currentTitle = currentWebviewItem
-          ? this.getShortTitle(currentWebviewItem.article.title)
-          : shortTitle;
-        panel.title = currentTitle;
-        panel.iconPath = vscode.Uri.joinPath(
-          Store.context!.extensionUri,
-          "resources",
-          "icon.svg",
-        );
-
-        DisguiseManager.hideDisguiseInterface(panel);
+        WebviewManager.restoreWebviewAppearance(webviewId);
       } else {
-        // 失去焦点时使用智能伪装（支持配置开关）
-        const currentWebviewItem = Store.webviewMap.get(webviewId);
-        const currentTitle = currentWebviewItem
-          ? this.getShortTitle(currentWebviewItem.article.title)
-          : shortTitle;
-        const disguise = DisguiseManager.getDisguiseOrDefault(
-          webviewId,
-          currentTitle,
-        );
-        panel.title = disguise.title;
-        panel.iconPath = disguise.iconPath;
-
-        // 如果启用了伪装功能，显示伪装界面
-        if (enableDisguise) {
-          DisguiseManager.showDisguiseInterface(panel);
-
-          if (enableSideBarDisguise) {
-            // 同时触发侧边栏伪装 if 开启了的话
-            const sidebarManager = SidebarDisguiseManager.getInstance();
-            sidebarManager.onWebViewDisguised().catch((error) => {
-              console.error("触发侧边栏联动伪装失败:", error);
-            });
-          } else {
-            console.log("侧边栏伪装功能未启用，未联动侧边栏");
-          }
-        }
+        WebviewManager.disguiseWebviewAppearance(webviewId);
       }
 
       // 触发侧边栏伪装状态评估
@@ -237,6 +194,73 @@ export class WebviewManager {
       this.crawlingThoughtData(webviewId);
     } else {
       this.crawlingURLData(webviewId);
+    }
+  }
+
+  /**
+   * 恢复WebView面板为正常标题和图标，并取消伪装界面
+   * 由 panel.onDidChangeViewState（面板被激活）和
+   * window.onDidChangeWindowState（VSCode窗口重新获得系统焦点）共同触发
+   * @param webviewId WebView的唯一标识
+   */
+  public static restoreWebviewAppearance(webviewId: string): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    const panel = webviewItem.webviewPanel;
+    panel.title = this.getShortTitle(webviewItem.article.title);
+    panel.iconPath = vscode.Uri.joinPath(
+      Store.context!.extensionUri,
+      "resources",
+      "icon.svg",
+    );
+
+    DisguiseManager.hideDisguiseInterface(panel);
+  }
+
+  /**
+   * 将WebView面板切换为智能伪装状态（支持配置开关）
+   * 由 panel.onDidChangeViewState（面板失去激活状态）和
+   * window.onDidChangeWindowState（VSCode窗口切到系统后台，如Alt+Tab切到其他应用）共同触发
+   * @param webviewId WebView的唯一标识
+   */
+  public static disguiseWebviewAppearance(webviewId: string): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const enableDisguise = config.get<boolean>("enableDisguise", false);
+    if (!enableDisguise) {
+      return;
+    }
+
+    const panel = webviewItem.webviewPanel;
+    const currentTitle = this.getShortTitle(webviewItem.article.title);
+    const disguise = DisguiseManager.getDisguiseOrDefault(
+      webviewId,
+      currentTitle,
+    );
+    panel.title = disguise.title;
+    panel.iconPath = disguise.iconPath;
+
+    DisguiseManager.showDisguiseInterface(panel);
+
+    const enableSideBarDisguise = config.get<boolean>(
+      "sidebarDisguiseEnabled",
+      false,
+    );
+    if (enableSideBarDisguise) {
+      // 同时触发侧边栏伪装 if 开启了的话
+      const sidebarManager = SidebarDisguiseManager.getInstance();
+      sidebarManager.onWebViewDisguised().catch((error) => {
+        console.error("触发侧边栏联动伪装失败:", error);
+      });
+    } else {
+      console.log("侧边栏伪装功能未启用，未联动侧边栏");
     }
   }
 
