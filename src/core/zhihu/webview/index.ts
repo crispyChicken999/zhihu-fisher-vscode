@@ -168,6 +168,7 @@ export class WebviewManager {
       item.excerpt,
       item.imgUrl,
       loadingContentType,
+      this.isDisguised(webviewId),
     );
 
     // 设置消息处理
@@ -284,14 +285,13 @@ export class WebviewManager {
       return;
     }
 
-    if (this.isDisguised(webviewId)) {
-      // 伪装状态下不刷新真实内容，避免用真实HTML覆盖掉伪装界面
-      return;
-    }
-
-    // 更新WebView内容
-    webviewItem.webviewPanel.webview.html =
-      HtmlRenderer.getArticleHtml(webviewId);
+    // 更新WebView内容。是否处于伪装状态交给 getArticleHtml 内部判断——
+    // 内容仍然正常渲染/加载，只是伪装状态下会直接以伪装遮罩可见的样子生成，
+    // 不会因为跳过刷新导致内容永远卡在加载中
+    webviewItem.webviewPanel.webview.html = HtmlRenderer.getArticleHtml(
+      webviewId,
+      this.isDisguised(webviewId),
+    );
   }
 
   /**
@@ -2995,6 +2995,7 @@ export class WebviewManager {
               webviewItem.article.excerpt,
               "", // 这里没有缩略图信息，传空字符串
               contentType,
+              this.isDisguised(webviewId),
             );
           }
           break;
@@ -3056,6 +3057,7 @@ export class WebviewManager {
                 webviewItemForReload.article.excerpt || "重新加载中...",
                 "",
                 contentType,
+                this.isDisguised(webviewId),
               );
             // 重新爬取数据
             await this.crawlingURLData(webviewId);
@@ -3083,6 +3085,7 @@ export class WebviewManager {
                 webviewItemForCookie.article.excerpt || "正在重新加载...",
                 "",
                 contentType,
+                this.isDisguised(webviewId),
               );
           }
           break;

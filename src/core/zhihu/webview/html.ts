@@ -68,6 +68,8 @@ export class HtmlRenderer {
    * @param excerpt 文章摘要
    * @param imgUrl 可选的缩略图URL
    * @param contentType 内容类型：'article' | 'question' | 'thought'
+   * @param isDisguised 当前是否处于伪装状态。是的话不显示真实标题/摘要/配图，
+   * 避免加载过程中切走再切回来时，正文这块提前暴露出真实内容
    * @returns 加载中的HTML字符串
    */
   public static getLoadingHtml(
@@ -75,8 +77,11 @@ export class HtmlRenderer {
     excerpt: string,
     imgUrl?: string,
     contentType?: string,
+    isDisguised: boolean = false,
   ): string {
-    const excerptText = excerpt || "🐟无摘要🐟";
+    const displayTitle = isDisguised ? "加载中…" : title;
+    const excerptText = isDisguised ? "" : (excerpt || "🐟无摘要🐟");
+    const displayImgUrl = isDisguised ? "" : (imgUrl || "");
 
     // 获取媒体显示模式配置
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
@@ -94,9 +99,9 @@ export class HtmlRenderer {
     }
 
     return loadingTemplate
-      .replace(/\${TITLE}/g, this.escapeHtml(title))
+      .replace(/\${TITLE}/g, this.escapeHtml(displayTitle))
       .replace("${EXCERPT}", this.escapeHtml(excerptText))
-      .replace("${IMG_URL}", imgUrl || "")
+      .replace("${IMG_URL}", displayImgUrl)
       .replace("${MEDIA_DISPLAY_MODE}", mediaDisplayMode)
       .replace("${MINI_MEDIA_SCALE}", miniMediaScale.toString())
       .replace("${CONTENT_TYPE}", contentTypeText);
@@ -148,9 +153,15 @@ export class HtmlRenderer {
   /**
    * 生成文章HTML内容
    * @param webviewId 网页视图ID
+   * @param isDisguised 当前是否处于伪装状态。是的话生成出来的HTML会直接以
+   * 伪装遮罩可见的状态渲染，不依赖加载完成后再补发一条消息去切换显示，
+   * 避免中间出现真实内容先露出、再被盖住的窗口
    * @returns 文章内容的HTML字符串
    */
-  public static getArticleHtml(webviewId: string): string {
+  public static getArticleHtml(
+    webviewId: string,
+    isDisguised: boolean = false,
+  ): string {
     // 获取文章对象
     const webview = Store.webviewMap.get(webviewId) as WebViewItem;
     const article = webview.article;
@@ -179,7 +190,13 @@ export class HtmlRenderer {
       } else if (webview.sourceType === "thought" || webview.url.includes("/pin/")) {
         contentType = "thought";
       }
-      return this.getLoadingHtml(article.title, article.excerpt || "", "", contentType);
+      return this.getLoadingHtml(
+        article.title,
+        article.excerpt || "",
+        "",
+        contentType,
+        isDisguised,
+      );
     }
 
     // 构建页面组件
@@ -296,9 +313,10 @@ export class HtmlRenderer {
         )
         .toString() || "";
 
-    // 生成伪装界面HTML（如果启用）
+    // 生成伪装界面HTML（如果启用）。当前处于伪装状态时直接渲染为可见，
+    // 不依赖页面加载后再补发消息切换，避免出现真实内容先露出的窗口
     const disguiseInterfaceHtml = enableDisguise
-      ? DisguiseManager.generateDisguiseCodeInterface(webviewId)
+      ? DisguiseManager.generateDisguiseCodeInterface(webviewId, isDisguised)
       : "";
 
     // 生成伪装界面控制脚本（如果启用）
