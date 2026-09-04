@@ -101,14 +101,14 @@ export class WebviewManager {
     );
 
     // 当面板失去焦点的时候，使用智能伪装系统
-    // 具体的伪装/恢复逻辑抽成静态方法，供 onDidChangeWindowState
+    // 具体的伪装逻辑抽成静态方法，供 onDidChangeWindowState
     // （Alt+Tab 切到其他应用时）复用，避免两处重复实现
     panel.onDidChangeViewState((e) => {
-      if (e.webviewPanel.active) {
-        WebviewManager.restoreWebviewAppearance(webviewId);
-      } else {
+      if (!e.webviewPanel.active) {
         WebviewManager.disguiseWebviewAppearance(webviewId);
       }
+      // 变为 active 时不自动恢复正常界面：点击标签页切回来的瞬间自动摘
+      // 伪装反而最容易被看到，保持伪装状态，交由用户按空格或工具栏按钮手动摘除
 
       // 触发侧边栏伪装状态评估
       console.log("WebView状态变化，已触发相关处理");
@@ -199,8 +199,8 @@ export class WebviewManager {
 
   /**
    * 恢复WebView面板为正常标题和图标，并取消伪装界面
-   * 由 panel.onDidChangeViewState（面板被激活）和
-   * window.onDidChangeWindowState（VSCode窗口重新获得系统焦点）共同触发
+   * 仅由用户手动摘除伪装触发（空格快捷键/工具栏按钮），面板被激活或
+   * VSCode窗口重新获得系统焦点时不会自动调用——避免切回来的瞬间自动暴露真实内容
    * @param webviewId WebView的唯一标识
    */
   public static restoreWebviewAppearance(webviewId: string): void {
@@ -3682,16 +3682,8 @@ export class WebviewManager {
         return;
       }
 
-      // 隐藏伪装 - 恢复标题和图标
-      panel.title = currentTitle;
-      panel.iconPath = vscode.Uri.joinPath(
-        Store.context!.extensionUri,
-        "resources",
-        "icon.svg",
-      );
-
-      // 隐藏伪装界面（这里会发送postMessage给前端）
-      DisguiseManager.hideDisguiseInterface(panel);
+      // 隐藏伪装 - 恢复标题和图标，并隐藏伪装界面（这里会发送postMessage给前端）
+      WebviewManager.restoreWebviewAppearance(webviewId);
     }
 
     // 动画完成后解除防抖锁定（总时长：1000ms欢迎消息 + 300ms动画）
