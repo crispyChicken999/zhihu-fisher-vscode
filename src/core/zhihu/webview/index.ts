@@ -197,6 +197,15 @@ export class WebviewManager {
     }
   }
 
+  /** 当前处于伪装状态的 webviewId 集合。内容加载/标题更新等逻辑需要
+   * 据此判断能否直接写入真实标题和内容，避免覆盖伪装界面暴露真实内容 */
+  private static disguisedWebviewIds = new Set<string>();
+
+  /** 判断指定WebView当前是否处于伪装状态 */
+  public static isDisguised(webviewId: string): boolean {
+    return this.disguisedWebviewIds.has(webviewId);
+  }
+
   /**
    * 恢复WebView面板为正常标题和图标，并取消伪装界面
    * 仅由用户手动摘除伪装触发（空格快捷键/工具栏按钮），面板被激活或
@@ -208,6 +217,8 @@ export class WebviewManager {
     if (!webviewItem) {
       return;
     }
+
+    this.disguisedWebviewIds.delete(webviewId);
 
     const panel = webviewItem.webviewPanel;
     panel.title = this.getShortTitle(webviewItem.article.title);
@@ -237,6 +248,8 @@ export class WebviewManager {
     if (!enableDisguise) {
       return;
     }
+
+    this.disguisedWebviewIds.add(webviewId);
 
     const panel = webviewItem.webviewPanel;
     const currentTitle = this.getShortTitle(webviewItem.article.title);
@@ -268,6 +281,11 @@ export class WebviewManager {
   private static updateWebview(webviewId: string): void {
     const webviewItem = Store.webviewMap.get(webviewId);
     if (!webviewItem) {
+      return;
+    }
+
+    if (this.isDisguised(webviewId)) {
+      // 伪装状态下不刷新真实内容，避免用真实HTML覆盖掉伪装界面
       return;
     }
 
@@ -706,7 +724,7 @@ export class WebviewManager {
       console.log("页面加载完成，开始读取页面...");
       webviewItem.isLoading = false;
 
-      if (webviewItem.webviewPanel.active) {
+      if (webviewItem.webviewPanel.active && !this.isDisguised(webviewId)) {
         webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
       }
 
@@ -986,7 +1004,9 @@ export class WebviewManager {
       }
 
       webviewItem.isLoading = false;
-      webviewItem.webviewPanel.title = shortTitle;
+      if (!this.isDisguised(webviewId)) {
+        webviewItem.webviewPanel.title = shortTitle;
+      }
 
       const isCookieExpired =
         await CookieManager.checkIfPageHasLoginElement(page);
@@ -1048,8 +1068,10 @@ export class WebviewManager {
               `更新专栏文章标题: ${webviewItem.article.title} -> ${realTitle}`,
             );
             webviewItem.article.title = realTitle;
-            webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
-            this.updateWebview(webviewId); // 更新WebView内容
+            if (!this.isDisguised(webviewId)) {
+              webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+            }
+            this.updateWebview(webviewId); // 更新WebView内容（伪装状态下会自动跳过）
           }
         } catch (error) {
           console.error("提取专栏文章标题失败:", error);
@@ -1375,7 +1397,9 @@ export class WebviewManager {
       }
 
       webviewItem.isLoading = false;
-      webviewItem.webviewPanel.title = shortTitle;
+      if (!this.isDisguised(webviewId)) {
+        webviewItem.webviewPanel.title = shortTitle;
+      }
 
       const isCookieExpired =
         await CookieManager.checkIfPageHasLoginElement(page);
@@ -2190,6 +2214,7 @@ export class WebviewManager {
 
       // 4. 清理伪装缓存
       DisguiseManager.clearDisguiseCache(webviewId);
+      this.disguisedWebviewIds.delete(webviewId);
 
       // 5. 关闭Puppeteer页面
       await PuppeteerManager.closePage(webviewId);
@@ -2376,8 +2401,10 @@ export class WebviewManager {
               `更新页面标题: ${webviewItem.article.title} -> ${realTitle}`,
             );
             webviewItem.article.title = realTitle;
-            webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
-            this.updateWebview(webviewId); // 更新WebView内容
+            if (!this.isDisguised(webviewId)) {
+              webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+            }
+            this.updateWebview(webviewId); // 更新WebView内容（伪装状态下会自动跳过）
           }
         } catch (error) {
           console.error("提取页面标题失败:", error);
@@ -3314,6 +3341,7 @@ export class WebviewManager {
 
             // 清理伪装缓存
             DisguiseManager.clearDisguiseCache(webviewId);
+            this.disguisedWebviewIds.delete(webviewId);
 
             Store.webviewMap.delete(webviewId);
             await PuppeteerManager.closePage(webviewId);
@@ -3638,7 +3666,6 @@ export class WebviewManager {
     }
 
     const panel = webviewItem.webviewPanel;
-    const currentTitle = this.getShortTitle(webviewItem.article.title);
 
     if (action === "show") {
       // 显示伪装前，检查webview是否处于激活状态
@@ -3649,16 +3676,8 @@ export class WebviewManager {
         return;
       }
 
-      // 显示伪装 - 修改标题和图标
-      const disguise = DisguiseManager.getDisguiseOrDefault(
-        webviewId,
-        currentTitle,
-      );
-      panel.title = disguise.title;
-      panel.iconPath = disguise.iconPath;
-
-      // 显示伪装界面（这里会发送postMessage给前端）
-      DisguiseManager.showDisguiseInterface(panel);
+      // 显示伪装 - 修改标题、图标并显示伪装界面
+      WebviewManager.disguiseWebviewAppearance(webviewId);
 
       if (enableSideBarDisguise) {
         // 同时触发侧边栏伪装
