@@ -104,11 +104,18 @@ export class WebviewManager {
     // 具体的伪装逻辑抽成静态方法，供 onDidChangeWindowState
     // （Alt+Tab 切到其他应用时）复用，避免两处重复实现
     panel.onDidChangeViewState((e) => {
-      if (!e.webviewPanel.active) {
+      if (e.webviewPanel.active) {
+        // 变为 active 且 VSCode 窗口处于聚焦状态时，说明用户只是在 VSCode
+        // 内部切换标签页，恢复真实标题/图标和界面，保持原有的"切回后自动
+        // 恢复"体验。窗口本身失焦（Alt+Tab 切到其他应用）后重新聚焦不会
+        // 触发本事件，因此不会出现切回来的瞬间自动摘除伪装暴露内容的情况
+        if (vscode.window.state.focused) {
+          WebviewManager.restoreWebviewAppearance(webviewId);
+        }
+      } else {
+        // 失去焦点时使用智能伪装
         WebviewManager.disguiseWebviewAppearance(webviewId);
       }
-      // 变为 active 时不自动恢复正常界面：点击标签页切回来的瞬间自动摘
-      // 伪装反而最容易被看到，保持伪装状态，交由用户按空格或工具栏按钮手动摘除
 
       // 触发侧边栏伪装状态评估
       console.log("WebView状态变化，已触发相关处理");
@@ -3417,6 +3424,7 @@ export class WebviewManager {
 
     // 清理所有伪装缓存
     DisguiseManager.clearAllDisguiseCache();
+    this.disguisedWebviewIds.clear();
   }
 
   /** 处理收藏内容请求 */

@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { Store } from "./core/stores";
 import { ZhihuService } from "./core/zhihu/index";
-import { WebviewManager } from "./core/zhihu/webview";
 import { registerAllCommands } from "./core/commands";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
@@ -97,28 +96,6 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
   });
-
-  // 监听 VSCode 窗口在操作系统层面的焦点变化
-  // panel.onDidChangeViewState 只能感知"标签页在 VSCode 内部是否被切走"，
-  // Alt+Tab 切到其他应用时，当前标签页在 VSCode 内部依然是 active 状态，
-  // 不会触发该事件。这里补上窗口级别的焦点检测，覆盖"切到别的应用"这个场景。
-  context.subscriptions.push(
-    vscode.window.onDidChangeWindowState((windowState) => {
-      if (windowState.focused) {
-        // 重新聚焦时不自动恢复正常界面：切回来的瞬间自动摘伪装反而最容易被看到，
-        // 保持伪装状态，交由用户自己按空格或工具栏按钮手动摘掉
-        return;
-      }
-
-      for (const [webviewId, item] of Store.webviewMap) {
-        if (!item.webviewPanel.active) {
-          // 非当前激活的标签页，其伪装状态已由 onDidChangeViewState 处理，跳过
-          continue;
-        }
-        WebviewManager.disguiseWebviewAppearance(webviewId);
-      }
-    })
-  );
 
   registerAllCommands(context, {
     zhihuService,

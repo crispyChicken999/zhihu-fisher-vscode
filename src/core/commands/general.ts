@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
+import { Store } from "../stores";
 import { DisguiseManager } from "../utils/disguise-manager";
 import { SidebarDisguiseManager } from "../utils/sidebar-disguise-manager";
+import { WebviewManager } from "../zhihu/webview";
 
 /**
  * 注册通用命令
@@ -179,6 +181,28 @@ export function registerGeneralCommands(): vscode.Disposable[] {
         vscode.window.showInformationMessage("侧边栏伪装已关闭");
       }
     )
+  );
+
+  // 监听 VSCode 窗口在操作系统层面的焦点变化（伪装相关）
+  // panel.onDidChangeViewState 只能感知"标签页在 VSCode 内部是否被切走"，
+  // Alt+Tab 切到其他应用时，当前标签页在 VSCode 内部依然是 active 状态，
+  // 不会触发该事件。这里补上窗口级别的焦点检测，覆盖"切到别的应用"这个场景。
+  commands.push(
+    vscode.window.onDidChangeWindowState((windowState) => {
+      if (windowState.focused) {
+        // 重新聚焦时不自动恢复正常界面：切回来的瞬间自动摘伪装反而最容易被看到，
+        // 保持伪装状态，交由用户自己按空格或工具栏按钮手动摘掉
+        return;
+      }
+
+      for (const [webviewId, item] of Store.webviewMap) {
+        if (!item.webviewPanel.active) {
+          // 非当前激活的标签页，其伪装状态已由 onDidChangeViewState 处理，跳过
+          continue;
+        }
+        WebviewManager.disguiseWebviewAppearance(webviewId);
+      }
+    })
   );
 
   // 关注列表过滤：正常展示（包含赞同）
