@@ -360,9 +360,15 @@ export class DisguiseManager {
   /**
    * 生成伪装代码界面HTML
    * @param webviewId WebView的唯一标识
+   * @param startVisible 生成时是否直接渲染为可见状态（整页HTML被替换时，
+   * 遮罩会跟着重置为默认隐藏，此时需要在生成阶段就直接渲染成可见，
+   * 避免依赖后续再发一条消息去切换——那样会有时序竞态，可能来不及生效）
    * @returns 伪装代码界面的HTML字符串
    */
-  public static generateDisguiseCodeInterface(webviewId: string): string {
+  public static generateDisguiseCodeInterface(
+    webviewId: string,
+    startVisible: boolean = false,
+  ): string {
     const disguiseInfo = this.getRandomDisguise(webviewId);
     const fileName = disguiseInfo.title;
 
@@ -373,7 +379,7 @@ export class DisguiseManager {
     // 使用CodeGenerator生成代码
     const codeLines = CodeGenerator.generateCode(language, 100);
 
-    return this.buildCodeInterfaceHTML(codeLines);
+    return this.buildCodeInterfaceHTML(codeLines, startVisible);
   }
 
   /**
@@ -400,9 +406,14 @@ export class DisguiseManager {
    * @param codeLines 代码行数组
    * @returns HTML字符串
    */
-  private static buildCodeInterfaceHTML(codeLines: string[]): string {
+  private static buildCodeInterfaceHTML(
+    codeLines: string[],
+    startVisible: boolean = false,
+  ): string {
+    const visibleClass = startVisible ? " show" : "";
+    const visibleStyle = startVisible ? "display: block;" : "display: none;";
     const html = `
-      <div id="disguise-code-interface" class="disguise-code-interface" style="display: none;">
+      <div id="disguise-code-interface" class="disguise-code-interface${visibleClass}" style="${visibleStyle}">
         <!-- Main content area -->
         <div class="disguise-main-content">
           <!-- Line numbers area -->
