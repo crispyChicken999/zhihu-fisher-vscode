@@ -2,6 +2,15 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.8.4] - 2026-09-08
+
+### Features
+
+- **窗口失焦自动伪装**：新增 `vscode.window.onDidChangeWindowState` 监听，当 Alt+Tab 切到其他应用（或 VSCode 窗口失去系统焦点）时，当前激活的知乎详情页自动触发智能伪装；切回 VSCode 后保持伪装状态（需手动按空格/工具栏按钮恢复）。
+- **Tab 切换回来自动恢复**：在 VSCode 内部切换标签页时，若 VSCode 窗口处于聚焦状态，重新激活知乎面板后自动恢复真实标题、图标和界面，保持原有的易用性。
+- **伪装命令统一管理**：将窗口焦点变化等伪装相关事件监听抽离到 `src/core/commands/general.ts`，与其他伪装命令共用同一个模块，方便后续维护。
+> Merge Pull Request [#79](https://github.com/crispyChicken999/zhihu-fisher-vscode/pull/79) by [@luojiateng] [@crispyChicken999]
+
 ## [0.8.3] - 2026-08-05
 
 ### Bug Fixes
