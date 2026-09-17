@@ -2,6 +2,14 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.8.5] - 2026-09-17
+
+### Features
+
+- **问题/文章标题显示方式**：新增 `zhihu-fisher.titleDisplayMode` 配置（`normal` / `mini` / `none`），详情页设置面板「多媒体」Tab 新增下拉框，可将顶部大字号标题缩小或完全隐藏；切换后即时生效，隐藏标题时上方「问题详情 / 相关问题 / 排序」等按钮仍可正常使用。
+- **标签页标题始终伪装**：新增 `zhihu-fisher.alwaysDisguiseTabTitle` 配置，开启后即使正在阅读（标签页未被自动伪装）也始终显示伪装文件名和图标，避免标签栏暴露真实标题；正文内容不受影响，阅读体验不变，需先开启智能伪装功能。相关标题/图标赋值已统一抽成 `computeTabAppearance` 方法。
+> Merge Pull Request [#80](https://github.com/crispyChicken999/zhihu-fisher-vscode/pull/80) by [@luojiateng] [@crispyChicken999]
+
 ## [0.8.4] - 2026-09-08
 
 ### Features
