@@ -5,6 +5,7 @@ import { Component, RenderOptions } from "./base";
  */
 export class StylePanelComponent implements Component {
   private mediaDisplayMode: string = "normal";
+  private titleDisplayMode: string = "normal";
   private miniMediaScale: number = 50;
   private enableDisguise: boolean = true;
   private enableGrayscale: boolean = false;
@@ -14,6 +15,7 @@ export class StylePanelComponent implements Component {
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
+    this.titleDisplayMode = renderOptions.titleDisplayMode || "normal";
     this.miniMediaScale = renderOptions.miniMediaScale || 50;
     this.enableDisguise =
       renderOptions.enableDisguise !== undefined
@@ -240,6 +242,41 @@ export class StylePanelComponent implements Component {
                 </div>
                 <div>
                   <strong class="style-option-help-strong">全部隐藏：</strong>完全隐藏图片和视频，专注文字内容
+                </div>
+              </div>
+            </details>
+
+            <div class="style-option">
+              <label for="title-display-select" class="style-option-label-inline">问题/文章标题显示方式</label>
+              <select
+                id="title-display-select"
+                class="panel-select"
+                onchange="changeTitleMode(this.value)"
+                title="大标题容易被路过的人注意到，摸鱼时可以切换为缩小或隐藏"
+              >
+                <option value="normal" ${
+                  this.titleDisplayMode === "normal" ? "selected" : ""
+                }>正常显示</option>
+                <option value="mini" ${
+                  this.titleDisplayMode === "mini" ? "selected" : ""
+                }>迷你模式</option>
+                <option value="none" ${
+                  this.titleDisplayMode === "none" ? "selected" : ""
+                }>全部隐藏</option>
+              </select>
+            </div>
+
+            <details class="style-option-help-details">
+              <summary class="style-option-help-summary">功能说明</summary>
+              <div class="style-option-help-content">
+                <div class="style-option-help-margin-4">
+                  <strong class="style-option-help-strong">正常显示：</strong>标题以原始大小显示
+                </div>
+                <div class="style-option-help-margin-4">
+                  <strong class="style-option-help-strong">迷你模式：</strong>标题缩小显示，不容易被路过的人注意到
+                </div>
+                <div>
+                  <strong class="style-option-help-strong">全部隐藏：</strong>完全隐藏标题，页面上方问题详情/相关问题/排序等按钮仍可正常使用
                 </div>
               </div>
             </details>

@@ -168,6 +168,7 @@ export class HtmlRenderer {
     const config = vscode.workspace.getConfiguration("zhihu-fisher");
     const mediaDisplayMode = config.get<string>("mediaDisplayMode", "normal");
     const miniMediaScale = config.get<number>("miniMediaScale", 50);
+    const titleDisplayMode = config.get<string>("titleDisplayMode", "normal");
     const enableDisguise = config.get<boolean>("enableDisguise", true);
     const selectedDisguiseTypes = config.get<string[]>(
       "selectedDisguiseTypes",
@@ -202,6 +203,7 @@ export class HtmlRenderer {
     // 构建页面组件
     const renderOptions = {
       mediaDisplayMode,
+      titleDisplayMode,
       miniMediaScale,
       enableDisguise,
       selectedDisguiseTypes,
@@ -304,6 +306,14 @@ export class HtmlRenderer {
         normal: "",
       }[mediaDisplayMode] || "";
 
+    // 标题显示模式类
+    const titleModeClass =
+      {
+        none: "hide-title",
+        mini: "mini-title",
+        normal: "",
+      }[titleDisplayMode] || "";
+
     // 生成JavaScript代码
     const webviewItem = Store.webviewMap.get(webviewId);
     const resourcesUri =
@@ -395,6 +405,7 @@ export class HtmlRenderer {
       .replace("${CONTENT_ID}", questionId || webview.id || "")
       .replace("${SORT_TYPE}", currentSortType)
       .replace(/\${MEDIA_MODE_CLASS}/g, mediaModeClass)
+      .replace("${TITLE_MODE_CLASS}", titleModeClass)
       .replace("${DISGUISE_INTERFACE}", disguiseInterfaceHtml)
       .replace("${DISGUISE_SCRIPT}", disguiseControlScript)
       .replace("${SCRIPTS}", scriptContent);

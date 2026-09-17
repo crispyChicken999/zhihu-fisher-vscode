@@ -15,6 +15,7 @@ export interface Component {
  */
 export interface RenderOptions {
   mediaDisplayMode: string;
+  titleDisplayMode?: string; // 问题/文章标题的显示方式：normal | mini | none
   immersiveMode?: boolean; // 沉浸模式开关
   miniMediaScale?: number; // mini模式下图片缩放比例 (1-100)
   enableDisguise?: boolean; // 智能伪装功能开关

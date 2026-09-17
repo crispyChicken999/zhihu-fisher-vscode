@@ -2950,6 +2950,20 @@ export class WebviewManager {
     );
   }
 
+  /** 设置问题/文章标题的显示方式 */
+  private static async setTitleMode(mode: string): Promise<void> {
+    if (!mode) {
+      return;
+    }
+
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    await config.update(
+      "titleDisplayMode",
+      mode,
+      vscode.ConfigurationTarget.Global,
+    );
+  }
+
   /** 设置Mini模式下图片缩放比例 */
   private static async setMiniMediaScale(scale: number): Promise<void> {
     if (!scale || scale < 1 || scale > 100) {
@@ -3107,6 +3121,10 @@ export class WebviewManager {
 
         case "setMiniMediaScale":
           await this.setMiniMediaScale(message.scale);
+          break;
+
+        case "setTitleMode":
+          await this.setTitleMode(message.mode);
           break;
 
         case "loadPreviousAnswer":

@@ -33,6 +33,22 @@ export const articleCss = `
   height: 30px;
 }
 
+/* 标题显示模式：大标题容易被路过的人注意到，摸鱼时可以缩小或隐藏 */
+.zhihu-content-title.hide-title .content-title-text {
+  display: none;
+}
+
+.zhihu-content-title.mini-title .content-title-text {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.zhihu-content-title.hide-title,
+.zhihu-content-title.mini-title {
+  margin-top: 0.5em;
+}
+
 /* 文章内容样式 */
 .article-content {
   margin: 10px 0;
