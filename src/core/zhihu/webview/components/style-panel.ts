@@ -5,15 +5,18 @@ import { Component, RenderOptions } from "./base";
  */
 export class StylePanelComponent implements Component {
   private mediaDisplayMode: string = "normal";
+  private titleDisplayMode: string = "normal";
   private miniMediaScale: number = 50;
   private enableDisguise: boolean = true;
   private enableGrayscale: boolean = false;
   private sidebarDisguiseEnabled: boolean = false;
+  private alwaysDisguiseTabTitle: boolean = false;
   private hideFollowUpVotes: boolean = false;
   private hideVotedAnswers: string = "all";
 
   constructor(renderOptions: RenderOptions) {
     this.mediaDisplayMode = renderOptions.mediaDisplayMode || "normal";
+    this.titleDisplayMode = renderOptions.titleDisplayMode || "normal";
     this.miniMediaScale = renderOptions.miniMediaScale || 50;
     this.enableDisguise =
       renderOptions.enableDisguise !== undefined
@@ -22,6 +25,10 @@ export class StylePanelComponent implements Component {
     this.sidebarDisguiseEnabled =
       renderOptions.sidebarDisguiseEnabled !== undefined
         ? renderOptions.sidebarDisguiseEnabled
+        : false;
+    this.alwaysDisguiseTabTitle =
+      renderOptions.alwaysDisguiseTabTitle !== undefined
+        ? renderOptions.alwaysDisguiseTabTitle
         : false;
     this.hideFollowUpVotes =
       renderOptions.hideFollowUpVotes !== undefined
@@ -240,6 +247,41 @@ export class StylePanelComponent implements Component {
                 </div>
                 <div>
                   <strong class="style-option-help-strong">全部隐藏：</strong>完全隐藏图片和视频，专注文字内容
+                </div>
+              </div>
+            </details>
+
+            <div class="style-option">
+              <label for="title-display-select" class="style-option-label-inline">问题/文章标题显示方式</label>
+              <select
+                id="title-display-select"
+                class="panel-select"
+                onchange="changeTitleMode(this.value)"
+                title="大标题容易被路过的人注意到，摸鱼时可以切换为缩小或隐藏"
+              >
+                <option value="normal" ${
+                  this.titleDisplayMode === "normal" ? "selected" : ""
+                }>正常显示</option>
+                <option value="mini" ${
+                  this.titleDisplayMode === "mini" ? "selected" : ""
+                }>迷你模式</option>
+                <option value="none" ${
+                  this.titleDisplayMode === "none" ? "selected" : ""
+                }>全部隐藏</option>
+              </select>
+            </div>
+
+            <details class="style-option-help-details">
+              <summary class="style-option-help-summary">功能说明</summary>
+              <div class="style-option-help-content">
+                <div class="style-option-help-margin-4">
+                  <strong class="style-option-help-strong">正常显示：</strong>标题以原始大小显示
+                </div>
+                <div class="style-option-help-margin-4">
+                  <strong class="style-option-help-strong">迷你模式：</strong>标题缩小显示，不容易被路过的人注意到
+                </div>
+                <div>
+                  <strong class="style-option-help-strong">全部隐藏：</strong>完全隐藏标题，页面上方问题详情/相关问题/排序等按钮仍可正常使用
                 </div>
               </div>
             </details>
@@ -474,6 +516,43 @@ export class StylePanelComponent implements Component {
                   </div>
                   <div>
                     <strong class="style-option-help-strong-link">恢复方式：</strong>点击侧边栏中的任何伪装文件即可恢复正常列表，或者关闭全部的知乎详情页后恢复
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="style-option-divider disguise-divider" ${this.enableDisguise ? "" : 'style="display: none;"'}></div>
+
+            <!-- 标签页标题始终伪装设置 -->
+            <div class="style-option-section" id="always-disguise-tab-title-section" ${this.enableDisguise ? "" : 'style="display: none;"'}>
+              <label class="style-option-label-inline style-option-font-weight">
+                标签页标题始终伪装
+                <span class="style-option-color-description">
+                  (阅读时标签页也不显示真实标题)
+                </span>
+              </label>
+
+              <div class="style-option-flex style-option-label-inline">
+                <label class="style-option-flex style-option-gap-8 style-option-cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="always-disguise-tab-title-toggle"
+                    ${this.alwaysDisguiseTabTitle ? "checked" : ""}
+                    onchange="toggleAlwaysDisguiseTabTitle(this.checked)"
+                    class="style-option-transform-scale"
+                  >
+                  <span class="style-option-font-weight">标签页标题始终显示为伪装文件名</span>
+                </label>
+              </div>
+
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">默认行为：</strong>正在阅读（标签页未被自动伪装）时，标签页标题会显示真实的问题/文章标题
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong">开启后：</strong>不管是不是正在阅读，标签页标题始终显示为伪装的文件名，正文内容不受影响，正常阅读不受影响
                   </div>
                 </div>
               </details>

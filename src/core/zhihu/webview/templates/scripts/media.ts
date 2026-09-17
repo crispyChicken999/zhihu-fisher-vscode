@@ -557,6 +557,41 @@ function changeMediaMode(mode) {
 }
 
 /**
+ * 切换问题/文章标题显示方式
+ * @param {string} mode 显示方式：normal | mini | none
+ */
+function changeTitleMode(mode) {
+  updateTitleDisplayClass(mode);
+
+  // 更新title-display-select的值
+  const select = document.getElementById('title-display-select');
+  if (select) {
+    select.value = mode;
+  }
+
+  // 保存设置
+  vscode.postMessage({ command: "setTitleMode", mode: mode });
+}
+
+/**
+ * 更新标题栏的显示模式类
+ * @param {string} mode 显示方式：normal | mini | none
+ */
+function updateTitleDisplayClass(mode) {
+  const title = document.querySelector('.zhihu-content-title');
+  if (!title) {
+    return;
+  }
+
+  title.classList.remove('hide-title', 'mini-title');
+  if (mode === 'none') {
+    title.classList.add('hide-title');
+  } else if (mode === 'mini') {
+    title.classList.add('mini-title');
+  }
+}
+
+/**
  * 改变Mini模式下图片缩放比例
  * @param {string} scale 缩放比例 (1-100)
  */

@@ -70,11 +70,11 @@ export const articleTemplate = `
     \${DISGUISE_INTERFACE}
 
     <header>
-      <h4 class="zhihu-content-title">
+      <h4 class="zhihu-content-title \${TITLE_MODE_CLASS}">
         <span id="sortModeTag" class="sort-mode-tag" style="display: none;">按时间排序</span>
         <span id="thoughtBadge" class="thought-badge" style="display: none;">想法</span>
         <span id="answerFilterTag" class="answer-filter-tag" style="display: none;" title=""></span>
-        \${TITLE}
+        <span class="content-title-text">\${TITLE}</span>
         \${QUESTION_DETAIL_COMPONENT_ICON}
         \${RELATED_QUESTION_COMPONENT_ICON}
         \${ANSWER_SORT_COMPONENT}

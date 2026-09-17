@@ -15,10 +15,12 @@ export interface Component {
  */
 export interface RenderOptions {
   mediaDisplayMode: string;
+  titleDisplayMode?: string; // 问题/文章标题的显示方式：normal | mini | none
   immersiveMode?: boolean; // 沉浸模式开关
   miniMediaScale?: number; // mini模式下图片缩放比例 (1-100)
   enableDisguise?: boolean; // 智能伪装功能开关
   selectedDisguiseTypes?: string[]; // 用户选择的伪装文件类型
   sidebarDisguiseEnabled?: boolean; // 侧边栏伪装功能开关
+  alwaysDisguiseTabTitle?: boolean; // 标签页标题是否始终伪装（即使正在正常阅读）
   [key: string]: any;
 }
