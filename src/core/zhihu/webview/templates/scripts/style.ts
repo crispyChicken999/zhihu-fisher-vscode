@@ -567,6 +567,16 @@ function toggleSidebarDisguiseWithSync(enabled) {
 }
 
 /**
+ * 切换"标签页标题始终伪装"功能
+ */
+function toggleAlwaysDisguiseTabTitle(enabled) {
+  vscode.postMessage({
+    command: "setAlwaysDisguiseTabTitle",
+    enabled: enabled
+  });
+}
+
+/**
  * 切换侧边栏伪装功能
  */
 function toggleSidebarDisguise(enabled) {

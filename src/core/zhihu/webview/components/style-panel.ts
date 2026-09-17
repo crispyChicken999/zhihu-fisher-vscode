@@ -10,6 +10,7 @@ export class StylePanelComponent implements Component {
   private enableDisguise: boolean = true;
   private enableGrayscale: boolean = false;
   private sidebarDisguiseEnabled: boolean = false;
+  private alwaysDisguiseTabTitle: boolean = false;
   private hideFollowUpVotes: boolean = false;
   private hideVotedAnswers: string = "all";
 
@@ -24,6 +25,10 @@ export class StylePanelComponent implements Component {
     this.sidebarDisguiseEnabled =
       renderOptions.sidebarDisguiseEnabled !== undefined
         ? renderOptions.sidebarDisguiseEnabled
+        : false;
+    this.alwaysDisguiseTabTitle =
+      renderOptions.alwaysDisguiseTabTitle !== undefined
+        ? renderOptions.alwaysDisguiseTabTitle
         : false;
     this.hideFollowUpVotes =
       renderOptions.hideFollowUpVotes !== undefined
@@ -511,6 +516,43 @@ export class StylePanelComponent implements Component {
                   </div>
                   <div>
                     <strong class="style-option-help-strong-link">恢复方式：</strong>点击侧边栏中的任何伪装文件即可恢复正常列表，或者关闭全部的知乎详情页后恢复
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="style-option-divider disguise-divider" ${this.enableDisguise ? "" : 'style="display: none;"'}></div>
+
+            <!-- 标签页标题始终伪装设置 -->
+            <div class="style-option-section" id="always-disguise-tab-title-section" ${this.enableDisguise ? "" : 'style="display: none;"'}>
+              <label class="style-option-label-inline style-option-font-weight">
+                标签页标题始终伪装
+                <span class="style-option-color-description">
+                  (阅读时标签页也不显示真实标题)
+                </span>
+              </label>
+
+              <div class="style-option-flex style-option-label-inline">
+                <label class="style-option-flex style-option-gap-8 style-option-cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="always-disguise-tab-title-toggle"
+                    ${this.alwaysDisguiseTabTitle ? "checked" : ""}
+                    onchange="toggleAlwaysDisguiseTabTitle(this.checked)"
+                    class="style-option-transform-scale"
+                  >
+                  <span class="style-option-font-weight">标签页标题始终显示为伪装文件名</span>
+                </label>
+              </div>
+
+              <details class="style-option-help-details">
+                <summary class="style-option-help-summary">功能说明</summary>
+                <div class="style-option-help-content">
+                  <div class="style-option-help-margin-4">
+                    <strong class="style-option-help-strong">默认行为：</strong>正在阅读（标签页未被自动伪装）时，标签页标题会显示真实的问题/文章标题
+                  </div>
+                  <div>
+                    <strong class="style-option-help-strong">开启后：</strong>不管是不是正在阅读，标签页标题始终显示为伪装的文件名，正文内容不受影响，正常阅读不受影响
                   </div>
                 </div>
               </details>

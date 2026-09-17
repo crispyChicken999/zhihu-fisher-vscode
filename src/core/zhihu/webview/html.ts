@@ -178,6 +178,10 @@ export class HtmlRenderer {
       "sidebarDisguiseEnabled",
       false,
     );
+    const alwaysDisguiseTabTitle = config.get<boolean>(
+      "alwaysDisguiseTabTitle",
+      false,
+    );
     const hideFollowUpVotes = config.get<boolean>("hideFollowUpVotes", false);
     const hideVotedAnswers = config.get<string>("hideVotedAnswers", "all");
 
@@ -208,6 +212,7 @@ export class HtmlRenderer {
       enableDisguise,
       selectedDisguiseTypes,
       sidebarDisguiseEnabled,
+      alwaysDisguiseTabTitle,
       hideFollowUpVotes,
       hideVotedAnswers,
     };

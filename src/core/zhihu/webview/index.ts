@@ -79,11 +79,12 @@ export class WebviewManager {
 
     // 获取短标题
     const shortTitle = this.getShortTitle(item.title);
+    const initialAppearance = this.computeTabAppearance(webviewId, shortTitle);
 
     // 创建并配置WebView面板
     const panel = vscode.window.createWebviewPanel(
       "zhihu-fisher-content-viewer", // 使用固定的panel类型，避免localstorage失效
-      shortTitle,
+      initialAppearance.title,
       vscode.ViewColumn.Active, // 修改为在当前编辑组显示
       {
         enableScripts: true,
@@ -94,11 +95,7 @@ export class WebviewManager {
       },
     );
 
-    panel.iconPath = vscode.Uri.joinPath(
-      Store.context!.extensionUri,
-      "resources",
-      "icon.svg",
-    );
+    panel.iconPath = initialAppearance.iconPath;
 
     // 当面板失去焦点的时候，使用智能伪装系统
     // 具体的伪装逻辑抽成静态方法，供 onDidChangeWindowState
@@ -214,6 +211,40 @@ export class WebviewManager {
     return this.disguisedWebviewIds.has(webviewId);
   }
 
+  /** 真实的标题图标（icon.svg）资源路径 */
+  private static getRealIconPath(): vscode.Uri {
+    return vscode.Uri.joinPath(
+      Store.context!.extensionUri,
+      "resources",
+      "icon.svg",
+    );
+  }
+
+  /**
+   * 计算标签页当前应该显示的标题和图标。
+   * 正在阅读（未被自动伪装）时，默认显示真实标题；但如果用户开启了
+   * "标签页标题始终伪装"，即使在阅读也继续显示假文件名，不显示真实标题/图标
+   * @param webviewId WebView的唯一标识
+   * @param realTitle 真实的短标题（已经过 getShortTitle 处理）
+   */
+  private static computeTabAppearance(
+    webviewId: string,
+    realTitle: string,
+  ): { title: string; iconPath: vscode.Uri } {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    const enableDisguise = config.get<boolean>("enableDisguise", false);
+    const alwaysDisguiseTabTitle = config.get<boolean>(
+      "alwaysDisguiseTabTitle",
+      false,
+    );
+
+    if (enableDisguise && alwaysDisguiseTabTitle) {
+      return DisguiseManager.getDisguiseOrDefault(webviewId, realTitle);
+    }
+
+    return { title: realTitle, iconPath: this.getRealIconPath() };
+  }
+
   /**
    * 恢复WebView面板为正常标题和图标，并取消伪装界面
    * 仅由用户手动摘除伪装触发（空格快捷键/工具栏按钮），面板被激活或
@@ -229,12 +260,10 @@ export class WebviewManager {
     this.disguisedWebviewIds.delete(webviewId);
 
     const panel = webviewItem.webviewPanel;
-    panel.title = this.getShortTitle(webviewItem.article.title);
-    panel.iconPath = vscode.Uri.joinPath(
-      Store.context!.extensionUri,
-      "resources",
-      "icon.svg",
-    );
+    const realTitle = this.getShortTitle(webviewItem.article.title);
+    const appearance = this.computeTabAppearance(webviewId, realTitle);
+    panel.title = appearance.title;
+    panel.iconPath = appearance.iconPath;
 
     DisguiseManager.hideDisguiseInterface(panel);
   }
@@ -732,7 +761,8 @@ export class WebviewManager {
       webviewItem.isLoading = false;
 
       if (webviewItem.webviewPanel.active && !this.isDisguised(webviewId)) {
-        webviewItem.webviewPanel.title = shortTitle; // 更新面板标题
+        const appearance = this.computeTabAppearance(webviewId, shortTitle);
+        webviewItem.webviewPanel.title = appearance.title; // 更新面板标题
       }
 
       const isCookieExpired =
@@ -1012,7 +1042,10 @@ export class WebviewManager {
 
       webviewItem.isLoading = false;
       if (!this.isDisguised(webviewId)) {
-        webviewItem.webviewPanel.title = shortTitle;
+        webviewItem.webviewPanel.title = this.computeTabAppearance(
+          webviewId,
+          shortTitle,
+        ).title;
       }
 
       const isCookieExpired =
@@ -1076,7 +1109,10 @@ export class WebviewManager {
             );
             webviewItem.article.title = realTitle;
             if (!this.isDisguised(webviewId)) {
-              webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+              webviewItem.webviewPanel.title = this.computeTabAppearance(
+                webviewId,
+                this.getShortTitle(realTitle),
+              ).title;
             }
             this.updateWebview(webviewId); // 更新WebView内容（伪装状态下会自动跳过）
           }
@@ -1405,7 +1441,10 @@ export class WebviewManager {
 
       webviewItem.isLoading = false;
       if (!this.isDisguised(webviewId)) {
-        webviewItem.webviewPanel.title = shortTitle;
+        webviewItem.webviewPanel.title = this.computeTabAppearance(
+          webviewId,
+          shortTitle,
+        ).title;
       }
 
       const isCookieExpired =
@@ -2409,7 +2448,10 @@ export class WebviewManager {
             );
             webviewItem.article.title = realTitle;
             if (!this.isDisguised(webviewId)) {
-              webviewItem.webviewPanel.title = this.getShortTitle(realTitle);
+              webviewItem.webviewPanel.title = this.computeTabAppearance(
+                webviewId,
+                this.getShortTitle(realTitle),
+              ).title;
             }
             this.updateWebview(webviewId); // 更新WebView内容（伪装状态下会自动跳过）
           }
@@ -2964,6 +3006,32 @@ export class WebviewManager {
     );
   }
 
+  /** 设置"标签页标题始终伪装"功能，并立即刷新当前标签页的标题/图标 */
+  private static async setAlwaysDisguiseTabTitle(
+    webviewId: string,
+    enabled: boolean,
+  ): Promise<void> {
+    const config = vscode.workspace.getConfiguration("zhihu-fisher");
+    await config.update(
+      "alwaysDisguiseTabTitle",
+      enabled,
+      vscode.ConfigurationTarget.Global,
+    );
+
+    // 当前未处于伪装状态时，立即按新设置刷新标题/图标，不用等下一次触发
+    if (this.isDisguised(webviewId)) {
+      return;
+    }
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+    const realTitle = this.getShortTitle(webviewItem.article.title);
+    const appearance = this.computeTabAppearance(webviewId, realTitle);
+    webviewItem.webviewPanel.title = appearance.title;
+    webviewItem.webviewPanel.iconPath = appearance.iconPath;
+  }
+
   /** 设置Mini模式下图片缩放比例 */
   private static async setMiniMediaScale(scale: number): Promise<void> {
     if (!scale || scale < 1 || scale > 100) {
@@ -3125,6 +3193,10 @@ export class WebviewManager {
 
         case "setTitleMode":
           await this.setTitleMode(message.mode);
+          break;
+
+        case "setAlwaysDisguiseTabTitle":
+          await this.setAlwaysDisguiseTabTitle(webviewId, message.enabled);
           break;
 
         case "loadPreviousAnswer":
