@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Store } from "./core/stores";
 import { ZhihuService } from "./core/zhihu/index";
+import { WebviewManager } from "./core/zhihu/webview";
 import { registerAllCommands } from "./core/commands";
 import { sidebarHotListDataProvider } from "./core/zhihu/sidebar/hot";
 import { sidebarSearchListDataProvider } from "./core/zhihu/sidebar/search";
@@ -21,6 +22,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 创建 知乎服务实例
   const zhihuService = new ZhihuService();
+
+  // 伪装界面：令牌色（.mtk*）跟随主题 —— 主题或配色设置变化时重新解析并推给所有 webview
+  WebviewManager.registerThemeTokenSync(context);
 
   // 侧边栏 推荐 列表
   const sidebarRecommend = new sidebarRecommendListDataProvider();

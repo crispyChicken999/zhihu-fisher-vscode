@@ -64,6 +64,10 @@ export const articleTemplate = `
       \${THOUGHT_CSS}
       \${SCROLL_NAVIGATION_CSS}
     </style>
+
+    <!-- 伪装界面的令牌色（.mtk*）：由扩展侧解析当前主题的真实 tokenColors 生成，
+         切主题时由伪装脚本接收扩展推送后更新这里的内容 -->
+    <style id="fisher-theme-tokens">\${DISGUISE_THEME_TOKENS}</style>
   </head>
   <body data-content-id="\${CONTENT_ID}" data-sort-type="\${SORT_TYPE}">
     <!-- 伪装界面 -->

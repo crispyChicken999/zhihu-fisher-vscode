@@ -422,7 +422,7 @@ export class DisguiseManager {
           </div>
 
           <!-- Code content area -->
-          <div class="disguise-code-content vscode-tokens-styles">
+          <div class="disguise-code-content">
             ${this.generateCodeHTML(codeLines)}
           </div>
         </div>

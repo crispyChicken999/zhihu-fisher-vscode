@@ -8,7 +8,7 @@
 
 ![License](https://badgen.net/badge/License/MIT/red)
 ![VSCode](https://badgen.net/badge/VSCode/1.82.0+/blue?icon=visualstudio)
-![Version](https://badgen.net/badge/Version/0.8.5/orange?icon=git)
+![Version](https://badgen.net/badge/Version/0.8.6/orange?icon=git)
 ![Platform](https://badgen.net/badge/Platform/Windows|MacOS|Linux/purple?icon=windows)
 
 ![Downloads](https://badgen.net/vs-marketplace/d/CrispyChicken.zhihu-fisher?label=Downloads&color=blue)
@@ -84,7 +84,7 @@ _主要功能展示_
 14. 支持 `沉浸模式`（X），**强烈推荐使用** 🎉，隐藏其他不重要的信息，只显示问题标题和回答内容
 15. 支持 `收藏文章`（F）、问答、想法到指定收藏夹，支持缓存收藏夹信息，避免每次都要重新加载
 16. 支持 `灰色模式`（G），将页面所有内容转为灰色显示，进一步地摸鱼，降低被老板发现的风险
-17. 支持 `智能伪装模式`，切到其他页面后自动将文章页面的标题和图标伪装为代码文件，界面伪装成代码编辑界面，避免摸鱼被发现，切回后自动恢复，支持快捷键 `Space` 显示/隐藏伪装界面
+17. 支持 `智能伪装模式`，切到其他页面后自动将文章页面的标题和图标伪装为代码文件，界面伪装成代码编辑界面，避免摸鱼被发现，切回后自动恢复，支持快捷键 `Space` 显示/隐藏伪装界面，语法高亮配色跟随当前主题（支持插件主题与 `editor.tokenColorCustomizations` 自定义）
 18. 支持 `侧边栏伪装模式`，侧边栏会伪装成文件列表，进一步增强伪装效果
 19. 支持 `自定义智能伪装模式列表`，用户可以自定义伪装的标题和图标，满足不同用户的需求，例如前端开发可以伪装为 `HTML/JS/CSS` 文件，后端开发可以伪装为 `Python/Java/Go` 文件等
 20. 支持 导出为 `Markdown` 文件，方便离线阅读和保存，导出的文件包含了问题标题、描述、每个回答的内容及评论信息、作者信息、点赞数、评论数等详细信息
@@ -240,7 +240,7 @@ _Cookie 获取示例图_
 
 </details>
 
-> 🔒 **隐私说明**：Cookie 仅存储在您的本地 VSCode 配置文件中，插件不会上传或分享您的 Cookie 信息。插件仅使用 Cookie 来模拟登录状态，获取知乎推荐和热榜内容。说白了，我就是写来自己摸鱼用的，我不会收集Cookie，要来也没用😂。说白了，我就是写来自己摸鱼用的，我不会收集Cookie，要来也没用😂。所有代码完全开源，欢迎审查源码验证安全性。
+> 🔒 **隐私说明**：Cookie 仅存储在您的本地 VSCode 配置文件中，插件不会上传或分享您的 Cookie 信息。插件仅使用 Cookie 来模拟登录状态，获取知乎推荐和热榜内容。说白了，我就是写来自己摸鱼用的，我不会收集Cookie，要来也没用😂。所有代码完全开源，欢迎审查源码验证安全性。
 
 ---
 

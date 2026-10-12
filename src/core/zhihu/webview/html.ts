@@ -11,6 +11,7 @@ import { ArticleContentComponent } from "./components/article";
 import { StylePanelComponent } from "./components/style-panel";
 import { ZhidaPanelComponent } from "./components/zhida-panel";
 import { DisguiseManager } from "../../utils/disguise-manager";
+import { ThemeTokenColors } from "../../utils/theme-token-colors";
 import { QuestionDetailComponent } from "./components/question-detail";
 import { RelatedQuestionsComponent } from "./components/related-questions";
 import { AnswerSortComponent } from "./components/answer-sort";
@@ -337,6 +338,12 @@ export class HtmlRenderer {
     // 生成伪装界面控制脚本（如果启用）
     const disguiseControlScript = enableDisguise ? disguiseScript : "";
 
+    // 生成伪装界面的令牌色样式（按当前主题解析，解析失败时为空字符串，
+    // 此时由 styles/disguise.ts 里按 vscode-light/dark 类名写的兜底调色板接管）
+    const disguiseThemeTokensCss = enableDisguise
+      ? ThemeTokenColors.getMtkCss()
+      : "";
+
     // 判断是否为文章或想法类型（用于控制相关问题/排序组件的显示）
     const isArticle =
       contentType === "article" ||
@@ -375,6 +382,7 @@ export class HtmlRenderer {
       .replace("${MEDIA_CSS}", mediaCss)
       .replace("${PANEL_CSS}", panelCss)
       .replace("${DISGUISE_CSS}", disguiseCss)
+      .replace("${DISGUISE_THEME_TOKENS}", disguiseThemeTokensCss)
       .replace("${RELATED_QUESTIONS_CSS}", relatedQuestionsCss)
       .replace("${QUESTION_DETAIL_CSS}", questionDetailCss)
       .replace("${ANSWER_SORT_CSS}", answerSortCss)

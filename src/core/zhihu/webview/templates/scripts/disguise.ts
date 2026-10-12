@@ -4,6 +4,32 @@ export const disguiseScript =`
   const disguiseElement = document.getElementById('disguise-code-interface');
   let welcomeMessageElement = null;
 
+  // 伪装界面的令牌色样式容器（.mtk*）
+  // HTML 里已经按「渲染那一刻的主题」内联了一份，这里负责在主题变化时更新它
+  const themeTokensStyle = document.getElementById('fisher-theme-tokens');
+
+  // 应用扩展下发的令牌色样式（空字符串表示「当前主题解析不出来」，
+  // 清掉内联样式，交给 styles/disguise.ts 里按主题类型写的兜底调色板）
+  function applyThemeTokens(css) {
+    if (themeTokensStyle && typeof css === 'string') {
+      themeTokensStyle.textContent = css;
+    }
+  }
+
+  // 主动向扩展要一次令牌色：用 webview 自己拿到的主题 id 做校准，
+  // 避免「HTML 渲染时刻」和「页面真正显示时刻」之间主题已经变了
+  function requestThemeTokens() {
+    if (!themeTokensStyle) {
+      return;
+    }
+    const body = document.body;
+    vscode.postMessage({
+      command: 'themeTokensRequest',
+      themeId: (body && body.dataset && body.dataset.vscodeThemeId) || '',
+      themeKind: (body && body.dataset && body.dataset.vscodeThemeKind) || ''
+    });
+  }
+
   // 创建欢迎消息元素
   function createWelcomeMessage() {
     if (!welcomeMessageElement) {
@@ -51,6 +77,12 @@ export const disguiseScript =`
   // 监听来自扩展的消息
   window.addEventListener('message', function(event) {
     const message = event.data;
+
+    // 主题令牌色更新（扩展在主题/配色设置变化时推送）
+    if (message.command === 'themeTokens') {
+      applyThemeTokens(message.css);
+      return;
+    }
 
     if (message.command === 'showDisguise' && disguiseElement) {
       // 打断功能：清除所有待执行的hideDisguise相关定时器
@@ -152,5 +184,8 @@ export const disguiseScript =`
       }
     });
   }
+
+  // 脚本执行时校准一次令牌色（此时 VS Code 已经把主题 id 写进 body.dataset）
+  requestThemeTokens();
 })();
 `;

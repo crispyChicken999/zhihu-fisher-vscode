@@ -2,6 +2,17 @@
 
 本文档记录了"知乎摸鱼"(Zhihu Fisher) VS Code 扩展的所有重要更改。
 
+## [0.8.6] - 2026-10-12
+
+### Features
+
+- **伪装界面语法高亮跟随主题**：伪装代码界面的语法配色不再写死，改为读取当前激活主题的真实 `tokenColors` 生成；切换主题（含自动深浅色）后立即跟着变，浅色 / 高对比主题下也不会再出现"浅背景配深灰字"看不清的问题。
+  - 支持内置主题与插件主题，自动处理主题文件的 `include` 继承链（如 Dark 2026 实际由 4 个主题文件叠加而成）。
+  - 用户在 `editor.tokenColorCustomizations` 里的快捷分组（comments / strings / numbers / keywords / types / functions / variables）、`textMateRules`、以及 `[主题名]` / `[*]` 作用域覆盖都会生效。
+  - 解析失败或主题文件读不到时，回退到按 VS Code 注入的 `vscode-light` / `vscode-dark` / `vscode-high-contrast(-light)` 类名切换的内置调色板（取自 Dark+ / Light+ / HC 主题），保证任何主题下都可读。
+  - 技术实现：新增 `src/core/utils/theme-token-colors.ts`（扩展侧定位主题文件 → 按 VSCode scope 匹配规则算出各类 token 颜色 → 生成 `#disguise-code-interface .mtk*` 样式注入 webview）；`vscode.window.onDidChangeActiveColorTheme` 与相关配置变化时重新解析并推送给所有 webview，页面加载时再用 `body.dataset.vscodeThemeId` 校准一次。
+  - 说明：webview 是跨源沙箱 iframe，既拿不到 VS Code 主窗口里的 `style.vscode-tokens-styles`，VS Code 也不会把 token 颜色下发到 webview，因此只能在扩展侧自行解析主题文件复现。
+
 ## [0.8.5] - 2026-09-17
 
 ### Features

@@ -9,6 +9,7 @@ import { ZhihuApiService } from "../api/index";
 import { PuppeteerManager } from "../puppeteer";
 import { CommentsManager } from "./components/comments";
 import { DisguiseManager } from "../../utils/disguise-manager";
+import { ThemeTokenColors } from "../../utils/theme-token-colors";
 import { LinkItem, WebViewItem, AnswerItem } from "../../types";
 import { ContentProcessor } from "./components/content-processor";
 import { WebViewUtils, CollectionPickerUtils } from "../../utils";
@@ -3046,6 +3047,73 @@ export class WebviewManager {
     );
   }
 
+  /**
+   * 伪装界面令牌色同步
+   *
+   * 伪装界面的 .mtk* 颜色来自「当前主题」的解析结果，主题或配色相关设置变化后
+   * 需要重新解析并推给所有 webview（webview 内是跨源 iframe，拿不到 VS Code 的
+   * token 样式，只能由扩展侧算好送进去）
+   */
+  public static registerThemeTokenSync(context: vscode.ExtensionContext): void {
+    // 主题本身变化（含自动深浅色切换）
+    context.subscriptions.push(
+      vscode.window.onDidChangeActiveColorTheme(() => {
+        ThemeTokenColors.invalidate();
+        this.broadcastThemeTokens();
+      }),
+    );
+
+    // 相关的自定义配置变化
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeConfiguration((event) => {
+        const affected =
+          event.affectsConfiguration("editor.tokenColorCustomizations") ||
+          event.affectsConfiguration("workbench.colorTheme") ||
+          event.affectsConfiguration("window.autoDetectColorScheme") ||
+          event.affectsConfiguration("window.autoDetectHighContrast") ||
+          event.affectsConfiguration("workbench.preferredDarkColorTheme") ||
+          event.affectsConfiguration("workbench.preferredLightColorTheme") ||
+          event.affectsConfiguration(
+            "workbench.preferredHighContrastColorTheme",
+          ) ||
+          event.affectsConfiguration(
+            "workbench.preferredHighContrastLightColorTheme",
+          );
+        if (!affected) {
+          return;
+        }
+        ThemeTokenColors.invalidate();
+        this.broadcastThemeTokens();
+      }),
+    );
+  }
+
+  /** 向单个 webview 推送当前主题的令牌色 */
+  public static sendThemeTokens(webviewId: string, themeIdHint?: string): void {
+    const webviewItem = Store.webviewMap.get(webviewId);
+    if (!webviewItem) {
+      return;
+    }
+    try {
+      // 解析不出来时推空字符串：让 webview 清掉内联样式，
+      // 改用 styles/disguise.ts 里按 vscode-light/dark 类名写的兜底调色板
+      const css = ThemeTokenColors.getMtkCss(themeIdHint) || "";
+      webviewItem.webviewPanel.webview.postMessage({
+        command: "themeTokens",
+        css,
+      });
+    } catch (error) {
+      console.warn(`[伪装界面] 推送主题令牌色失败 (${webviewId}):`, error);
+    }
+  }
+
+  /** 向所有 webview 推送当前主题的令牌色 */
+  public static broadcastThemeTokens(): void {
+    for (const webviewId of Store.webviewMap.keys()) {
+      this.sendThemeTokens(webviewId);
+    }
+  }
+
   /** 设置WebView消息处理 */
   private static setupMessageHandling(webviewId: string): void {
     const webviewItem = Store.webviewMap.get(webviewId);
@@ -3056,6 +3124,11 @@ export class WebviewManager {
     // 处理WebView消息
     webviewItem.webviewPanel.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
+        case "themeTokensRequest":
+          // webview 用自己从 VS Code 拿到的主题 id 校准一次伪装界面令牌色
+          this.sendThemeTokens(webviewId, message.themeId);
+          break;
+
         case "requestContent":
           await this.crawlingURLData(webviewId);
           break;
